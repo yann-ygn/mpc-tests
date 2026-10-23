@@ -39,7 +39,8 @@ family code in the hardware's identity reply).
 
 **LEDs** on the Private port: `B0 <button note> <value>`. Values seen: `01` dim (off), `03` lit, `04` a second colour
 (AUTOMATION in read mode, TC while SHIFT is held). MPC also writes LEDs the Key 37 doesn't have (notes 3, 4, 5, 8,
-41, 44–48, 113 …), and some of those carry state (below). CC 90–101 take `00`/`7F`/`03` and don't look like LEDs; 90/91
+41, 44–48, 113 …), and some of those carry state (below). 74, 76 and 77 are the MPC X's REC ARM, MUTE and SOLO buttons
+for the selected track: MPC lights them on a Key 37 too, and obeys their notes when injected. CC 90–101 take `00`/`7F`/`03` and don't look like LEDs; 90/91
 swap when the view changes. Not decoded.
 
 When the screen dims, MPC turns the pads off and resends their colours when it wakes: pad state is only readable while
@@ -58,16 +59,16 @@ polling.
 | Pad bank | BANK A–D LEDs | yes | one of the four is `03` |
 | Selected track muted | LED 76 (`0x4C`) | yes | `03` muted, `01` not; follows the selected track whichever way it was muted |
 | Selected track soloed | LED 77 (`0x4D`) | yes | `03` soloed, `01` not |
+| Selected track record-armed | LED 74 (`0x4A`) | yes | `03` armed, `01` not; the Main screen's MULTI REC button and the mixer's arm icon show the same |
 | Mute and solo of every track (16 per bank) | pad colours, Track Mute mode | yes, in that mode | steady yellow `7F 7F 00` normal; blinking orange `7F 3B 00` muted; blinking cyan `00 7F 7F` soloed; dim red `08 00 00` silenced by a solo; off: no track |
 | Number of tracks | pad colours, Track Mute mode | yes, in that mode | one lit pad per track |
-| Multi Rec on | LED 74 (`0x4A`) | yes | `03` on |
 | Selected track's kind | pad colours | yes | a drum kit shows its pad colours; a melodic track shows the scale (root red, scale notes yellow) |
 | Undo available | UNDO LED | yes | blinks after an undoable change — *inferred* |
 | Unsaved changes | SAVE LED | yes | `04` modified, `01` after saving |
 | Meters | LEDs 68–71, as an MPC X only | yes | none as a Key 37; as an MPC X, a stereo meter (below) |
 | Sequence selected | `.xpj` | when saved | nothing at all in the controller traffic when the sequence changed |
 | Selected track's number or name | `.xpj`; Q-Link displays as an MPC X | when saved; yes as an X | nothing direct in the Key 37's traffic (only its pad colours); as an MPC X its name is drawn on a display (below) |
-| Record arm per track | `.xpj` | when saved | `tracks[i].recordArm`; the mixer's arm icon shows it (tapping it didn't toggle it) |
+| Record arm of the other tracks | `.xpj` | when saved | `tracks[i].recordArm`; the mixer's arm icons show it (tapping one didn't toggle it) |
 | Track names, kinds, colours, volume, pan; sequence names, tempo, length | `.xpj` | when saved | below |
 
 ## The project file (.xpj)
@@ -99,7 +100,8 @@ Everything needed by the notes' API can be pressed or tapped:
 |---|---|
 | play, stop, record, overdub | PLAY, STOP, REC, OVERDUB, PLAY-START |
 | open mixer / main / grid / browser | MIX, MAIN, GRID, LOAD |
-| mute / solo a track | Track Mute mode: the track's pad / SHIFT + pad. Or the Main screen's MUTE / SOLO for the selected track |
+| mute / solo / arm the selected track | the MPC X's MUTE, SOLO, REC ARM notes (76, 77, 74), injected: `press_button MUTE` etc. Or the Main screen's MUTE / SOLO |
+| mute / solo any track | Track Mute mode: the track's pad / SHIFT + pad |
 | select a track | TRACK − / + on the Main screen, or tap its header in the mixer |
 | select a sequence | tap the sequence field on the Main screen, then the data wheel (`dial:N`) |
 
@@ -131,7 +133,6 @@ traffic and was inconclusive).
 
 ## Open questions
 
-- How record arm is toggled on a Key 37 (the `.xpj` has it; the mixer icon didn't respond to a tap).
 - The selected sequence and track live: the `.xpj` has them only as of the last save. The screen, or hooks in MPC.
 - The startup sysex (`62`–`64`, `41`, `5A`, `5B`) and CC 90–101.
 - As an MPC X: what the meter measures, reading the Q-Link displays as text (MPC's two fonts), and what the displays
