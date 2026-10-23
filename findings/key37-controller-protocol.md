@@ -64,9 +64,9 @@ polling.
 | Selected track's kind | pad colours | yes | a drum kit shows its pad colours; a melodic track shows the scale (root red, scale notes yellow) |
 | Undo available | UNDO LED | yes | blinks after an undoable change — *inferred* |
 | Unsaved changes | SAVE LED | yes | `04` modified, `01` after saving |
-| Meters | — | — | nothing: no continuous traffic during playback (the Key 37 has no meters to drive) |
+| Meters | LEDs 68–71, as an MPC X only | yes | none as a Key 37; as an MPC X, a stereo meter (below) |
 | Sequence selected | `.xpj` | when saved | nothing at all in the controller traffic when the sequence changed |
-| Selected track's number or name | `.xpj` | when saved | nothing direct in the traffic (only its pad colours) |
+| Selected track's number or name | `.xpj`; Q-Link displays as an MPC X | when saved; yes as an X | nothing direct in the Key 37's traffic (only its pad colours); as an MPC X its name is drawn on a display (below) |
 | Record arm per track | `.xpj` | when saved | `tracks[i].recordArm`; the mixer's arm icon shows it (tapping it didn't toggle it) |
 | Track names, kinds, colours, volume, pan; sequence names, tempo, length | `.xpj` | when saved | below |
 
@@ -103,9 +103,36 @@ Everything needed by the notes' API can be pressed or tapped:
 | select a track | TRACK − / + on the Main screen, or tap its header in the mixer |
 | select a sequence | tap the sequence field on the Main screen, then the data wheel (`dial:N`) |
 
+## As an MPC X (privtap identity=X)
+
+privtap 0.2.0 can pass the device off as another model: MPC's reads of the device tree's product code and compatible
+string are answered with an MPC X's (`ACV5`, `inmusic,acv5`), and the controller's family byte is swapped in Akai
+sysex both ways (`57` ↔ `3A`, also in the identity reply). MPC 3.9.1.2 starts normally that way, on a different first
+screen (the Sounds browser), with the same controller ports. Restarting with `identity=` empty brings the Key 37 back;
+the MPC X session left the settings and license files as they were (only `SESSION` and `MPC.crashinfo` change, as on
+every start).
+
+What MPC sends an MPC X and not a Key 37:
+
+| What | Message |
+|---|---|
+| **Stereo level meter** | LEDs 68 + 69 (left) and 70 + 71 (right), every 50 ms during playback. Each value is a thermometer bitmask (`01`, `03`, `07`, `0F` … `7F`), so a side's level is popcount(68) + popcount(69), 0–14 segments |
+| **Q-Link displays** | sysex `0B`: `<display 00–10> <first page> <last page> <first column> <last column> <pixels>`, a 128×32 monochrome display in pages of 8 rows; the pixels are 8-bit bytes (one column of 8 rows, bit 0 on top) packed into 7-bit MIDI bytes, most significant bit first. A full screen is 5 + 585 bytes. MPC draws live text on them: display 08 "CURRENT TRACK / Lead", 10 "TRACK / Lead", 02 "METRONOME ENABLE / Record". `tools/mpcx.py oled` draws them |
+| Q-Link rings, probably | sysex `0A`: `<knob 00–10> 00 03 00 7F 00 00` |
+| Settings, not decoded | sysex `66`, `67`, `68`, `69` (one byte each), `6A` (three entries) |
+
+LEDs that are off read `00` instead of the Key 37's dim `01`, and the Key 37's own LEDs (OCT, TC, LATCH, KEYBOARD
+CONTROL, CC 95–101) are no longer sent. Transport, view, pad bank and the selected track's mute (76) and solo (77) are
+the same as on the Key 37. While the identity is on, the Key 37's LEDs show MPC X states, so it is for experiments
+only.
+
+Not settled: whether the meter is the master output or the selected track (a second playback test produced no meter
+traffic and was inconclusive).
+
 ## Open questions
 
 - How record arm is toggled on a Key 37 (the `.xpj` has it; the mixer icon didn't respond to a tap).
 - The selected sequence and track live: the `.xpj` has them only as of the last save. The screen, or hooks in MPC.
 - The startup sysex (`62`–`64`, `41`, `5A`, `5B`) and CC 90–101.
-- Whether an MPC X identity (`iamX`) makes MPC send more, e.g. meters or per-track mute/solo/arm LEDs.
+- As an MPC X: what the meter measures, reading the Q-Link displays as text (MPC's two fonts), and what the displays
+  show in the other Q-Link modes (track volumes and pans in the mixer?).

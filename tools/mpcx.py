@@ -10,6 +10,7 @@ their place in the log, not by timestamp, so the marks can't drift against privt
     mpcx.py state [MARK]            the LED and pad state at a mark (default: now)
     mpcx.py events [FROM [TO]]      the decoded events between two marks
     mpcx.py marks                   the marks in the log
+    mpcx.py oled [N] [MARK]         the MPC X's Q-Link displays as text art, as MPC last drew them (privtap identity=X)
     mpcx.py shot FILE               save a screenshot
 
 Actions: press:NAME (hold:NAME:MS), down:NAME, up:NAME, tap:X,Y, inj:HEX (raw MIDI into the FIFO), dial:N (the data
@@ -162,8 +163,9 @@ def parse(lines):
 # ---- decoding
 
 def akai(msg):
-    """(command, payload) of an Akai sysex (F0 47 dev 57 cmd lenH lenL payload F7), else None."""
-    if len(msg) >= 8 and msg[0] == 0xF0 and msg[1] == 0x47 and msg[3] == 0x57 and msg[-1] == 0xF7:
+    """(command, payload) of an Akai sysex (F0 47 dev family cmd lenH lenL payload F7), else None. The family is the
+    Key 37's 57, or another model's when privtap's identity= is set (the log keeps MPC's bytes)."""
+    if len(msg) >= 8 and msg[0] == 0xF0 and msg[1] == 0x47 and msg[-1] == 0xF7:
         return msg[4], msg[7:-1]
     return None
 
@@ -297,6 +299,45 @@ def diff(a, b):
             if not (k[0] == "led" and k[2] in BLINKERS) and a.show(k) != b.show(k)]
 
 
+# ---- the MPC X's Q-Link displays (sysex 0B, sent when privtap passes the device off as an MPC X)
+
+OLED_W, OLED_PAGES = 128, 4   # 128 x 32 pixels, monochrome, in pages of 8 rows (SSD1306 style)
+
+
+def unpack7(data):
+    """8-bit bytes sent as a stream of 7-bit MIDI data bytes, most significant bit first."""
+    bits = "".join(f"{b & 0x7F:07b}" for b in data)
+    return [int(bits[i:i + 8], 2) for i in range(0, len(bits) - 7, 8)]
+
+
+def oled_screens(lines, until=None):
+    """Display number -> its pages of columns, from every 0B message (display, first page, last page, first column,
+    last column, then the pixels: one byte per column of 8 rows, bit 0 on top) up to the mark until."""
+    screens = {}
+    for item in parse(lines):
+        if item[1] == "mark" and item[2] == until:
+            break
+        if item[1] != "msg" or item[2] != "out":
+            continue
+        a = akai(item[4])
+        if not a or a[0] != 0x0B or len(a[1]) < 5:
+            continue
+        d, ps, pe, cs, ce = a[1][:5]
+        raw, i = unpack7(a[1][5:]), 0
+        fb = screens.setdefault(d, [[0] * OLED_W for _ in range(OLED_PAGES)])
+        for page in range(ps, pe + 1):
+            for col in range(cs, ce + 1):
+                if i < len(raw) and page < OLED_PAGES and col < OLED_W:
+                    fb[page][col] = raw[i]
+                i += 1
+    return screens
+
+
+def oled_text(fb):
+    return ["".join("#" if fb[page][c] >> bit & 1 else " " for c in range(OLED_W)).rstrip()
+            for page in range(OLED_PAGES) for bit in range(8)]
+
+
 # ---- actions
 
 def mark(label):
@@ -359,6 +400,12 @@ def main(argv):
     elif cmd == "events":
         _, _, events = scan(fetch_log(), argv[2] if len(argv) > 2 else None, argv[3] if len(argv) > 3 else None)
         print(*events, sep="\n")
+    elif cmd == "oled":
+        screens = oled_screens(fetch_log(), argv[3] if len(argv) > 3 else None)
+        for d in sorted(screens):
+            if len(argv) > 2 and argv[2] != "all" and int(argv[2], 0) != d:
+                continue
+            print(f"--- display {d:02X}", *oled_text(screens[d]), sep="\n")
     elif cmd == "marks":
         print(*[item[2] for item in parse(fetch_log()) if item[1] == "mark"], sep="\n")
     elif cmd == "shot":

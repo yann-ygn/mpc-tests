@@ -9,10 +9,10 @@ rawmidi ports inside the MPC process and:
   reads from the `... Private` port. The [MPC Remote addin](https://github.com/jacob-sabella/mpc-addin-remote) writes
   there when the device has no "Virtual RawMIDI" port, so this is what makes its `press_button` work on a stock device.
 
-> **Status:** running in MPC on a Key 37 (MPC 3.9.1.2) next to the MPC Remote addin 1.0.3: the traffic log works both
-> ways, and the remote addin's `press_button` MIX and GRID switched MPC's views through `/dev/midi_inject`. Offline:
-> 43 checks on the host (also under ASan/UBSan) and the same tests built for ARM and run on the Key 37 against a fake
-> alsa-lib.
+> **Status:** 0.2.0 running in MPC on a Key 37 (MPC 3.9.1.2) next to the MPC Remote addin 1.0.3: the traffic log works
+> both ways, the remote addin's `press_button` works through `/dev/midi_inject`, and `identity=X` ran MPC as an MPC X
+> (see `../findings/`). Offline: 44 checks, and 26 more with `identity=X`, on the host (also under ASan/UBSan) and built
+> for ARM on the Key 37 against a fake alsa-lib.
 
 ## Why it is needed on a Key 37
 
@@ -37,6 +37,10 @@ It interposes alsa-lib's `snd_rawmidi_open`, `_read`, `_write`, `_close` and `_n
   press can't land inside a hardware message or sysex. Running status is written out in full.
 - Symbols are found through libc's own `dlsym`, fetched by version: the commander addin exports a `dlsym`, which breaks
   plain `dlsym(RTLD_NEXT)` for every shim preloaded with it (mpc-vst-plugins NOTES, 2026-10-13).
+- With `identity=`, MPC's reads of the device tree's product code and compatible string (`open`, `open64`,
+  `__open64_2`, `openat64`, `fopen64` and the plain forms; MPC and libaz0x-info both read them) are answered from
+  memory, and the controller's family byte is swapped in Akai sysex both ways, including its identity reply. The log
+  keeps each side's bytes as sent. After TheKikGen's tkgl_mpcmapper `--tkgl_iamX`, without its virtual ports.
 - The library exports its hooks and nothing else (`src/exports.map`, checked by `build.sh`). Without that, Zig's
   runtime exports `memcpy`, `memset` and the math functions, which would replace libc's for all of MPC.
 
@@ -50,6 +54,7 @@ It interposes alsa-lib's `snd_rawmidi_open`, `_read`, `_write`, `_close` and `_n
 | `log_path` | `/tmp/privtap.log` | `/tmp` is in RAM on these devices |
 | `log_max_kb` | `4096` | past this the log moves to `<log_path>.1` and a new one starts |
 | `inject` | `/dev/midi_inject` | the FIFO; `none` turns injection off |
+| `identity` | empty | pass the device off as another model (`X`, `LIVE`, `LIVE2`, `ONE`, `FORCE`; only `X` tried), read when MPC starts. For experiments: the hardware's LEDs then show that model's states |
 
 ## The log
 
