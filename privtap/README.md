@@ -9,8 +9,10 @@ rawmidi ports inside the MPC process and:
   reads from the `... Private` port. The [MPC Remote addin](https://github.com/jacob-sabella/mpc-addin-remote) writes
   there when the device has no "Virtual RawMIDI" port, so this is what makes its `press_button` work on a stock device.
 
-> **Status:** tested offline only: 43 checks on the host (also under ASan/UBSan) and the same tests built for ARM and
-> run on a Key 37 (MPC 3.9.1.2) against a fake alsa-lib. Not yet loaded into MPC itself.
+> **Status:** running in MPC on a Key 37 (MPC 3.9.1.2) next to the MPC Remote addin 1.0.3: the traffic log works both
+> ways, and the remote addin's `press_button` MIX and GRID switched MPC's views through `/dev/midi_inject`. Offline:
+> 43 checks on the host (also under ASan/UBSan) and the same tests built for ARM and run on the Key 37 against a fake
+> alsa-lib.
 
 ## Why it is needed on a Key 37
 
@@ -74,7 +76,8 @@ printf '\x90\x52\x7f' > /dev/midi_inject; sleep 0.1; printf '\x90\x52\x00' > /de
 
 The remote addin's `press_button` writes here once it knows the button. The Key 37 has no built-in profile, and
 `learn_button` can't hear the buttons (see above), so build `/data/mpc-addins/remote/buttons.conf` (`NAME=note
-[channel]`) from the log: press each button once and read its note.
+[channel]`) from the log: press each button once and read its note. `profiles/mpc-key-37-buttons.conf` is the one read
+so far; the notes match the MPC Live's (MENU 123, REC 73, STOP 81, PLAY 82 ...).
 
 ## Build and test
 
