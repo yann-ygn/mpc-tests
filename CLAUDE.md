@@ -42,6 +42,6 @@ before running experiments.
 
 ## Tracking
 
-- Git: work is on branch `privtap` (not pushed to github.com/yann-ygn/mpc-tests yet).
+- Git: github.com/yann-ygn/mpc-tests, `main` (default) and `privtap`.
 - Taiga: project "MPC Key 37 API" (id 24). Move a story's status when its work starts or ends.
 - Next step: the state service prototype (Taiga #18).
