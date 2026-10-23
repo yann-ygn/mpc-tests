@@ -1,0 +1,8 @@
+# privtap, for the shared addin installer of mpc-vst-plugins (tools/release/addin; the keys are in its docs/ADDINS.md).
+ADDIN_ID=privtap
+ADDIN_NAME="privtap"
+ADDIN_SO=privtap.so
+ADDIN_CONF=privtap.conf
+ADDIN_FILES=""
+ADDIN_DONE="Traffic log: /tmp/privtap.log. MIDI written to /dev/midi_inject reaches MPC as if from the hardware."
+ADDIN_NETWORK=""

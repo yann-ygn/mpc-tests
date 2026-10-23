@@ -1,0 +1,14 @@
+/* What privtap.so exports: its hooks, nothing else. Without this, the compiler's runtime (Zig's compiler_rt: memcpy,
+   memset, the math functions ...) would be exported too, and being preloaded, would replace libc's for all of MPC. */
+{
+    global:
+        snd_rawmidi_open;
+        snd_rawmidi_close;
+        snd_rawmidi_read;
+        snd_rawmidi_write;
+        snd_rawmidi_nonblock;
+        poll;
+        __poll_chk;
+    local:
+        *;
+};
