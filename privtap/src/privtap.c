@@ -17,7 +17,15 @@
 //   log_max_kb=4096          past this the log moves to <log_path>.1 and a new one starts
 //   inject=/dev/midi_inject  the FIFO, created when the private input opens and removed at exit; none: no injection.
 //                            Read once, when the private input first opens.
-// Log lines: "<seconds> <in|out|inj> <port>: <hex bytes>", and "<seconds> # <event>" (monotonic clock).
+//   identity=                another MPC model to pass the device off as (X, LIVE, LIVE2, ONE, FORCE), to see what MPC
+//                            sends that model's hardware; empty: the device is itself. Read once, when MPC starts.
+// Log lines: "<seconds> <in|out|inj> <port>: <hex bytes>", and "<seconds> # <event>" (monotonic clock). With an
+// identity, "in" is what the hardware sent and "out" what MPC sent, before the rewrites below.
+//
+// Identity: MPC learns its model from the device tree's product code and compatible string (MPC and libaz0x-info both
+// read them) and checks the controller's identity reply. The two files are answered from memory, and the controller's
+// family byte is swapped in Akai sysex both ways: in the identity reply (F0 7E dd 06 02 47 <family> ...) and in
+// F0 47 dd <family> .... From TheKikGen's tkgl_mpcmapper (--tkgl_iamX), without its virtual ports and routing.
 
 #define _GNU_SOURCE
 #include <dlfcn.h>
@@ -30,11 +38,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
-#define PRIVTAP_VERSION "0.1.0"
+#define PRIVTAP_VERSION "0.2.0"
 
 typedef struct _snd_rawmidi snd_rawmidi_t;
 typedef struct _snd_rawmidi_info snd_rawmidi_info_t;
@@ -53,11 +63,36 @@ static ssize_t (*real_write)(snd_rawmidi_t *, const void *, size_t);
 static int (*real_nonblock)(snd_rawmidi_t *, int);
 static int (*real_poll)(struct pollfd *, nfds_t, int);
 
+struct sx {             // where a stream is in a sysex message, for the identity rewrites
+    int pos;            // the next byte's index after F0; -1 outside a sysex
+    unsigned char hdr[8];
+    int ident;          // this is the hardware's identity reply
+};
+
 struct port {
     snd_rawmidi_t *h;
     int out, fd, nonblock;
     char name[64];      // the subdevice's name, e.g. "MPC Private"
+    struct sx sx;       // MPC's writes, for the identity rewrites
 };
+
+// The models a device can pass for (tkgl_mpcmapper's table). Only X has been tried.
+struct identity {
+    const char *name, *code, *compatible;
+    unsigned char family, reply[7];
+};
+static const struct identity IDENTITIES[] = {
+    {"X", "ACV5", "inmusic,acv5", 0x3A, {0x3A, 0x00, 0x19, 0x00, 0x01, 0x01, 0x01}},
+    {"LIVE", "ACV8", "inmusic,acv8", 0x3B, {0x3B, 0x00, 0x19, 0x00, 0x01, 0x01, 0x01}},
+    {"FORCE", "ADA2", "inmusic,ada2", 0x40, {0x40, 0x00, 0x19, 0x00, 0x00, 0x04, 0x03}},
+    {"ONE", "ACVA", "inmusic,acva", 0x46, {0x46, 0x00, 0x19, 0x00, 0x01, 0x01, 0x01}},
+    {"LIVE2", "ACVB", "inmusic,acvb", 0x47, {0x47, 0x00, 0x19, 0x00, 0x01, 0x01, 0x01}},
+};
+static char identity_name[16];
+static const struct identity *spoof;   // NULL: the device is itself
+static pthread_once_t spoof_once = PTHREAD_ONCE_INIT;
+static int hw_family = -1;             // the hardware's own family byte, from its first identity reply
+static struct sx in_sx = {-1, {0}, 0}; // the hardware's stream (under lock)
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;   // the ports, the queues and the parser
 static struct port ports[MAXPORTS];
@@ -229,6 +264,8 @@ static void load_conf(void)
             log_max = (atol(v) < 64 ? 64 : atol(v)) * 1024;
         else if (!strcmp(k, "inject"))
             snprintf(inject_path, sizeof inject_path, "%s", v);
+        else if (!strcmp(k, "identity"))
+            snprintf(identity_name, sizeof identity_name, "%s", v);
         else if (!strcmp(k, "log_path") && *v && strcmp(v, log_path)) {
             pthread_mutex_lock(&log_lock);
             snprintf(log_path, sizeof log_path, "%s", v);
@@ -536,6 +573,177 @@ __attribute__((destructor)) static void privtap_fini(void)
         unlink(fifo_path);
 }
 
+// ---- identity
+
+static void spoof_init(void)
+{
+    conf_check(1);
+    for (size_t i = 0; i < sizeof IDENTITIES / sizeof *IDENTITIES; i++)
+        if (!strcasecmp(identity_name, IDENTITIES[i].name))
+            spoof = &IDENTITIES[i];
+    if (spoof)
+        logf_("identity: passing this device off as %s (%s, family %02X)", spoof->name, spoof->code, spoof->family);
+    else if (identity_name[0] && strcasecmp(identity_name, "none"))
+        logf_("identity: '%s' isn't X, LIVE, LIVE2, ONE or FORCE: the device stays itself", identity_name);
+}
+
+#define DT "/sys/firmware/devicetree/base/"
+
+// An fd reading the spoofed model's product code or compatible string, if path is one of those files and an identity
+// is set; else -2.
+static int fake_fd(const char *path)
+{
+    static int told[2];
+    if (!path || strncmp(path, DT, sizeof DT - 1))
+        return -2;
+    int code = !strcmp(path + sizeof DT - 1, "inmusic,product-code");
+    if (!code && strcmp(path + sizeof DT - 1, "compatible"))
+        return -2;
+    pthread_once(&spoof_once, spoof_init);
+    if (!spoof)
+        return -2;
+    // Device-tree strings end in a NUL, and a list of them is NUL-separated.
+    char buf[96];
+    int n = code ? sprintf(buf, "%s", spoof->code) + 1 : 0;
+    if (!code) {
+        n += sprintf(buf + n, "%s", spoof->compatible) + 1;
+        n += sprintf(buf + n, "inmusic,az01") + 1;
+        n += sprintf(buf + n, "rockchip,rk3288") + 1;
+    }
+    int fd = memfd_create(code ? "product-code" : "compatible", MFD_CLOEXEC);
+    if (fd < 0 || write(fd, buf, (size_t)n) != n || lseek(fd, 0, SEEK_SET)) {
+        if (fd >= 0)
+            close(fd);
+        logf_("identity: can't fake %s: %s", path, strerror(errno));
+        return -2;
+    }
+    if (!told[code]) {
+        told[code] = 1;
+        logf_("identity: %s read as %s's", path, spoof->name);
+    }
+    return fd;
+}
+
+// One byte of a stream, rewritten for the identity: to_mpc is the hardware's stream, else MPC's.
+static unsigned char sx_byte(struct sx *s, unsigned char b, int to_mpc)
+{
+    if (b >= 0xF8)   // real time, which may sit inside a sysex
+        return b;
+    if (b == 0xF0) {
+        s->pos = 1;
+        s->hdr[0] = b;
+        s->ident = 0;
+        return b;
+    }
+    if (b & 0x80) {  // F7, or any status, ends it
+        s->pos = -1;
+        return b;
+    }
+    if (s->pos < 0)
+        return b;
+    int p = s->pos++;
+    if (p < (int)sizeof s->hdr)
+        s->hdr[p] = b;
+    const unsigned char *h = s->hdr;
+    if (to_mpc) {
+        if (p == 6 && h[1] == 0x7E && h[3] == 0x06 && h[4] == 0x02 && h[5] == 0x47) {   // an Akai identity reply
+            if (hw_family < 0) {
+                hw_family = b;
+                logf_("identity: the hardware is family %02X, shown to MPC as %02X", b, spoof->family);
+            }
+            s->ident = b == hw_family;
+        }
+        if (s->ident && p >= 6 && p <= 12)
+            return spoof->reply[p - 6];
+        if (p == 3 && h[1] == 0x47 && b == hw_family)
+            return spoof->family;
+    } else if (p == 3 && h[1] == 0x47 && b == spoof->family && hw_family >= 0)
+        return (unsigned char)hw_family;
+    return b;
+}
+
+// The file opens MPC and libaz0x-info use. Only reading the two device-tree files is ever answered differently.
+static int (*libc_open)(const char *, int, ...);
+static int (*libc_open64)(const char *, int, ...);
+static int (*libc_open_2)(const char *, int);
+static int (*libc_open64_2)(const char *, int);
+static int (*libc_openat)(int, const char *, int, ...);
+static int (*libc_openat64)(int, const char *, int, ...);
+static FILE *(*libc_fopen)(const char *, const char *);
+static FILE *(*libc_fopen64)(const char *, const char *);
+
+#define READ_ONLY(flags) (((flags) & O_ACCMODE) == O_RDONLY && !((flags) & O_CREAT))
+#define NEEDS_MODE(flags) (((flags) & O_CREAT) || ((flags) & O_TMPFILE) == O_TMPFILE)
+#define OPEN_HOOK(libc, sym, ...)                                                                                  \
+    {                                                                                                                  \
+        mode_t mode = 0;                                                                                               \
+        if (NEEDS_MODE(flags)) {                                                                                       \
+            va_list ap;                                                                                                \
+            va_start(ap, flags);                                                                                       \
+            mode = (mode_t)va_arg(ap, int);                                                                            \
+            va_end(ap);                                                                                                \
+        }                                                                                                              \
+        int fd;                                                                                                        \
+        if (READ_ONLY(flags) && (fd = fake_fd(path)) != -2)                                                            \
+            return fd;                                                                                                 \
+        if (!RESOLVE(libc, sym)) {                                                                                     \
+            errno = ENOSYS;                                                                                            \
+            return -1;                                                                                                 \
+        }                                                                                                              \
+        return libc(__VA_ARGS__, mode);                                                                                \
+    }
+
+API int open(const char *path, int flags, ...) OPEN_HOOK(libc_open, "open", path, flags)
+API int open64(const char *path, int flags, ...) OPEN_HOOK(libc_open64, "open64", path, flags)
+API int openat(int dir, const char *path, int flags, ...) OPEN_HOOK(libc_openat, "openat", dir, path, flags)
+API int openat64(int dir, const char *path, int flags, ...)
+    OPEN_HOOK(libc_openat64, "openat64", dir, path, flags)
+
+// The fortified forms (_FORTIFY_SOURCE), which take no mode.
+API int __open_2(const char *path, int flags)
+{
+    int fd;
+    if (READ_ONLY(flags) && (fd = fake_fd(path)) != -2)
+        return fd;
+    if (!RESOLVE(libc_open_2, "__open_2")) {
+        errno = ENOSYS;
+        return -1;
+    }
+    return libc_open_2(path, flags);
+}
+
+API int __open64_2(const char *path, int flags)
+{
+    int fd;
+    if (READ_ONLY(flags) && (fd = fake_fd(path)) != -2)
+        return fd;
+    if (!RESOLVE(libc_open64_2, "__open64_2")) {
+        errno = ENOSYS;
+        return -1;
+    }
+    return libc_open64_2(path, flags);
+}
+
+static FILE *fopen_hook(const char *path, const char *mode, FILE *(**libc)(const char *, const char *),
+                        const char *sym)
+{
+    int fd;
+    if (mode && mode[0] == 'r' && !strchr(mode, '+') && (fd = fake_fd(path)) != -2) {
+        FILE *f = fdopen(fd, "r");
+        if (!f)
+            close(fd);
+        return f;
+    }
+    if (!RESOLVE(*libc, sym)) {
+        errno = ENOSYS;
+        return NULL;
+    }
+    return (*libc)(path, mode);
+}
+
+API FILE *fopen(const char *path, const char *mode) { return fopen_hook(path, mode, &libc_fopen, "fopen"); }
+API FILE *fopen64(const char *path, const char *mode) { return fopen_hook(path, mode, &libc_fopen64, "fopen64"); }
+
 // ---- the hooks
 
 static void info_names(snd_rawmidi_t *h, char *dev, char *sub, size_t n)
@@ -577,6 +785,7 @@ static void track(snd_rawmidi_t *h, int out, const char *alsa_name, int mode)
         p->out = out;
         p->fd = fd;
         p->nonblock = (mode & SND_RAWMIDI_NONBLOCK) != 0;
+        p->sx.pos = -1;
         snprintf(p->name, sizeof p->name, "%s", sub[0] ? sub : dev[0] ? dev : alsa_name ? alsa_name : "?");
         if (!out && (strstr(sub, "Private") || strstr(dev, "Private"))) {
             priv = 1;
@@ -604,8 +813,9 @@ static void say_hello(void)
     time_t t = time(NULL);
     struct tm tm;
     strftime(when, sizeof when, "%Y-%m-%d %H:%M:%S", localtime_r(&t, &tm));
-    logf_("privtap %s in pid %d (%s) at %s, settings %s, traffic log %s", PRIVTAP_VERSION, (int)getpid(), exe, when,
-          conf_path[0] ? conf_path : "(none)", log_traffic ? "on" : "off");
+    logf_("privtap %s in pid %d (%s) at %s, settings %s, traffic log %s%s%s", PRIVTAP_VERSION, (int)getpid(), exe, when,
+          conf_path[0] ? conf_path : "(none)", log_traffic ? "on" : "off", spoof ? ", identity " : "",
+          spoof ? spoof->name : "");
 }
 
 API int snd_rawmidi_open(snd_rawmidi_t **in, snd_rawmidi_t **out, const char *name, int mode)
@@ -613,6 +823,7 @@ API int snd_rawmidi_open(snd_rawmidi_t **in, snd_rawmidi_t **out, const char *na
     static pthread_once_t hello = PTHREAD_ONCE_INIT;
     if (!RESOLVE(real_open, "snd_rawmidi_open"))
         return -ENOSYS;
+    pthread_once(&spoof_once, spoof_init);
     int r = real_open(in, out, name, mode);
     if (r == 0) {
         conf_check(1);
@@ -668,7 +879,21 @@ API ssize_t snd_rawmidi_write(snd_rawmidi_t *h, const void *buffer, size_t size)
 {
     if (!RESOLVE(real_write, "snd_rawmidi_write"))
         return -ENOSYS;
-    ssize_t r = real_write(h, buffer, size);
+    const void *send = buffer;
+    unsigned char local[1024], *copy = NULL;
+    if (spoof && size) {
+        pthread_mutex_lock(&lock);
+        struct port *p = find(h);
+        if (p && (copy = size <= sizeof local ? local : malloc(size))) {
+            for (size_t i = 0; i < size; i++)
+                copy[i] = sx_byte(&p->sx, ((const unsigned char *)buffer)[i], 0);
+            send = copy;
+        }
+        pthread_mutex_unlock(&lock);
+    }
+    ssize_t r = real_write(h, send, size);
+    if (copy && copy != local)
+        free(copy);
     if (r > 0) {
         conf_check(0);
         if (log_traffic) {
@@ -739,7 +964,7 @@ API ssize_t snd_rawmidi_read(snd_rawmidi_t *h, void *buffer, size_t size)
             return r;
         }
         for (ssize_t i = 0; i < r; i++)
-            real_byte(tmp[i]);
+            real_byte(spoof ? sx_byte(&in_sx, tmp[i], 1) : tmp[i]);
     }
     pthread_mutex_unlock(&lock);
     return (ssize_t)n;

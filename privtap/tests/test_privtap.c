@@ -1,5 +1,6 @@
 // privtap's host tests: run with privtap.so preloaded over libfakeasound.so (build.sh test). The test plays MPC (poll
 // on a wake fd of its own and the private input, then read), the fake controller's hardware, and a FIFO writer.
+// With PRIVTAP_TEST_IDENTITY=X it runs the identity tests instead (the identity is fixed for a process's life).
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
@@ -24,6 +25,10 @@ int fake_hw_fd(int sub);
 size_t fake_out(int sub, unsigned char *buf, size_t n);
 
 static char dir[64], fifo[128], logp[128], conf[128];
+static const char *identity = "";
+static const char DT_CODE[] = "/sys/firmware/devicetree/base/inmusic,product-code";
+static const char DT_COMPAT[] = "/sys/firmware/devicetree/base/compatible";
+int __open64_2(const char *, int);
 static int checks, fails;
 
 #define CHECK(cond, ...)                                                                                               \
@@ -133,7 +138,8 @@ static int log_has(const char *needle)
 static void write_conf(int log)
 {
     FILE *f = fopen(conf, "w");
-    fprintf(f, "# test settings\nlog = %d\nlog_path=%s   # trailing comment\ninject=%s\n", log, logp, fifo);
+    fprintf(f, "# test settings\nlog = %d\nlog_path=%s   # trailing comment\ninject=%s\nidentity=%s\n", log, logp, fifo,
+            identity);
     fclose(f);
 }
 
@@ -187,6 +193,99 @@ static void *read_once(void *arg)
     return NULL;
 }
 
+static size_t read_fd(int fd, char *buf, size_t n)
+{
+    ssize_t r = fd >= 0 ? read(fd, buf, n) : -1;
+    if (fd >= 0)
+        close(fd);
+    return r > 0 ? (size_t)r : 0;
+}
+
+// identity=X: the device tree reads as an MPC X's, and the controller's family byte is swapped both ways.
+static void identity_tests(void)
+{
+    unsigned char got[1024];
+    char buf[128];
+    size_t n;
+    static const char want_compat[] = "inmusic,acv5\0inmusic,az01\0rockchip,rk3288";   // sizeof counts the last NUL
+
+    // Whichever open MPC or libaz0x-info uses.
+    n = read_fd(open(DT_CODE, O_RDONLY), buf, sizeof buf);
+    CHECK(n == 5 && !memcmp(buf, "ACV5", 5), "open: the product code read %zu bytes", n);
+    n = read_fd(open64(DT_CODE, O_RDONLY | O_CLOEXEC), buf, sizeof buf);
+    CHECK(n == 5 && !memcmp(buf, "ACV5", 5), "open64: the product code read %zu bytes", n);
+    n = read_fd(__open64_2(DT_CODE, O_RDONLY), buf, sizeof buf);
+    CHECK(n == 5 && !memcmp(buf, "ACV5", 5), "__open64_2: the product code read %zu bytes", n);
+    n = read_fd(openat64(AT_FDCWD, DT_CODE, O_RDONLY), buf, sizeof buf);
+    CHECK(n == 5 && !memcmp(buf, "ACV5", 5), "openat64: the product code read %zu bytes", n);
+    n = read_fd(openat(AT_FDCWD, DT_COMPAT, O_RDONLY), buf, sizeof buf);
+    CHECK(n == sizeof want_compat && !memcmp(buf, want_compat, n), "openat: compatible read %zu bytes", n);
+    FILE *f = fopen64(DT_COMPAT, "r");
+    n = f ? fread(buf, 1, sizeof buf, f) : 0;
+    if (f)
+        fclose(f);
+    CHECK(n == sizeof want_compat && !memcmp(buf, want_compat, n), "fopen64: compatible read %zu bytes", n);
+    f = fopen(DT_CODE, "re");
+    n = f ? fread(buf, 1, sizeof buf, f) : 0;
+    if (f)
+        fclose(f);
+    CHECK(n == 5 && !memcmp(buf, "ACV5", 5), "fopen: the product code read %zu bytes", n);
+    int fd = open(DT_CODE, O_RDWR);
+    CHECK(fd < 0, "opening the product code to write isn't answered from memory");
+    if (fd >= 0)
+        close(fd);
+    errno = 0;
+    CHECK(open("/sys/firmware/devicetree/base/no-such-file", O_RDONLY) < 0 && errno == ENOENT, "other files: untouched");
+
+    snd_rawmidi_t *pin, *pubout;
+    CHECK(snd_rawmidi_open(&pin, NULL, "hw:9,0,1", 0) == 0, "open private in");
+    CHECK(snd_rawmidi_open(NULL, &pubout, "hw:9,0,0", 0) == 0, "open public out");
+
+    hw("F0 47 7F 57 53 00 01 01 F7");
+    n = collect(pin, 200, got, sizeof got, 64);
+    expect("Akai sysex before the identity reply: as it is", got, n, "F0 47 7F 57 53 00 01 01 F7");
+
+    hw("F0 7E 00 06 02 47 57 00 19 00 00 03 00 7F 41 31 32 F7");
+    n = collect(pin, 200, got, sizeof got, 64);
+    expect("the identity reply: the X's family and version", got, n,
+           "F0 7E 00 06 02 47 3A 00 19 00 01 01 01 7F 41 31 32 F7");
+
+    hw("F0 47 7F 57 53 00 05 6E 6B 2D 79 01 F7");
+    n = collect(pin, 200, got, sizeof got, 64);
+    expect("Akai sysex from the hardware: the X's family", got, n, "F0 47 7F 3A 53 00 05 6E 6B 2D 79 01 F7");
+
+    hw("F0 47");
+    struct script s1 = {{"w100", "h7F 57 53 F7"}};
+    n = collect_with(pin, &s1, 400, got, sizeof got);
+    expect("a sysex split across reads", got, n, "F0 47 7F 3A 53 F7");
+
+    hw("F0 47 F8 7F 57 53 F7");
+    n = collect(pin, 200, got, sizeof got, 64);
+    expect("real time inside a sysex", got, n, "F0 47 F8 7F 3A 53 F7");
+
+    hw("F0 41 7F 57 F7 90 57 7F");
+    n = collect(pin, 200, got, sizeof got, 64);
+    expect("other sysex and notes: untouched", got, n, "F0 41 7F 57 F7 90 57 7F");
+
+    unsigned char pad[] = {0xF0, 0x47, 0x7F, 0x3A, 0x65, 0x00, 0x04, 0x00, 0x7F, 0x00, 0x00, 0xF7};
+    CHECK(snd_rawmidi_write(pubout, pad, sizeof pad) == (ssize_t)sizeof pad, "write");
+    n = fake_out(0, got, sizeof got);
+    expect("MPC's sysex: the hardware's family", got, n, "F0 47 7F 57 65 00 04 00 7F 00 00 F7");
+    unsigned char a[] = {0xF0, 0x47, 0x7F}, b[] = {0x3A, 0x65, 0x00, 0xF7}, other[] = {0xF0, 0x00, 0x20, 0x3A, 0xF7};
+    snd_rawmidi_write(pubout, a, sizeof a);
+    snd_rawmidi_write(pubout, b, sizeof b);
+    snd_rawmidi_write(pubout, other, sizeof other);
+    n = fake_out(0, got, sizeof got);
+    expect("split across writes; other sysex untouched", got, n, "F0 47 7F 57 65 00 F7 F0 00 20 3A F7");
+
+    CHECK(log_has("# identity: passing this device off as X (ACV5, family 3A)"), "log: the identity");
+    CHECK(log_has("# identity: /sys/firmware/devicetree/base/inmusic,product-code read as X's"), "log: product code");
+    CHECK(log_has("# identity: the hardware is family 57, shown to MPC as 3A"), "log: the hardware's family");
+    CHECK(log_has(", identity X"), "log: hello");
+    CHECK(log_has(" out Fake Public: F0 47 7F 3A 65 00 04 00 7F 00 00 F7"), "log: MPC's sysex as MPC sent it");
+    CHECK(log_has(" in  Fake Private: F0 7E 00 06 02 47 57 00 19"), "log: the hardware's reply as it sent it");
+}
+
 int main(void)
 {
     unsigned char got[1024];
@@ -197,10 +296,22 @@ int main(void)
     snprintf(fifo, sizeof fifo, "%s/midi_inject", dir);
     snprintf(logp, sizeof logp, "%s/privtap.log", dir);
     snprintf(conf, sizeof conf, "%s/privtap.conf", dir);
+    if (getenv("PRIVTAP_TEST_IDENTITY"))
+        identity = getenv("PRIVTAP_TEST_IDENTITY");
     write_conf(1);
     setenv("PRIVTAP_CONF", conf, 1);
     if (pipe(own_wake))
         return 2;
+    if (identity[0]) {
+        identity_tests();
+        goto done;
+    }
+
+    // Without an identity, the device tree is the device's own.
+    char dt[16];
+    int dtfd = open(DT_CODE, O_RDONLY);
+    size_t dtn = dtfd >= 0 ? read_fd(dtfd, dt, sizeof dt) : 0;
+    CHECK(dtfd >= 0 ? dtn < 4 || memcmp(dt, "ACV5", 4) : errno == ENOENT, "no identity: the product code isn't faked");
 
     // The FIFO exists while a process has the private input open, and goes when it exits.
     pid_t pid = fork();
@@ -353,7 +464,8 @@ int main(void)
     CHECK(log_has("# close Fake Private"), "log: close");
     CHECK(log_has("inject: 3 bytes dropped (the private input isn't open)"), "log: dropped after close");
 
-    printf("%d checks, %d failed\n", checks, fails);
+done:
+    printf("%d checks, %d failed%s%s\n", checks, fails, identity[0] ? ", identity " : "", identity);
     if (!fails) {
         char cmd[200];
         snprintf(cmd, sizeof cmd, "rm -rf %s", dir);

@@ -42,6 +42,7 @@ test)
     gcc -O1 -g -Wall -Wextra -Werror -std=gnu11 tests/test_privtap.c -L$B -lfakeasound -Wl,-rpath,"$PWD/$B" -lpthread \
         -o $B/test_privtap
     LD_PRELOAD="$PWD/$B/privtap.so" $B/test_privtap
+    LD_PRELOAD="$PWD/$B/privtap.so" PRIVTAP_TEST_IDENTITY=X $B/test_privtap
     ;;
 device-test)
     # The ARM build and the tests, run on a device in a folder of /tmp: a process of their own, MPC isn't touched.
@@ -56,8 +57,8 @@ device-test)
     $T tests/test_privtap.c -L$B -lfakeasound -Wl,-rpath,/tmp/privtap-device-test -lpthread -o $B/test_privtap
     ssh "root@$HOST" 'rm -rf /tmp/privtap-device-test && mkdir /tmp/privtap-device-test'
     scp -q $B/privtap.so $B/libfakeasound.so $B/test_privtap "root@$HOST:/tmp/privtap-device-test/"
-    ssh "root@$HOST" 'cd /tmp/privtap-device-test && LD_BIND_NOW=1 LD_PRELOAD=/tmp/privtap-device-test/privtap.so ./test_privtap;
-        r=$?; cd / && rm -rf /tmp/privtap-device-test; exit $r'
+    ssh "root@$HOST" 'cd /tmp/privtap-device-test && export LD_BIND_NOW=1 LD_PRELOAD=/tmp/privtap-device-test/privtap.so &&
+        ./test_privtap && PRIVTAP_TEST_IDENTITY=X ./test_privtap; r=$?; cd / && rm -rf /tmp/privtap-device-test; exit $r'
     ;;
 package)
     arm
