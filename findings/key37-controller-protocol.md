@@ -63,10 +63,33 @@ polling.
 | Multi Rec on | LED 74 (`0x4A`) | yes | `03` on |
 | Selected track's kind | pad colours | yes | a drum kit shows its pad colours; a melodic track shows the scale (root red, scale notes yellow) |
 | Undo available | UNDO LED | yes | blinks after an undoable change — *inferred* |
+| Unsaved changes | SAVE LED | yes | `04` modified, `01` after saving |
 | Meters | — | — | nothing: no continuous traffic during playback (the Key 37 has no meters to drive) |
-| Sequence selected | — | — | nothing at all when the sequence changed |
-| Selected track's number or name | — | — | nothing direct (only its pad colours) |
-| Record arm per track | — | — | not found: the mixer's arm icon didn't toggle by tapping |
+| Sequence selected | `.xpj` | when saved | nothing at all in the controller traffic when the sequence changed |
+| Selected track's number or name | `.xpj` | when saved | nothing direct in the traffic (only its pad colours) |
+| Record arm per track | `.xpj` | when saved | `tracks[i].recordArm`; the mixer's arm icon shows it (tapping it didn't toggle it) |
+| Track names, kinds, colours, volume, pan; sequence names, tempo, length | `.xpj` | when saved | below |
+
+## The project file (.xpj)
+
+A 3.x project is gzip-compressed text: five header lines (`ACVS`, `3.9.1.2`, `SerialisableProjectData`, `json`,
+`Linux`), then the project as JSON (7.8 MB for the demo). The ACVS header is inside the gzip stream, not in front of
+it. The bundled demos are MPC 2 projects in XML and only become this format once saved. `tools/xpj.py` decodes one,
+summarises it, or diffs two saves.
+
+Two saves of the demo, with track 3 muted and track 2 soloed in between, differed in exactly four values:
+
+| Path | Change |
+|---|---|
+| `tracks[1].program.mixable.solo` | false → true |
+| `tracks[2].program.mixable.mute` | false → true |
+| `sequences[0].value.trackClipMaps[0][<"Program 001">].perClipParameterValues[{256, 257}]` | 0 → 1: the mute in that sequence (`trackMutePerSequence` is on); the clip maps are keyed by track name |
+| `engineMode` | "Browser" → "Track Mute": the mode on screen is saved too |
+
+Also there: `currentTrackIndex`, `currentSequence`, `tracks[i]` (name, `colour` as 24-bit RGB, `recordArm`, volume,
+pan, `program.type`: 0 drum, 3 plugin, 6 audio; after the user's tracks come the buses: 7 return, 8 submix, 9
+outputs), `sequences[j].value` (name, `bpm`, `lengthBars`, loop points). The top-level `tracks[i].mute` did not change
+when a track was muted.
 
 ## Commands
 
@@ -82,7 +105,7 @@ Everything needed by the notes' API can be pressed or tapped:
 
 ## Open questions
 
-- Record arm per track, and where MPC shows it.
-- The selected sequence and track: from the screen, a 3.x `.xpj` (the demos are MPC 2 XML) or hooks in MPC.
+- How record arm is toggled on a Key 37 (the `.xpj` has it; the mixer icon didn't respond to a tap).
+- The selected sequence and track live: the `.xpj` has them only as of the last save. The screen, or hooks in MPC.
 - The startup sysex (`62`–`64`, `41`, `5A`, `5B`) and CC 90–101.
 - Whether an MPC X identity (`iamX`) makes MPC send more, e.g. meters or per-track mute/solo/arm LEDs.
