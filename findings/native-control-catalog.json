@@ -1,0 +1,2471 @@
+{
+  "date": "2026-10-24",
+  "firmware": "3.9.1.2",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "scope": "Local copied MPC executable only. No device calls performed for this inventory.",
+  "interpretation": "Named methods/properties referenced in registration implementations. Property writability, runtime wrapper instances, argument ABI/ranges and platform support remain unverified except the three previous native property tests. Short inline names were manually checked. This is not a supported/exported API.",
+  "classCount": 37,
+  "namedRegistrationCount": 368,
+  "classes": [
+    {
+      "class": "ScriptableCurrentSequenceWrapper",
+      "vtableRva": "0x68e16d8",
+      "registrationRva": "0x1042f00",
+      "names": [
+        {
+          "name": "BPM",
+          "evidenceSiteRva": "0x1042f94",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetBPM",
+          "evidenceSiteRva": "0x104308c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetCurrentSequence",
+          "evidenceSiteRva": "0x1043228",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableCurrentSongWrapper",
+      "vtableRva": "0x68968dc",
+      "registrationRva": "0x1052af8",
+      "names": [
+        {
+          "name": "SetCurrentSong",
+          "evidenceSiteRva": "0x1052b5c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetName",
+          "evidenceSiteRva": "0x1052c38",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "PushStep",
+          "evidenceSiteRva": "0x1052d04",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "InsertStep",
+          "evidenceSiteRva": "0x1052e28",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "DeleteStep",
+          "evidenceSiteRva": "0x1052f68",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ModifySequence",
+          "evidenceSiteRva": "0x105302c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ModifyRepeats",
+          "evidenceSiteRva": "0x1053130",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Clear",
+          "evidenceSiteRva": "0x1053234",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableModeMenu",
+      "vtableRva": "0x68968f4",
+      "registrationRva": "0x105d9f8",
+      "names": []
+    },
+    {
+      "class": "ScriptableSelectedClipWrapper",
+      "vtableRva": "0x68e177c",
+      "registrationRva": "0x105df08",
+      "names": []
+    },
+    {
+      "class": "Scripting::ScriptableStepSequencerControlWrapper",
+      "vtableRva": "0x689690c",
+      "registrationRva": "0x105e2d4",
+      "names": []
+    },
+    {
+      "class": "Scripting::ScriptableMidiDeviceControlMapper::SubMappers",
+      "vtableRva": "0x68e1918",
+      "registrationRva": "0x1068c34",
+      "names": []
+    },
+    {
+      "class": "Scripting::ScriptableMidiDeviceControlMapper::MIDIOutput",
+      "vtableRva": "0x68e1930",
+      "registrationRva": "0x108325c",
+      "names": [
+        {
+          "name": "SendMIDINoteOn",
+          "evidenceSiteRva": "0x10832d4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SendMIDINoteOff",
+          "evidenceSiteRva": "0x10833bc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SendMIDICC",
+          "evidenceSiteRva": "0x108348c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SendMIDISysex",
+          "evidenceSiteRva": "0x1083554",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableMidiDeviceControlMapper",
+      "vtableRva": "0x68e19f8",
+      "registrationRva": "0x1062268",
+      "names": []
+    },
+    {
+      "class": "ScriptableADA2ControlSurfaceWrapper",
+      "vtableRva": "0x6896960",
+      "registrationRva": "0x1084304",
+      "names": []
+    },
+    {
+      "class": "ScriptableADA2PadWrapper",
+      "vtableRva": "0x689698c",
+      "registrationRva": "0x108b21c",
+      "names": [
+        {
+          "name": "Tap",
+          "evidenceSiteRva": "0x108b290",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Press",
+          "evidenceSiteRva": "0x108b2fc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Release",
+          "evidenceSiteRva": "0x108b41c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ReleaseAll",
+          "evidenceSiteRva": "0x108b48c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsPressed",
+          "evidenceSiteRva": "0x108b724",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Velocity",
+          "evidenceSiteRva": "0x108b7f0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LastHitPad",
+          "evidenceSiteRva": "0x108b8bc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableButtonWrapper",
+      "vtableRva": "0x68e1b34",
+      "registrationRva": "0x1098910",
+      "names": [
+        {
+          "name": "Release",
+          "evidenceSiteRva": "0x1098aa4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Press",
+          "evidenceSiteRva": "0x1098bd0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "DoublePress",
+          "evidenceSiteRva": "0x1098d10",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Hold",
+          "evidenceSiteRva": "0x1098970",
+          "inlineName": true,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableControlSurfaceWrapper",
+      "vtableRva": "0x68969b8",
+      "registrationRva": "0x109c2e4",
+      "names": [
+        {
+          "name": "GetAttachedDevice",
+          "evidenceSiteRva": "0x109c3e4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTypeTo",
+          "evidenceSiteRva": "0x109c81c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableCrossfaderWrapper",
+      "vtableRva": "0x68969d0",
+      "registrationRva": "0x10a6c00",
+      "names": [
+        {
+          "name": "Move",
+          "evidenceSiteRva": "0x10a6c60",
+          "inlineName": true,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableDataDialWrapper",
+      "vtableRva": "0x68969e8",
+      "registrationRva": "0x10aa27c",
+      "names": [
+        {
+          "name": "Release",
+          "evidenceSiteRva": "0x10aa3f0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Press",
+          "evidenceSiteRva": "0x10aa4dc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "DoublePress",
+          "evidenceSiteRva": "0x10aa5d0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Twist",
+          "evidenceSiteRva": "0x10aa6d8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Hold",
+          "evidenceSiteRva": "0x10aa314",
+          "inlineName": true,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptablePadWrapper",
+      "vtableRva": "0x6896a00",
+      "registrationRva": "0x10aeb18",
+      "names": [
+        {
+          "name": "Tap",
+          "evidenceSiteRva": "0x10aeb8c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Press",
+          "evidenceSiteRva": "0x10aec00",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Release",
+          "evidenceSiteRva": "0x10aecc0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TapVirtual",
+          "evidenceSiteRva": "0x10aed38",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "PressVirtual",
+          "evidenceSiteRva": "0x10aedb0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ReleaseVirtual",
+          "evidenceSiteRva": "0x10aee60",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ReleaseAll",
+          "evidenceSiteRva": "0x10aeed4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsPadVisible",
+          "evidenceSiteRva": "0x10af174",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "EnsurePadVisible",
+          "evidenceSiteRva": "0x10af1ec",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsPressed",
+          "evidenceSiteRva": "0x10af264",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Velocity",
+          "evidenceSiteRva": "0x10af2dc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LastHitPad",
+          "evidenceSiteRva": "0x10af34c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsPressedVirtual",
+          "evidenceSiteRva": "0x10af5f4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "VelocityVirtual",
+          "evidenceSiteRva": "0x10af66c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LightRGBColor",
+          "evidenceSiteRva": "0x10af6dc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LightBrightness",
+          "evidenceSiteRva": "0x10af7b0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableQLinkWrapper",
+      "vtableRva": "0x6896a18",
+      "registrationRva": "0x10b8830",
+      "names": [
+        {
+          "name": "Touch",
+          "evidenceSiteRva": "0x10b8898",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Twist",
+          "evidenceSiteRva": "0x10b8994",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetPosition",
+          "evidenceSiteRva": "0x10b8ad8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetPosition",
+          "evidenceSiteRva": "0x10b8bec",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetValue",
+          "evidenceSiteRva": "0x10b8cd8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetValue",
+          "evidenceSiteRva": "0x10b8e04",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableStepSequencerWrapper",
+      "vtableRva": "0x6896a84",
+      "registrationRva": "0x10c18a8",
+      "names": [
+        {
+          "name": "GetCurrentMode",
+          "evidenceSiteRva": "0x10c1920",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Tap",
+          "evidenceSiteRva": "0x10c1bf4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Press",
+          "evidenceSiteRva": "0x10c1cf0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Release",
+          "evidenceSiteRva": "0x10c1dd4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsPressed",
+          "evidenceSiteRva": "0x10c1ecc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LightRGBColour",
+          "evidenceSiteRva": "0x10c1fb8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LightBrightness",
+          "evidenceSiteRva": "0x10c20a4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableTouchStripWrapper",
+      "vtableRva": "0x6896a9c",
+      "registrationRva": "0x10ce468",
+      "names": [
+        {
+          "name": "Release",
+          "evidenceSiteRva": "0x10ce80c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Hold",
+          "evidenceSiteRva": "0x10ce4cc",
+          "inlineName": true,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Move",
+          "evidenceSiteRva": "0x10ce690",
+          "inlineName": true,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptablePopups",
+      "vtableRva": "0x6896b80",
+      "registrationRva": "0x10d1ee0",
+      "names": [
+        {
+          "name": "GetButtons",
+          "evidenceSiteRva": "0x10d1f4c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "PushButton",
+          "evidenceSiteRva": "0x10d2258",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableTouchInterface",
+      "vtableRva": "0x68e1db8",
+      "registrationRva": "0x10de604",
+      "names": [
+        {
+          "name": "MouseDown",
+          "evidenceSiteRva": "0x10de680",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MouseUp",
+          "evidenceSiteRva": "0x10de840",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MouseDrag",
+          "evidenceSiteRva": "0x10de9c0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableUI",
+      "vtableRva": "0x68e1ddc",
+      "registrationRva": "0x10dfab0",
+      "names": []
+    },
+    {
+      "class": "Scripting::ScriptableFileHandler",
+      "vtableRva": "0x69375f0",
+      "registrationRva": "0x27925c8",
+      "names": [
+        {
+          "name": "Delete",
+          "evidenceSiteRva": "0x279262c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Write",
+          "evidenceSiteRva": "0x2792700",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Read",
+          "evidenceSiteRva": "0x2792808",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "FileSizeMB",
+          "evidenceSiteRva": "0x27928d4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableAperture",
+      "vtableRva": "0x68ae8ac",
+      "registrationRva": "0x27af718",
+      "names": [
+        {
+          "name": "GetColumns",
+          "evidenceSiteRva": "0x27af78c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetRows",
+          "evidenceSiteRva": "0x27af7e0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetOriginX",
+          "evidenceSiteRva": "0x27af83c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetOriginY",
+          "evidenceSiteRva": "0x27af898",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetGlobalColumns",
+          "evidenceSiteRva": "0x27af8f4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetGlobalRows",
+          "evidenceSiteRva": "0x27af950",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetGlobalColumns",
+          "evidenceSiteRva": "0x27af9b0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetGlobalRows",
+          "evidenceSiteRva": "0x27afa28",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetMinX",
+          "evidenceSiteRva": "0x27afaa0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetMinY",
+          "evidenceSiteRva": "0x27afb18",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MoveTo",
+          "evidenceSiteRva": "0x27afb88",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MoveToColumn",
+          "evidenceSiteRva": "0x27afcac",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MoveToRow",
+          "evidenceSiteRva": "0x27afd24",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MoveLeft",
+          "evidenceSiteRva": "0x27afd9c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MoveRight",
+          "evidenceSiteRva": "0x27afe14",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MoveUp",
+          "evidenceSiteRva": "0x27afe9c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MoveDown",
+          "evidenceSiteRva": "0x27aff14",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "BankLeft",
+          "evidenceSiteRva": "0x27aff8c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "BankRight",
+          "evidenceSiteRva": "0x27b0018",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "BankUp",
+          "evidenceSiteRva": "0x27b0090",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "BankDown",
+          "evidenceSiteRva": "0x27b0108",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CanMoveLeft",
+          "evidenceSiteRva": "0x27b0180",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CanMoveRight",
+          "evidenceSiteRva": "0x27b01dc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CanMoveUp",
+          "evidenceSiteRva": "0x27b0238",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CanMoveDown",
+          "evidenceSiteRva": "0x27b0294",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsVisibleColumn",
+          "evidenceSiteRva": "0x27b02f0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsVisibleRow",
+          "evidenceSiteRva": "0x27b0368",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsVisible",
+          "evidenceSiteRva": "0x27b03d8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ToLocalColumn",
+          "evidenceSiteRva": "0x27b04e8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ToLocalRow",
+          "evidenceSiteRva": "0x27b0560",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ToGlobalColumn",
+          "evidenceSiteRva": "0x27b05d8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ToGlobalRow",
+          "evidenceSiteRva": "0x27b0650",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableClipLanesWrapper",
+      "vtableRva": "0x68ae8c4",
+      "registrationRva": "0x27c3904",
+      "names": [
+        {
+          "name": "CreateClip",
+          "evidenceSiteRva": "0x27c3984",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "HasClip",
+          "evidenceSiteRva": "0x27c3a14",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SelectClip",
+          "evidenceSiteRva": "0x27c3aa4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "DeleteClip",
+          "evidenceSiteRva": "0x27c3b34",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "EditClip",
+          "evidenceSiteRva": "0x27c3bc4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CopyClip",
+          "evidenceSiteRva": "0x27c3c4c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TriggerClip",
+          "evidenceSiteRva": "0x27c3d94",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "FlattenClip",
+          "evidenceSiteRva": "0x27c3e24",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "FlattenClipElastique",
+          "evidenceSiteRva": "0x27c3eb4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetClipColour",
+          "evidenceSiteRva": "0x27c3f3c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetClipName",
+          "evidenceSiteRva": "0x27c4024",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetClipName",
+          "evidenceSiteRva": "0x27c410c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetClipStart",
+          "evidenceSiteRva": "0x27c4214",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetClipEnd",
+          "evidenceSiteRva": "0x27c42bc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetClipLoopStart",
+          "evidenceSiteRva": "0x27c438c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetClipLoopEnd",
+          "evidenceSiteRva": "0x27c445c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ClipIsPlaying",
+          "evidenceSiteRva": "0x27c4528",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ClipIsRecording",
+          "evidenceSiteRva": "0x27c45b8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ClipIsStopped",
+          "evidenceSiteRva": "0x27c4648",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "AllClipsStopped",
+          "evidenceSiteRva": "0x27c46d0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "StopAllClips",
+          "evidenceSiteRva": "0x27c4f10",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateDrumTrack",
+          "evidenceSiteRva": "0x27c4f70",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateAudioTrack",
+          "evidenceSiteRva": "0x27c4fd0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreatePluginTrack",
+          "evidenceSiteRva": "0x27c5030",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateKeygroupTrack",
+          "evidenceSiteRva": "0x27c5090",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateMidiTrack",
+          "evidenceSiteRva": "0x27c50f0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateCVTrack",
+          "evidenceSiteRva": "0x27c5150",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SelectTrack",
+          "evidenceSiteRva": "0x27c51b0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "DeleteTrack",
+          "evidenceSiteRva": "0x27c522c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "EditTrack",
+          "evidenceSiteRva": "0x27c52a8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CopyTrack",
+          "evidenceSiteRva": "0x27c5324",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "StopTrackClips",
+          "evidenceSiteRva": "0x27c53b4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackColour",
+          "evidenceSiteRva": "0x27c5428",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackName",
+          "evidenceSiteRva": "0x27c54f8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackName",
+          "evidenceSiteRva": "0x27c55c8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TrackIsPlaying",
+          "evidenceSiteRva": "0x27c56b8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TrackIsRecording",
+          "evidenceSiteRva": "0x27c5734",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TrackIsStopped",
+          "evidenceSiteRva": "0x27c57b0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SelectRow",
+          "evidenceSiteRva": "0x27c582c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ClearRow",
+          "evidenceSiteRva": "0x27c58a8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "DeleteRow",
+          "evidenceSiteRva": "0x27c5924",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "InsertRows",
+          "evidenceSiteRva": "0x27c59a0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "InsertRowAndCapture",
+          "evidenceSiteRva": "0x27c5a30",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CopyRow",
+          "evidenceSiteRva": "0x27c5aac",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TriggerRow",
+          "evidenceSiteRva": "0x27c5b3c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TriggerArrangeTrack",
+          "evidenceSiteRva": "0x27c5bb8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetRowColour",
+          "evidenceSiteRva": "0x27c5c34",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetRowTempoTrigger",
+          "evidenceSiteRva": "0x27c5cbc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetSelectedClipColumn",
+          "evidenceSiteRva": "0x27c5dac",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetSelectedClipRow",
+          "evidenceSiteRva": "0x27c5e0c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetColumns",
+          "evidenceSiteRva": "0x27c5e6c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetRows",
+          "evidenceSiteRva": "0x27c5ecc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableCommandManager",
+      "vtableRva": "0x68ae8f0",
+      "registrationRva": "0x27ddc10",
+      "names": [
+        {
+          "name": "Undo",
+          "evidenceSiteRva": "0x27ddc84",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Redo",
+          "evidenceSiteRva": "0x27ddce4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CanUndo",
+          "evidenceSiteRva": "0x27ddd5c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CanRedo",
+          "evidenceSiteRva": "0x27dddd4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "UndoToIndex",
+          "evidenceSiteRva": "0x27dde44",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "NumCommands",
+          "evidenceSiteRva": "0x27ddf24",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Reset",
+          "evidenceSiteRva": "0x27de1d4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableCurrentTrack",
+      "vtableRva": "0x68ae91c",
+      "registrationRva": "0x27e4648",
+      "names": [
+        {
+          "name": "NextPluginPreset",
+          "evidenceSiteRva": "0x27e4790",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "PrevPluginPreset",
+          "evidenceSiteRva": "0x27e4868",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Type",
+          "evidenceSiteRva": "0x27e46a8",
+          "inlineName": true,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableEngineMode",
+      "vtableRva": "0x68ae934",
+      "registrationRva": "0x27ecff0",
+      "names": [
+        {
+          "name": "GetCurrentMode",
+          "evidenceSiteRva": "0x27ed06c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetCurrentPopup",
+          "evidenceSiteRva": "0x27ed0cc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetCurrentMode",
+          "evidenceSiteRva": "0x27ed128",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetAvailableModes",
+          "evidenceSiteRva": "0x27ed1f8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableEngineWrapper",
+      "vtableRva": "0x69378cc",
+      "registrationRva": "0x27f1474",
+      "names": [
+        {
+          "name": "Version",
+          "evidenceSiteRva": "0x27f1618",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetProduct",
+          "evidenceSiteRva": "0x27f1718",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetHardwareProduct",
+          "evidenceSiteRva": "0x27f1838",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetUserSetting",
+          "evidenceSiteRva": "0x27f1930",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SyncThreads",
+          "evidenceSiteRva": "0x27f1b1c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Quit",
+          "evidenceSiteRva": "0x27f14d8",
+          "inlineName": true,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableEventListWrapper",
+      "vtableRva": "0x6937a2c",
+      "registrationRva": "0x27fe25c",
+      "names": [
+        {
+          "name": "CreateNoteEvent",
+          "evidenceSiteRva": "0x27fe2c0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateAudioEvent",
+          "evidenceSiteRva": "0x27fe420",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateTrackAutomationEvent",
+          "evidenceSiteRva": "0x27fe510",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateProgramAutomationEvent",
+          "evidenceSiteRva": "0x27fe5dc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateInstrumentAutomationEvent",
+          "evidenceSiteRva": "0x27fe6a0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "CreateSequenceTempoChangeEvent",
+          "evidenceSiteRva": "0x27fe7d4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "DeleteEvent",
+          "evidenceSiteRva": "0x27fe8bc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetSize",
+          "evidenceSiteRva": "0x27fe98c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetAudioEventAtTime",
+          "evidenceSiteRva": "0x27fedec",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "MoveEvent",
+          "evidenceSiteRva": "0x27feec4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetEventStart",
+          "evidenceSiteRva": "0x27fef54",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetEventEnd",
+          "evidenceSiteRva": "0x27fefe4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SplitEvents",
+          "evidenceSiteRva": "0x27ff06c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAudioMute",
+          "evidenceSiteRva": "0x27ff15c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAudioVolume",
+          "evidenceSiteRva": "0x27ff1ec",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAudioReverse",
+          "evidenceSiteRva": "0x27ff578",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAudioFadeIn",
+          "evidenceSiteRva": "0x27ff608",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAudioFadeOut",
+          "evidenceSiteRva": "0x27ff698",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAudioWarpEnabled",
+          "evidenceSiteRva": "0x27ff728",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetEventTempo",
+          "evidenceSiteRva": "0x27ff7b8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAudioCoarseTune",
+          "evidenceSiteRva": "0x27ff848",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAudioFineTune",
+          "evidenceSiteRva": "0x27ff8d8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetNote",
+          "evidenceSiteRva": "0x27ff968",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetNoteVelocity",
+          "evidenceSiteRva": "0x27ff9f8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetNoteOnModifier",
+          "evidenceSiteRva": "0x27ffa80",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetNoteRatchet",
+          "evidenceSiteRva": "0x27ffb88",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAutomationValue",
+          "evidenceSiteRva": "0x27ffc18",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableMixdown",
+      "vtableRva": "0x6937b20",
+      "registrationRva": "0x2828ecc",
+      "names": [
+        {
+          "name": "ExportClip",
+          "evidenceSiteRva": "0x2828f3c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableProject",
+      "vtableRva": "0x68ae984",
+      "registrationRva": "0x283562c",
+      "names": [
+        {
+          "name": "New",
+          "evidenceSiteRva": "0x2835690",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Load",
+          "evidenceSiteRva": "0x2835770",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LoadTrack",
+          "evidenceSiteRva": "0x28357e8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LoadSequence",
+          "evidenceSiteRva": "0x28358d4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Save",
+          "evidenceSiteRva": "0x28359b0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ImportMpc2ProjectToClips",
+          "evidenceSiteRva": "0x2835a28",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ImportMpc2ProjectToSequences",
+          "evidenceSiteRva": "0x2835aa0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SaveTrack",
+          "evidenceSiteRva": "0x2835b18",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SaveTrackFXRack",
+          "evidenceSiteRva": "0x2835ba8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetGlobalAutomationFilterType",
+          "evidenceSiteRva": "0x2835c58",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetGlobalAutomationFilterType",
+          "evidenceSiteRva": "0x2835df4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "AdvanceGlobalAutomationFilterType",
+          "evidenceSiteRva": "0x283615c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableQuantiser",
+      "vtableRva": "0x68ae99c",
+      "registrationRva": "0x2840438",
+      "names": [
+        {
+          "name": "Enabled",
+          "evidenceSiteRva": "0x28404a0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Swing",
+          "evidenceSiteRva": "0x2840514",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Shift",
+          "evidenceSiteRva": "0x2840580",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Window",
+          "evidenceSiteRva": "0x28405ec",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Strength",
+          "evidenceSiteRva": "0x2840658",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTimeDivision",
+          "evidenceSiteRva": "0x28406cc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTimeDivision",
+          "evidenceSiteRva": "0x2840b54",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableSamplePool",
+      "vtableRva": "0x68ae9c8",
+      "registrationRva": "0x2843d94",
+      "names": [
+        {
+          "name": "AddSample",
+          "evidenceSiteRva": "0x2843dfc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "RemoveSample",
+          "evidenceSiteRva": "0x2843ef4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "RemoveAll",
+          "evidenceSiteRva": "0x2843fc4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetSampleNames",
+          "evidenceSiteRva": "0x284425c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetSampleMetadata",
+          "evidenceSiteRva": "0x28444fc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableSequenceRecorderProperties",
+      "vtableRva": "0x6937c2c",
+      "registrationRva": "0x284b054",
+      "names": [
+        {
+          "name": "EnablePunchIn",
+          "evidenceSiteRva": "0x284b0d4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetPunchInStartBBP",
+          "evidenceSiteRva": "0x284b274",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetPunchInEndBBP",
+          "evidenceSiteRva": "0x284b4c8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableSequencerWrapper",
+      "vtableRva": "0x68ae9f4",
+      "registrationRva": "0x2851ebc",
+      "names": [
+        {
+          "name": "Loop",
+          "evidenceSiteRva": "0x2851f34",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "PlayheadPosition",
+          "evidenceSiteRva": "0x2851f80",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetCountInEnable",
+          "evidenceSiteRva": "0x2851fd8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetCountInEnable",
+          "evidenceSiteRva": "0x28520a8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetLoopStart",
+          "evidenceSiteRva": "0x2852160",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetEndOrLoop",
+          "evidenceSiteRva": "0x28521bc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTCPeriod",
+          "evidenceSiteRva": "0x2852218",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "JumpToPulse",
+          "evidenceSiteRva": "0x2852274",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "JumpToSample",
+          "evidenceSiteRva": "0x28522ec",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "JumpToBeginning",
+          "evidenceSiteRva": "0x2852364",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "JumpToEnd",
+          "evidenceSiteRva": "0x28523c0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "JumpByBar",
+          "evidenceSiteRva": "0x285241c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "JumpByBeat",
+          "evidenceSiteRva": "0x2852494",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "JumpByPulse",
+          "evidenceSiteRva": "0x285250c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "JumpByEvent",
+          "evidenceSiteRva": "0x2852584",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsPlaying",
+          "evidenceSiteRva": "0x28525f4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsRecording",
+          "evidenceSiteRva": "0x28526ac",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Play",
+          "evidenceSiteRva": "0x285275c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "PlayStart",
+          "evidenceSiteRva": "0x28527b8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TogglePlay",
+          "evidenceSiteRva": "0x2852814",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TogglePlayStart",
+          "evidenceSiteRva": "0x2852870",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Stop",
+          "evidenceSiteRva": "0x28528cc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Record",
+          "evidenceSiteRva": "0x2852928",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Overdub",
+          "evidenceSiteRva": "0x2852984",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "RecordOff",
+          "evidenceSiteRva": "0x28529e0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Locate",
+          "evidenceSiteRva": "0x2852a3c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "StepBack",
+          "evidenceSiteRva": "0x2852a98",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "StepForward",
+          "evidenceSiteRva": "0x2852af4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "BarBack",
+          "evidenceSiteRva": "0x2852b50",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "BarForward",
+          "evidenceSiteRva": "0x2852bac",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "EventBack",
+          "evidenceSiteRva": "0x2852c08",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "EventForward",
+          "evidenceSiteRva": "0x2852c64",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SequenceStart",
+          "evidenceSiteRva": "0x2852cc0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SequenceEnd",
+          "evidenceSiteRva": "0x2852d1c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetBPM",
+          "evidenceSiteRva": "0x2852d70",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "BPM",
+          "evidenceSiteRva": "0x2852e40",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "Scripting::ScriptableSyncArpeggiator",
+      "vtableRva": "0x68aea0c",
+      "registrationRva": "0x2864020",
+      "names": [
+        {
+          "name": "Enabled",
+          "evidenceSiteRva": "0x2864080",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Action",
+          "evidenceSiteRva": "0x28640e0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Latch",
+          "evidenceSiteRva": "0x286412c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ArpIndex",
+          "evidenceSiteRva": "0x2864178",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "RhythmIndex",
+          "evidenceSiteRva": "0x28641c4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "PatternIndex",
+          "evidenceSiteRva": "0x2864220",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Velocity",
+          "evidenceSiteRva": "0x2864280",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "AftertouchAction",
+          "evidenceSiteRva": "0x28642dc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "NoteLength",
+          "evidenceSiteRva": "0x2864328",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "AccentVelocity",
+          "evidenceSiteRva": "0x2864394",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "NonAccentVelocity",
+          "evidenceSiteRva": "0x2864400",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Swing",
+          "evidenceSiteRva": "0x286444c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Variation",
+          "evidenceSiteRva": "0x28644a8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Octaves",
+          "evidenceSiteRva": "0x2864514",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "AccentProbability",
+          "evidenceSiteRva": "0x2864570",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "NonAccentProbability",
+          "evidenceSiteRva": "0x28645dc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SustainPedalLatches",
+          "evidenceSiteRva": "0x2864628",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "LatchMode",
+          "evidenceSiteRva": "0x2864674",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    },
+    {
+      "class": "ScriptableTrackPool",
+      "vtableRva": "0x68aea4c",
+      "registrationRva": "0x2872718",
+      "names": [
+        {
+          "name": "CreateTrack",
+          "evidenceSiteRva": "0x2872798",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "RemoveAll",
+          "evidenceSiteRva": "0x2872810",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Remove",
+          "evidenceSiteRva": "0x2872870",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "Size",
+          "evidenceSiteRva": "0x28728ec",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SizeNormalTracks",
+          "evidenceSiteRva": "0x287294c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SizeMasterTracks",
+          "evidenceSiteRva": "0x28729ac",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SizeMidiTracks",
+          "evidenceSiteRva": "0x2872a0c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SizeNonMidiTracks",
+          "evidenceSiteRva": "0x2872a6c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetCurrentTrack",
+          "evidenceSiteRva": "0x2872ad4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetCurrentTrackName",
+          "evidenceSiteRva": "0x2872b4c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsTrackAudio",
+          "evidenceSiteRva": "0x2872ba8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsTrackInstrument",
+          "evidenceSiteRva": "0x2872c20",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsTrackMaster",
+          "evidenceSiteRva": "0x2872c98",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsTrackPadBased",
+          "evidenceSiteRva": "0x2872d10",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsTrackMidiTriggered",
+          "evidenceSiteRva": "0x2872d88",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "IsTrackMixable",
+          "evidenceSiteRva": "0x2872e00",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TrackSupportsSampleEditProgram",
+          "evidenceSiteRva": "0x2872e78",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TrackSupportsLayers",
+          "evidenceSiteRva": "0x2872ef0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TrackSupportsSixteenLevels",
+          "evidenceSiteRva": "0x2872f68",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "TrackAllNotesOff",
+          "evidenceSiteRva": "0x2872fe0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackMuteGroupIndex",
+          "evidenceSiteRva": "0x2873058",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackMuteGroupIndex",
+          "evidenceSiteRva": "0x28730e4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackCVPort",
+          "evidenceSiteRva": "0x2873160",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackCVPort",
+          "evidenceSiteRva": "0x28731f0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackGatePort",
+          "evidenceSiteRva": "0x287326c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackGatePort",
+          "evidenceSiteRva": "0x28732fc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackVelocityScale",
+          "evidenceSiteRva": "0x2873378",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackVelocityScale",
+          "evidenceSiteRva": "0x2873408",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackColour",
+          "evidenceSiteRva": "0x2873484",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackColour",
+          "evidenceSiteRva": "0x2873514",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackPadsFollowTrackColour",
+          "evidenceSiteRva": "0x2873590",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackPadsFollowTrackColour",
+          "evidenceSiteRva": "0x2873620",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackSkipFromRowLaunch",
+          "evidenceSiteRva": "0x287369c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackSkipFromRowLaunch",
+          "evidenceSiteRva": "0x2873b70",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackMidiBankEnable",
+          "evidenceSiteRva": "0x2873bec",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackMidiBankEnable",
+          "evidenceSiteRva": "0x2873c7c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackMidiBankMsb",
+          "evidenceSiteRva": "0x2873cf8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackMidiBankMsb",
+          "evidenceSiteRva": "0x2873d88",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackMidiBankLsb",
+          "evidenceSiteRva": "0x2873e04",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackMidiBankLsb",
+          "evidenceSiteRva": "0x2873e94",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackMidiProgramNumberEnable",
+          "evidenceSiteRva": "0x2873f10",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackMidiProgramNumberEnable",
+          "evidenceSiteRva": "0x2873fa0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackMidiProgramNumber",
+          "evidenceSiteRva": "0x287401c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackMidiProgramNumber",
+          "evidenceSiteRva": "0x28740ac",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackVolume",
+          "evidenceSiteRva": "0x2874128",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackVolume",
+          "evidenceSiteRva": "0x28741b8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackPan",
+          "evidenceSiteRva": "0x2874234",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackPan",
+          "evidenceSiteRva": "0x28742c4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackInputPort",
+          "evidenceSiteRva": "0x2874340",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackInputPort",
+          "evidenceSiteRva": "0x28743d0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackInputChannel",
+          "evidenceSiteRva": "0x287444c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackInputChannel",
+          "evidenceSiteRva": "0x28744dc",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackOutputPort",
+          "evidenceSiteRva": "0x2874558",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackOutputPort",
+          "evidenceSiteRva": "0x28745e8",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackOutputChannel",
+          "evidenceSiteRva": "0x2874664",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackOutputChannel",
+          "evidenceSiteRva": "0x28746f4",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackMonitorState",
+          "evidenceSiteRva": "0x2874770",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackMonitorState",
+          "evidenceSiteRva": "0x2874800",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackRecordArmed",
+          "evidenceSiteRva": "0x287487c",
+          "inlineName": false,
+          "runtimeStatus": "previously-verified-underlying-property-call"
+        },
+        {
+          "name": "GetTrackRecordArmed",
+          "evidenceSiteRva": "0x287490c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackTransposition",
+          "evidenceSiteRva": "0x2874988",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackTransposition",
+          "evidenceSiteRva": "0x2874a18",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetSendLevel",
+          "evidenceSiteRva": "0x2874a8c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetSendLevel",
+          "evidenceSiteRva": "0x2874b94",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetMute",
+          "evidenceSiteRva": "0x2874c80",
+          "inlineName": false,
+          "runtimeStatus": "previously-verified-underlying-property-call"
+        },
+        {
+          "name": "GetMute",
+          "evidenceSiteRva": "0x2874d10",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetSolo",
+          "evidenceSiteRva": "0x2874d8c",
+          "inlineName": false,
+          "runtimeStatus": "previously-verified-underlying-property-call"
+        },
+        {
+          "name": "GetSolo",
+          "evidenceSiteRva": "0x2874e1c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetSoloMute",
+          "evidenceSiteRva": "0x2874e98",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetHasAutomation",
+          "evidenceSiteRva": "0x2874f14",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetAutomationFilterType",
+          "evidenceSiteRva": "0x2874f88",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetAutomationFilterType",
+          "evidenceSiteRva": "0x2875074",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackLengthType",
+          "evidenceSiteRva": "0x28750f0",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetTrackIndependentLength",
+          "evidenceSiteRva": "0x2875164",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetTrackIndependentLength",
+          "evidenceSiteRva": "0x2875230",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetGlobalInsertEnabled",
+          "evidenceSiteRva": "0x287531c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetGlobalInsertEnabled",
+          "evidenceSiteRva": "0x28753ac",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "SetInsertEnabled",
+          "evidenceSiteRva": "0x2875420",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "GetInsertEnabled",
+          "evidenceSiteRva": "0x287551c",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        },
+        {
+          "name": "ResetTrackChannelStrip",
+          "evidenceSiteRva": "0x2875608",
+          "inlineName": false,
+          "runtimeStatus": "static-candidate"
+        }
+      ]
+    }
+  ]
+}

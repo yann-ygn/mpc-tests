@@ -1,0 +1,116 @@
+{
+  "firmwareVersion": "3.9.1.2",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "status": "native property calls verified in a bounded temporary bridge; wrapper entry points themselves were not invoked",
+  "functions": [
+    {
+      "name": "ScriptableTrackPool::SetMute",
+      "rva": 42392420,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c8219fe5c8319fe510808de514e08de5"
+    },
+    {
+      "name": "ScriptableTrackPool::SetSolo",
+      "rva": 42404484,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c8219fe5c8319fe510808de514e08de5"
+    },
+    {
+      "name": "ScriptableTrackPool::SetTrackRecordArmed",
+      "rva": 42403876,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e118229fe518329fe510808de514e08de5"
+    },
+    {
+      "name": "lockedBoolPropertySetter",
+      "rva": 14850236,
+      "prefixHex": "d4219fe5d4319fe5f0426de1f860cde1f081cde118a08de51ce08de5109080e2"
+    },
+    {
+      "name": "notifyingBoolPropertySetter",
+      "rva": 14986984,
+      "prefixHex": "fc416de10f30d0e5f860cde10170a0e16c119fe56c219fe5f081cde118e08de5"
+    },
+    {
+      "name": "juce::MessageManager::callAsync",
+      "rva": 10562108,
+      "prefixHex": "7c219fe57c319fe5f0416de108608de50ce08de50050a0e118d04de21800a0e3"
+    }
+  ],
+  "bindings": [
+    {
+      "name": "SetMute",
+      "wrapperRva": 42392420,
+      "propertyOwner": "program",
+      "propertyOffset": 80,
+      "setterRva": 14850236,
+      "scriptGetterRva": 42371264,
+      "scriptValueOffset": 120,
+      "observedValueOffset": 120
+    },
+    {
+      "name": "SetSolo",
+      "wrapperRva": 42404484,
+      "propertyOwner": "program",
+      "propertyOffset": 136,
+      "setterRva": 14986984,
+      "scriptGetterRva": 42366484,
+      "scriptValueOffset": 151,
+      "observedValueOffset": 192
+    },
+    {
+      "name": "SetTrackRecordArmed",
+      "wrapperRva": 42403876,
+      "propertyOwner": "track",
+      "propertyOffset": 1140,
+      "setterRva": 14986984,
+      "filterFunctionOffset": 1156,
+      "filterManagerOffset": 1164,
+      "filterInvokerOffset": 1168,
+      "scriptGetterRva": 42366988,
+      "scriptValueOffset": 1155,
+      "observedValueOffset": 1172
+    }
+  ],
+  "additionalBindings": [
+    {
+      "name": "SetCurrentTrack",
+      "rva": 42401624,
+      "nameRva": 78633036,
+      "registrationSite": 42412756
+    },
+    {
+      "name": "SetTrackColour",
+      "rva": 42403356,
+      "nameRva": 78634232,
+      "registrationSite": 42415236
+    },
+    {
+      "name": "SetTrackVolume",
+      "rva": 42377652,
+      "nameRva": 78635352,
+      "registrationSite": 42418472
+    },
+    {
+      "name": "SetTrackPan",
+      "rva": 42389500,
+      "nameRva": 78635440,
+      "registrationSite": 42418740
+    },
+    {
+      "name": "SetTrackMonitorState",
+      "rva": 42398356,
+      "nameRva": 78635952,
+      "registrationSite": 42420080
+    },
+    {
+      "name": "SetTrackTransposition",
+      "rva": 42401100,
+      "nameRva": 78636172,
+      "registrationSite": 42420616
+    },
+    {
+      "name": "SetSendLevel",
+      "rva": 42372296,
+      "nameRva": 78636284,
+      "registrationSite": 42420876
+    }
+  ]
+}

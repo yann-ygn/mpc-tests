@@ -1,0 +1,69 @@
+{
+  "mpcVersion": "3.9.1.2",
+  "model": "Key 37",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "buildIdFileOffset": 524,
+  "executableSha256": "bc054a3f3ba02c2d33ac9a515a4a8638964da779223502286d6a64b517bf1426",
+  "vtables": {
+    "project": 110312524,
+    "trackPool": 109761220,
+    "track": 110318932,
+    "sequence": 110316312
+  },
+  "projectSecondaryVtables": {
+    "20": 110312672,
+    "28": 110312772,
+    "36": 110312820,
+    "1108": 110312924,
+    "1116": 110312972
+  },
+  "programTypes": {
+    "110296772": "audio",
+    "110297836": "clip",
+    "110299668": "cv",
+    "110300160": "drum",
+    "110302332": "keygroup",
+    "110303696": "input",
+    "110304176": "output",
+    "110304656": "master-output",
+    "110305136": "return",
+    "110305616": "submix",
+    "110306104": "midi",
+    "110307912": "plugin"
+  },
+  "offsets": {
+    "project": {
+      "selectedTrack": 160,
+      "selectedTrackMirror": 176,
+      "selectedSequence": 228,
+      "selectedSequenceMirror": 244,
+      "selectedTrackIndex": 348,
+      "sequenceArray": 2672,
+      "sequenceCapacity": 2676,
+      "sequenceCount": 2680,
+      "trackPool": 2708
+    },
+    "trackPool": {
+      "allBegin": 52,
+      "allEnd": 56,
+      "allCapacity": 60,
+      "normalBegin": 68,
+      "normalEnd": 72,
+      "normalCapacity": 76
+    },
+    "track": {
+      "name": 1128,
+      "recordArm": 1172,
+      "program": 1608
+    },
+    "sequence": {
+      "name": 108,
+      "bpm": 196
+    },
+    "program": {
+      "mute": 120,
+      "solo": 192,
+      "silenced": 428
+    }
+  }
+}

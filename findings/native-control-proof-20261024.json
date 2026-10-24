@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-24",
+  "firmware": "3.9.1.2",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "pid": 2723,
+  "queuedCallbackTid": 2723,
+  "loaderWorkerTid": 2768,
+  "method": "temporary dlopen through idle privtap worker; JUCE callAsync; native notifying property setters",
+  "tests": [
+    {
+      "property": "mute",
+      "targetTrack": "Trap-Kit-Default",
+      "originalValue": false,
+      "appliedValue": true,
+      "independentReadback": true,
+      "restoredValue": false,
+      "uiTid": 2723,
+      "allNativePhasesAccepted": true,
+      "allTrackAndBusFlagsRestored": true,
+      "selectedTrackBefore": "Plugin 001",
+      "selectedTrackDuring": "Plugin 001",
+      "selectedTrackAfter": "Plugin 001"
+    },
+    {
+      "property": "solo",
+      "targetTrack": "Trap-Kit-Default",
+      "originalValue": false,
+      "appliedValue": true,
+      "independentReadback": true,
+      "restoredValue": false,
+      "uiTid": 2723,
+      "allNativePhasesAccepted": true,
+      "allTrackAndBusFlagsRestored": true,
+      "selectedTrackBefore": "Plugin 001",
+      "selectedTrackDuring": "Trap-Kit-Default",
+      "selectedTrackAfter": "Trap-Kit-Default",
+      "otherTrackDuring": {
+        "name": "Plugin 001",
+        "muted": false,
+        "silenced": true
+      }
+    },
+    {
+      "property": "arm",
+      "targetTrack": "Trap-Kit-Default",
+      "originalValue": true,
+      "appliedValue": false,
+      "independentReadback": false,
+      "restoredValue": true,
+      "uiTid": 2723,
+      "allNativePhasesAccepted": true,
+      "allTrackAndBusFlagsRestored": true,
+      "selectedTrackBefore": "Trap-Kit-Default",
+      "selectedTrackDuring": "Trap-Kit-Default",
+      "selectedTrackAfter": "Trap-Kit-Default"
+    }
+  ],
+  "cleanup": {
+    "initialObservedStateRestored": true,
+    "originalViewRestored": "MIDI Learn",
+    "selectionRestoredUsing": "Main track decrement; return through Menu > MIDI Learn",
+    "bridgeUnloaded": true,
+    "socketRemoved": true,
+    "workerResumedOriginalRead": true,
+    "mpcRestarted": false,
+    "persistentAddinInstalled": false
+  },
+  "guardChecks": [
+    "Wrong requested-value precondition rejected",
+    "Invalid Project pointer rejected",
+    "Unknown property rejected",
+    "Setting an already-matching mute value preserved state"
+  ],
+  "reusableHostLab": {
+    "targetTrack": "Plugin 001",
+    "property": "mute",
+    "independentWriteVerified": true,
+    "observedStateRestored": true,
+    "bridgeUnloaded": true,
+    "temporaryFilesRemoved": true
+  }
+}

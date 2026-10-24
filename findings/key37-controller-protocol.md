@@ -5,6 +5,13 @@ to the controller's rawmidi ports, and driven with `tools/mpcx.py`, which inject
 what MPC sends back between two marks. The test project was the HipHop "TheDrop" demo (4 tracks) after the button
 mapping. Everything below was seen on the device unless marked *inferred*.
 
+Reviewed against the retained captures and a fresh read-only device capture on 2026-10-24. Remaining API gaps and
+proposed experiments are in [the investigation review](investigation-review-20261024.md).
+The follow-up [web service investigation](web-service.md) verified a generic object publisher; no native MPC state
+objects were registered in the session tested.
+The subsequent [live object investigation](live-state.md) established a read-only process-memory source for selection,
+track names/types, mute/solo/arm and silencing, and published real snapshots through that web service.
+
 ## Ports
 
 The controller is one USB MIDI device with three ports. MPC opens two of them directly through alsa-lib:
@@ -35,7 +42,8 @@ family code in the hardware's identity reply).
 |---|---|
 | `65` | pad colour: `<pad> <r> <g> <b>`, 7-bit RGB. Pad 0 is PAD-1 (bottom left), 15 is PAD-16; a 17th entry (`10`) is sent too |
 | `52` / `53` | keepalive: MPC asks every 4 s, the hardware answers |
-| `62`, `63`, `64`, `41`, `5A`, `5B` | sent once at startup with the identity exchange (`F0 7E 00 06 01 F7`); not decoded |
+| `62`, `63`, `64`, `41`, `5A`, `5B` | seen around controller initialization and the identity exchange (`F0 7E 00 06 01 F7`); not decoded |
+| `66`, `67`, `68`, `69`, `6A` | settings, not decoded: the first four have one-byte payloads; `6A` sends three three-byte entries. Seen as both Key 37 and MPC X |
 
 **LEDs** on the Private port: `B0 <button note> <value>`. Values seen: `01` dim (off), `03` lit, `04` a second colour
 (AUTOMATION in read mode, TC while SHIFT is held). MPC also writes LEDs the Key 37 doesn't have (notes 3, 4, 5, 8,
@@ -61,12 +69,12 @@ polling.
 | Selected track soloed | LED 77 (`0x4D`) | yes | `03` soloed, `01` not |
 | Selected track record-armed | LED 74 (`0x4A`) | yes | `03` armed, `01` not; the Main screen's MULTI REC button and the mixer's arm icon show the same |
 | Mute and solo of every track (16 per bank) | pad colours, Track Mute mode | yes, in that mode | steady yellow `7F 7F 00` normal; blinking orange `7F 3B 00` muted; blinking cyan `00 7F 7F` soloed; dim red `08 00 00` silenced by a solo; off: no track |
-| Number of tracks | pad colours, Track Mute mode | yes, in that mode | one lit pad per track |
-| Selected track's kind | pad colours | yes | a drum kit shows its pad colours; a melodic track shows the scale (root red, scale notes yellow) |
+| Track presence in the visible bank | pad colours, Track Mute mode | yes, in that mode | one lit pad per track in the four-track demo; larger banks and track counts not validated |
+| Selected track's pad layout | pad colours | yes, in the tested views | a drum kit shows its pad colours; a melodic track shows the scale (root red, scale notes yellow). This does not identify every track kind uniquely |
 | Undo available | UNDO LED | yes | blinks after an undoable change — *inferred* |
 | Unsaved changes | SAVE LED | yes | `04` modified, `01` after saving |
 | Meters | LEDs 68–71, as an MPC X only | yes | none as a Key 37; as an MPC X, a stereo meter (below) |
-| Sequence selected | `.xpj` | when saved | nothing at all in the controller traffic when the sequence changed |
+| Sequence selected | `.xpj` | when saved | no dedicated sequence identifier observed; the tested sequence change did change TAP cadence with tempo |
 | Selected track's number or name | `.xpj`; Q-Link displays as an MPC X | when saved; yes as an X | nothing direct in the Key 37's traffic (only its pad colours); as an MPC X its name is drawn on a display (below) |
 | Record arm of the other tracks | `.xpj` | when saved | `tracks[i].recordArm`; the mixer's arm icons show it (tapping one didn't toggle it) |
 | Track names, kinds, colours, volume, pan; sequence names, tempo, length | `.xpj` | when saved | below |
@@ -119,9 +127,10 @@ What MPC sends an MPC X and not a Key 37:
 | What | Message |
 |---|---|
 | **Stereo level meter** | LEDs 68 + 69 (left) and 70 + 71 (right), every 50 ms during playback. Each value is a thermometer bitmask (`01`, `03`, `07`, `0F` … `7F`), so a side's level is popcount(68) + popcount(69), 0–14 segments |
-| **Q-Link displays** | sysex `0B`: `<display 00–10> <first page> <last page> <first column> <last column> <pixels>`, a 128×32 monochrome display in pages of 8 rows; the pixels are 8-bit bytes (one column of 8 rows, bit 0 on top) packed into 7-bit MIDI bytes, most significant bit first. A full screen is 5 + 585 bytes. MPC draws live text on them: display 08 "CURRENT TRACK / Lead", 10 "TRACK / Lead", 02 "METRONOME ENABLE / Record". `tools/mpcx.py oled` draws them |
+| **Q-Link displays** | sysex `0B`: `<display 00–10> <first page> <last page> <first column> <last column> <pixels>`, a 128×32 monochrome display in pages of 8 rows; the pixels are 8-bit bytes (one column of 8 rows, bit 0 on top) packed into 7-bit MIDI bytes, most significant bit first. A full-screen payload is 5 + 586 = 591 bytes (512 unpacked pixel bytes). MPC draws live text on them: display 08 "CURRENT TRACK / Lead", 10 "TRACK / Lead", 02 "METRONOME ENABLE / Record". `tools/mpcx.py oled` draws them |
 | Q-Link rings, probably | sysex `0A`: `<knob 00–10> 00 03 00 7F 00 00` |
-| Settings, not decoded | sysex `66`, `67`, `68`, `69` (one byte each), `6A` (three entries) |
+
+The settings messages `66`–`6A` are shared with normal Key 37 operation; they are not additional MPC X feedback.
 
 LEDs that are off read `00` instead of the Key 37's dim `01`, and the Key 37's own LEDs (OCT, TC, LATCH, KEYBOARD
 CONTROL, CC 95–101) are no longer sent. Transport, view, pad bank and the selected track's mute (76) and solo (77) are
@@ -137,3 +146,5 @@ traffic and was inconclusive).
 - The startup sysex (`62`–`64`, `41`, `5A`, `5B`) and CC 90–101.
 - As an MPC X: what the meter measures, reading the Q-Link displays as text (MPC's two fonts), and what the displays
   show in the other Q-Link modes (track volumes and pans in the mixer?).
+- Reliable state recovery after reconnect/project load, track identity across edits, per-sequence versus global mute,
+  transport timing and idempotent commands: see the investigation review for the proposed test matrix.

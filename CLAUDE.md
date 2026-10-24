@@ -11,6 +11,12 @@ before running experiments.
   device off as another model. See `privtap/README.md`; `profiles/` holds the button map.
 - `tools/mpcx.py`: experiments. `exp LABEL ACTION...` marks the log, acts, and diffs the decoded LEDs and pads. Also
   `state`, `events`, `oled`. `tools/xpj.py` reads and diffs 3.x project files.
+- `tools/mpc_live_state.py` + `tools/mpc_mem_probe.c`: experimental read-only live object snapshots, pinned by GNU
+  build ID in `tools/profiles/`. See `findings/live-state.md` for validated fields and limitations.
+- `tools/mpc_native_control_audit.py`: read-only verification of internal control code and live property listeners.
+  `findings/native-control.md` maps the setters. `tools/mpc_native_lab.py` now verifies temporary UI-thread dispatch
+  and bounded native mute/solo/arm pulses; it loads/unloads a lab bridge without restart. Native solo can select its
+  target through follow-solo behaviour; restore selection after unselected-track experiments.
 - `build/` is gitignored: local copies of the log, project saves and the settings backup.
 
 ## The device
@@ -22,6 +28,9 @@ before running experiments.
 - privtap's settings: `/data/mpc-addins/privtap/privtap.conf`. Keep `identity=` empty except during an experiment:
   as another model, the Key 37's LEDs show the wrong states.
 - Settings backup taken before identity experiments: `/data/claude-backup-20261023-settings.tar`.
+- Embedded scripting was previously tested and is disabled in production firmware. Compiled wrappers and
+  `/data/scriptingDefaultEnabled` do not establish a working script API. Native control can reuse the underlying
+  property/filter setters without running scripts; see `findings/native-control.md`.
 
 ## Rules
 
@@ -44,4 +53,5 @@ before running experiments.
 
 - Git: github.com/yann-ygn/mpc-tests, `main` (default) and `privtap`.
 - Taiga: project "MPC Key 37 API" (id 24). Move a story's status when its work starts or ends.
-- Next step: the state service prototype (Taiga #18).
+- Native API roadmap: `findings/native-api-roadmap.md` (Taiga epic #4, capability expansion epic #27).
+- Next implementation step: public API contract (#28), then firmware adapter (#29) and UI-thread executor (#30).
