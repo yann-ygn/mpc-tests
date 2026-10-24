@@ -1,6 +1,7 @@
 {
   "mpcVersion": "3.9.1.2",
   "model": "Key 37",
+  "deviceTreeModel": "Akai Professional MPC Key 37",
   "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
   "buildIdFileOffset": 524,
   "executableSha256": "bc054a3f3ba02c2d33ac9a515a4a8638964da779223502286d6a64b517bf1426",

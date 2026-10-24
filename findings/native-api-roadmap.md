@@ -4,7 +4,8 @@ Created 2026-10-24 in Taiga project **MPC Key 37 API** (id 24, slug `mpc-key-37-
 
 18 new user stories were created and linked to their epics; existing stories #18–21 were rewritten to use the native
 adapter architecture. Descriptions, acceptance criteria, dependencies, statuses and epic membership were read back
-and verified for all 22 stories. New stories are New; #19 and #20 retain their existing In progress status.
+and verified for all 22 stories. The owner accepted the [public contract](native-api-contract.md) on 2026-10-24
+(#28 Done). #32 is In progress with its first discovery-only endpoint; #19 and #20 remain In progress.
 
 ## Epic #4 — Native control library and live API
 
@@ -13,14 +14,14 @@ Only the bounded native mute/solo/arm proof is already validated; these stories 
 
 | US | Work | Status |
 |---|---|---|
-| #28 | Define the public native-control API and capability contract | New |
+| #28 | Define the public native-control API and capability contract | Done |
 | #29 | Build the native adapter library with validated firmware profiles | New |
 | #30 | Execute native operations on the MPC UI thread with bounded lifecycle | New |
 | #20 | Resolve active projects and generation-bound track/sequence handles | In progress |
 | #18 | Expose authoritative live state snapshots from native MPC objects | New |
 | #31 | Validate mute, solo and record-arm semantics beyond the bounded proof | New |
 | #19 | Provide idempotent native mute, solo and record-arm command handlers | In progress |
-| #32 | Expose the native adapter through a local command service | New |
+| #32 | Expose the native adapter through a local command service | In progress — `describe` implemented |
 | #33 | Publish live state changes and recover subscriptions after reconnect | New |
 | #34 | Connect paired HTTP state and commands to Akai's web service | New |
 | #35 | Expose the native-control API as typed MCP tools | New |
@@ -45,6 +46,11 @@ is callable or supported. Each story requires the specified mapping and device v
 | #45 | Map generic program/instrument parameters and separate IDs from controls |
 
 ## Delivery order
+
+Initial service slice: [`native-api/`](../native-api/README.md) implements `describe` on a private Unix socket with
+request/response schemas, host fixture tests and an ARM device smoke test. It reports live model/build metadata,
+stable installation identity and bounded service-instance identity. All state/write capabilities are unavailable;
+the adapter/identity/qualification dependencies still apply before enabling them. HTTP and MCP remain #34/#35.
 
 1. Define the public contract (#28), firmware adapter (#29) and application-thread executor (#30).
 2. Establish active-project/handle lifetimes (#20), live snapshots (#18) and the full flag-semantics matrix (#31), then productize the flag handlers (#19).

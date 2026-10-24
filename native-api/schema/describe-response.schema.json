@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MPC native API 0.1 describe response or protocol error",
+  "oneOf": [{"$ref": "#/$defs/description"}, {"$ref": "#/$defs/error"}],
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "required": ["available", "reason"],
+      "properties": {
+        "available": {"type": "boolean"},
+        "reason": {"type": ["string", "null"]},
+        "trackTypes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "verification": {"type": "array", "uniqueItems": true, "items": {"enum": ["model", "audio_copy"]}}
+      },
+      "allOf": [
+        {"if": {"properties": {"available": {"const": true}}},
+         "then": {"properties": {"reason": {"type": "null"}}},
+         "else": {"properties": {"reason": {"type": "string", "minLength": 1}}}}
+      ]
+    },
+    "nullableMilliseconds": {"type": ["integer", "null"], "minimum": 0},
+    "description": {
+      "type": "object",
+      "required": ["apiVersion", "deviceId", "instanceId", "implementation", "firmware", "readiness", "readableFields", "capabilities", "limits"],
+      "properties": {
+        "apiVersion": {"const": "0.1"},
+        "deviceId": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[A-Za-z0-9_-]+$"},
+        "instanceId": {"type": "string", "pattern": "^run_[0-9a-f]{32}$"},
+        "implementation": {
+          "type": "object", "required": ["name", "version"],
+          "properties": {"name": {"type": "string"}, "version": {"type": "string"}}
+        },
+        "firmware": {
+          "type": "object",
+          "required": ["model", "modelSource", "version", "versionSource", "buildId", "buildIdSource"],
+          "properties": {
+            "model": {"type": ["string", "null"]},
+            "modelSource": {"enum": ["device_tree", null]},
+            "version": {"type": ["string", "null"]},
+            "versionSource": {"enum": ["build_profile", null]},
+            "buildId": {"type": ["string", "null"], "pattern": "^(?:[0-9a-f]{2}){1,64}$"},
+            "buildIdSource": {"enum": ["elf_note", null]}
+          }
+        },
+        "readiness": {
+          "type": "object",
+          "required": ["status", "nativeAdapter", "mpcProcess", "firmwareProfile", "profileId"],
+          "properties": {
+            "status": {"enum": ["discovery_only", "ready", "not_ready"]},
+            "nativeAdapter": {"enum": ["not_attached", "attached"]},
+            "mpcProcess": {"enum": ["running", "not_running", "ambiguous", "unreadable"]},
+            "firmwareProfile": {"enum": ["matched", "unsupported", "unknown"]},
+            "profileId": {"type": ["string", "null"]}
+          }
+        },
+        "readableFields": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "capabilities": {
+          "type": "object",
+          "required": ["describe", "get_state", "current_track", "set_mute", "set_solo", "set_record_armed", "get_command", "watch"],
+          "properties": {
+            "describe": {"allOf": [{"$ref": "#/$defs/capability"}, {"properties": {"available": {"const": true}}}]},
+            "get_state": {"$ref": "#/$defs/capability"},
+            "current_track": {"$ref": "#/$defs/capability"},
+            "set_mute": {"$ref": "#/$defs/capability"},
+            "set_solo": {"$ref": "#/$defs/capability"},
+            "set_record_armed": {"$ref": "#/$defs/capability"},
+            "get_command": {"$ref": "#/$defs/capability"},
+            "watch": {"$ref": "#/$defs/capability"}
+          },
+          "additionalProperties": {"$ref": "#/$defs/capability"}
+        },
+        "limits": {
+          "type": "object",
+          "required": ["maxRequestBytes", "maxResponseBytes", "maxConnections", "connectionTimeoutMs", "queueCapacity", "requestRetentionMs", "defaultStartWithinMs", "maxStartWithinMs", "verificationTimeoutMs"],
+          "properties": {
+            "maxRequestBytes": {"type": "integer", "minimum": 1},
+            "maxResponseBytes": {"type": "integer", "minimum": 1},
+            "maxConnections": {"type": "integer", "minimum": 1},
+            "connectionTimeoutMs": {"type": "integer", "minimum": 1},
+            "queueCapacity": {"type": "integer", "minimum": 0},
+            "requestRetentionMs": {"type": "integer", "minimum": 0},
+            "defaultStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
+            "maxStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
+            "verificationTimeoutMs": {"$ref": "#/$defs/nullableMilliseconds"}
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "object", "required": ["apiVersion", "error"],
+      "properties": {
+        "apiVersion": {"const": "0.1"},
+        "error": {
+          "type": "object", "required": ["code", "message", "details"],
+          "properties": {
+            "code": {"type": "string", "minLength": 1},
+            "message": {"type": "string"},
+            "details": {"type": "object"}
+          }
+        }
+      }
+    }
+  }
+}

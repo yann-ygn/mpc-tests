@@ -1,0 +1,280 @@
+"""Exercise the actual socket service against synthetic proc/device-tree fixtures."""
+import concurrent.futures
+import contextlib
+import json
+import os
+from pathlib import Path
+import signal
+import socket
+import stat
+import struct
+import subprocess
+import tempfile
+import time
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+BINARY = ROOT / "build/native-api/host/mpc-api"
+PROFILE = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2.json").read_text())
+REQUEST = b'{"apiVersion":"0.1","op":"describe"}\n'
+
+
+def elf(build_id, bits=32):
+    note = struct.pack("<III", 4, len(build_id), 3) + b"GNU\0" + build_id
+    note += b"\0" * (-len(note) % 4)
+    ident = b"\x7fELF" + bytes([1 if bits == 32 else 2, 1, 1]) + bytes(9)
+    # Place the note away from the research build's fixed file offset.
+    if bits == 32:
+        header = ident + struct.pack("<HHIIIIIHHHHHH", 3, 40, 1, 0, 52, 0, 0, 52, 32, 1, 0, 0, 0)
+        entry = struct.pack("<IIIIIIII", 4, 1024, 0, 0, len(note), len(note), 4, 4)
+    else:
+        header = ident + struct.pack("<HHIQQQIHHHHHH", 3, 62, 1, 0, 64, 0, 0, 64, 56, 1, 0, 0, 0)
+        entry = struct.pack("<IIQQQQQQ", 4, 4, 1024, 0, 0, len(note), len(note), 4)
+    return (header + entry).ljust(1024, b"\0") + note
+
+
+class DescribeTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not os.environ.get("MPC_API_TEST_BINARY"):
+            subprocess.run(["python3", str(ROOT / "native-api/build.py"), "--host"], check=True, capture_output=True)
+        cls.binary = Path(os.environ.get("MPC_API_TEST_BINARY", BINARY))
+        # Optional external validation; core socket/metadata tests use only stdlib.
+        try:
+            import jsonschema
+        except ImportError:
+            cls.validator = None
+        else:
+            schema = json.loads((ROOT / "native-api/schema/describe-response.schema.json").read_text())
+            jsonschema.Draft202012Validator.check_schema(schema)
+            cls.validator = jsonschema.Draft202012Validator(schema)
+            request_schema = json.loads((ROOT / "native-api/schema/describe-request.schema.json").read_text())
+            jsonschema.Draft202012Validator.check_schema(request_schema)
+            jsonschema.validate(json.loads(REQUEST), request_schema)
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="mpc-api-test-")
+        self.root = Path(self.temp.name)
+        self.sock = self.root / "api.sock"
+        model = self.root / "sys/firmware/devicetree/base/model"
+        model.parent.mkdir(parents=True)
+        model.write_bytes(PROFILE["deviceTreeModel"].encode() + b"\0")
+        self.add_mpc()
+        self.process = None
+        self.start()
+
+    def add_mpc(self, pid=100, started=200, build_id=None, bits=32):
+        process = self.root / f"proc/{pid}"
+        process.mkdir(parents=True, exist_ok=True)
+        (process / "comm").write_text("MPC Main Thread\n")
+        self.set_start(pid, started)
+        image = self.root / f"images/{pid}/MPC"
+        image.parent.mkdir(parents=True, exist_ok=True)
+        image.write_bytes(elf(bytes.fromhex(build_id or PROFILE["buildId"]), bits))
+        if not (process / "exe").is_symlink():
+            (process / "exe").symlink_to(image)
+
+    def set_start(self, pid, started):
+        # Field 22 follows fields 3..21. Parentheses/spaces in comm must not shift parsing.
+        (self.root / f"proc/{pid}/stat").write_text(
+            f"{pid} (MPC (test worker)) S " + "0 " * 18 + f"{started} 0\n")
+
+    def start(self):
+        self.process = subprocess.Popen([str(self.binary), "serve", "--socket", str(self.sock),
+            "--device-id", "dev_fixture", "--root", str(self.root)], stderr=subprocess.PIPE)
+        until = time.monotonic() + 5
+        while not self.sock.exists():
+            if self.process.poll() is not None:
+                self.fail(self.process.stderr.read().decode())
+            if time.monotonic() > until:
+                self.fail("Service did not bind")
+            time.sleep(0.01)
+
+    def stop(self):
+        if self.process:
+            self.process.send_signal(signal.SIGTERM)
+            self.process.communicate(timeout=3)
+            self.assertEqual(self.process.returncode, 0)
+            self.process = None
+
+    def tearDown(self):
+        try:
+            self.stop()
+        finally:
+            self.temp.cleanup()
+
+    def call(self, request=REQUEST, shutdown=False):
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.settimeout(3)
+            client.connect(str(self.sock))
+            client.sendall(request)
+            if shutdown:
+                client.shutdown(socket.SHUT_WR)
+            chunks = []
+            while chunk := client.recv(16384):
+                chunks.append(chunk)
+                if b"\n" in chunk:
+                    break
+        response = json.loads(b"".join(chunks))
+        if self.validator:
+            self.validator.validate(response)
+        return response
+
+    def assert_unavailable(self, result, reason):
+        self.assertEqual(result["capabilities"]["describe"], {"available": True, "reason": None})
+        for op, capability in result["capabilities"].items():
+            if op != "describe":
+                self.assertFalse(capability["available"], op)
+                self.assertEqual(capability["reason"], reason)
+
+    def test_live_metadata_and_truthful_discovery_only_capabilities(self):
+        result = self.call()
+        self.assertEqual(result["deviceId"], "dev_fixture")
+        self.assertRegex(result["instanceId"], r"^run_[0-9a-f]{32}$")
+        self.assertEqual(result["firmware"]["model"], PROFILE["deviceTreeModel"])
+        self.assertEqual(result["firmware"]["buildId"], PROFILE["buildId"])
+        self.assertEqual(result["firmware"]["version"], "3.9.1.2")
+        self.assertEqual(result["firmware"]["versionSource"], "build_profile")
+        self.assertEqual(result["readiness"]["firmwareProfile"], "matched")
+        self.assertEqual(result["readiness"]["nativeAdapter"], "not_attached")
+        self.assertEqual(result["readableFields"], [])
+        self.assertEqual(result["limits"]["queueCapacity"], 0)
+        self.assertEqual(result["limits"]["requestRetentionMs"], 0)
+        self.assert_unavailable(result, "NOT_IMPLEMENTED")
+
+    def test_identity_stable_until_process_or_service_restart(self):
+        before = self.call()
+        self.assertEqual(before["instanceId"], self.call()["instanceId"])
+        self.set_start(100, 201)
+        replaced = self.call()
+        self.assertNotEqual(before["instanceId"], replaced["instanceId"])
+        self.stop()
+        self.assertFalse(self.sock.exists())
+        self.start()
+        restarted = self.call()
+        self.assertNotEqual(replaced["instanceId"], restarted["instanceId"])
+        self.assertEqual(restarted["deviceId"], before["deviceId"])
+
+    def test_same_build_on_other_model_is_not_supported(self):
+        (self.root / "sys/firmware/devicetree/base/model").write_bytes(b"Akai Professional MPC Other\0")
+        result = self.call()
+        self.assertEqual(result["readiness"]["firmwareProfile"], "unsupported")
+        self.assert_unavailable(result, "UNSUPPORTED_FIRMWARE")
+
+    def test_unknown_build_reports_observed_id_without_guessing_version(self):
+        self.add_mpc(build_id="11223344", bits=64)
+        result = self.call()
+        self.assertEqual(result["firmware"]["buildId"], "11223344")
+        self.assertIsNone(result["firmware"]["version"])
+        self.assertIsNone(result["firmware"]["versionSource"])
+        self.assert_unavailable(result, "UNSUPPORTED_FIRMWARE")
+
+    def test_missing_or_multiple_mpc_processes(self):
+        (self.root / "proc/100/exe").unlink()
+        stopped = self.call()
+        self.assertEqual(stopped["readiness"]["mpcProcess"], "not_running")
+        self.assertIsNone(stopped["firmware"]["buildId"])
+        self.assert_unavailable(stopped, "NOT_READY")
+        self.add_mpc()
+        self.add_mpc(pid=101)
+        result = self.call()
+        self.assertEqual(result["readiness"]["mpcProcess"], "ambiguous")
+        self.assert_unavailable(result, "NOT_READY")
+
+    def test_thread_names_do_not_override_executable_identity(self):
+        (self.root / "proc/100/comm").write_text("JUCE Message Thread\n")
+        self.assertEqual(self.call()["readiness"]["mpcProcess"], "running")
+        other = self.root / "proc/101"
+        other.mkdir()
+        (other / "comm").write_text("MPC\n")
+        image = self.root / "images/other"
+        image.write_bytes(b"unrelated")
+        (other / "exe").symlink_to(image)
+        self.assertEqual(self.call()["readiness"]["mpcProcess"], "running")
+
+    def test_bad_elf_and_missing_model_remain_discoverable(self):
+        (self.root / "proc/100/exe").write_bytes(b"not ELF")
+        result = self.call()
+        self.assertEqual(result["readiness"]["mpcProcess"], "unreadable")
+        self.assertIsNone(result["firmware"]["buildId"])
+        self.assert_unavailable(result, "NOT_READY")
+        self.add_mpc()
+        (self.root / "sys/firmware/devicetree/base/model").unlink()
+        result = self.call()
+        self.assertIsNone(result["firmware"]["model"])
+        self.assert_unavailable(result, "NOT_READY")
+
+    def test_json_string_escaping_and_metadata_utf8(self):
+        path = self.root / "sys/firmware/devicetree/base/model"
+        path.write_bytes('MPC "é"\\x\n\0'.encode())
+        self.assertEqual(self.call()["firmware"]["model"], 'MPC "é"\\x')
+        path.write_bytes(b"bad\xff\0")
+        self.assertIsNone(self.call()["firmware"]["model"])
+
+    def test_whitespace_order_and_escaped_identifiers(self):
+        response = self.call(b' { "op" : "de\\u0073cribe", "api\\u0056ersion" : "0.1" } \r\n')
+        self.assertNotIn("error", response)
+
+    def test_invalid_requests_are_bounded_and_do_not_crash_server(self):
+        requests = [b'{}\n', b'[]\n', b'null\n', b'{"apiVersion":0.1,"op":"describe"}\n',
+            b'{"apiVersion":"0.1","op":"describe","extra":"x"}\n',
+            b'{"apiVersion":"0.1","op":"describe","op":"describe"}\n',
+            b'{"op":"describe","op":"describe"}\n',
+            b'{"apiVersion":"0.1","op":"describe"}x\n',
+            b'{"apiVersion":"0.1","op":"de\x00scribe"}\n',
+            b'{"apiVersion":"0.1","op":"\\ud800"}\n',
+            b'{"apiVersion":"0.1","op":"\\x64escribe"}\n',
+            b'x' * 1025 + b'\n']
+        for request in requests:
+            with self.subTest(request=request[:100]):
+                self.assertEqual(self.call(request)["error"]["code"], "INVALID_ARGUMENT")
+        self.assertNotIn("error", self.call())
+
+    def test_versions_and_operations_return_structured_errors(self):
+        self.assertEqual(self.call(b'{"apiVersion":"2","op":"describe"}\n')["error"]["code"], "UNSUPPORTED_API_VERSION")
+        self.assertEqual(self.call(b'{"apiVersion":"0.1","op":"raw_call"}\n')["error"]["code"], "UNSUPPORTED_OPERATION")
+        self.assertEqual(self.call(b'{"apiVersion":"0.1","op":"set_mute"}\n')["error"]["code"], "NOT_READY")
+
+    def test_socket_permissions_and_live_socket_preserved(self):
+        self.assertEqual(stat.S_IMODE(self.sock.stat().st_mode), 0o600)
+        attempt = subprocess.run([str(self.binary), "serve", "--socket", str(self.sock),
+            "--device-id", "other"], capture_output=True, timeout=3)
+        self.assertNotEqual(attempt.returncode, 0)
+        self.assertNotIn("error", self.call())
+
+    def test_public_or_symlink_parent_refused(self):
+        public = self.root / "public"
+        public.mkdir(mode=0o755)
+        link = self.root / "link"
+        link.symlink_to(self.root, target_is_directory=True)
+        for parent in (public, link):
+            attempt = subprocess.run([str(self.binary), "serve", "--socket", str(parent / "other.sock"),
+                "--device-id", "other"], capture_output=True, timeout=3)
+            self.assertNotEqual(attempt.returncode, 0)
+            self.assertFalse((parent / "other.sock").exists())
+
+    def test_slow_and_disconnected_clients_do_not_block_discovery(self):
+        with contextlib.closing(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)) as slow:
+            slow.settimeout(3)
+            slow.connect(str(self.sock))
+            slow.sendall(b'{')
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+                results = list(pool.map(lambda _: self.call(), range(12)))
+            self.assertTrue(all("error" not in result for result in results))
+            self.assertEqual(len({r["instanceId"] for r in results}), 1)
+            self.assertEqual(json.loads(slow.recv(16384))["error"]["code"], "INVALID_ARGUMENT")
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as disconnected:
+            disconnected.connect(str(self.sock))
+            disconnected.sendall(REQUEST)
+        self.assertNotIn("error", self.call())
+
+    def test_truncated_line_and_cli_relay(self):
+        self.assertEqual(self.call(b'{', shutdown=True)["error"]["code"], "INVALID_ARGUMENT")
+        result = subprocess.run([str(self.binary), "request", "--socket", str(self.sock)],
+            input=REQUEST.rstrip(), capture_output=True, check=True, timeout=3)
+        self.assertEqual(json.loads(result.stdout)["deviceId"], "dev_fixture")
+
+
+
+if __name__ == "__main__":
+    unittest.main()

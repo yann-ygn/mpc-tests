@@ -17,6 +17,9 @@ before running experiments.
   `findings/native-control.md` maps the setters. `tools/mpc_native_lab.py` now verifies temporary UI-thread dispatch
   and bounded native mute/solo/arm pulses; it loads/unloads a lab bridge without restart. Native solo can select its
   target through follow-solo behaviour; restore selection after unselected-track experiments.
+- `native-api/`: standalone discovery-only C service and JSON schemas for the accepted 0.1 contract. It serves
+  `describe` on a private Unix socket, reads live executable/device metadata, and exposes no native state or writes
+  yet. See `native-api/README.md` for host tests, ARM builds and temporary device smoke tests.
 - `build/` is gitignored: local copies of the log, project saves and the settings backup.
 
 ## The device
@@ -54,4 +57,7 @@ before running experiments.
 - Git: github.com/yann-ygn/mpc-tests, `main` (default) and `privtap`.
 - Taiga: project "MPC Key 37 API" (id 24). Move a story's status when its work starts or ends.
 - Native API roadmap: `findings/native-api-roadmap.md` (Taiga epic #4, capability expansion epic #27).
-- Next implementation step: public API contract (#28), then firmware adapter (#29) and UI-thread executor (#30).
+- Accepted public API contract: `findings/native-api-contract.md` (#28). Initial `describe` implementation is in
+  `native-api/` under local-service story #32 (In progress; remaining operations unavailable).
+- Next: firmware adapter (#29) and UI-thread executor (#30), then lifetime/state/flag handlers before enabling
+  further service capabilities.
