@@ -1,4 +1,6 @@
 {
+  "profileSchemaVersion": 1,
+  "abi": {"machine":"arm","pointerBits":32,"byteOrder":"little","floatAbi":"hard"},
   "mpcVersion": "3.9.1.2",
   "model": "Key 37",
   "deviceTreeModel": "Akai Professional MPC Key 37",

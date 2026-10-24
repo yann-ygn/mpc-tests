@@ -1,8 +1,16 @@
 {
+  "profileSchemaVersion": 1,
+  "supportedProgramFamilies": ["plugin", "drum"],
+  "capabilityQualification": "bounded_lab_proof",
   "firmwareVersion": "3.9.1.2",
   "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
   "status": "native property calls verified in a bounded temporary bridge; wrapper entry points themselves were not invoked",
   "functions": [
+    {
+      "name": "recordArmFilterInvoker",
+      "rva": 39303804,
+      "prefixHex": "002090e50010d1e5003092e5041092e9000053e30430431201001ce3cc0083e0"
+    },
     {
       "name": "ScriptableTrackPool::SetMute",
       "rva": 42392420,
@@ -64,6 +72,7 @@
       "filterFunctionOffset": 1156,
       "filterManagerOffset": 1164,
       "filterInvokerOffset": 1168,
+      "filterInvokerRva": 39303804,
       "scriptGetterRva": 42366988,
       "scriptValueOffset": 1155,
       "observedValueOffset": 1172

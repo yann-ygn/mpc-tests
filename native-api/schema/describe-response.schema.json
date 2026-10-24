@@ -48,6 +48,16 @@
           "properties": {
             "status": {"enum": ["discovery_only", "ready", "not_ready"]},
             "nativeAdapter": {"enum": ["not_attached", "attached"]},
+            "adapter": {
+              "type": ["object", "null"],
+              "required": ["abiVersion", "instanceId", "codeVerified", "qualification"],
+              "properties": {
+                "abiVersion": {"const": 1},
+                "instanceId": {"type": "string", "pattern": "^adp_[0-9a-f]{32}$"},
+                "codeVerified": {"const": true},
+                "qualification": {"type":"string","minLength":1}
+              }
+            },
             "mpcProcess": {"enum": ["running", "not_running", "ambiguous", "unreadable"]},
             "firmwareProfile": {"enum": ["matched", "unsupported", "unknown"]},
             "profileId": {"type": ["string", "null"]}
@@ -81,7 +91,8 @@
             "requestRetentionMs": {"type": "integer", "minimum": 0},
             "defaultStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
             "maxStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
-            "verificationTimeoutMs": {"$ref": "#/$defs/nullableMilliseconds"}
+            "verificationTimeoutMs": {"$ref": "#/$defs/nullableMilliseconds"},
+            "adapterProbeTimeoutMs": {"type":"integer","minimum":1}
           }
         }
       }

@@ -1,4 +1,5 @@
 #include "api.h"
+#include "elf_id.h"
 #include "profile.h"
 
 #include <dirent.h>
@@ -75,77 +76,6 @@ static unsigned long long start_time(const char *root, long pid) {
     return errno || end == p || (*end != ' ' && *end != '\n' && *end) ? 0 : value;
 }
 
-static int read_at(int fd, void *output, size_t count, uint64_t offset) {
-    if (offset > INT64_MAX || count > (uint64_t)INT64_MAX - offset) return -1;
-    size_t used = 0;
-    while (used < count) {
-        ssize_t n = pread(fd, (char *)output + used, count - used, (off_t)(offset + used));
-        if (n < 0 && errno == EINTR) continue;
-        if (n <= 0) return -1;
-        used += (size_t)n;
-    }
-    return 0;
-}
-
-static int note_build_id(int fd, char output[129]) {
-    unsigned char ident[EI_NIDENT];
-    if (read_at(fd, ident, sizeof ident, 0) || memcmp(ident, ELFMAG, SELFMAG)
-        || ident[EI_DATA] != ELFDATA2LSB || ident[EI_VERSION] != EV_CURRENT) return -1;
-    uint64_t offset;
-    unsigned count, size;
-    if (ident[EI_CLASS] == ELFCLASS32) {
-        Elf32_Ehdr header;
-        if (read_at(fd, &header, sizeof header, 0) || header.e_phentsize != sizeof(Elf32_Phdr)) return -1;
-        offset = header.e_phoff; count = header.e_phnum; size = header.e_phentsize;
-    } else if (ident[EI_CLASS] == ELFCLASS64) {
-        Elf64_Ehdr header;
-        if (read_at(fd, &header, sizeof header, 0) || header.e_phentsize != sizeof(Elf64_Phdr)) return -1;
-        offset = header.e_phoff; count = header.e_phnum; size = header.e_phentsize;
-    } else return -1;
-    if (!count || count > 1024 || offset > INT64_MAX
-        || (uint64_t)count * size > (uint64_t)INT64_MAX - offset) return -1;
-    size_t budget = 1024 * 1024;
-    for (unsigned i = 0; i < count; i++) {
-        uint64_t note_offset, note_size;
-        uint32_t type;
-        if (ident[EI_CLASS] == ELFCLASS32) {
-            Elf32_Phdr entry;
-            if (read_at(fd, &entry, sizeof entry, offset + (uint64_t)i * size)) return -1;
-            type = entry.p_type; note_offset = entry.p_offset; note_size = entry.p_filesz;
-        } else {
-            Elf64_Phdr entry;
-            if (read_at(fd, &entry, sizeof entry, offset + (uint64_t)i * size)) return -1;
-            type = entry.p_type; note_offset = entry.p_offset; note_size = entry.p_filesz;
-        }
-        if (type != PT_NOTE) continue;
-        if (note_size > 65536 || note_size > budget) return -1;
-        budget -= (size_t)note_size;
-        unsigned char notes[65536];
-        if (read_at(fd, notes, (size_t)note_size, note_offset)) return -1;
-        size_t p = 0;
-        while (note_size - p >= sizeof(Elf32_Nhdr)) {
-            Elf32_Nhdr header;
-            memcpy(&header, notes + p, sizeof header);
-            p += sizeof header;
-            if (header.n_namesz > note_size - p) return -1;
-            size_t name_size = ((size_t)header.n_namesz + 3) & ~(size_t)3;
-            if (name_size > note_size - p) return -1;
-            size_t desc = p + name_size;
-            if (header.n_descsz > note_size - desc) return -1;
-            size_t desc_size = ((size_t)header.n_descsz + 3) & ~(size_t)3;
-            if (desc_size > note_size - desc) return -1;
-            if (header.n_type == NT_GNU_BUILD_ID && header.n_namesz == 4
-                && !memcmp(notes + p, "GNU\0", 4) && header.n_descsz && header.n_descsz <= 64) {
-                for (uint32_t j = 0; j < header.n_descsz; j++)
-                    sprintf(output + j * 2, "%02x", notes[desc + j]);
-                return 0;
-            }
-            p = desc + desc_size;
-        }
-    }
-    return -1;
-}
-
 static int valid_utf8(const char *text) {
     const unsigned char *p = (const unsigned char *)text;
     while (*p) {
@@ -210,7 +140,7 @@ int discovery_read(struct api *api, struct discovery *result) {
         int fd = open(path, O_RDONLY | O_CLOEXEC | O_NONBLOCK);
         if (fd >= 0) {
             valid = started && !fstat(fd, &before) && S_ISREG(before.st_mode)
-                && !note_build_id(fd, result->build_id) && !stat(path, &after)
+                && !mpc_elf_build_id(fd, result->build_id) && !stat(path, &after)
                 && before.st_dev == after.st_dev && before.st_ino == after.st_ino
                 && started == start_time(api->root, pid);
             close(fd);
@@ -221,14 +151,23 @@ int discovery_read(struct api *api, struct discovery *result) {
         : valid ? "running" : "unreadable";
     result->known_build = valid && !strcmp(result->build_id, PROFILE_BUILD_ID);
     int matched = result->known_build && !strcmp(result->model, PROFILE_MODEL);
+    if (matched) {
+        result->adapter_attached = adapter_probe(api->root, pid, result->adapter_id);
+        if (started != start_time(api->root, pid) || stat(path, &after)
+            || before.st_dev != after.st_dev || before.st_ino != after.st_ino) {
+            valid = matched = result->known_build = result->adapter_attached = 0;
+            result->adapter_id[0] = result->build_id[0] = 0;
+            result->process = "unreadable";
+        }
+    }
     result->profile = !valid || !result->model[0] ? "unknown" : matched ? "matched" : "unsupported";
     result->unavailable_reason = !strcmp(result->profile, "unknown") ? "NOT_READY"
         : matched ? "NOT_IMPLEMENTED" : "UNSUPPORTED_FIRMWARE";
 
     char signature[1024];
-    snprintf(signature, sizeof signature, "%d:%ld:%llu:%llu:%llu:%d:%s:%s", count, pid, started,
+    snprintf(signature, sizeof signature, "%d:%ld:%llu:%llu:%llu:%d:%s:%s:%s", count, pid, started,
         (unsigned long long)before.st_dev, (unsigned long long)before.st_ino, valid,
-        result->build_id, result->model);
+        result->build_id, result->model, result->adapter_id);
     if (api->backend_signature[0] && strcmp(api->backend_signature, signature)
         && instance_new(api->instance_id)) return -1;
     strcpy(api->backend_signature, signature);

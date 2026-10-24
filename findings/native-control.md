@@ -121,6 +121,12 @@ only change its cache unless a bridge routes the command to these native setters
 
 ## More controls
 
+The subsequent [reusable adapter](../native-api/adapter/README.md) extracts these property/filter paths into
+`libmpc_native.so` with eight C exports and versioned private profiles. It adds the record-arm invoker as a seventh
+code fingerprint. Device tests verified typed UI-thread reads, independent readback, load/unload and discovery of a
+retained attachment. The public service still exposes discovery only; reusable execution and authoritative
+project/object lifetimes remain separate work. The six-fingerprint description above records the earlier proof.
+
 The broader static [candidate catalog](native-control-catalog.md) groups the other compiled bindings and separates
 named methods/properties from parameter identifiers. It was collected without additional device tests.
 

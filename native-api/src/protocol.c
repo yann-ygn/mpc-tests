@@ -117,7 +117,14 @@ char *api_respond(struct api *api, const char *request, size_t length) {
     fputs(",\"versionSource\":", output); quoted(output, discovery.known_build ? "build_profile" : NULL);
     fputs(",\"buildId\":", output); quoted(output, discovery.build_id[0] ? discovery.build_id : NULL);
     fputs(",\"buildIdSource\":", output); quoted(output, discovery.build_id[0] ? "elf_note" : NULL);
-    fputs("},\"readiness\":{\"status\":\"discovery_only\",\"nativeAdapter\":\"not_attached\",\"mpcProcess\":", output);
+    fputs("},\"readiness\":{\"status\":\"discovery_only\",\"nativeAdapter\":", output);
+    quoted(output, discovery.adapter_attached ? "attached" : "not_attached");
+    fputs(",\"adapter\":", output);
+    if (discovery.adapter_attached) {
+        fputs("{\"abiVersion\":1,\"instanceId\":", output); quoted(output, discovery.adapter_id);
+        fputs(",\"codeVerified\":true,\"qualification\":\"bounded_lab_proof\"}", output);
+    } else fputs("null", output);
+    fputs(",\"mpcProcess\":", output);
     quoted(output, discovery.process);
     fputs(",\"firmwareProfile\":", output); quoted(output, discovery.profile);
     fputs(",\"profileId\":", output); quoted(output, !strcmp(discovery.profile, "matched") ? PROFILE_ID : NULL);
@@ -132,8 +139,8 @@ char *api_respond(struct api *api, const char *request, size_t length) {
     }
     fprintf(output, "},\"limits\":{\"maxRequestBytes\":%d,\"maxResponseBytes\":%d,\"maxConnections\":%d,\"connectionTimeoutMs\":%d,"
         "\"queueCapacity\":0,\"requestRetentionMs\":0,\"defaultStartWithinMs\":null,\"maxStartWithinMs\":null,"
-        "\"verificationTimeoutMs\":null}}\n", MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES,
-        MAX_CONNECTIONS, CONNECTION_TIMEOUT_MS);
+        "\"verificationTimeoutMs\":null,\"adapterProbeTimeoutMs\":%d}}\n", MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES,
+        MAX_CONNECTIONS, CONNECTION_TIMEOUT_MS, ADAPTER_PROBE_TIMEOUT_MS);
     if (fclose(output)) { free(buffer); return NULL; }
     return buffer;
 }

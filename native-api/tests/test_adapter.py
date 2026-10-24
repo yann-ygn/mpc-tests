@@ -1,0 +1,69 @@
+import copy
+import importlib.util
+import json
+from pathlib import Path
+import subprocess
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+spec = importlib.util.spec_from_file_location("mpc_firmware_profile", ROOT / "native-api/adapter/firmware_profile.py")
+profile = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(profile)
+
+
+class ProfileTests(unittest.TestCase):
+    def setUp(self):
+        self.state = json.loads(profile.STATE.read_text())
+        self.control = json.loads(profile.CONTROL.read_text())
+
+    def test_known_profile_validates(self):
+        profile.validate(self.state, self.control)
+
+    def test_invalid_profiles_rejected(self):
+        cases = {
+            "schema": lambda s, c: s.update(profileSchemaVersion=2),
+            "boolean_schema": lambda s, c: s.update(profileSchemaVersion=True),
+            "abi": lambda s, c: s["abi"].update(pointerBits=64),
+            "build": lambda s, c: c.update(buildId="1122"),
+            "version": lambda s, c: c.update(firmwareVersion="other"),
+            "family": lambda s, c: c["supportedProgramFamilies"].append("midi"),
+            "qualification": lambda s, c: c.update(capabilityQualification="production"),
+            "fingerprint_length": lambda s, c: c["functions"][0].update(prefixHex="abcd"),
+            "duplicate_function": lambda s, c: c["functions"].append(copy.deepcopy(c["functions"][0])),
+            "unverified_setter": lambda s, c: c["bindings"][0].update(setterRva=100),
+            "unverified_filter": lambda s, c: c["bindings"][2].update(filterInvokerRva=100),
+            "owner": lambda s, c: c["bindings"][0].update(propertyOwner="track"),
+            "offset": lambda s, c: c["bindings"][0].update(propertyOffset=0x10004),
+            "alignment": lambda s, c: s["vtables"].update(project=1),
+        }
+        for label, mutate in cases.items():
+            with self.subTest(label=label):
+                state, control = copy.deepcopy(self.state), copy.deepcopy(self.control)
+                mutate(state, control)
+                with self.assertRaises(ValueError):
+                    profile.validate(state, control)
+
+
+class NativeAdapterTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        subprocess.run(["python3", str(ROOT / "native-api/build.py"), "--host", "--tests"], check=True, capture_output=True)
+
+    def test_isolated_native_guards_and_typed_operations(self):
+        run = subprocess.run([str(ROOT / "build/native-api/host/native_fixture")], check=True, capture_output=True, text=True)
+        self.assertGreaterEqual(int(run.stdout.split("=")[1]), 25)
+
+    def test_shared_library_export_allowlist(self):
+        output = subprocess.run(["readelf", "-W", "--dyn-syms", str(ROOT / "build/native-api/host/libmpc_native.so")],
+                                check=True, capture_output=True, text=True).stdout
+        names = {row[7] for line in output.splitlines() if len(row := line.split()) >= 8
+                 and row[4] in ("GLOBAL", "WEAK") and row[6] != "UND"}
+        self.assertEqual(names, {"mpc_native_open", "mpc_native_close", "mpc_native_get_status", "mpc_native_read_track",
+            "mpc_native_set_mute", "mpc_native_set_solo", "mpc_native_set_record_armed", "mpc_native_error_name"})
+        dynamic = subprocess.run(["readelf", "-d", str(ROOT / "build/native-api/host/libmpc_native.so")],
+                                 check=True, capture_output=True, text=True).stdout
+        self.assertIn("Library soname: [libmpc_native.so]", dynamic)
+
+
+if __name__ == "__main__":
+    unittest.main()

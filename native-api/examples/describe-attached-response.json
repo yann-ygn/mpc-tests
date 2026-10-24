@@ -1,0 +1,83 @@
+{
+  "apiVersion": "0.1",
+  "deviceId": "dev_example",
+  "instanceId": "run_00000000000000000000000000000000",
+  "implementation": {
+    "name": "mpc-native-api",
+    "version": "0.1.0-dev"
+  },
+  "firmware": {
+    "model": "Akai Professional MPC Key 37",
+    "modelSource": "device_tree",
+    "version": "3.9.1.2",
+    "versionSource": "build_profile",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+    "buildIdSource": "elf_note"
+  },
+  "readiness": {
+    "status": "discovery_only",
+    "nativeAdapter": "attached",
+    "adapter": {
+      "abiVersion": 1,
+      "instanceId": "adp_00000000000000000000000000000000",
+      "codeVerified": true,
+      "qualification": "bounded_lab_proof"
+    },
+    "mpcProcess": "running",
+    "firmwareProfile": "matched",
+    "profileId": "key37-mpc3.9.1.2"
+  },
+  "readableFields": [],
+  "capabilities": {
+    "describe": {
+      "available": true,
+      "reason": null
+    },
+    "get_state": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "current_track": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "set_mute": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "trackTypes": [],
+      "verification": []
+    },
+    "set_solo": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "trackTypes": [],
+      "verification": []
+    },
+    "set_record_armed": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "trackTypes": [],
+      "verification": []
+    },
+    "get_command": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "watch": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    }
+  },
+  "limits": {
+    "maxRequestBytes": 1024,
+    "maxResponseBytes": 16384,
+    "maxConnections": 16,
+    "connectionTimeoutMs": 1000,
+    "queueCapacity": 0,
+    "requestRetentionMs": 0,
+    "defaultStartWithinMs": null,
+    "maxStartWithinMs": null,
+    "verificationTimeoutMs": null,
+    "adapterProbeTimeoutMs": 50
+  }
+}

@@ -20,6 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "native_profile.h"
+#include "mpc_native.h"
 
 /* Bounded lab bridge. No arbitrary calls, raw writes, saves, or transport commands.
  * Commands are local/root-only. PULSE restores its original requested value. */
@@ -32,13 +33,13 @@ struct job {
 struct function { void *data[2]; int (*manager)(void*,const void*,int); void (*invoke)(const void*); };
 _Static_assert(sizeof(struct function)==16,"GNU ARM std::function ABI");
 static uintptr_t image;
+static struct mpc_native_adapter *adapter;
 static int memory=-1;
 static pid_t ui_tid;
 static int pending_captures;
 static char socket_path[108];
 static int read_mem(uintptr_t p,void *out,size_t n) { return pread(memory,out,n,(off_t)p)==(ssize_t)n ? 0 : -1; }
 static int get32(uintptr_t p,uint32_t *v) { return read_mem(p,v,4); }
-static int get8(uintptr_t p,unsigned *v) { unsigned char b;if(read_mem(p,&b,1))return -1;*v=b;return b<=1?0:-1; }
 static void release(struct job *j) {
     if(__atomic_sub_fetch(&j->refs,1,__ATOMIC_ACQ_REL)==0){pthread_cond_destroy(&j->cond);pthread_mutex_destroy(&j->mutex);free(j);}
 }
@@ -67,9 +68,11 @@ static int snapshot(struct job *j) {
         if(get32(s->track,&vt) || vt!=image+TRACK_VTABLE || get32(s->track+0x648,&s->program)
             || get32(s->program,&pvt))return -1;
         if(pvt!=image+PLUGIN_VTABLE && pvt!=image+DRUM_VTABLE)return -1;
-        if(get8(s->program+0x78,&s->mute)||get8(s->program+0x97,&s->solo)||get8(s->track+0x483,&s->arm)
-            ||get8(s->program+0xc0,&s->audio_solo)||get8(s->track+0x494,&s->audio_arm)
-            ||get8(s->program+0x1ac,&s->silenced))return -1;
+        struct mpc_native_target target={j->project,s->track,s->program};
+        struct mpc_native_track_state state;
+        if(mpc_native_read_track(adapter,&target,&state)!=MPC_NATIVE_OK)return -1;
+        s->mute=state.muted;s->solo=state.soloed;s->arm=state.record_armed;
+        s->audio_solo=state.audio_soloed;s->audio_arm=state.audio_record_armed;s->silenced=state.silenced;
         if(s->track==j->track && s->program==j->program)found++;
     }
     return found==1?0:-1;
@@ -85,23 +88,19 @@ static void invoke(const void *capture) {
     else {
         j->ok=1;
         if(j->op==2) {
-            const struct binding *b=&bindings[j->property];unsigned current;
-            uintptr_t owner=j->property==2?j->track:j->program;
-            if(get8(owner+b->value_offset,&current)||current!=(unsigned)j->expected) {
-                j->ok=0;snprintf(j->error,sizeof j->error,"requested value precondition changed");
-            } else {
-                j->before=current;
-                if(current!=(unsigned)j->value) {
-                    bool v=j->value!=0;
-                    if(j->property==2) {
-                        uint32_t m,fn;
-                        if(get32(j->track+0x48c,&m)||!m||get32(j->track+0x490,&fn)||!fn) {
-                            j->ok=0;snprintf(j->error,sizeof j->error,"arm filter missing");
-                        } else v=((bool(*)(void*,const bool*))(uintptr_t)fn)((void*)(uintptr_t)(j->track+0x484),&v);
-                    }
-                    if(j->ok)((void(*)(void*,bool))(image+b->setter))((void*)(owner+b->property_offset),v);
-                }
+            struct mpc_native_target target={j->project,j->track,j->program};
+            struct mpc_native_track_state before;
+            enum mpc_native_error error=mpc_native_read_track(adapter,&target,&before);
+            bool expected=j->expected!=0,value=j->value!=0;
+            struct mpc_native_write_result result;
+            if(error==MPC_NATIVE_OK) {
+                j->before=j->property==0?before.muted:j->property==1?before.soloed:before.record_armed;
+                if(j->property==0)error=mpc_native_set_mute(adapter,&target,value,&expected,&result);
+                else if(j->property==1)error=mpc_native_set_solo(adapter,&target,value,&expected,&result);
+                else error=mpc_native_set_record_armed(adapter,&target,value,&expected,&result);
             }
+            if(error!=MPC_NATIVE_OK){j->ok=0;snprintf(j->error,sizeof j->error,"%s",mpc_native_error_name(error));}
+
         }
     }
     j->done=1;pthread_cond_broadcast(&j->cond);pthread_mutex_unlock(&j->mutex);
@@ -146,7 +145,19 @@ static void *worker(void *unused) {
         FILE *f=fdopen(fd,"r+");if(!f){close(fd);continue;}
         char line[256],verb[16]={0},prop[16]={0},extra;
         if(fgets(line,sizeof line,f)) {
-            if(!strcmp(line,"PING\n")) {struct job *j=dispatch(0,0,0,0,0,0,0);report(f,"ping",j);if(j)release(j);}
+            if(!strcmp(line,"ADAPTER_STATUS\n")) {
+                struct mpc_native_status status;
+                enum mpc_native_error error=mpc_native_get_status(adapter,&status);
+                if(error==MPC_NATIVE_OK)fprintf(f,"MPC_ADAPTER_V1 %s %s %s VERIFIED\n",status.instance_id,status.profile_id,status.build_id);
+                else fprintf(f,"MPC_ADAPTER_ERROR %s\n",mpc_native_error_name(error));
+            }
+            else if(!strncmp(line,"READ ",5)) {
+                uint32_t project,track,program;
+                if(sscanf(line,"READ %x %x %x %c",&project,&track,&program,&extra)==3) {
+                    struct job *j=dispatch(1,0,0,0,project,track,program);report(f,"read",j);if(j)release(j);
+                } else fprintf(f,"{\"ok\":false,\"error\":\"invalid READ target\"}\n");
+            }
+            else if(!strcmp(line,"PING\n")) {struct job *j=dispatch(0,0,0,0,0,0,0);report(f,"ping",j);if(j)release(j);}
             else if(!strcmp(line,"QUIT\n")){
                 if(__atomic_load_n(&pending_captures,__ATOMIC_ACQUIRE)==0){quit=1;fprintf(f,"{\"ok\":true,\"phase\":\"stopping\"}\n");}
                 else fprintf(f,"{\"ok\":false,\"error\":\"callbacks still pending; retry QUIT\"}\n");
@@ -176,14 +187,17 @@ static int find_main(struct dl_phdr_info *p,size_t n,void *unused) {
     (void)n;(void)unused;if(p->dlpi_name&&*p->dlpi_name)return 0;
     image=p->dlpi_addr;return 1;
 }
+/* This hook is confined to the retained experimental lab. Adapter ownership
+ * checks follow it, but authoritative active-project generations remain #20. */
+static enum mpc_native_error lab_target(void *unused,const struct mpc_native_target *target) {
+    (void)unused;return target?MPC_NATIVE_OK:MPC_NATIVE_INVALID_ARGUMENT;
+}
 __attribute__((constructor)) static void start(void) {
     dl_iterate_phdr(find_main,NULL);if(!image)return;
-    unsigned char id[20];int exe=open("/proc/self/exe",O_RDONLY|O_CLOEXEC);
-    if(exe<0)return;int matches=pread(exe,id,sizeof id,0x20c)==sizeof id&&!memcmp(id,build_id,sizeof id);close(exe);
-    if(!matches)return;
-    for(size_t k=0;k<sizeof fingerprints/sizeof fingerprints[0];k++)
-        if(memcmp((void*)(image+fingerprints[k].rva),fingerprints[k].bytes,32))return;
-    memory=open("/proc/self/mem",O_RDONLY|O_CLOEXEC);if(memory<0)return;
+    struct mpc_native_hooks hooks={MPC_NATIVE_ABI,sizeof hooks,NULL,lab_target};
+    if(mpc_native_open(&hooks,&adapter)!=MPC_NATIVE_OK)return;
+    memory=open("/proc/self/mem",O_RDONLY|O_CLOEXEC);
+    if(memory<0){mpc_native_close(adapter);adapter=NULL;return;}
     snprintf(socket_path,sizeof socket_path,"/tmp/mpc-native-lab-%d.sock",getpid());
     pthread_t t;pthread_attr_t attr;pthread_attr_init(&attr);pthread_attr_setstacksize(&attr,256*1024);pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
     sigset_t all,old;sigfillset(&all);pthread_sigmask(SIG_SETMASK,&all,&old);
@@ -193,4 +207,5 @@ __attribute__((constructor)) static void start(void) {
 __attribute__((destructor)) static void finish(void) {
     /* The host must QUIT and observe worker exit before dlclose. */
     if(memory>=0)close(memory);
+    mpc_native_close(adapter);adapter=NULL;
 }

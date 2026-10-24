@@ -11,6 +11,7 @@ import struct
 import subprocess
 import tempfile
 import time
+import threading
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -274,6 +275,76 @@ class DescribeTests(unittest.TestCase):
             input=REQUEST.rstrip(), capture_output=True, check=True, timeout=3)
         self.assertEqual(json.loads(result.stdout)["deviceId"], "dev_fixture")
 
+    @contextlib.contextmanager
+    def attachment(self, *, matching_peer=True, response=None, stall=False):
+        pid = os.getpid() if matching_peer else 100
+        if matching_peer:
+            (self.root / "proc/100/exe").unlink(missing_ok=True)
+            self.add_mpc(pid=pid)
+        path = self.root / f"tmp/mpc-native-lab-{pid}.sock"
+        path.parent.mkdir(mode=0o700, exist_ok=True)
+        state = {"epoch":"adp_" + "a" * 32, "response":response}
+        finished = threading.Event()
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server.settimeout(.05)
+        server.bind(str(path)); server.listen(4)
+
+        def serve():
+            while not finished.is_set():
+                try:
+                    client, _ = server.accept()
+                except TimeoutError:
+                    continue
+                with client:
+                    client.settimeout(.2)
+                    try:
+                        data = client.recv(128)
+                        if stall:
+                            finished.wait(.15)
+                            continue
+                        if data == b"ADAPTER_STATUS\n":
+                            payload = state["response"] or f'MPC_ADAPTER_V1 {state["epoch"]} key37-mpc3.9.1.2 {PROFILE["buildId"]} VERIFIED\n'.encode()
+                            client.sendall(payload)
+                    except (OSError, TimeoutError):
+                        pass
+
+        worker = threading.Thread(target=serve)
+        worker.start()
+        try:
+            yield state
+        finally:
+            finished.set(); worker.join(timeout=1); server.close(); path.unlink()
+
+    def test_verified_attachment_rotates_instance_without_enabling_commands(self):
+        with self.attachment() as attachment:
+            first = self.call()
+            self.assertEqual(first["readiness"]["nativeAdapter"], "attached")
+            self.assertEqual(first["readiness"]["adapter"]["qualification"], "bounded_lab_proof")
+            self.assertTrue(first["readiness"]["adapter"]["codeVerified"])
+            self.assertEqual(first["instanceId"], self.call()["instanceId"])
+            self.assert_unavailable(first, "NOT_IMPLEMENTED")
+            attachment["epoch"] = "adp_" + "b" * 32
+            second = self.call()
+            self.assertNotEqual(first["instanceId"], second["instanceId"])
+        third = self.call()
+        self.assertEqual(third["readiness"]["nativeAdapter"], "not_attached")
+        self.assertNotEqual(second["instanceId"], third["instanceId"])
+
+    def test_attachment_requires_matching_mpc_peer_pid(self):
+        with self.attachment(matching_peer=False):
+            self.assertEqual(self.call()["readiness"]["nativeAdapter"], "not_attached")
+
+    def test_bad_or_unresponsive_attachment_does_not_claim_readiness(self):
+        with self.attachment() as attachment:
+            for payload in [b"MPC_ADAPTER_ERROR FINGERPRINT_MISMATCH\n", b"MPC_ADAPTER_V1 bad profile build VERIFIED\n",
+                            b"MPC_ADAPTER_V1 adp_" + b"a" * 32 + b" key37-mpc3.9.1.2 1122 VERIFIED\n"]:
+                attachment["response"] = payload
+                self.assertEqual(self.call()["readiness"]["nativeAdapter"], "not_attached")
+        with self.attachment(stall=True):
+            started = time.monotonic()
+            result = self.call()
+            self.assertEqual(result["readiness"]["nativeAdapter"], "not_attached")
+            self.assertLess(time.monotonic() - started, .8)
 
 
 if __name__ == "__main__":

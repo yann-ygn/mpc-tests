@@ -74,7 +74,10 @@ def main():
         assert result["firmware"]["model"] is not None, "Missing device-tree model"
         assert result["capabilities"]["describe"]["available"]
         assert all(not c["available"] for op, c in result["capabilities"].items() if op != "describe")
-        assert result["readiness"]["nativeAdapter"] == "not_attached"
+        assert result["readiness"]["status"] == "discovery_only"
+        if result["readiness"]["nativeAdapter"] == "attached":
+            assert result["readiness"]["adapter"]["codeVerified"]
+            assert result["readiness"]["adapter"]["qualification"] == "bounded_lab_proof"
         assert call({"apiVersion": "0.1", "op": "describe"})["instanceId"] == result["instanceId"]
         assert call({"apiVersion": "9", "op": "describe"})["error"]["code"] == "UNSUPPORTED_API_VERSION"
         assert call({"apiVersion": "0.1", "op": "raw_call"})["error"]["code"] == "UNSUPPORTED_OPERATION"

@@ -3,6 +3,8 @@
 The first implementation of the [accepted 0.1 contract](../findings/native-api-contract.md).
 `describe` is a read-only endpoint in a standalone C process on MPC. It reads device-tree metadata and GNU ELF
 notes from the running MPC executable. It does not load the lab bridge or read native project objects.
+The [native adapter](adapter/README.md) is a separate shared library. A retained experimental host can expose its
+verified attachment status to this service; this does not enable state queries or commands.
 
 The local transport is a restricted Unix stream socket. Each connection carries **one compact JSON request plus
 a newline**, then one JSON response plus a newline. Read through the response newline and close the connection.
@@ -67,7 +69,8 @@ after shutdown when no longer needed.
 The configured `deviceId` must stay the same when this installation restarts. It is not derived from the hardware
 serial. The smoke test stores its generated value in `device-id` beside the temporary executable. The opaque
 `instanceId` stays stable between queries, changes on service restart and rotates on observed MPC process or
-executable/model identity changes. The native adapter is not attached and no object handles are issued yet.
+executable/model identity changes. Observed attachment identity/loss also changes the service instance.
+No public object handles are issued yet.
 
 ## Response semantics
 
@@ -76,7 +79,8 @@ executable/model identity changes. The native adapter is not attached and no obj
 - `firmware.version`: version mapped from that exact known build ID, with `versionSource: build_profile`.
   An unknown build never inherits the research profile's version.
 - `readiness`: distinguishes a matched research profile from unsupported/unknown firmware, and separately reports
-  `nativeAdapter: not_attached` and `status: discovery_only`.
+  `nativeAdapter: not_attached` or `attached` and `status: discovery_only`. Verified attachment metadata includes
+  its ABI, incarnation ID and `bounded_lab_proof` qualification; clients still consult each operation's availability.
 - `capabilities.describe.available`: true even when MPC is absent or its firmware is unsupported. All other
   operations are unavailable, with `NOT_IMPLEMENTED`, `UNSUPPORTED_FIRMWARE` or `NOT_READY` reasons.
 - `readableFields`: native state fields exposed by the public API, currently empty.
@@ -94,7 +98,8 @@ structured errors. Other contract operations return `NOT_READY`; unknown operati
 The schemas are [request](schema/describe-request.schema.json) and [response/error](schema/describe-response.schema.json).
 Requests reject unknown fields; responses permit additive optional fields as the contract requires.
 Concrete examples are [request](examples/describe-request.json) and [response](examples/describe-response.json),
-using illustrative installation/instance IDs.
+using illustrative installation/instance IDs. An [attached response](examples/describe-attached-response.json)
+shows the adapter metadata while state/write capabilities remain unavailable.
 
 ## Device verification
 

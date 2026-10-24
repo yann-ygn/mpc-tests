@@ -1,0 +1,12 @@
+{
+  global:
+    mpc_native_open;
+    mpc_native_close;
+    mpc_native_get_status;
+    mpc_native_read_track;
+    mpc_native_set_mute;
+    mpc_native_set_solo;
+    mpc_native_set_record_armed;
+    mpc_native_error_name;
+  local: *;
+};

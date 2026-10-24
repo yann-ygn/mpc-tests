@@ -5,7 +5,8 @@ Created 2026-10-24 in Taiga project **MPC Key 37 API** (id 24, slug `mpc-key-37-
 18 new user stories were created and linked to their epics; existing stories #18–21 were rewritten to use the native
 adapter architecture. Descriptions, acceptance criteria, dependencies, statuses and epic membership were read back
 and verified for all 22 stories. The owner accepted the [public contract](native-api-contract.md) on 2026-10-24
-(#28 Done). #32 is In progress with its first discovery-only endpoint; #19 and #20 remain In progress.
+(#28 Done). #29 is Done with its guarded shared adapter and lab validation. #32 is In progress with discovery and
+verified adapter attachment reporting; #19 and #20 remain In progress.
 
 ## Epic #4 — Native control library and live API
 
@@ -15,7 +16,7 @@ Only the bounded native mute/solo/arm proof is already validated; these stories 
 | US | Work | Status |
 |---|---|---|
 | #28 | Define the public native-control API and capability contract | Done |
-| #29 | Build the native adapter library with validated firmware profiles | New |
+| #29 | Build the native adapter library with validated firmware profiles | Done |
 | #30 | Execute native operations on the MPC UI thread with bounded lifecycle | New |
 | #20 | Resolve active projects and generation-bound track/sequence handles | In progress |
 | #18 | Expose authoritative live state snapshots from native MPC objects | New |
@@ -51,6 +52,12 @@ Initial service slice: [`native-api/`](../native-api/README.md) implements `desc
 request/response schemas, host fixture tests and an ARM device smoke test. It reports live model/build metadata,
 stable installation identity and bounded service-instance identity. All state/write capabilities are unavailable;
 the adapter/identity/qualification dependencies still apply before enabling them. HTTP and MCP remain #34/#35.
+
+Adapter slice (#29): [`libmpc_native.so`](../native-api/adapter/README.md) provides a small guarded C interface,
+versioned private profiles, seven code fingerprints and typed property/filter primitives. Twenty-two host tests
+pass; the isolated 28-case fixture also passed on ARM. Device tests verified UI-thread reads against an independent
+reader, full unload of both libraries, and a retained adapter visible through `describe`. Public state/write
+capabilities remain unavailable. The lab host's ownership hook/dispatcher do not complete #20 or #30.
 
 1. Define the public contract (#28), firmware adapter (#29) and application-thread executor (#30).
 2. Establish active-project/handle lifetimes (#20), live snapshots (#18) and the full flag-semantics matrix (#31), then productize the flag handlers (#19).
