@@ -351,7 +351,9 @@ follow behavior with observed effects; and readback-based completion with uncert
 should be Python, with TypeScript consuming the same contract later.
 
 Add machine-readable schemas and shared examples as each endpoint is implemented; discovery has its schemas
-above. Before exposing writable capabilities, finish authoritative project lifetime (#20),
+above. Authoritative read operations, including `list_tracks`, `current_sequence` and the full
+`recovery_snapshot` alias, now have [implementation findings](native-state.md) and
+[state schemas/examples](../native-api/README.md#read-current-state) under #18. Before exposing writable capabilities, finish authoritative project lifetime (#20),
 UI execution/lifecycle (#30), flag semantics across modes/types (#31) and failure/concurrency qualification (#38).
 These requirements describe the intended product, not additional proof already obtained from the lab.
 

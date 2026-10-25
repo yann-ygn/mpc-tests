@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "op"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "0.1"
+    },
+    "op": {
+      "enum": [
+        "get_state",
+        "list_tracks",
+        "current_track",
+        "current_sequence",
+        "recovery_snapshot"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

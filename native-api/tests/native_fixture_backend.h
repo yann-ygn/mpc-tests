@@ -19,7 +19,7 @@ enum {
   PROGRAM = OBJECTS + 0x6000
 };
 struct fixture {
-  unsigned char objects[0x18000];
+  unsigned char objects[0x70000];
   bool ui, authorized, filter_allows, propagate_audio, invalidate_after_set;
   int corrupt, unreadable;
   unsigned code_reads, object_reads, validations, setters, filters, sequence, filter_order,

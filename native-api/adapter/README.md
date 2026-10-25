@@ -1,4 +1,4 @@
-# Firmware adapter ABI 1 and UI executor ABI 2
+# Firmware adapter ABI 1 and UI executor ABI 3
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -42,10 +42,10 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) uses ABI 2; ABI 1 configurations are rejected at open.
+The [executor header](include/mpc_executor.h) uses ABI 3; ABI 1/2 configurations are rejected at open.
 The primitive ABI remains 1. Requests support track reads/flags, identity snapshots and sequence-reference
-validation. The authoritative mode owns the resolver; the original host-resolver mode remains available for
-trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
+validation and full live state snapshots. The authoritative mode owns the resolver; the original
+host-resolver mode remains available for trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
 
 `mpc_executor_open` copies the configuration, opens its guarded adapter and starts a scheduler. A startup probe
 uses the verified `callAsync` landmark and exact 16-byte GNU ARM function-object layout. Every callback checks
@@ -169,8 +169,8 @@ discarded dispatch, or a still-owned native listener, keeps the authority alive 
 shutdown after resolving the failure. The host must still establish external UI quiescence before `dlclose`.
 The identity fixture covers forced project/track/sequence ABA, retained old roots, queued stale writes,
 reconnection and refused/dropped cleanup. See [lifecycle findings](../../findings/native-identity.md) for device
-validation, the conservative sequence rule and a repeatable manual-test runner. Public service state/write
-capabilities remain gated by #18/#19/#32.
+validation, the conservative sequence rule and a repeatable manual-test runner. Public service reads require
+#18’s authoritative snapshot host; writes remain gated by #19/#32.
 
 ## Temporary device host
 
@@ -203,8 +203,8 @@ reports contain private lab details and stay under ignored `build/`. No addin in
 The service's private status probe requires the peer PID/UID to match the current MPC, the expected ABI tag,
 profile/build, a valid adapter incarnation ID and successful code verification. It has a 50 ms total deadline.
 Attachment identity/loss changes invalidate the service instance. Public `describe` reports `readiness.adapter`
-with `qualification: bounded_lab_proof`; all state/write/watch capabilities remain unavailable. This handshake
-is diagnostic, not the future command transport. Device tests verified loading, typed readback, full unload,
+with `qualification: bounded_lab_proof`. Authoritative mode now advertises the private snapshot transfer
+for #18; other lab attachments remain discovery-only. Public write/watch capabilities remain unavailable. Device tests verified loading, typed readback, full unload,
 and a retained attachment visible through `describe`, with MPC PID and observed state unchanged.
 
 The #30 read-only smoke test on 2026-10-25 confirmed the executor's callback on UI TID/PID 365, typed readback
@@ -228,3 +228,17 @@ The matrix runner preserves failure evidence, checks peer flags and selection, a
 aborts on restoration mismatch. Host tests cover those failure paths and manual
 edits between queue acceptance and dispatch for every flag. The primitive ABI,
 firmware qualification level and public discovery capabilities are unchanged.
+
+## Live state (#18)
+
+`MPC_EXECUTOR_GET_STATE` requires authoritative mode and returns a borrowed
+[`mpc_state_snapshot`](include/mpc_state.h) only on successful completion. Keep the job alive while reading
+that pointer; release frees its buffer. Allocation occurs during submission, outside the UI callback.
+Cancelled/running/failed jobs expose no snapshot pointer. Capacity still bounds outstanding job storage.
+
+The capture reads native metadata, qualified plugin/drum requested/audio flags, bus metadata and all existing
+sequences with their usage flag/BPM. It fences project generations, topology, Program associations and selection,
+retries instability three times, and fails supported field read errors rather than caching. The result reports
+capture interval/duration and attempts. No atomicity or effective transport tempo is implied.
+The local service supplies JSON projections, service-scoped references and observation revisions; see
+[findings](../../findings/native-state.md) and [service schemas](../schema/state-response.schema.json).

@@ -3,11 +3,12 @@
 
 #include "mpc_native.h"
 #include "mpc_identity.h"
+#include "mpc_state.h"
 
 /* Trusted in-process interface, separate from the public command protocol. All
  * client calls are for non-realtime threads. Only the resolver runs on the UI
  * thread. The executor owns its adapter, scheduler and copied requests. */
-#define MPC_EXECUTOR_ABI 2u
+#define MPC_EXECUTOR_ABI 3u
 #define MPC_EXECUTOR_MAX_JOBS 128u
 #define MPC_EXECUTOR_MAX_WAIT_MS 30000u
 
@@ -40,7 +41,8 @@ enum mpc_executor_operation {
   MPC_EXECUTOR_SET_SOLO,
   MPC_EXECUTOR_SET_RECORD_ARMED,
   MPC_EXECUTOR_IDENTITIES,
-  MPC_EXECUTOR_VALIDATE_SEQUENCE
+  MPC_EXECUTOR_VALIDATE_SEQUENCE,
+  MPC_EXECUTOR_GET_STATE
 };
 
 struct mpc_executor_request {
@@ -75,6 +77,9 @@ struct mpc_executor_result {
    * with OUTCOME_UNKNOWN does not report whether a native setter has begun. */
   struct mpc_native_write_result write;
   struct mpc_identity_snapshot identities;
+  /* Valid only on successful COMPLETED GET_STATE; borrowed until job release.
+   * Wait/cancel never exposes a buffer while a UI capture is still running. */
+  const struct mpc_state_snapshot *snapshot;
 };
 
 struct mpc_executor_status {

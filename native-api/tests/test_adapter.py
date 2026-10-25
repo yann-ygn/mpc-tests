@@ -30,6 +30,8 @@ class ProfileTests(unittest.TestCase):
             "build": lambda s, c: c.update(buildId="1122"),
             "version": lambda s, c: c.update(firmwareVersion="other"),
             "family": lambda s, c: c["supportedProgramFamilies"].append("midi"),
+            "program_type": lambda s, c: s["programTypes"].update({"4": "unqualified"}),
+            "program_vtable": lambda s, c: s["programTypes"].update({"1": "audio"}),
             "qualification": lambda s, c: c.update(capabilityQualification="production"),
             "fingerprint_length": lambda s, c: c["functions"][0].update(prefixHex="abcd"),
             "duplicate_function": lambda s, c: c["functions"].append(

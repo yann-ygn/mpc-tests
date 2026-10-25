@@ -50,6 +50,11 @@ class DescribeTests(unittest.TestCase):
             )
             jsonschema.Draft202012Validator.check_schema(schema)
             cls.validator = jsonschema.Draft202012Validator(schema)
+            state_schema = json.loads(
+                (ROOT / "native-api/schema/state-response.schema.json").read_text()
+            )
+            jsonschema.Draft202012Validator.check_schema(state_schema)
+            cls.state_validator = jsonschema.Draft202012Validator(state_schema)
             request_schema = json.loads(
                 (ROOT / "native-api/schema/describe-request.schema.json").read_text()
             )
@@ -133,7 +138,10 @@ class DescribeTests(unittest.TestCase):
                     break
         response = json.loads(b"".join(chunks))
         if self.validator:
-            self.validator.validate(response)
+            if "revision" in response:
+                self.state_validator.validate(response)
+            else:
+                self.validator.validate(response)
         return response
 
     def assert_unavailable(self, result, reason):
@@ -331,8 +339,10 @@ class DescribeTests(unittest.TestCase):
             self.add_mpc(pid=pid)
         path = self.root / f"tmp/mpc-native-lab-{pid}.sock"
         path.parent.mkdir(mode=0o700, exist_ok=True)
-        state = {"epoch": "adp_" + "a" * 32, "response": response}
+        state = {"epoch": "adp_" + "a" * 32, "response": response, "tag": "MPC_ADAPTER_V1"}
         finished = threading.Event()
+        state["state_idle"] = threading.Event()
+        state["state_idle"].set()
         server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         server.settimeout(0.05)
         server.bind(str(path))
@@ -354,9 +364,35 @@ class DescribeTests(unittest.TestCase):
                         if data == b"ADAPTER_STATUS\n":
                             payload = (
                                 state["response"]
-                                or f"MPC_ADAPTER_V1 {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
+                                or f"{state['tag']} {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
                             )
                             client.sendall(payload)
+                        elif data.startswith(b"STATE_V1 "):
+                            if state.get("stall_state"):
+                                state["state_idle"].clear()
+                                finished.wait(0.3)
+                                state["state_idle"].set()
+                                continue
+                            wire = bytearray(state["wire"])
+                            wire[8:45] = state["epoch"].encode() + b"\0"
+                            if state.get("empty"):
+                                wire[48:80] = bytes(32)
+                                wire[108:128] = bytes(20)
+                            if state.get("bad_instance"):
+                                wire[8] = ord("x")
+                            if state.get("bad_count"):
+                                # Track count follows attempts in the fixed snapshot header.
+                                struct.pack_into("<I", wire, 108, 129)
+                            if state.get("bad_abi"):
+                                struct.pack_into("<I", wire, 0, 99)
+                            payload = struct.pack("<III", 1, len(wire), state.get("error", 0))
+                            if not state.get("error"):
+                                payload += wire
+                            if state.get("truncate"):
+                                payload = payload[:20]
+                            client.sendall(payload)
+                            if state.get("replace"):
+                                state["epoch"] = "adp_" + "b" * 32
                     except (OSError, TimeoutError):
                         pass
 
@@ -369,6 +405,96 @@ class DescribeTests(unittest.TestCase):
             worker.join(timeout=1)
             server.close()
             path.unlink()
+
+    def snapshot_attachment(self, attachment):
+        fixture = Path(
+            os.environ.get(
+                "MPC_NATIVE_IDENTITY_FIXTURE",
+                ROOT / "builddir/host/native-api/tests/identity_fixture",
+            )
+        )
+        wire = subprocess.run(
+            [str(fixture), "--snapshot-wire"], check=True, capture_output=True
+        ).stdout
+        attachment.update(tag="MPC_ADAPTER_STATE_V1", wire=wire)
+
+    def test_snapshot_operations_share_fresh_observations_and_handles(self):
+        with self.attachment() as attachment:
+            self.snapshot_attachment(attachment)
+            description = self.call()
+            self.assertTrue(description["capabilities"]["get_state"]["available"])
+            self.assertFalse(description["capabilities"]["set_mute"]["available"])
+            self.assertFalse(description["capabilities"]["watch"]["available"])
+            results = {}
+            for operation in (
+                "get_state",
+                "list_tracks",
+                "current_track",
+                "current_sequence",
+                "recovery_snapshot",
+            ):
+                results[operation] = self.call(
+                    json.dumps({"apiVersion": "0.1", "op": operation}).encode() + b"\n"
+                )
+                self.assertEqual(results[operation]["instanceId"], description["instanceId"])
+                self.assertFalse(results[operation]["sample"]["atomic"])
+                self.assertEqual(results[operation]["sample"]["freshness"], "fresh")
+            full = results["get_state"]
+            self.assertEqual(full["tracks"], results["list_tracks"]["tracks"])
+            self.assertEqual(full["tracks"][0], results["current_track"]["track"])
+            self.assertEqual(full["selectedSequence"], results["current_sequence"]["sequence"])
+            self.assertEqual(full["tracks"], results["recovery_snapshot"]["tracks"])
+            self.assertEqual(len({r["revision"] for r in results.values()}), 5)
+            self.assertEqual(full["tracks"][0]["ref"]["instanceId"], description["instanceId"])
+            self.assertTrue(full["tracks"][0]["requested"]["soloed"])
+            self.assertFalse(full["tracks"][0]["audioSide"]["soloed"])
+            self.assertIsNone(full["tracks"][0]["audioSide"]["muted"])
+            self.assertEqual(full["sequenceSlotCount"], 2)
+            self.assertEqual(full["usedSequenceCount"], 1)
+            self.assertEqual(full["selectedSequence"]["bpm"], 123.5)
+            self.assertIsNone(full["transport"]["effectiveBpm"])
+            self.assertIn('"é"\n', full["tracks"][0]["name"])
+
+    def test_no_active_project_is_an_empty_fresh_snapshot(self):
+        with self.attachment() as attachment:
+            self.snapshot_attachment(attachment)
+            attachment["empty"] = True
+            for operation in ("get_state", "current_track", "current_sequence"):
+                result = self.call(
+                    json.dumps({"apiVersion": "0.1", "op": operation}).encode() + b"\n"
+                )
+                self.assertIsNone(result["projectId"])
+                if operation == "get_state":
+                    self.assertIsNone(result["project"])
+                    self.assertEqual(result["tracks"], [])
+                    self.assertEqual(result["buses"], [])
+                    self.assertEqual(result["sequenceSlotCount"], 0)
+                else:
+                    self.assertIsNone(
+                        result["track" if operation == "current_track" else "sequence"]
+                    )
+
+    def test_snapshot_failures_never_return_cached_state(self):
+        request = b'{"apiVersion":"0.1","op":"get_state"}\n'
+        with self.attachment() as attachment:
+            self.snapshot_attachment(attachment)
+            self.assertIn("revision", self.call(request))
+            for mode in ("truncate", "bad_instance", "bad_count", "bad_abi", "stall_state"):
+                with self.subTest(mode=mode):
+                    attachment[mode] = True
+                    self.assertEqual(self.call(request)["error"]["code"], "READ_FAILED")
+                    attachment[mode] = False
+                    self.assertTrue(attachment["state_idle"].wait(1))
+                    self.assertIn("revision", self.call(request))
+            attachment["error"] = 20  # MPC_NATIVE_STATE_UNSTABLE
+            self.assertEqual(self.call(request)["error"]["code"], "STATE_UNSTABLE")
+            attachment["error"] = 0
+            attachment["replace"] = True
+            self.assertEqual(self.call(request)["error"]["code"], "STATE_UNSTABLE")
+            attachment["replace"] = False
+            recovered = self.call(request)
+            self.assertEqual(recovered["revision"], "1")
+            self.assertEqual(recovered["instanceId"], self.call()["instanceId"])
 
     def test_verified_attachment_rotates_instance_without_enabling_commands(self):
         with self.attachment() as attachment:

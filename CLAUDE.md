@@ -17,9 +17,9 @@ before running experiments.
   `findings/native-control.md` maps the setters. `tools/mpc_native_lab.py` now verifies temporary UI-thread dispatch
   and bounded native mute/solo/arm pulses; it loads/unloads a lab bridge without restart. Native solo can select its
   target through follow-solo behaviour; restore selection after unselected-track experiments.
-- `native-api/`: discovery-only C service, JSON schemas and a guarded shared native adapter. `describe` reports
-  live executable/device metadata and verified lab attachment status. Public state/write operations remain
-  unavailable. See `native-api/README.md` and `native-api/adapter/README.md` for tests, builds and lifecycle limits.
+- `native-api/`: C discovery/live-state service, JSON schemas and a guarded shared native adapter. `describe` reports
+  live metadata and verified attachment status. Authoritative attachments enable snapshots; public writes/watch
+  remain unavailable. See `native-api/README.md` and `native-api/adapter/README.md` for tests, builds and lifecycle limits.
 - `build/` is gitignored: local copies of the log, project saves and the settings backup.
 - `builddir/{host,arm}/` is gitignored: canonical Meson build directories. See `README.md` for all targets.
 
@@ -75,7 +75,7 @@ before running experiments.
 - Taiga: project "MPC Key 37 API" (id 24). Move a story's status when its work starts or ends.
 - Native API roadmap: `findings/native-api-roadmap.md` (Taiga epic #4, capability expansion epic #27).
 - Accepted public API contract: `findings/native-api-contract.md` (#28). Initial `describe` implementation is in
-  `native-api/` under local-service story #32 (In progress; remaining operations unavailable).
+  `native-api/` under local-service story #32 (In progress; reads now implemented by #18; writes/watch unavailable).
 - Firmware adapter (#29) implemented: eight C exports, profile schema v1, exact build/model/ABI plus seven code
   fingerprints, typed read/setter/filter paths and isolated host/ARM fixtures. Native target operations require a
   UI thread and an external lifetime validator; the lab hook is experimental and does not satisfy #20.
@@ -100,4 +100,13 @@ before running experiments.
   destructive edits invalidate references conservatively. See `findings/native-identity.md` and its sanitized
   evidence. UI observer removal precedes executor drain and DSO unload; the native listener weak-reference
   protocol owns deferred registration cleanup.
-- Next: live state (#18) and flag handlers (#19) before enabling further service capabilities. Per-sequence mute needs an explicit sequence target/precondition before public exposure.
+- Live state (#18) implemented: executor ABI 3 adds bounded owned snapshot jobs; the Unix service exposes
+  get_state/list_tracks/current_track/current_sequence/recovery_snapshot through an authoritative attachment.
+  Snapshots fence identity/topology/selection, distinguish requested/audio flags, buses and sequence usage/BPM,
+  and report capture/revision/freshness with explicit nulls for unsupported fields. Ten host entries, five
+  ASan/UBSan native entries and isolated ARM fixtures pass. Device captures matched the independent reader;
+  Sounds-mode controller mute edits were visible/restored; small-project native capture p95 was 9.058 ms.
+  See findings/native-state.md and findings/native-state-proof-20261025.json. Both DSOs and temporary service
+  files were removed. Public writes/watch stay gated; persistent attachment supervision remains #21/#32.
+- Next: flag handlers (#19), remaining local service work (#32), then streaming (#33). Per-sequence mute needs
+  an explicit sequence target/precondition before public exposure.

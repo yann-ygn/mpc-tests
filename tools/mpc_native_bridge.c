@@ -305,6 +305,35 @@ static void identity_command(FILE *stream, const char *line) {
       result.observed.record_armed ? "true" : "false");
   fprintf(stream, "}\n");
 }
+static void state_command(FILE *stream, const char *line) {
+  char instance[37], extra;
+  enum mpc_native_error error = MPC_NATIVE_NOT_READY;
+  struct mpc_executor_status status;
+  struct mpc_executor_job *job = NULL;
+  struct mpc_executor_result result = {0};
+  if (sscanf(line, "STATE_V1 %36s %c", instance, &extra) != 1)
+    error = MPC_NATIVE_INVALID_ARGUMENT;
+  else if (authoritative) {
+    error = mpc_executor_get_status(executor, &status);
+    if (!error && strcmp(instance, status.adapter.instance_id))
+      error = MPC_NATIVE_STALE_TARGET;
+    if (!error) {
+      struct mpc_executor_request request = {
+        .operation = MPC_EXECUTOR_GET_STATE,
+        .queue_timeout_ms = 150};
+      error = mpc_executor_submit(executor, &request, &job);
+    }
+    if (!error)
+      error = mpc_executor_wait(job, 150, &result);
+  }
+  uint32_t header[] = {MPC_STATE_ABI, sizeof(struct mpc_state_snapshot), error};
+  fwrite(header, sizeof header, 1, stream);
+  if (!error)
+    fwrite(result.snapshot, sizeof *result.snapshot, 1, stream);
+  fflush(stream);
+  if (job)
+    mpc_executor_release(job);
+}
 static void *worker(void *unused) {
   (void)unused;
   pthread_setname_np(pthread_self(), "mpc native lab");
@@ -346,7 +375,9 @@ static void *worker(void *unused) {
     }
     char line[256], verb[16] = {0}, prop[16] = {0}, extra;
     if (fgets(line, sizeof line, f)) {
-      if (!strcmp(line, "IDENTITIES\n") || !strncmp(line, "HANDLE_", 7)) {
+      if (!strncmp(line, "STATE_V1 ", 9)) {
+        state_command(f, line);
+      } else if (!strcmp(line, "IDENTITIES\n") || !strncmp(line, "HANDLE_", 7)) {
         identity_command(f, line);
       } else if (!strcmp(line, "ADAPTER_STATUS\n")) {
         struct mpc_executor_status status;
@@ -356,7 +387,8 @@ static void *worker(void *unused) {
         if (error == MPC_NATIVE_OK)
           fprintf(
             f,
-            "MPC_ADAPTER_V1 %s %s %s VERIFIED\n",
+            "%s %s %s %s VERIFIED\n",
+            authoritative ? "MPC_ADAPTER_STATE_V1" : "MPC_ADAPTER_V1",
             status.adapter.instance_id,
             status.adapter.profile_id,
             status.adapter.build_id);

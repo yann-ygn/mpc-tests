@@ -1,0 +1,336 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MPC native API snapshot responses",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "deviceId",
+    "instanceId",
+    "projectId",
+    "projectGeneration",
+    "revision",
+    "sample",
+    "unsupportedFields"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "0.1"
+    },
+    "deviceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "instanceId": {
+      "type": "string",
+      "pattern": "^run_[0-9a-f]{32}$"
+    },
+    "projectId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "projectGeneration": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "sample": {
+      "type": "object",
+      "required": [
+        "startedAt",
+        "finishedAt",
+        "durationMs",
+        "attempts",
+        "atomic",
+        "consistency",
+        "freshness",
+        "source"
+      ],
+      "properties": {
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finishedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "atomic": {
+          "const": false
+        },
+        "consistency": {
+          "const": "identity_topology_selection_checked"
+        },
+        "freshness": {
+          "const": "fresh"
+        },
+        "source": {
+          "const": "native_ui_thread"
+        }
+      }
+    },
+    "tracks": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/track"
+      }
+    },
+    "buses": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/track"
+      }
+    },
+    "track": {
+      "$ref": "#/$defs/track"
+    },
+    "sequence": {
+      "$ref": "#/$defs/sequence"
+    },
+    "sequences": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/sequence"
+      }
+    },
+    "selectedSequence": {
+      "$ref": "#/$defs/sequence"
+    },
+    "sequenceSlotCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 128
+    },
+    "usedSequenceCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 128
+    },
+    "unsupportedFields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "tracks",
+        "buses"
+      ]
+    },
+    {
+      "required": [
+        "track"
+      ]
+    },
+    {
+      "required": [
+        "sequence"
+      ]
+    }
+  ],
+  "$defs": {
+    "track": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "ref",
+        "generation",
+        "kind",
+        "index",
+        "name",
+        "type",
+        "requested",
+        "audioSide",
+        "silenced",
+        "unsupportedFields"
+      ],
+      "properties": {
+        "ref": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "instanceId",
+            "projectId",
+            "trackId"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "projectId": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "trackId": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        },
+        "generation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "track",
+            "bus"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requested": {
+          "type": "object",
+          "required": [
+            "muted",
+            "soloed",
+            "recordArmed"
+          ],
+          "properties": {
+            "muted": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "soloed": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "recordArmed": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "audioSide": {
+          "type": "object",
+          "required": [
+            "muted",
+            "soloed",
+            "recordArmed"
+          ],
+          "properties": {
+            "muted": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "soloed": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "recordArmed": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "silenced": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "unsupportedFields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "sequence": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "id",
+        "generation",
+        "index",
+        "name",
+        "used",
+        "bpm",
+        "bpmSource"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "used": {
+          "type": "boolean"
+        },
+        "bpm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "bpmSource": {
+          "const": "sequence_property"
+        }
+      }
+    }
+  }
+}

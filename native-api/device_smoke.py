@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Test discovery in a private temporary directory on MPC, without attaching to MPC.
+"""Test the local service in a private temporary directory on MPC.
 
-Default: stop the service and remove its files. --keep leaves this discovery-only
-service running for further requests; it does not install an addin or startup job.
+--state checks fresh reads through an existing authoritative lab attachment.
+Default: stop the service and remove its files. --keep retains it for further
+requests; neither mode installs an addin or startup job.
 """
 
 import argparse
@@ -22,6 +23,11 @@ def main():
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
     parser.add_argument("--binary", type=Path, default=ROOT / "builddir/arm/native-api/mpc-api")
     parser.add_argument("--keep", action="store_true")
+    parser.add_argument(
+        "--state",
+        action="store_true",
+        help="Validate reads through an existing authoritative attachment",
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     ssh = [
@@ -117,10 +123,70 @@ def main():
         assert result["firmware"]["buildId"] is not None, "Missing live executable build ID"
         assert result["firmware"]["model"] is not None, "Missing device-tree model"
         assert result["capabilities"]["describe"]["available"]
+        reads = {
+            "get_state",
+            "list_tracks",
+            "current_track",
+            "current_sequence",
+            "recovery_snapshot",
+        }
         assert all(
-            not c["available"] for op, c in result["capabilities"].items() if op != "describe"
+            c["available"] == (args.state and op in reads)
+            for op, c in result["capabilities"].items()
+            if op != "describe"
         )
-        assert result["readiness"]["status"] == "discovery_only"
+        assert result["readiness"]["status"] == ("ready" if args.state else "discovery_only")
+        if args.state:
+            import sys
+
+            sys.path.insert(0, str(ROOT / "tools"))
+            from mpc_live_state import MemorySession
+
+            profile = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2.json").read_text())
+            with_session = MemorySession(args.host, ROOT / "builddir/arm/tools/mem_probe", profile)
+            try:
+                independent = with_session.snapshot(with_session.active_project())
+                snapshots = {op: call({"apiVersion": "0.1", "op": op}) for op in sorted(reads)}
+                state = snapshots["get_state"]
+                assert "error" not in state, state
+                assert state["tracks"] == snapshots["list_tracks"]["tracks"]
+                assert state["tracks"] == snapshots["recovery_snapshot"]["tracks"]
+                assert state["selectedSequence"] == snapshots["current_sequence"]["sequence"]
+                assert (
+                    snapshots["current_track"]["track"]["ref"]["trackId"]
+                    == state["selectedTrackId"]
+                )
+                for actual, expected in zip(state["tracks"], independent["tracks"], strict=True):
+                    assert actual["index"] == expected["index"]
+                    assert actual["name"] == expected["name"]
+                    assert actual["type"] == expected["type"]
+                    for key in ("muted", "soloed", "recordArmed"):
+                        assert actual["requested"][key] == expected[key]
+                    assert actual["silenced"] == expected["silenced"]
+                assert len(state["buses"]) == len(independent["buses"])
+                assert state["sequenceSlotCount"] == independent["sequenceSlots"]
+                after_state = with_session.snapshot(with_session.active_project())
+                for key in (
+                    "tracks",
+                    "buses",
+                    "selectedTrack",
+                    "selectedSequence",
+                    "sequenceSlots",
+                ):
+                    assert after_state[key] == independent[key]
+                samples = [call({"apiVersion": "0.1", "op": "get_state"}) for _ in range(20)]
+                assert all("error" not in sample for sample in samples), samples
+                assert len({sample["revision"] for sample in samples}) == len(samples)
+                assert all(sample["instanceId"] == result["instanceId"] for sample in samples)
+                durations = sorted(sample["sample"]["durationMs"] for sample in samples)
+                report.update(
+                    snapshots=snapshots,
+                    sampleCount=len(samples),
+                    captureP95Ms=durations[18],
+                    independentReadMatched=True,
+                )
+            finally:
+                with_session.close()
         if result["readiness"]["nativeAdapter"] == "attached":
             assert result["readiness"]["adapter"]["codeVerified"]
             assert result["readiness"]["adapter"]["qualification"] == "bounded_lab_proof"

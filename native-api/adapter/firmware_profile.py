@@ -84,6 +84,24 @@ def validate(state, control):
         if not integer(lifetime[key], key, 0x10000) or lifetime[key] % 4:
             raise ValueError("Invalid identity path")
     integer(lifetime["sequenceUsed"], "sequenceUsed", 0x10000)
+    for vtable, name in state["programTypes"].items():
+        if name not in {
+            "audio",
+            "clip",
+            "cv",
+            "drum",
+            "keygroup",
+            "input",
+            "output",
+            "master-output",
+            "return",
+            "submix",
+            "midi",
+            "plugin",
+        }:
+            raise ValueError("Unknown program type")
+        if not integer(int(vtable), "program vtable") or int(vtable) % 4:
+            raise ValueError("Invalid program vtable")
     for family in control["supportedProgramFamilies"]:
         candidates = [
             integer(int(v), "program vtable")
@@ -173,6 +191,14 @@ def generate(out, state_path=STATE, control_path=CONTROL):
     for family in control["supportedProgramFamilies"]:
         vtable = next(int(v) for v, name in state["programTypes"].items() if name == family)
         lines.append(f"#define NATIVE_{family.upper()}_VTABLE {vtable}u")
+    lines.append(
+        "static const struct { uint32_t vtable; const char *name; } native_program_types[]={"
+        + ",".join(
+            "{" + str(vtable) + "u," + json.dumps(name) + "}"
+            for vtable, name in state["programTypes"].items()
+        )
+        + "};"
+    )
     fields = {
         "PROJECT_LISTENER_ADD": next(
             f["rva"] for f in control["functions"] if f["name"] == "projectListenerAdd"
@@ -193,6 +219,15 @@ def generate(out, state_path=STATE, control_path=CONTROL):
         "VECTOR_BEGIN": state["offsets"]["trackPool"]["normalBegin"],
         "VECTOR_END": state["offsets"]["trackPool"]["normalEnd"],
         "VECTOR_CAPACITY": state["offsets"]["trackPool"]["normalCapacity"],
+        "ALL_BEGIN": state["offsets"]["trackPool"]["allBegin"],
+        "ALL_END": state["offsets"]["trackPool"]["allEnd"],
+        "ALL_CAPACITY": state["offsets"]["trackPool"]["allCapacity"],
+        "TRACK_NAME": state["offsets"]["track"]["name"],
+        "SEQUENCE_NAME": state["offsets"]["sequence"]["name"],
+        "SEQUENCE_BPM": state["offsets"]["sequence"]["bpm"],
+        "SELECTED_TRACK_MIRROR": state["offsets"]["project"]["selectedTrackMirror"],
+        "SELECTED_SEQUENCE_MIRROR": state["offsets"]["project"]["selectedSequenceMirror"],
+        "SELECTED_TRACK_INDEX": state["offsets"]["project"]["selectedTrackIndex"],
         "PROGRAM_OFFSET": state["offsets"]["track"]["program"],
         "SILENCED_OFFSET": state["offsets"]["program"]["silenced"],
         "SELECTED_TRACK": state["offsets"]["project"]["selectedTrack"],

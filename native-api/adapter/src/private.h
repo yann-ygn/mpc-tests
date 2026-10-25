@@ -78,6 +78,8 @@ void mpc_identity_destroy(struct mpc_identity_registry *);
 enum mpc_native_error mpc_identity_detach(struct mpc_identity_registry *);
 enum mpc_native_error
 mpc_identity_capture(struct mpc_identity_registry *, struct mpc_identity_snapshot *);
+enum mpc_native_error
+mpc_identity_state(struct mpc_identity_registry *, struct mpc_state_snapshot *);
 enum mpc_native_error mpc_identity_resolve(
   struct mpc_identity_registry *, const struct mpc_executor_identity *, struct mpc_native_target *);
 enum mpc_native_error

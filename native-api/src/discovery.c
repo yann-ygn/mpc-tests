@@ -191,12 +191,15 @@ int discovery_read(struct api *api, struct discovery *result) {
   result->known_build = valid && !strcmp(result->build_id, PROFILE_BUILD_ID);
   int matched = result->known_build && !strcmp(result->model, PROFILE_MODEL);
   if (matched) {
-    result->adapter_attached = adapter_probe(api->root, pid, result->adapter_id);
+    result->adapter_attached =
+      adapter_probe(api->root, pid, result->adapter_id, &result->state_ready);
+    result->pid = pid;
     if (
       started != start_time(api->root, pid) || stat(path, &after) ||
       before.st_dev != after.st_dev || before.st_ino != after.st_ino) {
       valid = matched = result->known_build = result->adapter_attached = 0;
       result->adapter_id[0] = result->build_id[0] = 0;
+      result->state_ready = 0;
       result->process = "unreadable";
     }
   }
@@ -219,10 +222,11 @@ int discovery_read(struct api *api, struct discovery *result) {
     result->build_id,
     result->model,
     result->adapter_id);
-  if (
-    api->backend_signature[0] && strcmp(api->backend_signature, signature) &&
-    instance_new(api->instance_id))
-    return -1;
+  if (api->backend_signature[0] && strcmp(api->backend_signature, signature)) {
+    if (instance_new(api->instance_id))
+      return -1;
+    api->revision = 0;
+  }
   strcpy(api->backend_signature, signature);
   return 0;
 }

@@ -44,6 +44,7 @@ if not meson.is_cross_build()
   native_test_env.set('MPC_API_TEST_BINARY', api.full_path())
   native_test_env.set('MPC_NATIVE_TEST_LIBRARY', adapter.full_path())
   native_test_env.set('MPC_NATIVE_TEST_FIXTURE', native_fixture.full_path())
+  native_test_env.set('MPC_NATIVE_IDENTITY_FIXTURE', identity_fixture.full_path())
   native_test_env.set('MPC_READELF', readelf.full_path())
   foreach module : ['test_describe', 'test_adapter', 'test_semantics']
     test(
@@ -52,7 +53,7 @@ if not meson.is_cross_build()
       args: ['-m', 'unittest', module, '-v'],
       workdir: meson.current_source_dir(),
       env: native_test_env,
-      depends: [api, adapter, native_fixture],
+      depends: [api, adapter, native_fixture, identity_fixture],
       suite: 'native-api',
     )
   endforeach

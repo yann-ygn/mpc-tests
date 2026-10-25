@@ -13,6 +13,7 @@ struct mpc_executor_job {
   struct mpc_executor_job *next;
   struct mpc_executor_request request;
   struct mpc_executor_result result;
+  struct mpc_state_snapshot *snapshot;
   struct timespec execution_deadline;
   bool client_owned, has_deadline;
 };
@@ -61,6 +62,8 @@ static void remove_queued(struct mpc_executor *executor, struct mpc_executor_job
 }
 
 static void free_slot(struct mpc_executor_job *job) {
+  free(job->snapshot);
+  job->snapshot = NULL;
   job->result.state = 0;
   job->client_owned = false;
   job->owner->live_jobs--;
@@ -111,9 +114,17 @@ static enum mpc_native_error revalidate(void *data, const struct mpc_native_targ
     : MPC_NATIVE_STALE_TARGET;
 }
 
-static struct mpc_executor_result
-execute(struct mpc_executor *executor, const struct mpc_executor_request *request) {
+static struct mpc_executor_result execute(
+  struct mpc_executor *executor,
+  const struct mpc_executor_request *request,
+  struct mpc_state_snapshot *snapshot) {
   struct mpc_executor_result result = {.state = MPC_EXECUTOR_COMPLETED};
+  if (request->operation == MPC_EXECUTOR_GET_STATE) {
+    result.error = mpc_identity_state(executor->registry, snapshot);
+    if (!result.error)
+      result.snapshot = snapshot;
+    return result;
+  }
   if (request->operation == MPC_EXECUTOR_IDENTITIES) {
     result.error = mpc_identity_capture(executor->registry, &result.identities);
     return result;
@@ -150,6 +161,7 @@ execute(struct mpc_executor *executor, const struct mpc_executor_request *reques
       break;
     case MPC_EXECUTOR_IDENTITIES:
     case MPC_EXECUTOR_VALIDATE_SEQUENCE:
+    case MPC_EXECUTOR_GET_STATE:
       break;
     }
     if (request->operation != MPC_EXECUTOR_READ_TRACK)
@@ -206,7 +218,7 @@ static void invoke(const void *capture) {
       }
       job->result.state = MPC_EXECUTOR_RUNNING;
       pthread_mutex_unlock(&executor->mutex);
-      struct mpc_executor_result result = execute(executor, &job->request);
+      struct mpc_executor_result result = execute(executor, &job->request, job->snapshot);
       pthread_mutex_lock(&executor->mutex);
       job->result = result;
       if (!job->client_owned)
@@ -450,7 +462,7 @@ enum mpc_native_error mpc_executor_submit(
     return MPC_NATIVE_INVALID_ARGUMENT;
   *output = NULL;
   if (
-    !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_VALIDATE_SEQUENCE ||
+    !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_GET_STATE ||
     request->queue_timeout_ms > MPC_EXECUTOR_MAX_WAIT_MS)
     return MPC_NATIVE_INVALID_ARGUMENT;
   pthread_mutex_lock(&executor->mutex);
@@ -470,6 +482,13 @@ enum mpc_native_error mpc_executor_submit(
       struct mpc_executor_job *job = &executor->jobs[i];
       if (job->result.state)
         continue;
+      if (request->operation == MPC_EXECUTOR_GET_STATE) {
+        job->snapshot = calloc(1, sizeof *job->snapshot);
+        if (!job->snapshot) {
+          error = MPC_NATIVE_NOT_READY;
+          break;
+        }
+      }
       job->request = *request;
       job->result = (struct mpc_executor_result){.state = MPC_EXECUTOR_QUEUED};
       job->has_deadline = request->queue_timeout_ms != 0;

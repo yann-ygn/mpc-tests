@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <time.h>
+#include <stdlib.h>
 
 enum {
   APP = OBJECTS + 0x8000,
@@ -27,6 +28,7 @@ struct identity_fixture {
   struct mpc_native_sequence_watch *sequence_watches[128];
   struct mpc_native_project_watch *project_watch;
   unsigned registered, removed, expired;
+  unsigned state_mutation, mutations;
 };
 static _Thread_local bool ui;
 
@@ -75,6 +77,26 @@ static void pump(struct identity_fixture *fixture) {
 }
 
 static int identity_read(void *data, uintptr_t address, void *output, size_t length) {
+  struct identity_fixture *fixture = data;
+  if (address == TRACK + NATIVE_TRACK_NAME && fixture->state_mutation) {
+    unsigned mutation = fixture->state_mutation;
+    if (mutation != 2)
+      fixture->state_mutation = 0;
+    fixture->mutations++;
+    if (mutation == 3)
+      put32(
+        &fixture->native,
+        COMPONENT + NATIVE_COMPONENT_ENGINE + NATIVE_ENGINE_PROJECT,
+        PROJECT2);
+    else {
+      uint32_t current;
+      memcpy(&current, fixture->native.objects + NATIVE_SELECTED_TRACK, 4);
+      uint32_t selected = current == TRACK ? TRACK2 : TRACK;
+      put32(&fixture->native, OBJECTS + NATIVE_SELECTED_TRACK, selected);
+      put32(&fixture->native, OBJECTS + NATIVE_SELECTED_TRACK_MIRROR, selected);
+      put32(&fixture->native, OBJECTS + NATIVE_SELECTED_TRACK_INDEX, selected == TRACK ? 0 : 1);
+    }
+  }
   if (address == IMAGE + NATIVE_APPLICATION_SLOT && length == 4) {
     uint32_t app = APP;
     memcpy(output, &app, 4);
@@ -306,7 +328,162 @@ static void close_executor(struct identity_fixture *fixture, struct mpc_executor
     assert(!fixture->sequence_watches[i]);
 }
 
-int main(void) {
+static void state_init(struct identity_fixture *fixture) {
+  init(fixture);
+  struct fixture *f = &fixture->native;
+  put32(f, POOL + NATIVE_ALL_BEGIN, VECTOR);
+  put32(f, POOL + NATIVE_ALL_END, VECTOR + 8);
+  put32(f, POOL + NATIVE_ALL_CAPACITY, VECTOR + 8);
+  put32(f, POOL + NATIVE_VECTOR_END, VECTOR + 8);
+  put32(f, POOL + NATIVE_VECTOR_CAPACITY, VECTOR + 8);
+  put32(f, VECTOR + 4, TRACK2);
+  put32(f, OBJECTS + NATIVE_SELECTED_TRACK_MIRROR, TRACK);
+  put32(f, OBJECTS + NATIVE_SELECTED_SEQUENCE_MIRROR, SEQUENCE);
+  put32(f, OBJECTS + NATIVE_SELECTED_TRACK_INDEX, 0);
+  uint32_t name = OBJECTS + 0x15000;
+  memcpy(f->objects + name - OBJECTS, "Live \"é\"\n", 11);
+  put32(f, TRACK + NATIVE_TRACK_NAME, name);
+  put32(f, TRACK2 + NATIVE_TRACK_NAME, name);
+  put32(f, SEQUENCE + NATIVE_SEQUENCE_NAME, name);
+  put32(f, SEQUENCE2 + NATIVE_SEQUENCE_NAME, name);
+  float bpm = 123.5f;
+  memcpy(f->objects + SEQUENCE + NATIVE_SEQUENCE_BPM - OBJECTS, &bpm, 4);
+  memcpy(f->objects + SEQUENCE2 + NATIVE_SEQUENCE_BPM - OBJECTS, &bpm, 4);
+  put_bool(f, SEQUENCE + NATIVE_SEQUENCE_USED, 1);
+  put_bool(f, TRACK + native_bindings[2].requested, 1);
+  /* Requested and audio copies deliberately disagree. */
+  put_bool(f, PROGRAM + native_bindings[1].requested, 1);
+  put_bool(f, PROGRAM + NATIVE_SILENCED_OFFSET, 1);
+  memcpy(f->objects + PROJECT2 - OBJECTS, f->objects, 0x1000);
+}
+
+static struct mpc_state_snapshot *state_read(
+  struct identity_fixture *fixture, struct mpc_executor *executor, enum mpc_native_error expected) {
+  struct mpc_executor_job *job =
+    submit(executor, MPC_EXECUTOR_GET_STATE, (struct mpc_executor_identity){0});
+  pump(fixture);
+  struct mpc_executor_result result;
+  enum mpc_native_error actual = mpc_executor_wait(job, 1000, &result);
+  if (actual != expected)
+    fprintf(
+      stderr,
+      "state capture: expected %s, got %s (mutations %u)\n",
+      mpc_native_error_name(expected),
+      mpc_native_error_name(actual),
+      fixture->mutations);
+  assert(actual == expected);
+  assert(result.state == MPC_EXECUTOR_COMPLETED);
+  struct mpc_state_snapshot *copy = NULL;
+  if (!expected) {
+    assert(result.snapshot);
+    copy = malloc(sizeof *copy);
+    assert(copy);
+    *copy = *result.snapshot;
+  } else
+    assert(!result.snapshot);
+  mpc_executor_release(job);
+  return copy;
+}
+
+static void state_tests(void) {
+  struct identity_fixture fixture;
+  state_init(&fixture);
+  struct fixture *f = &fixture.native;
+  struct mpc_executor *executor = open_executor(&fixture);
+  struct mpc_state_snapshot *first = state_read(&fixture, executor, MPC_NATIVE_OK);
+  assert(first->track_count == 2 && first->bus_count == 0 && first->sequence_slots == 2);
+  assert(first->used_sequences == 1 && first->sequences[0].used && !first->sequences[1].used);
+  assert(first->sequences[0].bpm == 123.5f && first->started_ms && first->finished_ms);
+  assert(first->tracks[0].known == 15 && first->tracks[0].soloed && !first->tracks[0].audio_soloed);
+  assert(
+    first->tracks[0].record_armed && !first->tracks[0].audio_record_armed &&
+    first->tracks[0].silenced);
+  uint64_t project = first->project, track = first->tracks[0].identity.id;
+  free(first);
+  fixture.state_mutation = 1;
+  first = state_read(&fixture, executor, MPC_NATIVE_OK);
+  assert(first->attempts == 2 && first->selected_track == first->tracks[1].identity.id);
+  assert(first->project == project && first->tracks[0].identity.id == track);
+  free(first);
+  fixture.state_mutation = 2;
+  fixture.mutations = 0;
+  assert(!state_read(&fixture, executor, MPC_NATIVE_STATE_UNSTABLE));
+  assert(fixture.mutations == MPC_STATE_ATTEMPTS);
+  fixture.state_mutation = 3;
+  first = state_read(&fixture, executor, MPC_NATIVE_OK);
+  assert(
+    first->project != project && first->tracks[0].identity.id != track && first->attempts == 2);
+  free(first);
+  /* Failed supported fields cannot be replaced with false or an old sample. */
+  put_bool(f, PROGRAM + native_bindings[0].requested, 2);
+  assert(!state_read(&fixture, executor, MPC_NATIVE_READ_FAILED));
+  put_bool(f, PROGRAM + native_bindings[0].requested, 0);
+  put32(f, TRACK + NATIVE_TRACK_NAME, 0);
+  assert(!state_read(&fixture, executor, MPC_NATIVE_READ_FAILED));
+  put32(f, TRACK + NATIVE_TRACK_NAME, OBJECTS + 0x15000);
+  /* Non-qualified families expose metadata, without invented flag values. */
+  put32(f, PROGRAM, IMAGE + native_program_types[0].vtable);
+  first = state_read(&fixture, executor, MPC_NATIVE_OK);
+  assert(!first->tracks[0].known && !strcmp(first->tracks[0].type, "audio"));
+  free(first);
+  /* A bus belongs only to all-tracks, and receives no writable identity. */
+  put32(f, POOL + NATIVE_VECTOR_END, VECTOR + 4);
+  first = state_read(&fixture, executor, MPC_NATIVE_OK);
+  assert(
+    first->track_count == 1 && first->bus_count == 1 && !first->buses[0].identity.id &&
+    !first->buses[0].known);
+  free(first);
+  select_project(&fixture, 0);
+  first = state_read(&fixture, executor, MPC_NATIVE_OK);
+  assert(
+    !first->project && !first->track_count && !first->selected_track && !first->sequence_slots);
+  free(first);
+  select_project(&fixture, OBJECTS);
+  put32(f, OBJECTS + NATIVE_SELECTED_TRACK, OBJECTS + 0x20000);
+  put32(f, OBJECTS + NATIVE_SELECTED_TRACK_MIRROR, OBJECTS + 0x20000);
+  put32(f, OBJECTS + NATIVE_SELECTED_TRACK_INDEX, 0);
+  put32(f, POOL + NATIVE_VECTOR_BEGIN, OBJECTS + 0x17000);
+  put32(f, POOL + NATIVE_VECTOR_END, OBJECTS + 0x17200);
+  put32(f, POOL + NATIVE_VECTOR_CAPACITY, OBJECTS + 0x17200);
+  put32(f, POOL + NATIVE_ALL_BEGIN, OBJECTS + 0x18000);
+  put32(f, POOL + NATIVE_ALL_END, OBJECTS + 0x18000 + 156 * 4);
+  put32(f, POOL + NATIVE_ALL_CAPACITY, OBJECTS + 0x18000 + 156 * 4);
+  for (unsigned i = 0; i < 156; i++) {
+    uint32_t address = OBJECTS + 0x20000 + i * 0x800;
+    memcpy(f->objects + address - OBJECTS, f->objects + TRACK - OBJECTS, 0x700);
+    put32(f, OBJECTS + 0x18000 + i * 4, address);
+    if (i < 128)
+      put32(f, OBJECTS + 0x17000 + i * 4, address);
+  }
+  put32(f, PROGRAM, IMAGE + NATIVE_PLUGIN_VTABLE);
+  first = state_read(&fixture, executor, MPC_NATIVE_OK);
+  assert(first->track_count == 128 && first->bus_count == 28);
+  assert(first->tracks[127].identity.index == 127 && first->tracks[127].known == 15);
+  free(first);
+  /* Cancelled/disconnected snapshot jobs still drain and release their buffers. */
+  struct mpc_executor_job *job =
+    submit(executor, MPC_EXECUTOR_GET_STATE, (struct mpc_executor_identity){0});
+  struct mpc_executor_result result;
+  assert(mpc_executor_cancel(job, &result) == MPC_NATIVE_CANCELLED && !result.snapshot);
+  mpc_executor_release(job);
+  close_executor(&fixture, executor);
+  assert(!f->setters);
+  assert(!pthread_cond_destroy(&fixture.changed));
+  assert(!pthread_mutex_destroy(&fixture.mutex));
+}
+
+int main(int argc, char **argv) {
+  if (argc == 2 && !strcmp(argv[1], "--snapshot-wire")) {
+    struct identity_fixture fixture;
+    state_init(&fixture);
+    struct mpc_executor *executor = open_executor(&fixture);
+    struct mpc_state_snapshot *state = state_read(&fixture, executor, MPC_NATIVE_OK);
+    assert(fwrite(state, sizeof *state, 1, stdout) == 1);
+    free(state);
+    close_executor(&fixture, executor);
+    return 0;
+  }
+  state_tests();
   (void)validate_target; /* This fixture uses the production identity resolver. */
   struct identity_fixture fixture;
   init(&fixture);

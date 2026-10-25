@@ -1,0 +1,145 @@
+{
+  "apiVersion": "0.1",
+  "deviceId": "dev_example",
+  "instanceId": "run_00000000000000000000000000000000",
+  "projectId": "1",
+  "projectGeneration": "1",
+  "revision": "1",
+  "sample": {
+    "startedAt": "2026-10-25T18:00:00.000Z",
+    "finishedAt": "2026-10-25T18:00:00.009Z",
+    "durationMs": 9.058,
+    "attempts": 1,
+    "atomic": false,
+    "consistency": "identity_topology_selection_checked",
+    "freshness": "fresh",
+    "source": "native_ui_thread"
+  },
+  "project": {
+    "name": null
+  },
+  "selectedTrackId": "2",
+  "selectedSequence": {
+    "id": "4",
+    "generation": "4",
+    "index": 0,
+    "name": "Sequence 01",
+    "used": false,
+    "bpm": 120,
+    "bpmSource": "sequence_property"
+  },
+  "sequenceSlotCount": 128,
+  "sequenceObjectCount": 1,
+  "usedSequenceCount": 0,
+  "sequences": [
+    {
+      "id": "4",
+      "generation": "4",
+      "index": 0,
+      "name": "Sequence 01",
+      "used": false,
+      "bpm": 120,
+      "bpmSource": "sequence_property"
+    }
+  ],
+  "transport": {
+    "effectiveBpm": null,
+    "tempoSource": null,
+    "playing": null,
+    "recording": null
+  },
+  "tracks": [
+    {
+      "ref": {
+        "instanceId": "run_00000000000000000000000000000000",
+        "projectId": "1",
+        "trackId": "2"
+      },
+      "generation": "2",
+      "kind": "track",
+      "index": 0,
+      "name": "Plugin 001",
+      "type": "plugin",
+      "requested": {
+        "muted": false,
+        "soloed": false,
+        "recordArmed": true
+      },
+      "audioSide": {
+        "muted": null,
+        "soloed": false,
+        "recordArmed": true
+      },
+      "silenced": false,
+      "unsupportedFields": [
+        "audioSide.muted",
+        "audioActivity"
+      ]
+    },
+    {
+      "ref": {
+        "instanceId": "run_00000000000000000000000000000000",
+        "projectId": "1",
+        "trackId": "3"
+      },
+      "generation": "3",
+      "kind": "track",
+      "index": 1,
+      "name": "Trap-Kit-Default",
+      "type": "drum",
+      "requested": {
+        "muted": false,
+        "soloed": false,
+        "recordArmed": true
+      },
+      "audioSide": {
+        "muted": null,
+        "soloed": false,
+        "recordArmed": true
+      },
+      "silenced": false,
+      "unsupportedFields": [
+        "audioSide.muted",
+        "audioActivity"
+      ]
+    }
+  ],
+  "buses": [
+    {
+      "ref": null,
+      "generation": null,
+      "kind": "bus",
+      "index": 0,
+      "name": "Submix 1",
+      "type": "submix",
+      "requested": {
+        "muted": null,
+        "soloed": null,
+        "recordArmed": null
+      },
+      "audioSide": {
+        "muted": null,
+        "soloed": null,
+        "recordArmed": null
+      },
+      "silenced": null,
+      "unsupportedFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.muted",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced",
+        "audioActivity"
+      ]
+    }
+  ],
+  "unsupportedFields": [
+    "project.name",
+    "transport.effectiveBpm",
+    "transport.tempoSource",
+    "transport.playing",
+    "transport.recording"
+  ]
+}

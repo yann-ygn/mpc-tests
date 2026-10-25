@@ -1,8 +1,8 @@
 # MPC Key 37 API
 
-Native state/control research and a discovery service for the Akai MPC Key 37.
-The public API currently implements `describe`; state and write operations remain
-unavailable. See [the service](native-api/README.md), [the native adapter](native-api/adapter/README.md)
+Native state/control research and a local service for the Akai MPC Key 37.
+The API implements discovery and authoritative live state reads through a verified
+attachment. Public writes and streaming remain unavailable. See [the service](native-api/README.md), [the native adapter](native-api/adapter/README.md)
 and [privtap](privtap/README.md) for their interfaces and limitations.
 
 ## Requirements
@@ -33,12 +33,13 @@ Meson generates `compile_commands.json` in each build directory for editor suppo
 Use `--buildtype=debug` at setup for unoptimized service and research-tool builds;
 the explicit privtap and fixture optimization settings are retained.
 
-The tests include the 26 Python API/adapter/experiment cases with JSON Schema validation,
+The tests include Python API/adapter/experiment cases with JSON Schema validation,
 the isolated native, executor and identity lifecycle/concurrency fixtures, privtap protocol tests, both preload cases
 (normal and identity X), and seven tests exercising the ELF deployment guards.
 Tests consume Meson's binaries and do not invoke compilers.
 The [flag-semantics matrix](findings/native-flag-semantics.md) documents device
-experiments and the private runner for US #31. To run one suite:
+experiments and the private runner for US #31. The [live-state findings](findings/native-state.md)
+cover US #18 and its device evidence. To run one suite:
 
 ```sh
 uv run --no-sync meson test -C builddir/host --suite native-api --print-errorlogs
@@ -61,7 +62,7 @@ The service's Python integration tests run in the host build only.
 
 | Artifact | Path relative to `builddir/host/` or `builddir/arm/` |
 |---|---|
-| Discovery service | `native-api/mpc-api` |
+| Discovery/state service | `native-api/mpc-api` |
 | Native adapter | `native-api/libmpc_native.so` |
 | Native fixture | `native-api/tests/native_fixture` |
 | Executor fixture | `native-api/tests/executor_fixture` |

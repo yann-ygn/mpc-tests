@@ -191,7 +191,7 @@ int api_serve(const char *path, const char *device_id, const char *root) {
   sigemptyset(&action.sa_mask);
   sigaction(SIGTERM, &action, NULL);
   sigaction(SIGINT, &action, NULL);
-  fprintf(stderr, "Listening on %s (describe only)\n", path);
+  fprintf(stderr, "Listening on %s (native API)\n", path);
   status = 0;
   while (!stopping) {
     struct pollfd fds[MAX_CONNECTIONS + 1];

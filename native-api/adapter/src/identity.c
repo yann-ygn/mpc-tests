@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <time.h>
 
 struct entry {
   uint32_t address;
@@ -53,8 +55,11 @@ static enum mpc_native_error active_root(struct mpc_identity_registry *registry,
   engine = component + NATIVE_COMPONENT_ENGINE;
   if (
     !has_vtable(registry, engine, NATIVE_ENGINE_VTABLE) ||
-    read32(registry, engine + NATIVE_ENGINE_PROJECT, root) ||
-    !has_vtable(registry, *root, NATIVE_PROJECT_VTABLE))
+    read32(registry, engine + NATIVE_ENGINE_PROJECT, root))
+    return MPC_NATIVE_NOT_READY;
+  if (!*root)
+    return MPC_NATIVE_OK;
+  if (!has_vtable(registry, *root, NATIVE_PROJECT_VTABLE))
     return MPC_NATIVE_NOT_READY;
   for (size_t i = 0; i < sizeof native_secondary / sizeof *native_secondary; i++)
     if (!has_vtable(registry, *root + native_secondary[i].offset, native_secondary[i].vtable))
@@ -275,6 +280,8 @@ static enum mpc_native_error refresh(struct mpc_identity_registry *registry) {
     enum mpc_native_error detached = mpc_identity_detach(registry);
     return detached ? detached : error;
   }
+  if (!root)
+    return mpc_identity_detach(registry);
   if (
     root == registry->root && alive(&registry->lifetime) &&
     __atomic_load_n(&registry->project_watch.loading, __ATOMIC_ACQUIRE))
@@ -333,6 +340,11 @@ mpc_identity_capture(struct mpc_identity_registry *registry, struct mpc_identity
   if (error)
     return error;
   struct mpc_identity_snapshot snapshot = {0};
+  strcpy(snapshot.instance_id, registry->adapter->instance_id);
+  if (!registry->root) {
+    *output = snapshot;
+    return MPC_NATIVE_OK;
+  }
   uint32_t track, sequence;
   if (
     read32(registry, registry->root + NATIVE_SELECTED_TRACK, &track) ||
@@ -424,4 +436,254 @@ enum mpc_native_error mpc_identity_resolve(
     return MPC_NATIVE_READ_FAILED;
   *output = (struct mpc_native_target){registry->root, track->address, program};
   return MPC_NATIVE_OK;
+}
+
+static uint64_t nanoseconds(clockid_t clock) {
+  struct timespec time;
+  if (clock_gettime(clock, &time))
+    return 0;
+  return (uint64_t)time.tv_sec * 1000000000u + (uint64_t)time.tv_nsec;
+}
+
+static int state_bool(struct mpc_identity_registry *registry, uint32_t address, uint32_t *value) {
+  unsigned char byte;
+  struct mpc_native_io *io = &registry->adapter->io;
+  if (io->read(io->userdata, address, &byte, 1) || byte > 1)
+    return -1;
+  *value = byte;
+  return 0;
+}
+
+static int state_name(struct mpc_identity_registry *registry, uint32_t field, char *name) {
+  uint32_t address;
+  if (read32(registry, field, &address) || !address || address > UINT32_MAX - MPC_STATE_NAME_BYTES)
+    return -1;
+  struct mpc_native_io *io = &registry->adapter->io;
+  for (unsigned i = 0; i < MPC_STATE_NAME_BYTES; i++) {
+    if (io->read(io->userdata, address + i, name + i, 1))
+      return -1;
+    if (!name[i])
+      return 0;
+  }
+  return -1; /* Never silently truncate a required name. */
+}
+
+#define ALL_TRACKS (MPC_IDENTITY_MAX_TRACKS + MPC_STATE_MAX_BUSES)
+static enum mpc_native_error all_tracks(
+  struct mpc_identity_registry *registry, uint32_t addresses[ALL_TRACKS], unsigned *count) {
+  uint32_t pool, begin, end, capacity;
+  if (
+    read32(registry, registry->root + NATIVE_POOL_OFFSET, &pool) ||
+    !has_vtable(registry, pool, NATIVE_POOL_VTABLE) ||
+    read32(registry, pool + NATIVE_ALL_BEGIN, &begin) ||
+    read32(registry, pool + NATIVE_ALL_END, &end) ||
+    read32(registry, pool + NATIVE_ALL_CAPACITY, &capacity) || begin % 4 || end < begin ||
+    capacity < end || (end - begin) % 4 || (capacity - begin) % 4 ||
+    capacity - begin > ALL_TRACKS * 4 || (!begin && (end || capacity)))
+    return MPC_NATIVE_READ_FAILED;
+  *count = (end - begin) / 4;
+  struct mpc_native_io *io = &registry->adapter->io;
+  if (*count && io->read(io->userdata, begin, addresses, *count * 4))
+    return MPC_NATIVE_READ_FAILED;
+  for (unsigned i = 0; i < *count; i++) {
+    if (!has_vtable(registry, addresses[i], NATIVE_TRACK_VTABLE))
+      return MPC_NATIVE_READ_FAILED;
+    for (unsigned j = 0; j < i; j++)
+      if (addresses[i] == addresses[j])
+        return MPC_NATIVE_READ_FAILED;
+  }
+  return MPC_NATIVE_OK;
+}
+
+static enum mpc_native_error selection_check(
+  struct mpc_identity_registry *registry, const struct mpc_identity_snapshot *identity) {
+  uint32_t track, mirror, sequence, sequence_mirror, index;
+  if (
+    read32(registry, registry->root + NATIVE_SELECTED_TRACK, &track) ||
+    read32(registry, registry->root + NATIVE_SELECTED_TRACK_MIRROR, &mirror) ||
+    read32(registry, registry->root + NATIVE_SELECTED_SEQUENCE, &sequence) ||
+    read32(registry, registry->root + NATIVE_SELECTED_SEQUENCE_MIRROR, &sequence_mirror) ||
+    read32(registry, registry->root + NATIVE_SELECTED_TRACK_INDEX, &index))
+    return MPC_NATIVE_READ_FAILED;
+  if (track != mirror || sequence != sequence_mirror)
+    return MPC_NATIVE_STATE_UNSTABLE;
+  for (unsigned i = 0; i < identity->track_count; i++)
+    if (identity->tracks[i].id == identity->selected_track && identity->tracks[i].index != index)
+      return MPC_NATIVE_STATE_UNSTABLE;
+  return MPC_NATIVE_OK;
+}
+
+static enum mpc_native_error state_track(
+  struct mpc_identity_registry *registry,
+  uint32_t address,
+  uint32_t *program,
+  bool normal,
+  struct mpc_state_track *output) {
+  uint32_t vtable;
+  if (
+    state_name(registry, address + NATIVE_TRACK_NAME, output->name) ||
+    read32(registry, address + NATIVE_PROGRAM_OFFSET, program) ||
+    read32(registry, *program, &vtable))
+    return MPC_NATIVE_READ_FAILED;
+  strcpy(output->type, "unknown");
+  for (unsigned i = 0; i < sizeof native_program_types / sizeof *native_program_types; i++)
+    if (vtable == registry->adapter->io.image + native_program_types[i].vtable)
+      strcpy(output->type, native_program_types[i].name);
+  if (!normal || (strcmp(output->type, "plugin") && strcmp(output->type, "drum")))
+    return MPC_NATIVE_OK;
+  uint32_t *requested[] = {&output->muted, &output->soloed, &output->record_armed};
+  uint32_t *audio[] = {NULL, &output->audio_soloed, &output->audio_record_armed};
+  for (unsigned i = 0; i < 3; i++) {
+    const struct native_binding *binding = &native_bindings[i];
+    uint32_t owner = binding->owner_is_track ? address : *program;
+    if (
+      state_bool(registry, owner + binding->requested, requested[i]) ||
+      (audio[i] && state_bool(registry, owner + binding->observed, audio[i])))
+      return MPC_NATIVE_READ_FAILED;
+  }
+  if (state_bool(registry, *program + NATIVE_SILENCED_OFFSET, &output->silenced))
+    return MPC_NATIVE_READ_FAILED;
+  output->known =
+    MPC_STATE_REQUESTED | MPC_STATE_AUDIO_SOLO | MPC_STATE_AUDIO_ARM | MPC_STATE_SILENCED;
+  return MPC_NATIVE_OK;
+}
+
+static bool
+same_identities(const struct mpc_identity_snapshot *a, const struct mpc_identity_snapshot *b) {
+  if (
+    memcmp(a->instance_id, b->instance_id, sizeof a->instance_id) || a->project != b->project ||
+    a->project_generation != b->project_generation || a->selected_track != b->selected_track ||
+    a->selected_sequence != b->selected_sequence || a->track_count != b->track_count ||
+    a->sequence_count != b->sequence_count || a->sequence_slots != b->sequence_slots)
+    return false;
+  /* Compare fields, never C structure padding. */
+  for (unsigned kind = 0; kind < 2; kind++) {
+    const struct mpc_identity_object *left = kind ? a->sequences : a->tracks;
+    const struct mpc_identity_object *right = kind ? b->sequences : b->tracks;
+    unsigned count = kind ? a->sequence_count : a->track_count;
+    for (unsigned i = 0; i < count; i++)
+      if (
+        left[i].id != right[i].id || left[i].generation != right[i].generation ||
+        left[i].index != right[i].index)
+        return false;
+  }
+  return true;
+}
+
+static enum mpc_native_error
+capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot *output) {
+  struct mpc_identity_snapshot before, after;
+  enum mpc_native_error error = mpc_identity_capture(registry, &before);
+  if (error)
+    return error;
+  strcpy(output->instance_id, before.instance_id);
+  output->project = before.project;
+  output->project_generation = before.project_generation;
+  output->selected_track = before.selected_track;
+  output->selected_sequence = before.selected_sequence;
+  output->sequence_slots = before.sequence_slots;
+  uint32_t addresses[ALL_TRACKS], programs[ALL_TRACKS], verify[ALL_TRACKS];
+  unsigned count = 0, verify_count = 0;
+  if (before.project) {
+    error = selection_check(registry, &before);
+    if (error)
+      return error;
+    error = all_tracks(registry, addresses, &count);
+    if (error)
+      return error;
+    for (unsigned i = 0; i < count; i++) {
+      struct entry *normal = NULL;
+      for (unsigned j = 0; j < MPC_IDENTITY_MAX_TRACKS; j++)
+        if (registry->tracks[j].address == addresses[i])
+          normal = &registry->tracks[j];
+      struct mpc_state_track *track;
+      if (normal) {
+        track = &output->tracks[normal->index];
+        track->identity.id = normal->id;
+        track->identity.generation = normal->generation;
+        track->identity.index = normal->index;
+        output->track_count++;
+      } else {
+        if (output->bus_count == MPC_STATE_MAX_BUSES)
+          return MPC_NATIVE_READ_FAILED;
+        track = &output->buses[output->bus_count];
+        track->identity.index = output->bus_count++;
+      }
+      error = state_track(registry, addresses[i], &programs[i], normal != NULL, track);
+      if (error)
+        return error;
+    }
+    if (output->track_count != before.track_count)
+      return MPC_NATIVE_READ_FAILED;
+    for (unsigned i = 0; i < before.sequence_count; i++) {
+      const struct mpc_identity_object *id = &before.sequences[i];
+      struct entry *entry =
+        find(registry->sequences, MPC_IDENTITY_MAX_SEQUENCES, id->id, id->generation);
+      struct mpc_state_sequence *sequence = &output->sequences[output->sequence_count++];
+      sequence->identity.id = id->id;
+      sequence->identity.generation = id->generation;
+      sequence->identity.index = id->index;
+      struct mpc_native_io *io = &registry->adapter->io;
+      if (
+        !entry || state_name(registry, entry->address + NATIVE_SEQUENCE_NAME, sequence->name) ||
+        state_bool(registry, entry->address + NATIVE_SEQUENCE_USED, &sequence->used) ||
+        io->read(
+          io->userdata,
+          entry->address + NATIVE_SEQUENCE_BPM,
+          &sequence->bpm,
+          sizeof sequence->bpm) ||
+        !isfinite(sequence->bpm) || sequence->bpm <= 0 || sequence->bpm > 1000)
+        return MPC_NATIVE_READ_FAILED;
+      output->used_sequences += sequence->used;
+    }
+  }
+  error = mpc_identity_capture(registry, &after);
+  if (error)
+    return error;
+  if (!same_identities(&before, &after))
+    return MPC_NATIVE_STATE_UNSTABLE;
+  if (!before.project)
+    return MPC_NATIVE_OK;
+  error = selection_check(registry, &after);
+  if (error)
+    return error;
+  error = all_tracks(registry, verify, &verify_count);
+  if (error)
+    return error;
+  if (count != verify_count || memcmp(addresses, verify, count * 4))
+    return MPC_NATIVE_STATE_UNSTABLE;
+  for (unsigned i = 0; i < count; i++) {
+    uint32_t program;
+    if (read32(registry, addresses[i] + NATIVE_PROGRAM_OFFSET, &program))
+      return MPC_NATIVE_READ_FAILED;
+    if (program != programs[i])
+      return MPC_NATIVE_STATE_UNSTABLE;
+  }
+  return MPC_NATIVE_OK;
+}
+
+enum mpc_native_error
+mpc_identity_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot *output) {
+  if (!registry || !output)
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  uint64_t started = nanoseconds(CLOCK_REALTIME) / 1000000;
+  uint64_t monotonic = nanoseconds(CLOCK_MONOTONIC);
+  enum mpc_native_error error = MPC_NATIVE_STATE_UNSTABLE;
+  for (unsigned attempt = 1; attempt <= MPC_STATE_ATTEMPTS; attempt++) {
+    memset(output, 0, sizeof *output);
+    error = capture_state(registry, output);
+    if (error == MPC_NATIVE_STATE_UNSTABLE)
+      continue;
+    if (error)
+      break;
+    output->abi_version = MPC_STATE_ABI;
+    output->struct_bytes = sizeof *output;
+    output->started_ms = started;
+    output->finished_ms = nanoseconds(CLOCK_REALTIME) / 1000000;
+    output->duration_ns = nanoseconds(CLOCK_MONOTONIC) - monotonic;
+    output->attempts = attempt;
+    return MPC_NATIVE_OK;
+  }
+  memset(output, 0, sizeof *output);
+  return error;
 }

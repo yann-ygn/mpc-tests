@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-25",
+  "story": 18,
+  "firmware": {
+    "model": "Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "operations": [
+    "get_state",
+    "list_tracks",
+    "current_track",
+    "current_sequence",
+    "recovery_snapshot"
+  ],
+  "qualification": "bounded_lab_proof",
+  "host": {
+    "mesonEntriesPassed": 10,
+    "sanitizedNativeApiEntriesPassed": 5,
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "maxFixtureNormalTracks": 128,
+    "maxFixtureBuses": 28
+  },
+  "armFixtures": {
+    "native_fixture": "native_fixture_cases=51",
+    "executor_fixture": "executor lifecycle, typed operations and concurrency passed",
+    "identity_fixture": "identity_lifecycle_cases=19"
+  },
+  "device": {
+    "normalTracks": 2,
+    "buses": 28,
+    "sequenceSlots": 128,
+    "sequenceObjects": 128,
+    "usedSequences": 0,
+    "sequenceBpm": 120,
+    "effectiveTransportBpm": null,
+    "sampleCount": 20,
+    "nativeCaptureP95Ms": 9.058,
+    "independentReadMatched": true,
+    "controllerEditOutsideMain": {
+      "mode": "Sounds",
+      "controllerEdit": "MUTE",
+      "observedWithoutSaveOrModeSwitch": true,
+      "trackReferencePreserved": true,
+      "requestedMute": [
+        false,
+        true,
+        false
+      ],
+      "restoredFlagsAndSelection": true,
+      "originalMainViewRestored": true
+    },
+    "attachmentLossInvalidatedInstance": true,
+    "attachmentLossReadGated": true,
+    "mpcPidUnchanged": true,
+    "observersDrained": true,
+    "bothLibrariesUnloaded": true,
+    "temporaryFilesRemoved": true,
+    "restarted": false,
+    "addinInstalled": false,
+    "projectSavedOrLoaded": false
+  },
+  "limits": {
+    "atomic": false,
+    "snapshotAttempts": 3,
+    "stateTransferTimeoutMs": 200,
+    "nativeWaitMs": 150,
+    "nameBytes": 255,
+    "maxResponseBytes": 1048576
+  },
+  "remaining": [
+    "production attachment supervision/packaging",
+    "public write handlers and receipts",
+    "HTTP/MCP transports",
+    "streaming/replay",
+    "larger-device-project and additional-mode qualification"
+  ]
+}

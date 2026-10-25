@@ -357,6 +357,7 @@ const char *mpc_native_error_name(enum mpc_native_error error) {
     "OUTCOME_UNKNOWN",
     "TIMED_OUT",
     "SHUTTING_DOWN",
-    "DISPATCH_FAILED"};
+    "DISPATCH_FAILED",
+    "STATE_UNSTABLE"};
   return (unsigned)error < sizeof names / sizeof *names ? names[error] : "INVALID_ERROR";
 }

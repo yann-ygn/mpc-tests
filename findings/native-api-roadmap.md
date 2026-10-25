@@ -7,8 +7,9 @@ adapter architecture. Descriptions, acceptance criteria, dependencies, statuses 
 and verified for all 22 stories. The owner accepted the [public contract](native-api-contract.md) on 2026-10-24
 (#28 Done). #29 and #30 are Done with the guarded shared adapter, bounded executor and lab validation.
 #31 adds the stopped-mode flag matrix, repeatable device experiments and failure evidence.
-#32 is In progress with discovery and verified adapter attachment reporting; #19 remains In progress.
+#32 is In progress with discovery, authoritative read operations and verified attachment reporting; #19 remains In progress.
 #20 is implemented with authoritative owner resolution and native lifecycle generations.
+#18 adds live snapshots and read projections; see [findings](native-state.md).
 
 ## Epic #4 — Native control library and live API
 
@@ -21,10 +22,10 @@ Only the bounded native mute/solo/arm proof is already validated; these stories 
 | #29 | Build the native adapter library with validated firmware profiles | Done |
 | #30 | Execute native operations on the MPC UI thread with bounded lifecycle | Done |
 | #20 | Resolve active projects and generation-bound track/sequence handles | Done |
-| #18 | Expose authoritative live state snapshots from native MPC objects | New |
+| #18 | Expose authoritative live state snapshots from native MPC objects | Done — live reads |
 | #31 | Validate mute, solo and record-arm semantics beyond the bounded proof | Done — stopped-mode matrix |
 | #19 | Provide idempotent native mute, solo and record-arm command handlers | In progress |
-| #32 | Expose the native adapter through a local command service | In progress — `describe` implemented |
+| #32 | Expose the native adapter through a local command service | In progress — discovery and reads implemented |
 | #33 | Publish live state changes and recover subscriptions after reconnect | New |
 | #34 | Connect paired HTTP state and commands to Akai's web service | New |
 | #35 | Expose the native-control API as typed MCP tools | New |
@@ -119,3 +120,8 @@ not erase its research results.
 - [Native write proof and runtime constraints](native-control.md)
 - [Sanitized verified test record](native-control-proof-20261024.json)
 - [Static capability catalog](native-control-catalog.md)
+
+Snapshot slice (#18, 2026-10-25): [authoritative live state](native-state.md) adds UI-thread snapshots and
+all read projections to the restricted Unix service. Identity/topology/selection fences, fresh revisions,
+nullable unsupported fields and native sequence usage distinguish live observations from saved-file inference.
+Host/sanitizer/ARM fixtures and real controller edits in Sounds pass; public writes/watch remain gated.

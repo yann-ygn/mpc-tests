@@ -1,10 +1,12 @@
-# Native API: discovery service
+# Native API: discovery and live state service
 
 The first implementation of the [accepted 0.1 contract](../findings/native-api-contract.md).
-`describe` is a read-only endpoint in a standalone C process on MPC. It reads device-tree metadata and GNU ELF
-notes from the running MPC executable. It does not load the lab bridge or read native project objects.
-The [native adapter](adapter/README.md) is a separate shared library. A retained experimental host can expose its
-verified attachment status to this service; this does not enable state queries or commands.
+`describe` reads device-tree metadata, GNU ELF notes and verified adapter attachment status. With an
+authoritative attachment, `get_state`, `list_tracks`, `current_track`, `current_sequence` and
+`recovery_snapshot` capture current native state through the UI executor. Writes, receipts and streaming
+remain unavailable. The service does not load the [native adapter](adapter/README.md) itself; the temporary
+lab host supplies the attachment until packaging/supervision work is complete. See the
+[snapshot findings and qualification limits](../findings/native-state.md).
 
 The local transport is a restricted Unix stream socket. Each connection carries **one compact JSON request plus
 a newline**, then one JSON response plus a newline. Read through the response newline and close the connection.
@@ -15,9 +17,11 @@ HTTP and MCP adapters follow in their own stories; this service has no TCP liste
 - `src/main.c`: command-line parsing and validation.
 - `src/server.c`: socket ownership, peer admission, bounded client I/O and shutdown.
 - `src/client.c`: the `request` command's delivery and response relay.
-- `src/protocol.c`: request parsing and JSON responses; `src/discovery.c` and `src/attachment.c` provide metadata.
+- `src/protocol.c`: request parsing and discovery JSON; `src/discovery.c` reads process metadata.
+- `src/state.c`: validated snapshot serialization/projections; `src/attachment.c` checks the MPC peer and
+  performs bounded metadata/state transfers.
 
-`transport.h` is the private CLI/transport boundary; public request and response schemas are unchanged.
+`transport.h` is the private CLI/transport boundary; schemas cover discovery and the additive state operations.
 
 ## Build and test
 
@@ -48,7 +52,9 @@ To upload and smoke-test the ARM binary in a fresh private device directory:
 python3 native-api/device_smoke.py --output build/native-api/device-smoke.json
 ```
 
-This cleans up afterwards. Add `--keep` to leave the temporary discovery service running for further requests.
+This cleans up afterwards. Add `--keep` to leave the temporary service running for further requests.
+Add `--state` with an existing authoritative attachment to check all read operations, compare them to the
+independent observer and measure repeated native captures.
 The report records its directory, socket and service PID. This does not install a startup job or addin.
 
 ## Start and query
@@ -89,11 +95,13 @@ No public object handles are issued yet.
 - `firmware.version`: version mapped from that exact known build ID, with `versionSource: build_profile`.
   An unknown build never inherits the research profile's version.
 - `readiness`: distinguishes a matched research profile from unsupported/unknown firmware, and separately reports
-  `nativeAdapter: not_attached` or `attached` and `status: discovery_only`. Verified attachment metadata includes
-  its ABI, incarnation ID and `bounded_lab_proof` qualification; clients still consult each operation's availability.
-- `capabilities.describe.available`: true even when MPC is absent or its firmware is unsupported. All other
-  operations are unavailable, with `NOT_IMPLEMENTED`, `UNSUPPORTED_FIRMWARE` or `NOT_READY` reasons.
-- `readableFields`: native state fields exposed by the public API, currently empty.
+  `nativeAdapter: not_attached` or `attached`. Status is `discovery_only`, or `ready` when authoritative
+  snapshots are attached. Verified attachment metadata includes its ABI, incarnation ID and `bounded_lab_proof`
+  qualification; clients still consult each operation's availability.
+- `capabilities.describe.available`: true even when MPC is absent or its firmware is unsupported. Read operations
+  become available only through an authoritative snapshot attachment. Other operations remain unavailable, with
+  `NOT_IMPLEMENTED`, `UNSUPPORTED_FIRMWARE` or `NOT_READY` reasons.
+- `readableFields`: qualified native state fields exposed by the attachment; empty when reads are unavailable.
 - `limits`: enforced frame/connection limits. Native queue/receipt capacities are zero and command timing values
   are null while command operations are unavailable. Before enabling commands, receipt retention must meet the
   contract's ten-minute minimum.
@@ -103,7 +111,9 @@ Unix peer UID. Requests are limited to 1024 bytes excluding the framing newline;
 connections. A request must finish within 1000 ms of acceptance, even if it trickles in. These are IPC resource
 bounds, not native command execution limits. Input permits the two ASCII string identifiers `apiVersion` and
 `op`, with ordinary JSON escaping; duplicate/extra fields, invalid types and unsupported API versions produce
-structured errors. Other contract operations return `NOT_READY`; unknown operations return `UNSUPPORTED_OPERATION`.
+structured errors. Unavailable operations return `NOT_READY`; unknown operations return `UNSUPPORTED_OPERATION`.
+The response limit is 1 MiB. Snapshot transfer has a 200 ms total deadline and fails closed on malformed,
+partial or stale data. Snapshot reads never serve a cached fallback.
 
 The schemas are [request](schema/describe-request.schema.json) and [response/error](schema/describe-response.schema.json).
 Requests reject unknown fields; responses permit additive optional fields as the contract requires.
@@ -118,3 +128,40 @@ Verified on 2026-10-24 against the running MPC Key 37 / 3.9.1.2, build ID
 queries, rejected unsupported versions/operations, and kept its socket at `0600`. MPC's PID stayed unchanged.
 Process discovery uses the executable path: the actual main thread is named `MPC Main Thread`, so its thread name
 cannot identify the process reliably. Host fixtures cover that case.
+
+## Read current state
+
+Enable the temporary authoritative host without installing an addin or restarting MPC:
+
+```sh
+python3 tools/mpc_native_lab.py --identities --keep --output build/native-api/state-attachment.json
+```
+
+Then send the same two-field request with `op` set to `get_state`, `list_tracks`, `current_track`,
+`current_sequence`, or `recovery_snapshot`. `get_state` and `recovery_snapshot` both return a full fresh snapshot.
+Each read has its own instance-scoped observation revision and capture interval; this is not an event cursor.
+`current_track` and `current_sequence` project a full capture onto its selection; null selections return null.
+`list_tracks` returns normal tracks and a separate bus metadata list.
+
+Requested flags and separate audio-side copies are qualified only for plugin/drum normal tracks. Bus flags,
+other families' flags, project name, actual audio activity and effective transport tempo remain null.
+A sequence's `bpm` is its own property; `used` comes from the native usage flag rather than its name or slot.
+Unsupported fields are identified explicitly. A supported field read failure returns `READ_FAILED`; three
+unstable topology/identity/selection attempts return `STATE_UNSTABLE`.
+
+Example: [full state response](examples/state-response.json).
+Schemas: [state request](schema/state-request.schema.json), [state response](schema/state-response.schema.json).
+A successful `describe` advertises each read independently of the still-unavailable write/watch operations.
+The public service instance scopes all returned references; the adapter incarnation remains private attachment
+metadata. No heap addresses appear in state responses.
+
+Stop and unload the temporary host after testing:
+
+```sh
+python3 tools/mpc_native_lab.py --detach build/native-api/state-attachment.json \
+  --output build/native-api/state-detached.json
+```
+
+On 2026-10-25 the read smoke matched an independent observer on the actual device. Twenty native captures
+had p95 9.058 ms for two normal tracks, 28 buses and 128 sequence objects. A Sounds-mode controller mute edit
+was visible immediately and restored. See [sanitized evidence](../findings/native-state-proof-20261025.json).
