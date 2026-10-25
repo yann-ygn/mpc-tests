@@ -3,9 +3,10 @@
 The first implementation of the [accepted 0.1 contract](../findings/native-api-contract.md).
 `describe` reads device-tree metadata, GNU ELF notes and verified adapter attachment status. With an
 authoritative attachment, `get_state`, `list_tracks`, `current_track`, `current_sequence` and
-`recovery_snapshot` capture current native state through the UI executor. Writes, receipts and streaming
-remain unavailable. The service does not load the [native adapter](adapter/README.md) itself; the temporary
-lab host supplies the attachment until packaging/supervision work is complete. See the
+`recovery_snapshot` capture current native state through the UI executor. Public Unix writes, receipt lookup
+and streaming remain unavailable. Transport-independent [flag handlers](adapter/COMMANDS.md) are implemented by #19;
+#32 still supplies the authenticated wire binding and live mode/settings policy. The service does not load
+the [native adapter](adapter/README.md) itself; the temporary lab host supplies the attachment until packaging/supervision work is complete. See the
 [snapshot findings and qualification limits](../findings/native-state.md).
 
 The local transport is a restricted Unix stream socket. Each connection carries **one compact JSON request plus
@@ -165,3 +166,16 @@ python3 tools/mpc_native_lab.py --detach build/native-api/state-attachment.json 
 On 2026-10-25 the read smoke matched an independent observer on the actual device. Twenty native captures
 had p95 9.058 ms for two normal tracks, 28 buses and 128 sequence objects. A Sounds-mode controller mute edit
 was visible immediately and restored. See [sanitized evidence](../findings/native-state-proof-20261025.json).
+
+## Managed command handlers
+
+US #19 provides the [typed command API](adapter/include/mpc_commands.h),
+[integration guide](adapter/COMMANDS.md), [domain request schema](schema/command-request.schema.json),
+and [receipt schema](schema/command-receipt.schema.json). The handler retains caller-scoped outcomes,
+deduplicates retries, checks expected values at UI dispatch, verifies required native/audio readbacks,
+and reports observed selection/peer changes. It keeps running work alive across client waits/disconnects.
+
+These are library/domain interfaces. Public Unix setters and `get_command` remain unavailable until #32
+supplies authenticated wire routing and a validated live mode/settings qualification policy. The bounded
+private lab policy is manually qualified and does not enable public commands. See
+[device evidence](../findings/native-commands.md).

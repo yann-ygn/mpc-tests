@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native command receipt",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "requestId",
+    "instanceId",
+    "status",
+    "execution",
+    "target",
+    "op",
+    "value",
+    "changed",
+    "nativeInvoked",
+    "verification",
+    "observedChanges",
+    "error"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "0.1"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "instanceId": {
+      "type": "string",
+      "pattern": "^run_[0-9a-f]{32}$"
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "applied",
+        "rejected",
+        "cancelled",
+        "unknown"
+      ]
+    },
+    "execution": {
+      "enum": [
+        "not_started",
+        "started",
+        "completed"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "instanceId",
+        "projectId",
+        "trackId"
+      ],
+      "properties": {
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "trackId": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "op": {
+      "enum": [
+        "set_mute",
+        "set_solo",
+        "set_record_armed"
+      ]
+    },
+    "value": {
+      "type": "boolean"
+    },
+    "changed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "nativeInvoked": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "verification": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "by",
+        "requestedValue",
+        "audioSideValue",
+        "observedAt"
+      ],
+      "properties": {
+        "by": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "model",
+              "audio_copy"
+            ]
+          }
+        },
+        "requestedValue": {
+          "type": "boolean"
+        },
+        "audioSideValue": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "observedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "observedChanges": {
+      "type": "array",
+      "maxItems": 770,
+      "items": {
+        "type": "object",
+        "required": [
+          "projectId",
+          "path",
+          "before",
+          "after"
+        ],
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "trackId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "path": {
+            "type": "string"
+          },
+          "before": {
+            "type": [
+              "boolean",
+              "string",
+              "null"
+            ]
+          },
+          "after": {
+            "type": [
+              "boolean",
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "error": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object",
+          "required": [
+            "execution"
+          ]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "applied"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "const": "completed"
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "null"
+          },
+          "verification": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "cancelled"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "const": "not_started"
+          },
+          "nativeInvoked": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -108,5 +108,15 @@ before running experiments.
   Sounds-mode controller mute edits were visible/restored; small-project native capture p95 was 9.058 ms.
   See findings/native-state.md and findings/native-state-proof-20261025.json. Both DSOs and temporary service
   files were removed. Public writes/watch stay gated; persistent attachment supervision remains #21/#32.
-- Next: flag handlers (#19), remaining local service work (#32), then streaming (#33). Per-sequence mute needs
-  an explicit sequence target/precondition before public exposure.
+- Flag handlers (#19) implemented: command ABI 1 on executor ABI 4 provides caller-scoped retained receipts,
+  desired-state writes, dispatch-time expected values, native/audio verification, observed peer/selection changes,
+  and draining shutdown. The handler owns work across waits/disconnects; retries return the retained outcome.
+  Missing live host policy rejects writes; the lab policy is explicitly manual/experimental. Public Unix setters
+  and get_command remain gated pending #32's authenticated binding and production live mode/settings policy.
+  Twelve host entries, seven ASan/UBSan native entries and four isolated ARM fixtures pass. Twelve device rows
+  cover all flags on selected/unselected plugin/drum tracks, no-ops/conflicts, retries and complete restoration.
+  Both DSOs were unloaded; per-sequence mute was restored enabled and Main restored. See
+  findings/native-commands.md and findings/native-commands-proof-20261025.json; C integration is documented in
+  native-api/adapter/COMMANDS.md. tools/mpc_command_lab.py is the bounded device runner.
+- Next: local command service binding and validated live qualification policy (#32), then streaming (#33).
+  Per-sequence mute needs an explicit sequence target/precondition before public exposure.

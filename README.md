@@ -2,7 +2,8 @@
 
 Native state/control research and a local service for the Akai MPC Key 37.
 The API implements discovery and authoritative live state reads through a verified
-attachment. Public writes and streaming remain unavailable. See [the service](native-api/README.md), [the native adapter](native-api/adapter/README.md)
+attachment. The [managed flag handlers](native-api/adapter/COMMANDS.md) provide retained, verified command results;
+public Unix writes and streaming remain unavailable pending their transport/policy binding. See [the service](native-api/README.md), [the native adapter](native-api/adapter/README.md)
 and [privtap](privtap/README.md) for their interfaces and limitations.
 
 ## Requirements
@@ -67,6 +68,7 @@ The service's Python integration tests run in the host build only.
 | Native fixture | `native-api/tests/native_fixture` |
 | Executor fixture | `native-api/tests/executor_fixture` |
 | Identity/lifecycle fixture | `native-api/tests/identity_fixture` |
+| Command/receipt fixture | `native-api/tests/commands_fixture` |
 | Interposition addin | `privtap/privtap.so` |
 | privtap fixtures | `privtap/tests/{test_protocol,test_privtap,libfakeasound.so}` |
 | Memory/web helpers | `tools/{mem_probe,ipc_bridge}` |

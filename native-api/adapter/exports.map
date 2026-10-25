@@ -18,5 +18,12 @@
     mpc_executor_release;
     mpc_executor_shutdown;
     mpc_executor_close;
+    mpc_executor_poll;
+    mpc_commands_open;
+    mpc_commands_submit;
+    mpc_commands_get;
+    mpc_commands_shutdown;
+    mpc_commands_close;
+    mpc_commands_receipt_json;
   local: *;
 };

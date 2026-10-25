@@ -390,9 +390,9 @@ class DescribeTests(unittest.TestCase):
                                 payload += wire
                             if state.get("truncate"):
                                 payload = payload[:20]
-                            client.sendall(payload)
                             if state.get("replace"):
                                 state["epoch"] = "adp_" + "b" * 32
+                            client.sendall(payload)
                     except (OSError, TimeoutError):
                         pass
 

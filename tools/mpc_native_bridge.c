@@ -16,6 +16,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "mpc_executor.h"
+#include "mpc_commands.h"
 
 /* Bounded lab bridge. No arbitrary calls, raw writes, saves, or transport commands.
  * Commands are local/root-only. PULSE restores its original requested value;
@@ -35,6 +36,7 @@ struct job {
   struct flags tracks[1];
 };
 static struct mpc_executor *executor;
+static struct mpc_commands *commands;
 static bool authoritative;
 static struct {
   pthread_mutex_t mutex;
@@ -171,10 +173,105 @@ static void pause_ms(unsigned ms) {
   }
 }
 static void stop_executor(void) {
+  if (commands) {
+    if (mpc_commands_shutdown(commands, 3000) || mpc_commands_close(commands))
+      return;
+    commands = NULL;
+  }
   if (
     executor && mpc_executor_shutdown(executor, 3000) == MPC_NATIVE_OK &&
     mpc_executor_close(executor) == MPC_NATIVE_OK)
     executor = NULL;
+}
+/* Explicitly experimental host policy: the operator owns the stopped-mode and
+ * settings qualification for this bounded lab session, as in #31. This does NOT
+ * supply production live mode/settings validation. The Unix service must keep
+ * writes disabled until #32 supplies that policy and authenticated routing. */
+static enum mpc_native_error
+lab_command_policy(void *unused, enum mpc_command_operation operation) {
+  (void)unused;
+  return (unsigned)operation <= MPC_COMMAND_RECORD_ARMED ? MPC_NATIVE_OK
+                                                         : MPC_NATIVE_INVALID_ARGUMENT;
+}
+
+static void command_request(FILE *stream, const char *line) {
+  enum mpc_native_error error = MPC_NATIVE_INVALID_ARGUMENT;
+  char instance[37], id[MPC_COMMAND_ID_BYTES], property[16], expected[2], extra;
+  unsigned value, start_ms, wait_ms;
+  struct mpc_command_receipt *receipt = calloc(1, sizeof *receipt);
+  if (!receipt)
+    return;
+  if (!strchr(line, '\n')) {
+    fprintf(stream, "{\"ok\":false,\"error\":\"INVALID_ARGUMENT\"}\n");
+    free(receipt);
+    return;
+  }
+  if (
+    sscanf(line, "LAB_COMMAND_OPEN %36s %c", instance, &extra) == 1 &&
+    !strncmp(line, "LAB_COMMAND_OPEN ", 17)) {
+    if (authoritative && !commands) {
+      struct mpc_commands_config config = {
+        .abi_version = MPC_COMMANDS_ABI,
+        .struct_bytes = sizeof config,
+        .executor = executor,
+        .pending_capacity = 16,
+        .receipt_capacity = 128,
+        .retention_ms = MPC_COMMAND_MIN_RETENTION_MS,
+        .policy = {NULL, lab_command_policy}};
+      memcpy(config.instance_id, instance, 37);
+      error = mpc_commands_open(&config, &commands);
+    } else
+      error = MPC_NATIVE_NOT_READY;
+  } else if (!strcmp(line, "LAB_COMMAND_CLOSE\n")) {
+    error = commands ? mpc_commands_shutdown(commands, 3000) : MPC_NATIVE_NOT_READY;
+    if (!error)
+      error = mpc_commands_close(commands);
+    if (!error)
+      commands = NULL;
+  } else if (commands && !strncmp(line, "LAB_COMMAND_GET ", 16)) {
+    if (sscanf(line, "LAB_COMMAND_GET %36s %80s %u %c", instance, id, &wait_ms, &extra) == 3)
+      error = mpc_commands_get(commands, 0, instance, id, wait_ms, receipt);
+  } else if (commands && !strncmp(line, "LAB_COMMAND_SET ", 16)) {
+    struct mpc_command_request request = {0};
+    int fields = sscanf(
+      line,
+      "LAB_COMMAND_SET %15s %u %1s %36s %" SCNu64 " %" SCNu64 " %80s %u %u %c",
+      property,
+      &value,
+      expected,
+      request.target.instance_id,
+      &request.target.project,
+      &request.target.track,
+      request.request_id,
+      &start_ms,
+      &wait_ms,
+      &extra);
+    if (
+      fields == 9 && value <= 1 && strchr("-01", expected[0]) &&
+      (!strcmp(property, "mute") || !strcmp(property, "solo") || !strcmp(property, "arm"))) {
+      request.operation = !strcmp(property, "mute") ? MPC_COMMAND_MUTE
+        : !strcmp(property, "solo")                 ? MPC_COMMAND_SOLO
+                                                    : MPC_COMMAND_RECORD_ARMED;
+      request.value = value != 0;
+      request.has_expected = expected[0] != '-';
+      request.expected = expected[0] == '1';
+      request.start_within_ms = start_ms;
+      error = mpc_commands_submit(commands, 0, &request, wait_ms, receipt);
+    }
+  }
+  if (!error && receipt->request.request_id[0]) {
+    char *json = mpc_commands_receipt_json(receipt);
+    if (json) {
+      fputs(json, stream);
+      free(json);
+    }
+  } else
+    fprintf(
+      stream,
+      "{\"ok\":%s,\"error\":\"%s\"}\n",
+      error ? "false" : "true",
+      mpc_native_error_name(error));
+  free(receipt);
 }
 
 static void identity_command(FILE *stream, const char *line) {
@@ -375,7 +472,9 @@ static void *worker(void *unused) {
     }
     char line[256], verb[16] = {0}, prop[16] = {0}, extra;
     if (fgets(line, sizeof line, f)) {
-      if (!strncmp(line, "STATE_V1 ", 9)) {
+      if (!strncmp(line, "LAB_COMMAND_", 12)) {
+        command_request(f, line);
+      } else if (!strncmp(line, "STATE_V1 ", 9)) {
         state_command(f, line);
       } else if (!strcmp(line, "IDENTITIES\n") || !strncmp(line, "HANDLE_", 7)) {
         identity_command(f, line);
@@ -432,7 +531,15 @@ static void *worker(void *unused) {
         if (j)
           release(j);
       } else if (!strcmp(line, "QUIT\n")) {
-        enum mpc_native_error error = mpc_executor_shutdown(executor, 3000);
+        enum mpc_native_error error =
+          commands ? mpc_commands_shutdown(commands, 3000) : MPC_NATIVE_OK;
+        if (!error && commands) {
+          error = mpc_commands_close(commands);
+          if (!error)
+            commands = NULL;
+        }
+        if (!error)
+          error = mpc_executor_shutdown(executor, 3000);
         if (!error)
           error = mpc_executor_close(executor);
         if (!error) {

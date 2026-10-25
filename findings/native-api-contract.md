@@ -360,3 +360,11 @@ These requirements describe the intended product, not additional proof already o
 Evidence: [live state](live-state.md), [native control](native-control.md),
 [sanitized write proof](native-control-proof-20261024.json), [capability catalog](native-control-catalog.md),
 [delivery roadmap](native-api-roadmap.md).
+
+## Managed command implementation (#19)
+
+The [transport-independent handler API](../native-api/adapter/COMMANDS.md) implements typed desired-state
+requests, retained receipts, caller-scoped retries, dispatch preconditions, native/audio verification and
+observed peer/selection changes. [Domain request](../native-api/schema/command-request.schema.json) and
+[receipt](../native-api/schema/command-receipt.schema.json) schemas describe that boundary. Public Unix command
+binding and validated live mode/settings qualification remain #32; `describe` still gates those operations.

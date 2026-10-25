@@ -39,21 +39,31 @@ identity_fixture = executable(
 elf_checks += [{'binary': identity_fixture}]
 test('identity-fixture', identity_fixture, suite: 'native-api', timeout: 30)
 
+commands_fixture = executable(
+  'commands_fixture', 'commands_fixture.c', adapter_sources, profiles[1],
+  include_directories: [root_inc, api_inc, adapter_inc],
+  c_args: native_args, override_options: native_options + ['optimization=1'],
+  dependencies: [dl_dep, threads_dep], link_with: elf_id,
+)
+elf_checks += [{'binary': commands_fixture}]
+test('commands-fixture', commands_fixture, suite: 'native-api', timeout: 30)
+
 if not meson.is_cross_build()
   native_test_env = environment()
   native_test_env.set('MPC_API_TEST_BINARY', api.full_path())
   native_test_env.set('MPC_NATIVE_TEST_LIBRARY', adapter.full_path())
   native_test_env.set('MPC_NATIVE_TEST_FIXTURE', native_fixture.full_path())
+  native_test_env.set('MPC_COMMANDS_TEST_FIXTURE', commands_fixture.full_path())
   native_test_env.set('MPC_NATIVE_IDENTITY_FIXTURE', identity_fixture.full_path())
   native_test_env.set('MPC_READELF', readelf.full_path())
-  foreach module : ['test_describe', 'test_adapter', 'test_semantics']
+  foreach module : ['test_describe', 'test_adapter', 'test_semantics', 'test_commands']
     test(
       module,
       python,
       args: ['-m', 'unittest', module, '-v'],
       workdir: meson.current_source_dir(),
       env: native_test_env,
-      depends: [api, adapter, native_fixture, identity_fixture],
+      depends: [api, adapter, native_fixture, identity_fixture, commands_fixture],
       suite: 'native-api',
     )
   endforeach

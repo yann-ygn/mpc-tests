@@ -1,4 +1,4 @@
-# Firmware adapter ABI 1 and UI executor ABI 3
+# Firmware adapter ABI 1 and UI executor ABI 4
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -42,7 +42,7 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) uses ABI 3; ABI 1/2 configurations are rejected at open.
+The [executor header](include/mpc_executor.h) uses ABI 4; ABI 1/2/3 configurations are rejected at open.
 The primitive ABI remains 1. Requests support track reads/flags, identity snapshots and sequence-reference
 validation and full live state snapshots. The authoritative mode owns the resolver; the original
 host-resolver mode remains available for trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
@@ -242,3 +242,12 @@ retries instability three times, and fails supported field read errors rather th
 capture interval/duration and attempts. No atomicity or effective transport tempo is implied.
 The local service supplies JSON projections, service-scoped references and observation revisions; see
 [findings](../../findings/native-state.md) and [service schemas](../schema/state-response.schema.json).
+
+## Managed flag handlers (#19)
+
+The [command API](include/mpc_commands.h) adds retained, idempotent desired-state handlers over an authoritative
+executor. It checks expected values at dispatch, verifies solo/arm audio copies, reports peer/selection changes,
+and preserves accepted/unknown outcomes across disconnects. See [integration and lifecycle](COMMANDS.md),
+[domain schemas](../schema/command-request.schema.json), and [device findings](../../findings/native-commands.md).
+A required UI-thread host policy gates unqualified contexts; the private lab policy is manually qualified.
+Public Unix write/receipt binding and production live mode/settings validation remain #32.

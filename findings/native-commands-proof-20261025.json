@@ -1,0 +1,263 @@
+{
+  "date": "2026-10-25",
+  "story": 19,
+  "firmware": {
+    "model": "Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "boundary": "transport-independent typed handler and receipt API; public Unix write binding/live mode policy remain US 32",
+  "abis": {
+    "native": 1,
+    "executor": 4,
+    "commands": 1
+  },
+  "host": {
+    "mesonEntriesPassed": 12,
+    "sanitizedNativeApiEntriesPassed": 7,
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "concurrentRetries": 8,
+    "minimumRetentionMs": 600000
+  },
+  "isolatedArm": {
+    "native_fixture": "native_fixture_cases=51",
+    "executor_fixture": "executor lifecycle, typed operations and concurrency passed",
+    "identity_fixture": "identity_lifecycle_cases=19",
+    "commands_fixture": {
+      "passed": true,
+      "receipts": 36,
+      "statuses": [
+        "accepted",
+        "applied",
+        "cancelled",
+        "rejected",
+        "unknown"
+      ]
+    }
+  },
+  "device": {
+    "qualification": "bounded_lab_proof",
+    "cases": [
+      {
+        "context": "stopped-sequence-multi-arm-single-solo",
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "status": "applied",
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-multi-arm-single-solo",
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "status": "applied",
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-multi-arm-single-solo",
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "status": "applied",
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": true
+      },
+      {
+        "context": "stopped-sequence-multi-arm-single-solo",
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "status": "applied",
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-multi-arm-single-solo",
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "status": "applied",
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-multi-arm-single-solo",
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "status": "applied",
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-multi-arm-single-solo",
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "status": "applied",
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": true
+      },
+      {
+        "context": "stopped-sequence-multi-arm-single-solo",
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "status": "applied",
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-global-mute",
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "status": "applied",
+        "verification": [
+          "model"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-global-mute",
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "status": "applied",
+        "verification": [
+          "model"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-global-mute",
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "status": "applied",
+        "verification": [
+          "model"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      },
+      {
+        "context": "stopped-sequence-global-mute",
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "status": "applied",
+        "verification": [
+          "model"
+        ],
+        "retainedReplayMatched": true,
+        "nativeNoopSkipped": true,
+        "conflict": "PRECONDITION_FAILED",
+        "restored": true,
+        "replayAfterRestoreMatched": true,
+        "observedSelectionChange": false
+      }
+    ],
+    "caseCount": 12,
+    "allFlagsAndSelectionRestored": true,
+    "handlerWorkersClosed": true,
+    "bothLibrariesUnloaded": true,
+    "temporaryFilesRemoved": true,
+    "perSequenceMuteRestored": true,
+    "originalMainViewRestored": true,
+    "mpcPidUnchanged": true,
+    "applicationRestarted": false,
+    "addinInstalled": false,
+    "projectSavedOrLoaded": false
+  },
+  "remaining": [
+    "production live mode/settings qualification and authenticated Unix write binding (#32)",
+    "HTTP/MCP transports",
+    "streaming",
+    "packaging and release qualification"
+  ]
+}

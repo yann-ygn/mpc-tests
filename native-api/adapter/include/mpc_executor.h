@@ -8,7 +8,7 @@
 /* Trusted in-process interface, separate from the public command protocol. All
  * client calls are for non-realtime threads. Only the resolver runs on the UI
  * thread. The executor owns its adapter, scheduler and copied requests. */
-#define MPC_EXECUTOR_ABI 3u
+#define MPC_EXECUTOR_ABI 4u
 #define MPC_EXECUTOR_MAX_JOBS 128u
 #define MPC_EXECUTOR_MAX_WAIT_MS 30000u
 
@@ -42,7 +42,12 @@ enum mpc_executor_operation {
   MPC_EXECUTOR_SET_RECORD_ARMED,
   MPC_EXECUTOR_IDENTITIES,
   MPC_EXECUTOR_VALIDATE_SEQUENCE,
-  MPC_EXECUTOR_GET_STATE
+  MPC_EXECUTOR_GET_STATE,
+  /* For the managed command host only; require an attached handler authority. */
+  MPC_EXECUTOR_COMMAND_MUTE,
+  MPC_EXECUTOR_COMMAND_SOLO,
+  MPC_EXECUTOR_COMMAND_ARM,
+  MPC_EXECUTOR_COMMAND_OBSERVE
 };
 
 struct mpc_executor_request {
@@ -52,6 +57,11 @@ struct mpc_executor_request {
   /* Optional acceptance-relative queue deadline, at most MAX_WAIT_MS. Zero
    * leaves it unset. The UI callback checks it before starting model access. */
   unsigned queue_timeout_ms;
+  /* COMMAND_OBSERVE rechecks the qualification of the original operation. */
+  unsigned command_property;
+  /* Managed commands carry their original absolute monotonic deadline. This
+   * prevents allocation/dispatch overhead from renewing the acceptance budget. */
+  uint64_t command_deadline_ms;
 };
 
 enum mpc_executor_state {
@@ -80,6 +90,8 @@ struct mpc_executor_result {
   /* Valid only on successful COMPLETED GET_STATE; borrowed until job release.
    * Wait/cancel never exposes a buffer while a UI capture is still running. */
   const struct mpc_state_snapshot *snapshot;
+  /* Internal managed-command observation, borrowed under the same job lifetime. */
+  const struct mpc_command_native_result *command;
 };
 
 struct mpc_executor_status {
@@ -113,6 +125,9 @@ MPC_NATIVE_API enum mpc_native_error
 mpc_executor_wait(struct mpc_executor_job *, unsigned, struct mpc_executor_result *);
 MPC_NATIVE_API enum mpc_native_error
 mpc_executor_cancel(struct mpc_executor_job *, struct mpc_executor_result *);
+/* Non-mutating status read: unlike wait(0), never shortens a queue deadline. */
+MPC_NATIVE_API enum mpc_native_error
+mpc_executor_poll(struct mpc_executor_job *, struct mpc_executor_result *);
 /* Client disconnect: cancel if queued, detach if running. Join other users of
  * this job before release; the handle becomes invalid immediately. */
 MPC_NATIVE_API void mpc_executor_release(struct mpc_executor_job *);

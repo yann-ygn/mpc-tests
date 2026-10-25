@@ -358,6 +358,15 @@ const char *mpc_native_error_name(enum mpc_native_error error) {
     "TIMED_OUT",
     "SHUTTING_DOWN",
     "DISPATCH_FAILED",
-    "STATE_UNSTABLE"};
+    "STATE_UNSTABLE",
+    "STALE_INSTANCE",
+    "STALE_PROJECT",
+    "TARGET_NOT_FOUND",
+    "NO_ACTIVE_PROJECT",
+    "UNSUPPORTED_PRECONDITION",
+    "REQUEST_ID_CONFLICT",
+    "RETENTION_CAPACITY",
+    "OUTCOME_UNAVAILABLE",
+    "VERIFICATION_TIMEOUT"};
   return (unsigned)error < sizeof names / sizeof *names ? names[error] : "INVALID_ERROR";
 }

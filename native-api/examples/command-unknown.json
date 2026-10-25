@@ -1,0 +1,33 @@
+{
+  "apiVersion": "0.1",
+  "requestId": "timeout_audio",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "status": "unknown",
+  "execution": "completed",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "op": "set_solo",
+  "value": false,
+  "changed": false,
+  "nativeInvoked": false,
+  "verification": {
+    "by": [
+      "model",
+      "audio_copy"
+    ],
+    "requestedValue": false,
+    "audioSideValue": true,
+    "observedAt": "2026-10-25T16:22:18.161Z"
+  },
+  "observedChanges": [],
+  "error": {
+    "code": "VERIFICATION_TIMEOUT",
+    "message": "Command did not establish the requested state",
+    "details": {
+      "execution": "completed"
+    }
+  }
+}

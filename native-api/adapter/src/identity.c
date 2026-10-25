@@ -687,3 +687,27 @@ mpc_identity_state(struct mpc_identity_registry *registry, struct mpc_state_snap
   memset(output, 0, sizeof *output);
   return error;
 }
+
+/* Bind public incarnation IDs to their current generations on the UI thread.
+ * Never resolve names/indices or reuse a generation from a service cache. */
+enum mpc_native_error
+mpc_identity_bind(struct mpc_identity_registry *registry, struct mpc_executor_identity *identity) {
+  if (!registry || memcmp(identity->instance_id, registry->adapter->instance_id, 37))
+    return MPC_NATIVE_STALE_INSTANCE;
+  enum mpc_native_error error = refresh(registry);
+  if (error)
+    return error;
+  if (!registry->project)
+    return MPC_NATIVE_NO_ACTIVE_PROJECT;
+  if (identity->project != registry->project)
+    return MPC_NATIVE_STALE_PROJECT;
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
+    const struct entry *entry = &registry->tracks[i];
+    if (entry->address && entry->id == identity->track && alive(&entry->lifetime)) {
+      identity->project_generation = registry->generation;
+      identity->track_generation = entry->generation;
+      return MPC_NATIVE_OK;
+    }
+  }
+  return MPC_NATIVE_TARGET_NOT_FOUND;
+}
