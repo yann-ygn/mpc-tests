@@ -1,6 +1,7 @@
 import copy
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import unittest
@@ -47,20 +48,22 @@ class ProfileTests(unittest.TestCase):
 class NativeAdapterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        subprocess.run(["python3", str(ROOT / "native-api/build.py"), "--host", "--tests"], check=True, capture_output=True)
+        cls.fixture = os.environ.get("MPC_NATIVE_TEST_FIXTURE", ROOT / "builddir/host/native-api/tests/native_fixture")
+        cls.library = os.environ.get("MPC_NATIVE_TEST_LIBRARY", ROOT / "builddir/host/native-api/libmpc_native.so")
+        cls.readelf = os.environ.get("MPC_READELF", "readelf")
 
     def test_isolated_native_guards_and_typed_operations(self):
-        run = subprocess.run([str(ROOT / "build/native-api/host/native_fixture")], check=True, capture_output=True, text=True)
+        run = subprocess.run([str(self.fixture)], check=True, capture_output=True, text=True)
         self.assertGreaterEqual(int(run.stdout.split("=")[1]), 25)
 
     def test_shared_library_export_allowlist(self):
-        output = subprocess.run(["readelf", "-W", "--dyn-syms", str(ROOT / "build/native-api/host/libmpc_native.so")],
+        output = subprocess.run([self.readelf, "-W", "--dyn-syms", str(self.library)],
                                 check=True, capture_output=True, text=True).stdout
         names = {row[7] for line in output.splitlines() if len(row := line.split()) >= 8
                  and row[4] in ("GLOBAL", "WEAK") and row[6] != "UND"}
         self.assertEqual(names, {"mpc_native_open", "mpc_native_close", "mpc_native_get_status", "mpc_native_read_track",
             "mpc_native_set_mute", "mpc_native_set_solo", "mpc_native_set_record_armed", "mpc_native_error_name"})
-        dynamic = subprocess.run(["readelf", "-d", str(ROOT / "build/native-api/host/libmpc_native.so")],
+        dynamic = subprocess.run([self.readelf, "-d", str(self.library)],
                                  check=True, capture_output=True, text=True).stdout
         self.assertIn("Library soname: [libmpc_native.so]", dynamic)
 

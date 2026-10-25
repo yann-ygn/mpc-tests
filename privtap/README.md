@@ -41,7 +41,7 @@ It interposes alsa-lib's `snd_rawmidi_open`, `_read`, `_write`, `_close` and `_n
   `__open64_2`, `openat64`, `fopen64` and the plain forms; MPC and libaz0x-info both read them) are answered from
   memory, and the controller's family byte is swapped in Akai sysex both ways, including its identity reply. The log
   keeps each side's bytes as sent. After TheKikGen's tkgl_mpcmapper `--tkgl_iamX`, without its virtual ports.
-- The library exports its hooks and nothing else (`src/exports.map`, checked by `build.sh`). Without that, Zig's
+- The library exports its hooks and nothing else (`src/exports.map`, checked by the Meson build). Without that, Zig's
   runtime exports `memcpy`, `memset` and the math functions, which would replace libc's for all of MPC.
 
 ## Settings
@@ -87,11 +87,14 @@ so far; the notes match the MPC Live's (MENU 123, REC 73, STOP 81, PLAY 82 ...).
 ## Build and test
 
 ```sh
-./build.sh                         # build/arm/privtap.so (Zig 0.14.1 from PyPI through uvx; no other toolchain)
-./build.sh test                    # host build with gcc, over tests/fake_asound.c, then the tests
+./build.sh                         # ../builddir/arm/privtap/privtap.so, through Meson and pinned Zig 0.14.1
+./build.sh test                    # Meson host build and privtap tests, over tests/fake_asound.c
 ./build.sh device-test <address>   # the ARM build and the same tests, run on a device over ssh in /tmp (MPC untouched)
 ./build.sh package                 # build/privtap-<version>/: the library, settings, manifest and the shared installer
 ```
+
+Bootstrap first with `uv sync --locked` from the repository root. The wrapper delegates all compilation and
+ELF checks to the root Meson project; see the [build guide](../README.md) for the direct commands.
 
 `package` takes the shared addin installer (`install.sh`, `uninstall.sh`, `addin-lib.sh`) from an mpc-vst-plugins
 checkout (`MPC_VST_PLUGINS`, default `../../torpedo/mpc/mpc-vst-plugins`): the same installer every addin uses, which

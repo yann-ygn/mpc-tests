@@ -56,12 +56,15 @@ There is no rollback, auto-restoration or undo guarantee.
 ## Build and verification
 
 ```sh
-python3 native-api/build.py --host --tests
-python3 -m unittest discover -s native-api/tests -v
-python3 native-api/build.py --tests --zig /path/to/zig
+uv sync --locked
+uv run --no-sync meson setup builddir/host
+uv run --no-sync meson test -C builddir/host --suite native-api --print-errorlogs
+uv run --no-sync meson setup builddir/arm --cross-file build-support/cross/mpc-armhf.ini
+uv run --no-sync meson compile -C builddir/arm
 ```
 
-Builds produce `build/native-api/{host,arm}/libmpc_native.so`, the service and optional `native_fixture`.
+Builds produce `builddir/{host,arm}/native-api/libmpc_native.so`, the service and `tests/native_fixture`.
+See the [root build guide](../../README.md) for requirements and all targets.
 The isolated fixture uses synthetic addresses and private I/O callbacks. No MPC entry point is called by those
 tests. It exercises 28 cases, including each fingerprint mismatch, wrong thread, missing validator, stale
 ownership, unknown family, expected-value rejection, filtered arm rejection and pending audio propagation.
@@ -78,7 +81,7 @@ The existing lab now consumes the shared library. It still owns its experimental
 bounded loader; it no longer implements property calls independently.
 
 ```sh
-python3 tools/build_native_control.py --zig /path/to/zig
+uv run --no-sync meson compile -C builddir/arm
 python3 tools/mpc_native_lab.py --output build/native-api/adapter-device-unload.json
 ```
 

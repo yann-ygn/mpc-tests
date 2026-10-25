@@ -127,10 +127,9 @@ verified.
 From the repository root, with the existing Zig/uv toolchain:
 
 ```sh
-mkdir -p build/web-probe
-uv run --no-project --with ziglang==0.14.1 python -m ziglang cc \
-  -target arm-linux-gnueabihf.2.31 -mcpu=cortex_a7 -O2 -Wall -Wextra -Werror \
-  tools/web_ipc_bridge.c -o build/web-probe/ipc_bridge
+uv sync --locked
+uv run --no-sync meson setup builddir/arm --cross-file build-support/cross/mpc-armhf.ini
+uv run --no-sync meson compile -C builddir/arm
 uv run --no-project --with cbor2 python tools/web_probe.py
 ```
 

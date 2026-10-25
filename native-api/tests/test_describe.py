@@ -15,7 +15,7 @@ import threading
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-BINARY = ROOT / "build/native-api/host/mpc-api"
+BINARY = ROOT / "builddir/host/native-api/mpc-api"
 PROFILE = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2.json").read_text())
 REQUEST = b'{"apiVersion":"0.1","op":"describe"}\n'
 
@@ -37,8 +37,6 @@ def elf(build_id, bits=32):
 class DescribeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        if not os.environ.get("MPC_API_TEST_BINARY"):
-            subprocess.run(["python3", str(ROOT / "native-api/build.py"), "--host"], check=True, capture_output=True)
         cls.binary = Path(os.environ.get("MPC_API_TEST_BINARY", BINARY))
         # Optional external validation; core socket/metadata tests use only stdlib.
         try:

@@ -90,10 +90,9 @@ bounded binary reads. [`tools/mpc_live_state.py`](../tools/mpc_live_state.py) ch
 Project, validates pointers/vectors/types, and emits JSON. It needs only Python's standard library on the host.
 
 ```sh
-mkdir -p build/internals
-uv run --no-project --with ziglang==0.14.1 python -m ziglang cc \
-  -target arm-linux-gnueabihf.2.31 -mcpu=cortex_a7 -O2 -Wall -Wextra -Werror \
-  tools/mpc_mem_probe.c -o build/internals/mem_probe
+uv sync --locked
+uv run --no-sync meson setup builddir/arm --cross-file build-support/cross/mpc-armhf.ini
+uv run --no-sync meson compile -C builddir/arm
 python3 tools/mpc_live_state.py --output build/internals/live-state.json
 ```
 

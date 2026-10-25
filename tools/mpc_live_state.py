@@ -221,7 +221,7 @@ def main():
     root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
-    parser.add_argument("--binary", type=Path, default=root / "build/internals/mem_probe")
+    parser.add_argument("--binary", type=Path, default=root / "builddir/arm/tools/mem_probe")
     parser.add_argument("--profile", type=Path, default=root / "tools/profiles/key37-mpc3.9.1.2.json")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()

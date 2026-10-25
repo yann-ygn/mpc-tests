@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
-    parser.add_argument("--binary", type=Path, default=ROOT / "build/native-api/arm/mpc-api")
+    parser.add_argument("--binary", type=Path, default=ROOT / "builddir/arm/native-api/mpc-api")
     parser.add_argument("--keep", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()

@@ -21,6 +21,7 @@ before running experiments.
   live executable/device metadata and verified lab attachment status. Public state/write operations remain
   unavailable. See `native-api/README.md` and `native-api/adapter/README.md` for tests, builds and lifecycle limits.
 - `build/` is gitignored: local copies of the log, project saves and the settings backup.
+- `builddir/{host,arm}/` is gitignored: canonical Meson build directories. See `README.md` for all targets.
 
 ## The device
 
@@ -42,14 +43,20 @@ before running experiments.
 - Never commit privtap logs: the hardware's identity reply contains the device's serial number.
 - After an experiment, put back what it changed (mute, solo, arm, mode), pressing twice where a press toggles.
 
-## Build and test (`privtap/`)
+## Build and test
 
-- `./build.sh`: the ARM library, via Zig from PyPI (`uvx`); there is no other cross toolchain here.
-- `./build.sh test`: host tests, run twice (plain and `PRIVTAP_TEST_IDENTITY=X`).
-  `./build.sh device-test $MPC_HOST`: the same tests on the device, in `/tmp`, without touching MPC.
-- `./build.sh package`, then on the device `sh /tmp/privtap-<version>/install.sh -y` (the shared addin installer;
+- Bootstrap: `uv sync --locked` (pinned Zig 0.14.1 and JSON Schema test dependencies).
+- Host: `uv run --no-sync meson setup builddir/host`, then
+  `uv run --no-sync meson test -C builddir/host --print-errorlogs` (builds before testing).
+- ARM: `uv run --no-sync meson setup builddir/arm --cross-file build-support/cross/mpc-armhf.ini`, then
+  `uv run --no-sync meson compile -C builddir/arm`. No deployment is performed.
+- Firmware headers, ELF export checks, SONAME/RUNPATH checks and ARM/glibc compatibility checks are Meson
+  dependencies. Python tests consume built binaries; they must not rebuild them.
+- In `privtap/`, `./build.sh test` delegates the two host fixture cases to Meson.
+  `./build.sh device-test $MPC_HOST` runs the ARM fixtures in `/tmp`, without touching MPC.
+- In `privtap/`, `./build.sh package`, then on the device `sh /tmp/privtap-<version>/install.sh -y` (the shared addin installer;
   it restarts MPC).
-- `src/exports.map` must list every hook. `build.sh` fails if anything else is exported (Zig's runtime would
+- `privtap/src/exports.map` must list every hook. The build fails if anything else is exported (Zig's runtime would
   otherwise replace libc's `memcpy` and the math functions in all of MPC).
 
 ## Tracking

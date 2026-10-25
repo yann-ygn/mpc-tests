@@ -107,7 +107,7 @@ def audit(session, control):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
-    parser.add_argument("--binary", type=Path, default=ROOT / "build/internals/mem_probe")
+    parser.add_argument("--binary", type=Path, default=ROOT / "builddir/arm/tools/mem_probe")
     parser.add_argument("--profile", type=Path, default=ROOT / "tools/profiles/key37-mpc3.9.1.2.json")
     parser.add_argument("--control-profile", type=Path,
                         default=ROOT / "tools/profiles/key37-mpc3.9.1.2-control.json")

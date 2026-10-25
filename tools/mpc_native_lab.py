@@ -24,12 +24,12 @@ ROOT = Path(__file__).resolve().parent.parent
 def experiment(args):
     state_profile = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2.json").read_text())
     control = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2-control.json").read_text())
-    directory = ROOT / "build/native-control"
+    directory = ROOT / "builddir/arm/tools"
     names = ["hotload", "native_client", "native_bridge.so", "libmpc_native.so", "test_payload.so"]
     for name in names:
         if not (directory / name).is_file():
-            raise RuntimeError("Build the native tools first with tools/build_native_control.py")
-    session = MemorySession(args.host, ROOT / "build/internals/mem_probe", state_profile)
+            raise RuntimeError("Build the native tools first with meson compile -C builddir/arm")
+    session = MemorySession(args.host, ROOT / "builddir/arm/tools/mem_probe", state_profile)
     remote = "/tmp/mpc-native-lab-" + uuid.uuid4().hex[:12]
     handle, created, loaded, worker = None, False, False, None
     report = {"buildId": state_profile["buildId"], "pid": session.pid, "pulse": args.pulse}

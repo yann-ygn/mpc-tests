@@ -212,7 +212,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     root = Path(__file__).resolve().parent.parent
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
-    parser.add_argument("--bridge", type=Path, default=root / "build/web-probe/ipc_bridge")
+    parser.add_argument("--bridge", type=Path, default=root / "builddir/arm/tools/ipc_bridge")
     parser.add_argument("--output", type=Path, default=root / "build/web-probe/verified-report.json")
     args = parser.parse_args()
     if not args.bridge.is_file():

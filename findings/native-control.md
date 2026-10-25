@@ -199,12 +199,14 @@ The retained sources are:
 - [`tools/mpc_hotload.c`](../tools/mpc_hotload.c): temporary ARM loader, disposable-child self-test and unload guard.
 - [`tools/mpc_native_bridge.c`](../tools/mpc_native_bridge.c): firmware checks, UI dispatch and bounded native pulses.
 - [`tools/mpc_native_client.c`](../tools/mpc_native_client.c): local Unix-socket command relay.
-- [`tools/build_native_control.py`](../tools/build_native_control.py): generates the C profile, builds the tools and
+- [`tools/meson.build`](../tools/meson.build): builds the tools with generated firmware headers and
   rejects any exported bridge symbols that could interpose on MPC or other addins.
 - [`tools/mpc_native_lab.py`](../tools/mpc_native_lab.py): host orchestration with independent readback and cleanup.
 
 ```sh
-python3 tools/build_native_control.py --zig /path/to/zig
+uv sync --locked
+uv run --no-sync meson setup builddir/arm --cross-file build-support/cross/mpc-armhf.ini
+uv run --no-sync meson compile -C builddir/arm
 # Callback only, with automatic loading and unloading:
 python3 tools/mpc_native_lab.py --output build/native-control/ping-proof.json
 # Briefly invert the selected plugin/drum track's mute, then restore it:

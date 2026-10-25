@@ -13,19 +13,20 @@ HTTP and MCP adapters follow in their own stories; this service has no TCP liste
 ## Build and test
 
 ```sh
-python3 native-api/build.py --host
-python3 -m unittest discover -s native-api/tests -v
+uv sync --locked
+uv run --no-sync meson setup builddir/host
+uv run --no-sync meson compile -C builddir/host
+uv run --no-sync meson test -C builddir/host --suite native-api --print-errorlogs
 
-# With JSON Schema validation of every response as well:
-UV_CACHE_DIR=/tmp/mpc-api-uv-cache uv run --no-project --with jsonschema \
-  python -m unittest discover -s native-api/tests -v
-
-# ARM, using an installed Zig compiler:
-python3 native-api/build.py --zig /path/to/zig
+# ARM, using the pinned Zig compiler:
+uv run --no-sync meson setup builddir/arm --cross-file build-support/cross/mpc-armhf.ini
+uv run --no-sync meson compile -C builddir/arm
 ```
 
 Zig's `ZIG_GLOBAL_CACHE_DIR` and `ZIG_LOCAL_CACHE_DIR` can be set to writable directories if its default cache
-is unavailable. Builds go to ignored `build/native-api/{host,arm}/mpc-api`; they never deploy or restart MPC.
+is unavailable. Builds go to ignored `builddir/{host,arm}/native-api/mpc-api`; they never deploy or restart MPC.
+JSON Schema validation is included in the development environment. See the [root build guide](../README.md)
+for requirements, all targets and dependency checks.
 
 The host tests use synthetic proc/device-tree fixtures, including ELF32 and ELF64 note sections at unrelated
 file offsets. They cover identity changes, firmware/model mismatches, malformed requests, connection bounds,
