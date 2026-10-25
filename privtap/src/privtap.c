@@ -1,43 +1,17 @@
-// privtap: an LD_PRELOAD addin for MPC OS standalone devices (written on an MPC Key 37) that sits
-// on the controller's own rawmidi ports as MPC opens them through alsa-lib:
-//   - it logs what MPC reads from them (the hardware: buttons, pads, keys, knobs) and what it
-//   writes to them (LEDs
-//     and the rest of the feedback), with a timestamp and the port's name, so the protocol can be
-//     mapped;
-//   - it merges MIDI written to a FIFO (/dev/midi_inject) into what MPC reads from the "...
-//   Private" input, as if the
-//     hardware had sent it. The MPC Remote addin writes there when the device has no "Virtual
-//     RawMIDI" port, which is what makes its press_button work on a stock device.
-// MPC owns the private input (rawmidi inputs can't be shared), so this has to happen inside MPC.
-// Its MIDI thread waits in poll() on that input and a wake fd of its own, then calls
-// snd_rawmidi_read, so poll() is hooked too: while it waits on the private input it also watches a
-// wake pipe, and it reports the input readable while injected messages are queued. Hardware and
-// injected messages are merged at message boundaries only (running status is written out in full),
-// so neither can split the other.
-//
-// Settings: privtap.conf next to this library (PRIVTAP_CONF overrides), key=value, re-read within a
-// second of a change:
-//   log=1                    log the traffic (0: only opens, closes and errors)
-//   log_path=/tmp/privtap.log
-//   log_max_kb=4096          past this the log moves to <log_path>.1 and a new one starts
-//   inject=/dev/midi_inject  the FIFO, created when the private input opens and removed at exit;
-//   none: no injection.
-//                            Read once, when the private input first opens.
-//   identity=                another MPC model to pass the device off as (X, LIVE, LIVE2, ONE,
-//   FORCE), to see what MPC
-//                            sends that model's hardware; empty: the device is itself. Read once,
-//                            when MPC starts.
-// Log lines: "<seconds> <in|out|inj> <port>: <hex bytes>", and "<seconds> # <event>" (monotonic
-// clock). With an identity, "in" is what the hardware sent and "out" what MPC sent, before the
-// rewrites below.
-//
-// Identity: MPC learns its model from the device tree's product code and compatible string (MPC and
-// libaz0x-info both read them) and checks the controller's identity reply. The two files are
-// answered from memory, and the controller's family byte is swapped in Akai sysex both ways: in the
-// identity reply (F0 7E dd 06 02 47 <family> ...) and in F0 47 dd <family> .... From TheKikGen's
-// tkgl_mpcmapper (--tkgl_iamX), without its virtual ports and routing.
+/* Controller interposition: port tracking, config/logging, FIFO worker and poll wakeups.
+ * MIDI parsing/merging lives in midi_stream.c, identity rewriting in identity.c,
+ * and libc entry points in file_hooks.c. See ../README.md for settings and protocol details.
+ *
+ * midi_lock protects ports, merger state and identity streams. The FIFO parser
+ * belongs to the injection thread. Traffic logs keep the original hardware/MPC
+ * bytes, before identity rewriting; injected messages merge only at message boundaries.
+ */
 
 #define _GNU_SOURCE
+#include "interpose.h"
+#include "identity.h"
+#include "midi_stream.h"
+
 #include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -60,10 +34,7 @@ typedef struct _snd_rawmidi snd_rawmidi_t;
 typedef struct _snd_rawmidi_info snd_rawmidi_info_t;
 
 #define SND_RAWMIDI_NONBLOCK 0x0002
-#define API __attribute__((visibility("default")))
 #define MAXPORTS 16
-#define QSIZE 16384   // what MPC reads next from the private input: whole messages
-#define IQSIZE 4096   // injected messages waiting for the hardware to finish the message it is in
 #define LINE_BYTES 48 // bytes per log line
 
 static int (*real_open)(snd_rawmidi_t **, snd_rawmidi_t **, const char *, int);
@@ -73,50 +44,27 @@ static ssize_t (*real_write)(snd_rawmidi_t *, const void *, size_t);
 static int (*real_nonblock)(snd_rawmidi_t *, int);
 static int (*real_poll)(struct pollfd *, nfds_t, int);
 
-struct sx { // where a stream is in a sysex message, for the identity rewrites
-  int pos;  // the next byte's index after F0; -1 outside a sysex
-  unsigned char hdr[8];
-  int ident; // this is the hardware's identity reply
-};
-
 struct port {
-  snd_rawmidi_t *h;
-  int out, fd, nonblock;
-  char name[64]; // the subdevice's name, e.g. "MPC Private"
-  struct sx sx;  // MPC's writes, for the identity rewrites
+  snd_rawmidi_t *handle;
+  int output, fd, nonblocking;
+  char name[64];                   // the subdevice's name, e.g. "MPC Private"
+  struct identity_stream identity; // MPC's writes, for the identity rewrites
 };
 
-// The models a device can pass for (tkgl_mpcmapper's table). Only X has been tried.
-struct identity {
-  const char *name, *code, *compatible;
-  unsigned char family, reply[7];
-};
-static const struct identity IDENTITIES[] = {
-  {"X", "ACV5", "inmusic,acv5", 0x3A, {0x3A, 0x00, 0x19, 0x00, 0x01, 0x01, 0x01}},
-  {"LIVE", "ACV8", "inmusic,acv8", 0x3B, {0x3B, 0x00, 0x19, 0x00, 0x01, 0x01, 0x01}},
-  {"FORCE", "ADA2", "inmusic,ada2", 0x40, {0x40, 0x00, 0x19, 0x00, 0x00, 0x04, 0x03}},
-  {"ONE", "ACVA", "inmusic,acva", 0x46, {0x46, 0x00, 0x19, 0x00, 0x01, 0x01, 0x01}},
-  {"LIVE2", "ACVB", "inmusic,acvb", 0x47, {0x47, 0x00, 0x19, 0x00, 0x01, 0x01, 0x01}},
-};
 static char identity_name[16];
-static const struct identity *spoof; // NULL: the device is itself
-static pthread_once_t spoof_once = PTHREAD_ONCE_INIT;
-static int hw_family = -1; // the hardware's own family byte, from its first identity reply
-static struct sx in_sx = {-1, {0}, 0}; // the hardware's stream (under lock)
+static const struct identity_profile *selected_identity; // NULL: the device is itself
+static pthread_once_t identity_once = PTHREAD_ONCE_INIT;
+static int hardware_family = -1; // the hardware's own family byte, from its first identity reply
+static struct identity_stream hardware_identity_stream = {
+  -1, {0}, 0}; // the hardware's stream (under lock)
 
-static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER; // the ports, the queues and the parser
+static pthread_mutex_t midi_lock =
+  PTHREAD_MUTEX_INITIALIZER; // the ports, the queues and the parser
 static struct port ports[MAXPORTS];
-static snd_rawmidi_t *priv_in;
-static int priv_fd = -1;
-static int wake_fd[2] = {-1, -1};
-static unsigned char q[QSIZE], iq[IQSIZE];
-static int qh, qt, ih, it;
-static unsigned long dropped;
-
-// The hardware's stream, parsed: cur is the status of the message being put together (0 between
-// messages), run the running status a data byte continues.
-static unsigned char cur, run, data[2];
-static int have, need, sysex;
+static snd_rawmidi_t *private_input;
+static int private_input_fd = -1;
+static int wake_pipe[2] = {-1, -1};
+static struct midi_merger midi;
 
 // Settings and the log
 static pthread_mutex_t conf_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -140,7 +88,7 @@ static pid_t fifo_owner;
 // libc's own dlsym, fetched by version: another preloaded library may export a dlsym of its own
 // (the commander addin does), and dlsym(RTLD_NEXT) then resolves relative to that library instead
 // of this one (mpc-vst-plugins NOTES, 2026-10-13; the same fix as hwremap's).
-static void *next_sym(const char *name) {
+void *privtap_next_symbol(const char *name) {
   static void *(*libc_dlsym)(void *, const char *);
   if (!libc_dlsym) {
     static const char *const vers[] =
@@ -150,8 +98,6 @@ static void *next_sym(const char *name) {
   }
   return (libc_dlsym ? libc_dlsym : dlsym)(RTLD_NEXT, name);
 }
-
-#define RESOLVE(var, name) (var || (var = next_sym(name)))
 
 static long long now_ms(void) {
   struct timespec ts;
@@ -191,7 +137,7 @@ static int stamp(char *buf, size_t n) {
 }
 
 // An event: logged whether or not the traffic is.
-static void logf_(const char *fmt, ...) {
+static void log_event(const char *fmt, ...) {
   char buf[600];
   int n = stamp(buf, sizeof buf);
   n += snprintf(buf + n, sizeof buf - (size_t)n, " # ");
@@ -286,7 +232,7 @@ static void load_conf(void) {
 }
 
 // Re-read the settings if they changed: looked at once a second at most, unless forced.
-static void conf_check(int force) {
+static void refresh_config(int force) {
   pthread_once(&conf_once, find_conf);
   if (force)
     pthread_mutex_lock(&conf_lock);
@@ -305,121 +251,21 @@ static void conf_check(int force) {
   pthread_mutex_unlock(&conf_lock);
 }
 
-// ---- the private input's queue (all under lock)
-
-static int data_len(unsigned char s) {
-  switch (s & 0xF0) {
-  case 0xC0:
-  case 0xD0:
-    return 1;
-  case 0xF0:
-    return s == 0xF2 ? 2 : s == 0xF1 || s == 0xF3 ? 1 : 0;
-  default:
-    return 2;
-  }
-}
-
-static int qfree(void) {
-  return QSIZE - 1 - (qt - qh + QSIZE) % QSIZE;
-}
-static int iqlen(void) {
-  return (it - ih + IQSIZE) % IQSIZE;
-}
-static int at_boundary(void) {
-  return !cur && !sysex;
-}
-static int ready(void) {
-  return qh != qt || (iqlen() && at_boundary());
-}
-
-static void qput(unsigned char b) {
-  if (qfree() > 0) {
-    q[qt] = b;
-    qt = (qt + 1) % QSIZE;
-  } else
-    dropped++;
-}
-
-// The injected messages go next, unless the hardware is in the middle of one.
-static void flush_inject(void) {
-  int n = iqlen();
-  if (!n || !at_boundary() || qfree() < n)
-    return;
-  while (ih != it) {
-    q[qt] = iq[ih];
-    qt = (qt + 1) % QSIZE;
-    ih = (ih + 1) % IQSIZE;
-  }
-}
-
-static void real_byte(unsigned char b) {
-  if (b >= 0xF8) { // real time: allowed anywhere, even inside another message
-    qput(b);
-    return;
-  }
-  if (sysex) {
-    if (b < 0x80 || b == 0xF7) {
-      qput(b);
-      if (b == 0xF7) {
-        sysex = 0;
-        flush_inject();
-      }
-      return;
-    }
-    sysex = 0; // a status byte also ends a sysex
-  }
-  if (b == 0xF0) {
-    qput(b);
-    sysex = 1;
-    cur = run = 0;
-    return;
-  }
-  if (b & 0x80) {
-    run = b < 0xF0 ? b : 0; // system common messages cancel running status
-    cur = b;
-    have = 0;
-    need = data_len(b);
-    if (!need) {
-      qput(b);
-      cur = 0;
-      flush_inject();
-    }
-    return;
-  }
-  if (!cur) {
-    if (!run) { // a data byte with no status: passed on as it is
-      qput(b);
-      return;
-    }
-    cur = run;
-    have = 0;
-    need = data_len(run);
-  }
-  data[have++] = b;
-  if (have == need) {
-    qput(cur);
-    for (int i = 0; i < need; i++)
-      qput(data[i]);
-    cur = 0;
-    flush_inject();
-  }
-}
-
-static struct port *find(snd_rawmidi_t *h) {
+static struct port *find_port(snd_rawmidi_t *handle) {
   for (int i = 0; i < MAXPORTS; i++)
-    if (h && ports[i].h == h)
+    if (handle && ports[i].handle == handle)
       return &ports[i];
   return NULL;
 }
 
-static void wake(void) {
+static void wake_reader(void) {
   char c = 1;
-  if (wake_fd[1] >= 0 && write(wake_fd[1], &c, 1) < 0) {
+  if (wake_pipe[1] >= 0 && write(wake_pipe[1], &c, 1) < 0) {
     // full: the reader is already due to wake
   }
 }
 
-static void drain(int fd) {
+static void drain_wake_pipe(int fd) {
   char buf[64];
   while (read(fd, buf, sizeof buf) > 0)
     ;
@@ -427,84 +273,29 @@ static void drain(int fd) {
 
 // ---- injection
 
-static void push_inject(const unsigned char *m, int n) {
-  int ok = 0;
-  pthread_mutex_lock(&lock);
-  if (priv_in && IQSIZE - 1 - iqlen() >= n) {
-    for (int i = 0; i < n; i++) {
-      iq[it] = m[i];
-      it = (it + 1) % IQSIZE;
-    }
-    flush_inject();
-    ok = 1;
+static void queue_injected_message(const unsigned char *bytes, size_t length) {
+  pthread_mutex_lock(&midi_lock);
+  int queued = private_input && midi_merger_queue_injected(&midi, bytes, length);
+  pthread_mutex_unlock(&midi_lock);
+  if (queued) {
+    wake_reader();
+  } else {
+    log_event(
+      "inject: %zu bytes dropped (%s)",
+      length,
+      private_input ? "queue full" : "the private input isn't open");
   }
-  pthread_mutex_unlock(&lock);
-  if (ok)
-    wake();
-  else
-    logf_(
-      "inject: %d bytes dropped (%s)",
-      n,
-      priv_in ? "queue full" : "the private input isn't open");
 }
 
-// The FIFO's stream, put together into whole messages (the inject thread's own state).
-static unsigned char im[512];
-static int im_len, im_need, im_run, im_sysex, im_long;
+static struct midi_injection_parser injection_parser;
 
-static void inject_byte(unsigned char b) {
-  if (b >= 0xF8) {
-    push_inject(&b, 1);
-    return;
-  }
-  if (im_sysex) {
-    if (b < 0x80) {
-      if (im_len < (int)sizeof im - 1)
-        im[im_len++] = b;
-      else
-        im_long = 1;
-      return;
-    }
-    if (b == 0xF7) {
-      im[im_len++] = b;
-      if (im_long)
-        logf_("inject: a sysex over %d bytes was dropped", (int)sizeof im);
-      else
-        push_inject(im, im_len);
-      im_sysex = im_len = 0;
-      return;
-    }
-    im_sysex = im_len = 0;
-  }
-  if (b == 0xF0) {
-    im[0] = b;
-    im_len = 1;
-    im_sysex = 1;
-    im_long = im_run = 0;
-    return;
-  }
-  if (b & 0x80) {
-    im_run = b < 0xF0 ? b : 0;
-    im[0] = b;
-    im_len = 1;
-    im_need = data_len(b);
-    if (!im_need) {
-      push_inject(im, 1);
-      im_len = 0;
-    }
-    return;
-  }
-  if (!im_len) {
-    if (!im_run) // a data byte with no status: dropped
-      return;
-    im[0] = (unsigned char)im_run;
-    im_len = 1;
-    im_need = data_len((unsigned char)im_run);
-  }
-  im[im_len++] = b;
-  if (im_len == 1 + im_need) {
-    push_inject(im, im_len);
-    im_len = 0;
+static void process_injected_byte(unsigned char byte) {
+  struct midi_message message;
+  enum midi_parse_result result = midi_parse_injected_byte(&injection_parser, byte, &message);
+  if (result == MIDI_PARSE_MESSAGE) {
+    queue_injected_message(message.bytes, message.length);
+  } else if (result == MIDI_PARSE_OVERSIZED_SYSEX) {
+    log_event("inject: a sysex over %d bytes was dropped", MIDI_MESSAGE_CAPACITY);
   }
 }
 
@@ -516,12 +307,12 @@ static void *inject_thread(void *arg) {
     if (n < 0 && errno == EINTR)
       continue;
     if (n <= 0) {
-      logf_("inject: reading %s stopped: %s", fifo_path, n ? strerror(errno) : "end of file");
+      log_event("inject: reading %s stopped: %s", fifo_path, n ? strerror(errno) : "end of file");
       break;
     }
     log_bytes("inj", fifo_path, buf, (size_t)n);
     for (ssize_t i = 0; i < n; i++)
-      inject_byte(buf[i]);
+      process_injected_byte(buf[i]);
   }
   close(fd);
   return NULL;
@@ -531,25 +322,25 @@ static void inject_setup(void) {
   struct stat st;
   snprintf(fifo_path, sizeof fifo_path, "%s", inject_path);
   if (!fifo_path[0] || !strcmp(fifo_path, "none")) {
-    logf_("inject: off");
+    log_event("inject: off");
     return;
   }
   int made = 0;
   if (!lstat(fifo_path, &st)) {
     if (!S_ISFIFO(st.st_mode)) {
-      logf_("inject: %s exists and isn't a FIFO, so there is no injection", fifo_path);
+      log_event("inject: %s exists and isn't a FIFO, so there is no injection", fifo_path);
       return;
     }
   } else if (!mkfifo(fifo_path, 0600))
     made = 1;
   else {
-    logf_("inject: can't create %s: %s", fifo_path, strerror(errno));
+    log_event("inject: can't create %s: %s", fifo_path, strerror(errno));
     return;
   }
   // Read-write: opening doesn't wait for a writer, and a writer going away isn't an end of file.
   int fd = open(fifo_path, O_RDWR | O_CLOEXEC);
   if (fd < 0) {
-    logf_("inject: can't open %s: %s", fifo_path, strerror(errno));
+    log_event("inject: can't open %s: %s", fifo_path, strerror(errno));
     return;
   }
   // Ours from here on, whoever made it: removed at exit, since a FIFO nobody reads blocks whoever
@@ -567,12 +358,12 @@ static void inject_setup(void) {
   pthread_attr_destroy(&at);
   pthread_sigmask(SIG_SETMASK, &old, NULL);
   if (err) {
-    logf_("inject: no thread: %s", strerror(err));
+    log_event("inject: no thread: %s", strerror(err));
     close(fd);
     return;
   }
   pthread_setname_np(th, "privtap inject");
-  logf_("inject: reading %s%s", fifo_path, made ? " (created)" : "");
+  log_event("inject: reading %s%s", fifo_path, made ? " (created)" : "");
 }
 
 __attribute__((destructor)) static void privtap_fini(void) {
@@ -582,19 +373,17 @@ __attribute__((destructor)) static void privtap_fini(void) {
 
 // ---- identity
 
-static void spoof_init(void) {
-  conf_check(1);
-  for (size_t i = 0; i < sizeof IDENTITIES / sizeof *IDENTITIES; i++)
-    if (!strcasecmp(identity_name, IDENTITIES[i].name))
-      spoof = &IDENTITIES[i];
-  if (spoof)
-    logf_(
+static void select_identity(void) {
+  refresh_config(1);
+  selected_identity = identity_lookup(identity_name);
+  if (selected_identity)
+    log_event(
       "identity: passing this device off as %s (%s, family %02X)",
-      spoof->name,
-      spoof->code,
-      spoof->family);
+      selected_identity->name,
+      selected_identity->product_code,
+      selected_identity->family);
   else if (identity_name[0] && strcasecmp(identity_name, "none"))
-    logf_(
+    log_event(
       "identity: '%s' isn't X, LIVE, LIVE2, ONE or FORCE: the device stays itself",
       identity_name);
 }
@@ -603,21 +392,21 @@ static void spoof_init(void) {
 
 // An fd reading the spoofed model's product code or compatible string, if path is one of those
 // files and an identity is set; else -2.
-static int fake_fd(const char *path) {
+int privtap_identity_fd(const char *path) {
   static int told[2];
   if (!path || strncmp(path, DT, sizeof DT - 1))
     return -2;
   int code = !strcmp(path + sizeof DT - 1, "inmusic,product-code");
   if (!code && strcmp(path + sizeof DT - 1, "compatible"))
     return -2;
-  pthread_once(&spoof_once, spoof_init);
-  if (!spoof)
+  pthread_once(&identity_once, select_identity);
+  if (!selected_identity)
     return -2;
   // Device-tree strings end in a NUL, and a list of them is NUL-separated.
   char buf[96];
-  int n = code ? sprintf(buf, "%s", spoof->code) + 1 : 0;
+  int n = code ? sprintf(buf, "%s", selected_identity->product_code) + 1 : 0;
   if (!code) {
-    n += sprintf(buf + n, "%s", spoof->compatible) + 1;
+    n += sprintf(buf + n, "%s", selected_identity->compatible) + 1;
     n += sprintf(buf + n, "inmusic,az01") + 1;
     n += sprintf(buf + n, "rockchip,rk3288") + 1;
   }
@@ -625,142 +414,33 @@ static int fake_fd(const char *path) {
   if (fd < 0 || write(fd, buf, (size_t)n) != n || lseek(fd, 0, SEEK_SET)) {
     if (fd >= 0)
       close(fd);
-    logf_("identity: can't fake %s: %s", path, strerror(errno));
+    log_event("identity: can't fake %s: %s", path, strerror(errno));
     return -2;
   }
   if (!told[code]) {
     told[code] = 1;
-    logf_("identity: %s read as %s's", path, spoof->name);
+    log_event("identity: %s read as %s's", path, selected_identity->name);
   }
   return fd;
 }
 
-// One byte of a stream, rewritten for the identity: to_mpc is the hardware's stream, else MPC's.
-static unsigned char sx_byte(struct sx *s, unsigned char b, int to_mpc) {
-  if (b >= 0xF8) // real time, which may sit inside a sysex
-    return b;
-  if (b == 0xF0) {
-    s->pos = 1;
-    s->hdr[0] = b;
-    s->ident = 0;
-    return b;
+static unsigned char
+rewrite_identity_byte(struct identity_stream *stream, unsigned char byte, bool incoming) {
+  int previous_family = hardware_family;
+  unsigned char rewritten =
+    identity_rewrite_byte(selected_identity, stream, &hardware_family, byte, incoming);
+  if (previous_family < 0 && hardware_family >= 0) {
+    log_event(
+      "identity: the hardware is family %02X, shown to MPC as %02X",
+      hardware_family,
+      selected_identity->family);
   }
-  if (b & 0x80) { // F7, or any status, ends it
-    s->pos = -1;
-    return b;
-  }
-  if (s->pos < 0)
-    return b;
-  int p = s->pos++;
-  if (p < (int)sizeof s->hdr)
-    s->hdr[p] = b;
-  const unsigned char *h = s->hdr;
-  if (to_mpc) {
-    if (p == 6 && h[1] == 0x7E && h[3] == 0x06 && h[4] == 0x02 && h[5] == 0x47) { // an Akai
-                                                                                  // identity reply
-      if (hw_family < 0) {
-        hw_family = b;
-        logf_("identity: the hardware is family %02X, shown to MPC as %02X", b, spoof->family);
-      }
-      s->ident = b == hw_family;
-    }
-    if (s->ident && p >= 6 && p <= 12)
-      return spoof->reply[p - 6];
-    if (p == 3 && h[1] == 0x47 && b == hw_family)
-      return spoof->family;
-  } else if (p == 3 && h[1] == 0x47 && b == spoof->family && hw_family >= 0)
-    return (unsigned char)hw_family;
-  return b;
-}
-
-// The file opens MPC and libaz0x-info use. Only reading the two device-tree files is ever answered
-// differently.
-static int (*libc_open)(const char *, int, ...);
-static int (*libc_open64)(const char *, int, ...);
-static int (*libc_open_2)(const char *, int);
-static int (*libc_open64_2)(const char *, int);
-static int (*libc_openat)(int, const char *, int, ...);
-static int (*libc_openat64)(int, const char *, int, ...);
-static FILE *(*libc_fopen)(const char *, const char *);
-static FILE *(*libc_fopen64)(const char *, const char *);
-
-#define READ_ONLY(flags) (((flags) & O_ACCMODE) == O_RDONLY && !((flags) & O_CREAT))
-#define NEEDS_MODE(flags) (((flags) & O_CREAT) || ((flags) & O_TMPFILE) == O_TMPFILE)
-#define OPEN_HOOK(libc, sym, ...)                                                                  \
-  {                                                                                                \
-    mode_t mode = 0;                                                                               \
-    if (NEEDS_MODE(flags)) {                                                                       \
-      va_list ap;                                                                                  \
-      va_start(ap, flags);                                                                         \
-      mode = (mode_t)va_arg(ap, int);                                                              \
-      va_end(ap);                                                                                  \
-    }                                                                                              \
-    int fd;                                                                                        \
-    if (READ_ONLY(flags) && (fd = fake_fd(path)) != -2)                                            \
-      return fd;                                                                                   \
-    if (!RESOLVE(libc, sym)) {                                                                     \
-      errno = ENOSYS;                                                                              \
-      return -1;                                                                                   \
-    }                                                                                              \
-    return libc(__VA_ARGS__, mode);                                                                \
-  }
-
-API int open(const char *path, int flags, ...) OPEN_HOOK(libc_open, "open", path, flags) API
-  int open64(const char *path, int flags, ...) OPEN_HOOK(libc_open64, "open64", path, flags) API
-  int openat(int dir, const char *path, int flags, ...)
-    OPEN_HOOK(libc_openat, "openat", dir, path, flags) API
-  int openat64(int dir, const char *path, int flags, ...)
-    OPEN_HOOK(libc_openat64, "openat64", dir, path, flags)
-
-  // The fortified forms (_FORTIFY_SOURCE), which take no mode.
-  API int __open_2(const char *path, int flags) {
-  int fd;
-  if (READ_ONLY(flags) && (fd = fake_fd(path)) != -2)
-    return fd;
-  if (!RESOLVE(libc_open_2, "__open_2")) {
-    errno = ENOSYS;
-    return -1;
-  }
-  return libc_open_2(path, flags);
-}
-
-API int __open64_2(const char *path, int flags) {
-  int fd;
-  if (READ_ONLY(flags) && (fd = fake_fd(path)) != -2)
-    return fd;
-  if (!RESOLVE(libc_open64_2, "__open64_2")) {
-    errno = ENOSYS;
-    return -1;
-  }
-  return libc_open64_2(path, flags);
-}
-
-static FILE *fopen_hook(
-  const char *path, const char *mode, FILE *(**libc)(const char *, const char *), const char *sym) {
-  int fd;
-  if (mode && mode[0] == 'r' && !strchr(mode, '+') && (fd = fake_fd(path)) != -2) {
-    FILE *f = fdopen(fd, "r");
-    if (!f)
-      close(fd);
-    return f;
-  }
-  if (!RESOLVE(*libc, sym)) {
-    errno = ENOSYS;
-    return NULL;
-  }
-  return (*libc)(path, mode);
-}
-
-API FILE *fopen(const char *path, const char *mode) {
-  return fopen_hook(path, mode, &libc_fopen, "fopen");
-}
-API FILE *fopen64(const char *path, const char *mode) {
-  return fopen_hook(path, mode, &libc_fopen64, "fopen64");
+  return rewritten;
 }
 
 // ---- the hooks
 
-static void info_names(snd_rawmidi_t *h, char *dev, char *sub, size_t n) {
+static void info_names(snd_rawmidi_t *handle, char *dev, char *sub, size_t n) {
   size_t (*info_sizeof)(void) = dlsym(RTLD_DEFAULT, "snd_rawmidi_info_sizeof");
   int (*info)(snd_rawmidi_t *, snd_rawmidi_info_t *) = dlsym(RTLD_DEFAULT, "snd_rawmidi_info");
   const char *(*get_name)(const snd_rawmidi_info_t *) =
@@ -771,64 +451,62 @@ static void info_names(snd_rawmidi_t *h, char *dev, char *sub, size_t n) {
   if (!info_sizeof || !info || !get_name || !get_sub)
     return;
   snd_rawmidi_info_t *ri = calloc(1, info_sizeof());
-  if (ri && !info(h, ri)) {
+  if (ri && !info(handle, ri)) {
     snprintf(dev, n, "%s", get_name(ri) ? get_name(ri) : "");
     snprintf(sub, n, "%s", get_sub(ri) ? get_sub(ri) : "");
   }
   free(ri);
 }
 
-static int poll_fd(snd_rawmidi_t *h) {
+static int poll_fd(snd_rawmidi_t *handle) {
   int (*pdesc)(snd_rawmidi_t *, struct pollfd *, unsigned int) =
     dlsym(RTLD_DEFAULT, "snd_rawmidi_poll_descriptors");
   struct pollfd pfd;
-  return pdesc && pdesc(h, &pfd, 1) == 1 ? pfd.fd : -1;
+  return pdesc && pdesc(handle, &pfd, 1) == 1 ? pfd.fd : -1;
 }
 
-static void track(snd_rawmidi_t *h, int out, const char *alsa_name, int mode) {
+static void track_port(snd_rawmidi_t *handle, int output, const char *alsa_name, int mode) {
   char dev[64], sub[64];
-  info_names(h, dev, sub, sizeof dev);
-  int fd = poll_fd(h), priv = 0;
-  pthread_mutex_lock(&lock);
-  struct port *p = NULL;
-  for (int i = 0; i < MAXPORTS && !p; i++)
-    if (!ports[i].h)
-      p = &ports[i];
-  if (p) {
-    p->h = h;
-    p->out = out;
-    p->fd = fd;
-    p->nonblock = (mode & SND_RAWMIDI_NONBLOCK) != 0;
-    p->sx.pos = -1;
+  info_names(handle, dev, sub, sizeof dev);
+  int fd = poll_fd(handle), priv = 0;
+  pthread_mutex_lock(&midi_lock);
+  struct port *port = NULL;
+  for (int i = 0; i < MAXPORTS && !port; i++)
+    if (!ports[i].handle)
+      port = &ports[i];
+  if (port) {
+    port->handle = handle;
+    port->output = output;
+    port->fd = fd;
+    port->nonblocking = (mode & SND_RAWMIDI_NONBLOCK) != 0;
+    port->identity.position = -1;
     snprintf(
-      p->name,
-      sizeof p->name,
+      port->name,
+      sizeof port->name,
       "%s",
       sub[0]        ? sub
         : dev[0]    ? dev
         : alsa_name ? alsa_name
                     : "?");
-    if (!out && (strstr(sub, "Private") || strstr(dev, "Private"))) {
+    if (!output && (strstr(sub, "Private") || strstr(dev, "Private"))) {
       priv = 1;
-      priv_in = h;
-      priv_fd = fd;
-      if (wake_fd[0] < 0 && pipe2(wake_fd, O_NONBLOCK | O_CLOEXEC))
-        wake_fd[0] = wake_fd[1] = -1;
-      qh = qt = ih = it = 0;
-      cur = run = 0;
-      have = need = sysex = 0;
+      private_input = handle;
+      private_input_fd = fd;
+      if (wake_pipe[0] < 0 && pipe2(wake_pipe, O_NONBLOCK | O_CLOEXEC))
+        wake_pipe[0] = wake_pipe[1] = -1;
+      midi_merger_reset(&midi);
     }
   }
-  pthread_mutex_unlock(&lock);
-  logf_(
+  pthread_mutex_unlock(&midi_lock);
+  log_event(
     "open %s %s: '%s' / '%s', fd %d, mode %#x%s",
     alsa_name ? alsa_name : "?",
-    out ? "out" : "in",
+    output ? "out" : "in",
     dev,
     sub,
     fd,
     mode,
-    !p       ? ": not tracked (too many ports)"
+    !port    ? ": not tracked (too many ports)"
       : priv ? ": the private input"
              : "");
   if (priv)
@@ -842,7 +520,7 @@ static void say_hello(void) {
   time_t t = time(NULL);
   struct tm tm;
   strftime(when, sizeof when, "%Y-%m-%d %H:%M:%S", localtime_r(&t, &tm));
-  logf_(
+  log_event(
     "privtap %s in pid %d (%s) at %s, settings %s, traffic log %s%s%s",
     PRIVTAP_VERSION,
     (int)getpid(),
@@ -850,154 +528,151 @@ static void say_hello(void) {
     when,
     conf_path[0] ? conf_path : "(none)",
     log_traffic ? "on" : "off",
-    spoof ? ", identity " : "",
-    spoof ? spoof->name : "");
+    selected_identity ? ", identity " : "",
+    selected_identity ? selected_identity->name : "");
 }
 
-API int snd_rawmidi_open(snd_rawmidi_t **in, snd_rawmidi_t **out, const char *name, int mode) {
+API int snd_rawmidi_open(snd_rawmidi_t **in, snd_rawmidi_t **output, const char *name, int mode) {
   static pthread_once_t hello = PTHREAD_ONCE_INIT;
   if (!RESOLVE(real_open, "snd_rawmidi_open"))
     return -ENOSYS;
-  pthread_once(&spoof_once, spoof_init);
-  int r = real_open(in, out, name, mode);
+  pthread_once(&identity_once, select_identity);
+  int r = real_open(in, output, name, mode);
   if (r == 0) {
-    conf_check(1);
+    refresh_config(1);
     pthread_once(&hello, say_hello);
     if (in && *in)
-      track(*in, 0, name, mode);
-    if (out && *out)
-      track(*out, 1, name, mode);
+      track_port(*in, 0, name, mode);
+    if (output && *output)
+      track_port(*output, 1, name, mode);
   }
   return r;
 }
 
-API int snd_rawmidi_close(snd_rawmidi_t *h) {
+API int snd_rawmidi_close(snd_rawmidi_t *handle) {
   if (!RESOLVE(real_close, "snd_rawmidi_close"))
     return -ENOSYS;
   char name[64] = "";
-  pthread_mutex_lock(&lock);
-  struct port *p = find(h);
-  if (p) {
-    snprintf(name, sizeof name, "%s", p->name);
-    if (h == priv_in) {
-      priv_in = NULL;
-      priv_fd = -1;
-      qh = qt = ih = it = 0;
+  pthread_mutex_lock(&midi_lock);
+  struct port *port = find_port(handle);
+  if (port) {
+    snprintf(name, sizeof name, "%s", port->name);
+    if (handle == private_input) {
+      private_input = NULL;
+      private_input_fd = -1;
+      midi_merger_clear_queues(&midi);
     }
-    p->h = NULL;
+    port->handle = NULL;
   }
-  unsigned long lost = dropped;
-  dropped = 0;
-  pthread_mutex_unlock(&lock);
-  if (p)
-    logf_("close %s%s", name, lost ? " (bytes were dropped: the queue was full)" : "");
-  return real_close(h);
+  unsigned long lost = midi_merger_take_dropped(&midi);
+  pthread_mutex_unlock(&midi_lock);
+  if (port)
+    log_event("close %s%s", name, lost ? " (bytes were dropped: the queue was full)" : "");
+  return real_close(handle);
 }
 
-API int snd_rawmidi_nonblock(snd_rawmidi_t *h, int nonblock) {
+API int snd_rawmidi_nonblock(snd_rawmidi_t *handle, int nonblocking) {
   if (!RESOLVE(real_nonblock, "snd_rawmidi_nonblock"))
     return -ENOSYS;
-  int r = real_nonblock(h, nonblock);
+  int r = real_nonblock(handle, nonblocking);
   if (r == 0) {
-    pthread_mutex_lock(&lock);
-    struct port *p = find(h);
-    if (p)
-      p->nonblock = nonblock != 0;
-    pthread_mutex_unlock(&lock);
+    pthread_mutex_lock(&midi_lock);
+    struct port *port = find_port(handle);
+    if (port)
+      port->nonblocking = nonblocking != 0;
+    pthread_mutex_unlock(&midi_lock);
   }
   return r;
 }
 
-API ssize_t snd_rawmidi_write(snd_rawmidi_t *h, const void *buffer, size_t size) {
+API ssize_t snd_rawmidi_write(snd_rawmidi_t *handle, const void *buffer, size_t size) {
   if (!RESOLVE(real_write, "snd_rawmidi_write"))
     return -ENOSYS;
   const void *send = buffer;
   unsigned char local[1024], *copy = NULL;
-  if (spoof && size) {
-    pthread_mutex_lock(&lock);
-    struct port *p = find(h);
-    if (p && (copy = size <= sizeof local ? local : malloc(size))) {
+  if (selected_identity && size) {
+    pthread_mutex_lock(&midi_lock);
+    struct port *port = find_port(handle);
+    if (port && (copy = size <= sizeof local ? local : malloc(size))) {
       for (size_t i = 0; i < size; i++)
-        copy[i] = sx_byte(&p->sx, ((const unsigned char *)buffer)[i], 0);
+        copy[i] = rewrite_identity_byte(&port->identity, ((const unsigned char *)buffer)[i], 0);
       send = copy;
     }
-    pthread_mutex_unlock(&lock);
+    pthread_mutex_unlock(&midi_lock);
   }
-  ssize_t r = real_write(h, send, size);
+  ssize_t r = real_write(handle, send, size);
   if (copy && copy != local)
     free(copy);
   if (r > 0) {
-    conf_check(0);
+    refresh_config(0);
     if (log_traffic) {
       char name[64];
-      pthread_mutex_lock(&lock);
-      struct port *p = find(h);
-      if (p)
-        snprintf(name, sizeof name, "%s", p->name);
-      pthread_mutex_unlock(&lock);
-      if (p)
+      pthread_mutex_lock(&midi_lock);
+      struct port *port = find_port(handle);
+      if (port)
+        snprintf(name, sizeof name, "%s", port->name);
+      pthread_mutex_unlock(&midi_lock);
+      if (port)
         log_bytes("out", name, buffer, (size_t)r);
     }
   }
   return r;
 }
 
-API ssize_t snd_rawmidi_read(snd_rawmidi_t *h, void *buffer, size_t size) {
+API ssize_t snd_rawmidi_read(snd_rawmidi_t *handle, void *buffer, size_t size) {
   if (!RESOLVE(real_read, "snd_rawmidi_read") || !RESOLVE(real_poll, "poll"))
     return -ENOSYS;
-  conf_check(0);
+  refresh_config(0);
   char name[64];
-  pthread_mutex_lock(&lock);
-  struct port *p = find(h);
-  if (p)
-    snprintf(name, sizeof name, "%s", p->name);
-  if (!p || h != priv_in || !size) {
-    pthread_mutex_unlock(&lock);
-    ssize_t r = real_read(h, buffer, size);
-    if (p && r > 0)
+  pthread_mutex_lock(&midi_lock);
+  struct port *port = find_port(handle);
+  if (port)
+    snprintf(name, sizeof name, "%s", port->name);
+  if (!port || handle != private_input || !size) {
+    pthread_mutex_unlock(&midi_lock);
+    ssize_t r = real_read(handle, buffer, size);
+    if (port && r > 0)
       log_bytes("in", name, buffer, (size_t)r);
     return r;
   }
-  unsigned char *out = buffer;
+  unsigned char *output = buffer;
   size_t n = 0;
   for (;;) {
-    flush_inject();
-    while (n < size && qh != qt) {
-      out[n++] = q[qh];
-      qh = (qh + 1) % QSIZE;
-    }
+    n = midi_merger_read(&midi, output, size);
     if (n)
       break;
-    int nb = p->nonblock, fd = priv_fd, wfd = wake_fd[0];
-    pthread_mutex_unlock(&lock);
+    int nb = port->nonblocking, fd = private_input_fd, wfd = wake_pipe[0];
+    pthread_mutex_unlock(&midi_lock);
     if (!nb && fd >= 0 && wfd >= 0) {
       // A blocking read waits for the hardware or for an injected message, whichever comes first.
       struct pollfd w[2] = {{fd, POLLIN, 0}, {wfd, POLLIN, 0}};
       int r = real_poll(w, 2, -1);
       if (r >= 0 || errno == EINTR) {
         if (r > 0 && w[1].revents)
-          drain(wfd);
+          drain_wake_pipe(wfd);
         if (r <= 0 || !w[0].revents) {
-          pthread_mutex_lock(&lock);
+          pthread_mutex_lock(&midi_lock);
           continue;
         }
       }
     }
     unsigned char tmp[256];
-    ssize_t r = real_read(h, tmp, size < sizeof tmp ? size : sizeof tmp);
+    ssize_t r = real_read(handle, tmp, size < sizeof tmp ? size : sizeof tmp);
     if (r <= 0)
       return r;
     log_bytes("in", name, tmp, (size_t)r);
-    pthread_mutex_lock(&lock);
-    if (h != priv_in) { // closed meanwhile: hand over what was read as it is
-      pthread_mutex_unlock(&lock);
+    pthread_mutex_lock(&midi_lock);
+    if (handle != private_input) { // closed meanwhile: hand over what was read as it is
+      pthread_mutex_unlock(&midi_lock);
       memcpy(buffer, tmp, (size_t)r);
       return r;
     }
     for (ssize_t i = 0; i < r; i++)
-      real_byte(spoof ? sx_byte(&in_sx, tmp[i], 1) : tmp[i]);
+      midi_merger_feed_hardware(
+        &midi,
+        selected_identity ? rewrite_identity_byte(&hardware_identity_stream, tmp[i], 1) : tmp[i]);
   }
-  pthread_mutex_unlock(&lock);
+  pthread_mutex_unlock(&midi_lock);
   return (ssize_t)n;
 }
 
@@ -1008,7 +683,7 @@ API int poll(struct pollfd *fds, nfds_t nfds, int timeout) {
     errno = ENOSYS;
     return -1;
   }
-  int fd = priv_fd, wfd = wake_fd[0], idx = -1;
+  int fd = private_input_fd, wfd = wake_pipe[0], idx = -1;
   if (fd >= 0 && wfd >= 0 && nfds < 16)
     for (nfds_t i = 0; i < nfds && idx < 0; i++)
       if (fds[i].fd == fd && (fds[i].events & POLLIN))
@@ -1019,9 +694,9 @@ API int poll(struct pollfd *fds, nfds_t nfds, int timeout) {
   struct pollfd all[17];
   long long deadline = timeout > 0 ? now_ms() + timeout : 0;
   for (;;) {
-    pthread_mutex_lock(&lock);
-    int rdy = ready();
-    pthread_mutex_unlock(&lock);
+    pthread_mutex_lock(&midi_lock);
+    int rdy = midi_merger_ready(&midi);
+    pthread_mutex_unlock(&midi_lock);
     memcpy(all, fds, nfds * sizeof *fds);
     all[nfds] = (struct pollfd){wfd, POLLIN, 0};
     int r = real_poll(all, nfds + 1, rdy ? 0 : timeout);
@@ -1029,15 +704,15 @@ API int poll(struct pollfd *fds, nfds_t nfds, int timeout) {
       return r;
     int woke = all[nfds].revents != 0;
     if (woke) {
-      drain(wfd);
+      drain_wake_pipe(wfd);
       r--;
     }
     for (nfds_t i = 0; i < nfds; i++)
       fds[i].revents = all[i].revents;
     if (!rdy && woke) {
-      pthread_mutex_lock(&lock);
-      rdy = ready();
-      pthread_mutex_unlock(&lock);
+      pthread_mutex_lock(&midi_lock);
+      rdy = midi_merger_ready(&midi);
+      pthread_mutex_unlock(&midi_lock);
     }
     if (rdy) {
       if (!fds[idx].revents)

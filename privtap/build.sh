@@ -39,9 +39,11 @@ device-test)
   arm
   ssh_command "root@$HOST" 'rm -rf /tmp/privtap-device-test && mkdir /tmp/privtap-device-test'
   scp -q -F /dev/null -o BatchMode=yes -o ConnectTimeout=7 -o StrictHostKeyChecking=yes -o UpdateHostKeys=no \
-    "$B/privtap/privtap.so" "$B/privtap/tests/libfakeasound.so" "$B/privtap/tests/test_privtap" \
+    "$B/privtap/privtap.so" "$B/privtap/tests/libfakeasound.so" \
+    "$B/privtap/tests/test_privtap" "$B/privtap/tests/test_protocol" \
     "root@$HOST:/tmp/privtap-device-test/"
-  ssh_command "root@$HOST" 'cd /tmp/privtap-device-test && export LD_BIND_NOW=1 LD_PRELOAD=/tmp/privtap-device-test/privtap.so &&
+  ssh_command "root@$HOST" 'cd /tmp/privtap-device-test && ./test_protocol &&
+    export LD_BIND_NOW=1 LD_PRELOAD=/tmp/privtap-device-test/privtap.so &&
     ./test_privtap && PRIVTAP_TEST_IDENTITY=X ./test_privtap; r=$?; cd / && rm -rf /tmp/privtap-device-test; exit $r'
   ;;
 package)

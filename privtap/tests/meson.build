@@ -1,3 +1,13 @@
+protocol_test = executable(
+  'test_protocol',
+  'test_protocol.c',
+  include_directories: privtap_inc,
+  link_with: privtap_protocol,
+  override_options: ['optimization=1'],
+)
+test('protocol', protocol_test, suite: 'privtap')
+elf_checks += [{'binary': protocol_test}]
+
 fake_asound = shared_library(
   'fakeasound',
   'fake_asound.c',

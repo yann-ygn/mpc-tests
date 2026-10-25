@@ -11,8 +11,9 @@ rawmidi ports inside the MPC process and:
 
 > **Status:** 0.2.0 running in MPC on a Key 37 (MPC 3.9.1.2) next to the MPC Remote addin 1.0.3: the traffic log works
 > both ways, the remote addin's `press_button` works through `/dev/midi_inject`, and `identity=X` ran MPC as an MPC X
-> (see `../findings/`). Offline: 44 checks, and 26 more with `identity=X`, on the host (also under ASan/UBSan) and built
-> for ARM on the Key 37 against a fake alsa-lib.
+> (see `../findings/`). Protocol unit tests cover message boundaries, queue limits, running status, SysEx and
+> identity rewriting. Preload integration tests run with a fake alsa-lib on the host or ARM, including file-mode
+> forwarding and the `identity=X` case.
 
 ## Why it is needed on a Key 37
 
@@ -43,6 +44,19 @@ It interposes alsa-lib's `snd_rawmidi_open`, `_read`, `_write`, `_close` and `_n
   keeps each side's bytes as sent. After TheKikGen's tkgl_mpcmapper `--tkgl_iamX`, without its virtual ports.
 - The library exports its hooks and nothing else (`src/exports.map`, checked by the Meson build). Without that, Zig's
   runtime exports `memcpy`, `memset` and the math functions, which would replace libc's for all of MPC.
+
+## Source layout
+
+- `src/privtap.c`: port tracking, settings/logging, the FIFO worker and poll wakeups.
+  The existing MIDI mutex owns port, merger and identity-stream access; the injection parser belongs to its worker.
+- `src/midi_stream.c`: bounded queues, hardware/injected MIDI parsing and message-boundary merging.
+  State is caller-owned; the module performs no I/O or locking.
+- `src/identity.c`: model profiles and byte-level SysEx identity rewriting, with caller-owned stream state.
+- `src/file_hooks.c`: libc open/fopen entry points and mode forwarding. `interpose.h` exposes only the private
+  symbol resolver and identity-file provider shared with the shim.
+
+The pure protocol modules form an internal static library and are tested without preloading or ALSA.
+Only the existing hook allowlist is exported from `privtap.so`.
 
 ## Settings
 

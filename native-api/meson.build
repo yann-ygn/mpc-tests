@@ -13,7 +13,14 @@ elf_id = static_library(
 
 api = executable(
   'mpc-api',
-  files('src/main.c', 'src/protocol.c', 'src/discovery.c', 'src/attachment.c'),
+  files(
+    'src/main.c',
+    'src/server.c',
+    'src/client.c',
+    'src/protocol.c',
+    'src/discovery.c',
+    'src/attachment.c',
+  ),
   profiles[0],
   include_directories: root_inc,
   c_args: native_args,

@@ -280,7 +280,14 @@ def detach(args):
             "test_payload.so",
         )
     ]
-    command("rm -f " + shlex.join(files) + " && rmdir " + shlex.quote(remote))
+    command(
+        "rm -f "
+        + shlex.join(files)
+        + " "
+        + shlex.quote(remote)
+        + "/mpc-native-fixture-* && rmdir "
+        + shlex.quote(remote)
+    )
     report.update(bridgeRetained=False, bridgeUnloaded=True, temporaryFilesRemoved=True)
     args.detach.write_text(json.dumps(report, indent=2) + "\n")
     return report

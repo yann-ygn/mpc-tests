@@ -201,6 +201,37 @@ static size_t read_fd(int fd, char *buf, size_t n) {
   return r > 0 ? (size_t)r : 0;
 }
 
+static void expect_file_mode(int fd, const char *operation) {
+  struct stat status;
+  CHECK(fd >= 0, "%s creates an ordinary file", operation);
+  if (fd >= 0) {
+    CHECK(
+      !fstat(fd, &status) && (status.st_mode & 0777) == 0640,
+      "%s forwards the mode argument",
+      operation);
+    close(fd);
+  }
+}
+
+static void file_hook_tests(void) {
+  char path[128];
+  mode_t previous_mask = umask(0);
+  snprintf(path, sizeof path, "%s/open-mode", dir);
+  expect_file_mode(open(path, O_WRONLY | O_CREAT | O_EXCL, 0640), "open");
+  snprintf(path, sizeof path, "%s/open64-mode", dir);
+  expect_file_mode(open64(path, O_WRONLY | O_CREAT | O_EXCL, 0640), "open64");
+  int directory = open(dir, O_RDONLY | O_DIRECTORY);
+  CHECK(directory >= 0, "open a directory without a mode argument");
+  if (directory >= 0) {
+    expect_file_mode(openat(directory, "openat-mode", O_WRONLY | O_CREAT | O_EXCL, 0640), "openat");
+    expect_file_mode(
+      openat64(directory, "openat64-mode", O_WRONLY | O_CREAT | O_EXCL, 0640),
+      "openat64");
+    close(directory);
+  }
+  umask(previous_mask);
+}
+
 // identity=X: the device tree reads as an MPC X's, and the controller's family byte is swapped both
 // ways.
 static void identity_tests(void) {
@@ -328,6 +359,7 @@ int main(void) {
     identity = getenv("PRIVTAP_TEST_IDENTITY");
   write_conf(1);
   setenv("PRIVTAP_CONF", conf, 1);
+  file_hook_tests();
   if (pipe(own_wake))
     return 2;
   if (identity[0]) {

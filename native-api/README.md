@@ -10,6 +10,15 @@ The local transport is a restricted Unix stream socket. Each connection carries 
 a newline**, then one JSON response plus a newline. Read through the response newline and close the connection.
 HTTP and MCP adapters follow in their own stories; this service has no TCP listener.
 
+## Source layout
+
+- `src/main.c`: command-line parsing and validation.
+- `src/server.c`: socket ownership, peer admission, bounded client I/O and shutdown.
+- `src/client.c`: the `request` command's delivery and response relay.
+- `src/protocol.c`: request parsing and JSON responses; `src/discovery.c` and `src/attachment.c` provide metadata.
+
+`transport.h` is the private CLI/transport boundary; public request and response schemas are unchanged.
+
 ## Build and test
 
 ```sh
