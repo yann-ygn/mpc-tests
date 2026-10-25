@@ -16,7 +16,8 @@ struct harness {
   uint64_t generation;
 };
 static _Thread_local bool is_ui;
-static const struct mpc_executor_identity handle = {17, 3, 29, 5};
+static const struct mpc_executor_identity handle = {
+  .project = 17, .project_generation = 3, .track = 29, .track_generation = 5};
 
 static struct timespec test_deadline(void) {
   struct timespec until;

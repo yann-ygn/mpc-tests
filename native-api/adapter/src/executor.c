@@ -23,12 +23,14 @@ struct mpc_executor {
   pthread_t scheduler;
   struct mpc_native_adapter *adapter;
   struct mpc_executor_config config;
+  struct mpc_identity_registry *registry;
   struct mpc_executor_job *jobs, *head, *tail;
   enum mpc_executor_state state;
   enum mpc_native_error failure;
   unsigned live_jobs, queued_jobs, captures;
   uint32_t ui_thread_id;
   bool probe_posted, callback_invoked, exited, active;
+  bool identities_detached, cleanup_rejected, cleanup_posted;
   struct mpc_executor_identity identity;
 };
 
@@ -84,13 +86,23 @@ static void fail(struct mpc_executor *executor, enum mpc_native_error error) {
 
 /* The resolver is consulted at dispatch AND by each adapter traversal, including
  * post-setter readback. The active request stays copied and alive until return. */
+static enum mpc_native_error resolve_target(
+  struct mpc_executor *executor,
+  const struct mpc_executor_identity *identity,
+  struct mpc_native_target *target) {
+  if (executor->registry)
+    return mpc_identity_resolve(executor->registry, identity, target);
+  return executor->config.resolve
+    ? executor->config.resolve(executor->config.userdata, identity, target)
+    : MPC_NATIVE_NOT_READY;
+}
+
 static enum mpc_native_error revalidate(void *data, const struct mpc_native_target *target) {
   struct mpc_executor *executor = data;
-  if (!executor->active || !executor->config.resolve)
+  if (!executor->active)
     return MPC_NATIVE_NOT_READY;
   struct mpc_native_target current = {0};
-  enum mpc_native_error error =
-    executor->config.resolve(executor->config.userdata, &executor->identity, &current);
+  enum mpc_native_error error = resolve_target(executor, &executor->identity, &current);
   if (error)
     return error;
   return current.project == target->project && current.track == target->track &&
@@ -102,10 +114,18 @@ static enum mpc_native_error revalidate(void *data, const struct mpc_native_targ
 static struct mpc_executor_result
 execute(struct mpc_executor *executor, const struct mpc_executor_request *request) {
   struct mpc_executor_result result = {.state = MPC_EXECUTOR_COMPLETED};
+  if (request->operation == MPC_EXECUTOR_IDENTITIES) {
+    result.error = mpc_identity_capture(executor->registry, &result.identities);
+    return result;
+  }
+  if (request->operation == MPC_EXECUTOR_VALIDATE_SEQUENCE) {
+    result.error = mpc_identity_sequence(executor->registry, &request->identity);
+    return result;
+  }
   struct mpc_native_target target = {0};
   executor->active = true;
   executor->identity = request->identity;
-  result.error = executor->config.resolve(executor->config.userdata, &request->identity, &target);
+  result.error = resolve_target(executor, &request->identity, &target);
   if (!result.error) {
     const bool *expected = request->has_expected ? &request->expected : NULL;
     switch (request->operation) {
@@ -128,6 +148,9 @@ execute(struct mpc_executor *executor, const struct mpc_executor_request *reques
         expected,
         &result.write);
       break;
+    case MPC_EXECUTOR_IDENTITIES:
+    case MPC_EXECUTOR_VALIDATE_SEQUENCE:
+      break;
     }
     if (request->operation != MPC_EXECUTOR_READ_TRACK)
       result.observed = result.write.observed;
@@ -141,12 +164,27 @@ static void invoke(const void *capture) {
   pthread_mutex_lock(&executor->mutex);
   executor->callback_invoked = true;
   if (!mpc_native_on_ui_thread(executor->adapter)) {
+    executor->cleanup_rejected = true;
     fail(executor, MPC_NATIVE_WRONG_THREAD);
     pthread_mutex_unlock(&executor->mutex);
     return;
   }
   executor->ui_thread_id = (uint32_t)syscall(SYS_gettid);
-  if (executor->state == MPC_EXECUTOR_STARTING) {
+  if (
+    (executor->state == MPC_EXECUTOR_STOPPING || executor->state == MPC_EXECUTOR_FAILED) &&
+    executor->registry && !executor->identities_detached) {
+    pthread_mutex_unlock(&executor->mutex);
+    enum mpc_native_error error = mpc_native_verify_ui(executor->adapter);
+    if (!error)
+      error = mpc_identity_detach(executor->registry);
+    pthread_mutex_lock(&executor->mutex);
+    if (error) {
+      executor->cleanup_rejected = true;
+      fail(executor, error);
+    } else
+      executor->identities_detached = true;
+    pthread_cond_broadcast(&executor->changed);
+  } else if (executor->state == MPC_EXECUTOR_STARTING) {
     executor->state = MPC_EXECUTOR_READY;
     pthread_cond_broadcast(&executor->changed);
   } else {
@@ -207,18 +245,27 @@ static void *schedule(void *data) {
   pthread_setname_np(pthread_self(), "mpc executor");
   pthread_mutex_lock(&executor->mutex);
   for (;;) {
+    if (!executor->captures && executor->cleanup_posted && !executor->callback_invoked) {
+      executor->cleanup_rejected = true;
+      fail(executor, MPC_NATIVE_DISPATCH_FAILED);
+    }
     if (
       !executor->captures && executor->probe_posted && !executor->callback_invoked &&
       (executor->state == MPC_EXECUTOR_STARTING || executor->state == MPC_EXECUTOR_READY))
       fail(executor, MPC_NATIVE_DISPATCH_FAILED);
     if (
       (executor->state == MPC_EXECUTOR_STOPPING || executor->state == MPC_EXECUTOR_FAILED) &&
-      !executor->captures)
+      !executor->captures && executor->identities_detached)
       break;
+    bool cleanup =
+      (executor->state == MPC_EXECUTOR_STOPPING || executor->state == MPC_EXECUTOR_FAILED) &&
+      !executor->identities_detached && !executor->cleanup_rejected;
     bool probe = executor->state == MPC_EXECUTOR_STARTING && !executor->probe_posted;
     if (
-      !executor->captures && (probe || (executor->state == MPC_EXECUTOR_READY && executor->head))) {
+      !executor->captures &&
+      (probe || cleanup || (executor->state == MPC_EXECUTOR_READY && executor->head))) {
       executor->probe_posted = true;
+      executor->cleanup_posted = cleanup;
       executor->callback_invoked = false;
       executor->captures = 1; /* Local function ownership, before posting. */
       struct mpc_native_function function = {{executor, NULL}, manager, invoke};
@@ -226,6 +273,8 @@ static void *schedule(void *data) {
       enum mpc_native_error error = mpc_native_post(executor->adapter, &function);
       if (error) {
         pthread_mutex_lock(&executor->mutex);
+        if (cleanup)
+          executor->cleanup_rejected = true;
         fail(executor, error);
         pthread_mutex_unlock(&executor->mutex);
       }
@@ -243,9 +292,10 @@ static void *schedule(void *data) {
   return NULL;
 }
 
-enum mpc_native_error mpc_executor_open_backend(
+static enum mpc_native_error open_executor(
   const struct mpc_native_io *io,
   const struct mpc_executor_config *config,
+  bool authoritative,
   struct mpc_executor **output) {
   if (!output)
     return MPC_NATIVE_INVALID_ARGUMENT;
@@ -261,6 +311,7 @@ enum mpc_native_error mpc_executor_open_backend(
     return MPC_NATIVE_NOT_READY;
   executor->config = *config;
   executor->state = MPC_EXECUTOR_STARTING;
+  executor->identities_detached = !authoritative;
   executor->jobs = calloc(config->capacity, sizeof *executor->jobs);
   if (!executor->jobs) {
     free(executor);
@@ -285,8 +336,16 @@ enum mpc_native_error mpc_executor_open_backend(
              : mpc_native_open(&hooks, &executor->adapter);
   if (error)
     goto free_condition;
+  if (authoritative) {
+    error = mpc_identity_create(executor->adapter, &executor->registry);
+    if (error) {
+      mpc_native_close(executor->adapter);
+      goto free_condition;
+    }
+  }
   if (pthread_create(&executor->scheduler, NULL, schedule, executor)) {
     error = MPC_NATIVE_NOT_READY;
+    mpc_identity_destroy(executor->registry);
     mpc_native_close(executor->adapter);
     goto free_condition;
   }
@@ -305,7 +364,25 @@ free_jobs:
 
 enum mpc_native_error
 mpc_executor_open(const struct mpc_executor_config *config, struct mpc_executor **output) {
-  return mpc_executor_open_backend(NULL, config, output);
+  return open_executor(NULL, config, false, output);
+}
+
+enum mpc_native_error mpc_executor_open_backend(
+  const struct mpc_native_io *io,
+  const struct mpc_executor_config *config,
+  struct mpc_executor **output) {
+  return open_executor(io, config, false, output);
+}
+
+enum mpc_native_error mpc_executor_open_authoritative_backend(
+  const struct mpc_native_io *io, unsigned capacity, struct mpc_executor **output) {
+  struct mpc_executor_config config = {MPC_EXECUTOR_ABI, sizeof config, capacity, NULL, NULL};
+  return open_executor(io, &config, true, output);
+}
+
+enum mpc_native_error
+mpc_executor_open_authoritative(unsigned capacity, struct mpc_executor **output) {
+  return mpc_executor_open_authoritative_backend(NULL, capacity, output);
 }
 
 static struct timespec deadline(unsigned milliseconds) {
@@ -360,7 +437,7 @@ mpc_executor_get_status(struct mpc_executor *executor, struct mpc_executor_statu
   output->callback_captures = executor->captures;
   output->ui_thread_id = executor->ui_thread_id;
   /* The internal wrapper exists even in discovery-only mode. */
-  output->adapter.target_validator_present = executor->config.resolve != NULL;
+  output->adapter.target_validator_present = executor->config.resolve != NULL || executor->registry;
   pthread_mutex_unlock(&executor->mutex);
   return error;
 }
@@ -373,7 +450,7 @@ enum mpc_native_error mpc_executor_submit(
     return MPC_NATIVE_INVALID_ARGUMENT;
   *output = NULL;
   if (
-    !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_SET_RECORD_ARMED ||
+    !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_VALIDATE_SEQUENCE ||
     request->queue_timeout_ms > MPC_EXECUTOR_MAX_WAIT_MS)
     return MPC_NATIVE_INVALID_ARGUMENT;
   pthread_mutex_lock(&executor->mutex);
@@ -382,7 +459,9 @@ enum mpc_native_error mpc_executor_submit(
     error = executor->failure                    ? executor->failure
       : executor->state == MPC_EXECUTOR_STARTING ? MPC_NATIVE_NOT_READY
                                                  : MPC_NATIVE_SHUTTING_DOWN;
-  else if (!executor->config.resolve)
+  else if (!executor->config.resolve && !executor->registry)
+    error = MPC_NATIVE_NOT_READY;
+  else if (request->operation >= MPC_EXECUTOR_IDENTITIES && !executor->registry)
     error = MPC_NATIVE_NOT_READY;
   else if (executor->live_jobs == executor->config.capacity)
     error = MPC_NATIVE_QUEUE_FULL;
@@ -484,6 +563,8 @@ enum mpc_native_error mpc_executor_shutdown(struct mpc_executor *executor, unsig
   struct timespec until = deadline(milliseconds);
   pthread_mutex_lock(&executor->mutex);
   executor->state = executor->exited ? MPC_EXECUTOR_STOPPED : MPC_EXECUTOR_STOPPING;
+  executor->cleanup_rejected = false;
+  executor->cleanup_posted = false;
   cancel_queued(executor, MPC_NATIVE_CANCELLED);
   while (!executor->exited)
     if (pthread_cond_timedwait(&executor->changed, &executor->mutex, &until) == ETIMEDOUT)
@@ -498,11 +579,13 @@ enum mpc_native_error mpc_executor_close(struct mpc_executor *executor) {
   if (error)
     return error;
   pthread_mutex_lock(&executor->mutex);
-  bool drained = executor->exited && !executor->captures && !executor->live_jobs;
+  bool drained = executor->exited && !executor->captures && !executor->live_jobs &&
+    executor->identities_detached;
   pthread_mutex_unlock(&executor->mutex);
   if (!drained)
     return MPC_NATIVE_NOT_READY;
   pthread_join(executor->scheduler, NULL);
+  mpc_identity_destroy(executor->registry);
   mpc_native_close(executor->adapter);
   pthread_cond_destroy(&executor->changed);
   pthread_mutex_destroy(&executor->mutex);

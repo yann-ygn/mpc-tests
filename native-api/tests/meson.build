@@ -25,6 +25,20 @@ executor_fixture = executable(
 elf_checks += [{'binary': executor_fixture}]
 test('executor-fixture', executor_fixture, suite: 'native-api', timeout: 30)
 
+identity_fixture = executable(
+  'identity_fixture',
+  'identity_fixture.c',
+  adapter_sources,
+  profiles[1],
+  include_directories: [root_inc, api_inc, adapter_inc],
+  c_args: native_args,
+  override_options: native_options + ['optimization=1'],
+  dependencies: [dl_dep, threads_dep],
+  link_with: elf_id,
+)
+elf_checks += [{'binary': identity_fixture}]
+test('identity-fixture', identity_fixture, suite: 'native-api', timeout: 30)
+
 if not meson.is_cross_build()
   native_test_env = environment()
   native_test_env.set('MPC_API_TEST_BINARY', api.full_path())

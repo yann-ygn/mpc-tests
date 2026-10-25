@@ -8,13 +8,6 @@
 #include <string.h>
 #include <unistd.h>
 
-struct mpc_native_adapter {
-  struct mpc_native_io io;
-  struct mpc_native_hooks hooks;
-  int fault;
-  char instance_id[37];
-};
-
 static enum mpc_native_error verify(struct mpc_native_adapter *adapter) {
   if (!adapter)
     return MPC_NATIVE_INVALID_ARGUMENT;
@@ -110,6 +103,13 @@ void mpc_native_close(struct mpc_native_adapter *adapter) {
 
 bool mpc_native_on_ui_thread(struct mpc_native_adapter *adapter) {
   return adapter->io.on_ui_thread(adapter->io.userdata);
+}
+
+enum mpc_native_error mpc_native_verify_ui(struct mpc_native_adapter *adapter) {
+  enum mpc_native_error error = verify(adapter);
+  if (!error && !mpc_native_on_ui_thread(adapter))
+    error = MPC_NATIVE_WRONG_THREAD;
+  return error;
 }
 
 enum mpc_native_error

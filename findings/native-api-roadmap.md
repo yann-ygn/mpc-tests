@@ -7,7 +7,8 @@ adapter architecture. Descriptions, acceptance criteria, dependencies, statuses 
 and verified for all 22 stories. The owner accepted the [public contract](native-api-contract.md) on 2026-10-24
 (#28 Done). #29 and #30 are Done with the guarded shared adapter, bounded executor and lab validation.
 #31 adds the stopped-mode flag matrix, repeatable device experiments and failure evidence.
-#32 is In progress with discovery and verified adapter attachment reporting; #19 and #20 remain In progress.
+#32 is In progress with discovery and verified adapter attachment reporting; #19 remains In progress.
+#20 is implemented with authoritative owner resolution and native lifecycle generations.
 
 ## Epic #4 — Native control library and live API
 
@@ -19,7 +20,7 @@ Only the bounded native mute/solo/arm proof is already validated; these stories 
 | #28 | Define the public native-control API and capability contract | Done |
 | #29 | Build the native adapter library with validated firmware profiles | Done |
 | #30 | Execute native operations on the MPC UI thread with bounded lifecycle | Done |
-| #20 | Resolve active projects and generation-bound track/sequence handles | In progress |
+| #20 | Resolve active projects and generation-bound track/sequence handles | Done |
 | #18 | Expose authoritative live state snapshots from native MPC objects | New |
 | #31 | Validate mute, solo and record-arm semantics beyond the bounded proof | Done — stopped-mode matrix |
 | #19 | Provide idempotent native mute, solo and record-arm command handlers | In progress |
@@ -77,6 +78,14 @@ also exposed a restoration failure from an inconsistent starting baseline; the r
 All original observed state/settings were restored at the end, both libraries unloaded and MPC's PID stayed
 unchanged. Nine host Meson entries pass, and updated isolated ARM fixtures pass. Playback/automation/clip/Song,
 other families and production project lifetimes remain outside this matrix; public writes stay unavailable.
+
+Identity slice (#20, 2026-10-25): the [native registry](native-identity.md) resolves the application-owned Project
+on the UI thread, observes native destruction plus in-place project/sequence reset notifications, and binds opaque
+references to an adapter instance and generations. Track rename/reorder preserves IDs; destructive sequence edits
+retire references conservatively. Host/ARM fixtures force ABA, queued stale commands and cleanup failures. Device
+experiments cover manual edits/selection, same-file replacement, detach/reconnect and post-unload operation.
+The [sanitized evidence](native-identity-proof-20261025.json) retains rejected candidates and restoration details.
+Public state/write capabilities remain unavailable until their own stories are complete.
 
 1. Define the public contract (#28), firmware adapter (#29) and application-thread executor (#30).
 2. Establish active-project/handle lifetimes (#20), live snapshots (#18) and the full flag-semantics matrix (#31), then productize the flag handlers (#19).

@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 #include <errno.h>
+#include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -34,6 +35,7 @@ struct job {
   struct flags tracks[1];
 };
 static struct mpc_executor *executor;
+static bool authoritative;
 static struct {
   pthread_mutex_t mutex;
   struct mpc_native_target target;
@@ -87,7 +89,8 @@ static struct job *dispatch(
           : property == 0    ? MPC_EXECUTOR_SET_MUTE
           : property == 1    ? MPC_EXECUTOR_SET_SOLO
                              : MPC_EXECUTOR_SET_RECORD_ARMED,
-        .identity = {1, generation, 1, 1},
+        .identity =
+          {.project = 1, .project_generation = generation, .track = 1, .track_generation = 1},
         .desired = value != 0,
         .has_expected = op == 2,
         .expected = expected != 0};
@@ -173,6 +176,135 @@ static void stop_executor(void) {
     mpc_executor_close(executor) == MPC_NATIVE_OK)
     executor = NULL;
 }
+
+static void identity_command(FILE *stream, const char *line) {
+  struct mpc_executor_request request = {0};
+  struct mpc_executor_identity *identity = &request.identity;
+  enum mpc_native_error error = MPC_NATIVE_OK;
+  if (!strcmp(line, "IDENTITIES\n")) {
+    if (!authoritative) {
+      error = mpc_executor_shutdown(executor, 3000);
+      if (!error)
+        error = mpc_executor_close(executor);
+      if (!error) {
+        executor = NULL;
+        error = mpc_executor_open_authoritative(16, &executor);
+        authoritative = !error;
+      }
+    }
+    request.operation = MPC_EXECUTOR_IDENTITIES;
+  } else if (!authoritative)
+    error = MPC_NATIVE_NOT_READY;
+  else {
+    char extra, property[16];
+    unsigned desired, expected;
+    int fields;
+    if (!strncmp(line, "HANDLE_READ ", 12)) {
+      fields = sscanf(
+        line,
+        "HANDLE_READ %36s %" SCNu64 " %" SCNu64 " %" SCNu64 " %" SCNu64 " %c",
+        identity->instance_id,
+        &identity->project,
+        &identity->project_generation,
+        &identity->track,
+        &identity->track_generation,
+        &extra);
+      request.operation = MPC_EXECUTOR_READ_TRACK;
+      if (fields != 5)
+        error = MPC_NATIVE_INVALID_ARGUMENT;
+    } else if (!strncmp(line, "HANDLE_SEQUENCE ", 16)) {
+      fields = sscanf(
+        line,
+        "HANDLE_SEQUENCE %36s %" SCNu64 " %" SCNu64 " %" SCNu64 " %" SCNu64 " %c",
+        identity->instance_id,
+        &identity->project,
+        &identity->project_generation,
+        &identity->sequence,
+        &identity->sequence_generation,
+        &extra);
+      request.operation = MPC_EXECUTOR_VALIDATE_SEQUENCE;
+      if (fields != 5)
+        error = MPC_NATIVE_INVALID_ARGUMENT;
+    } else {
+      fields = sscanf(
+        line,
+        "HANDLE_SET %15s %u %u %36s %" SCNu64 " %" SCNu64 " %" SCNu64 " %" SCNu64 " %c",
+        property,
+        &desired,
+        &expected,
+        identity->instance_id,
+        &identity->project,
+        &identity->project_generation,
+        &identity->track,
+        &identity->track_generation,
+        &extra);
+      if (fields != 8 || desired > 1 || expected > 1)
+        error = MPC_NATIVE_INVALID_ARGUMENT;
+      else {
+        request.operation = !strcmp(property, "mute") ? MPC_EXECUTOR_SET_MUTE
+          : !strcmp(property, "solo")                 ? MPC_EXECUTOR_SET_SOLO
+                                                      : MPC_EXECUTOR_SET_RECORD_ARMED;
+        if (strcmp(property, "mute") && strcmp(property, "solo") && strcmp(property, "arm"))
+          error = MPC_NATIVE_INVALID_ARGUMENT;
+        request.desired = desired != 0;
+        request.has_expected = true;
+        request.expected = expected != 0;
+      }
+    }
+  }
+  struct mpc_executor_result result = {0};
+  if (!error)
+    error = mpc_executor_wait_ready(executor, 3000);
+  struct mpc_executor_job *job;
+  if (!error) {
+    error = mpc_executor_submit(executor, &request, &job);
+    if (!error) {
+      error = mpc_executor_wait(job, 3000, &result);
+      mpc_executor_release(job);
+    }
+  }
+  fprintf(
+    stream,
+    "{\"ok\":%s,\"error\":\"%s\",\"nativeInvoked\":%s",
+    error ? "false" : "true",
+    mpc_native_error_name(error),
+    result.write.native_invoked ? "true" : "false");
+  if (!error && request.operation == MPC_EXECUTOR_IDENTITIES) {
+    const struct mpc_identity_snapshot *snapshot = &result.identities;
+    fprintf(
+      stream,
+      ",\"instanceId\":\"%s\",\"projectId\":\"%" PRIu64 "\",\"projectGeneration\":\"%" PRIu64
+      "\",\"selectedTrackId\":\"%" PRIu64 "\",\"selectedSequenceId\":\"%" PRIu64
+      "\",\"sequenceSlots\":%u",
+      snapshot->instance_id,
+      snapshot->project,
+      snapshot->project_generation,
+      snapshot->selected_track,
+      snapshot->selected_sequence,
+      snapshot->sequence_slots);
+    for (unsigned kind = 0; kind < 2; kind++) {
+      unsigned count = kind ? snapshot->sequence_count : snapshot->track_count;
+      const struct mpc_identity_object *objects = kind ? snapshot->sequences : snapshot->tracks;
+      fprintf(stream, ",\"%s\":[", kind ? "sequences" : "tracks");
+      for (unsigned i = 0; i < count; i++)
+        fprintf(
+          stream,
+          "%s{\"id\":\"%" PRIu64 "\",\"generation\":\"%" PRIu64 "\",\"index\":%u}",
+          i ? "," : "",
+          objects[i].id,
+          objects[i].generation,
+          objects[i].index);
+      fprintf(stream, "]");
+    }
+  } else if (!error && request.operation == MPC_EXECUTOR_READ_TRACK)
+    fprintf(
+      stream,
+      ",\"mute\":%s,\"solo\":%s,\"arm\":%s",
+      result.observed.muted ? "true" : "false",
+      result.observed.soloed ? "true" : "false",
+      result.observed.record_armed ? "true" : "false");
+  fprintf(stream, "}\n");
+}
 static void *worker(void *unused) {
   (void)unused;
   pthread_setname_np(pthread_self(), "mpc native lab");
@@ -214,7 +346,9 @@ static void *worker(void *unused) {
     }
     char line[256], verb[16] = {0}, prop[16] = {0}, extra;
     if (fgets(line, sizeof line, f)) {
-      if (!strcmp(line, "ADAPTER_STATUS\n")) {
+      if (!strcmp(line, "IDENTITIES\n") || !strncmp(line, "HANDLE_", 7)) {
+        identity_command(f, line);
+      } else if (!strcmp(line, "ADAPTER_STATUS\n")) {
         struct mpc_executor_status status;
         enum mpc_native_error error = mpc_executor_wait_ready(executor, 0);
         if (!error)

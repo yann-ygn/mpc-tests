@@ -63,8 +63,11 @@ Each setter accepts only a boolean. Track record arm does not mean global transp
 
 Resolve and revalidate the reference against the authoritative active project immediately before execution on the
 UI thread. A queued command cannot follow a replacement project or a recycled object into a different target.
-If identity/lifetime cannot be established, reject the command. Establishing these guarantees is required work in
-#20; the current heap-discovery prototype is insufficient.
+If identity/lifetime cannot be established, reject the command. The #20 adapter implements these guarantees through native ownership and lifecycle notifications; the external
+heap-discovery prototype remains diagnostic only. Sequence references are conservatively retired on destructive
+content/length notifications as well as clear/recreation. Reacquire them after those edits. Rename/reorder of an
+in-use sequence alone preserves its reference. Same-file project loading creates a new project generation even
+when the firmware retains its Project object.
 
 ## Reads and state meaning
 

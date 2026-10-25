@@ -1,6 +1,11 @@
 {
   "profileSchemaVersion": 1,
-  "abi": {"machine":"arm","pointerBits":32,"byteOrder":"little","floatAbi":"hard"},
+  "abi": {
+    "machine": "arm",
+    "pointerBits": 32,
+    "byteOrder": "little",
+    "floatAbi": "hard"
+  },
   "mpcVersion": "3.9.1.2",
   "model": "Key 37",
   "deviceTreeModel": "Akai Professional MPC Key 37",
@@ -68,5 +73,21 @@
       "solo": 192,
       "silenced": 428
     }
+  },
+  "identity": {
+    "applicationSlot": 112336264,
+    "applicationVtable": 109930108,
+    "applicationWindow": 196,
+    "windowVtable": 109930948,
+    "windowComponent": 612,
+    "componentVtable": 109974644,
+    "componentEngine": 208,
+    "engineVtable": 109935608,
+    "engineProject": 588,
+    "destructionOffset": 4,
+    "sequenceNotifier": 48,
+    "sequenceUsed": 600,
+    "projectNotifier": 1096,
+    "projectListenerVtable": 109983972
   }
 }

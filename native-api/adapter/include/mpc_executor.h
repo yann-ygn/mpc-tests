@@ -2,11 +2,12 @@
 #define MPC_EXECUTOR_H
 
 #include "mpc_native.h"
+#include "mpc_identity.h"
 
 /* Trusted in-process interface, separate from the public command protocol. All
  * client calls are for non-realtime threads. Only the resolver runs on the UI
  * thread. The executor owns its adapter, scheduler and copied requests. */
-#define MPC_EXECUTOR_ABI 1u
+#define MPC_EXECUTOR_ABI 2u
 #define MPC_EXECUTOR_MAX_JOBS 128u
 #define MPC_EXECUTOR_MAX_WAIT_MS 30000u
 
@@ -17,6 +18,9 @@ struct mpc_executor_job;
  * active project and both generations on every invocation (#20). */
 struct mpc_executor_identity {
   uint64_t project, project_generation, track, track_generation;
+  char instance_id[37];
+  /* Optional sequence precondition; zero/zero leaves it unset. */
+  uint64_t sequence, sequence_generation;
 };
 
 struct mpc_executor_config {
@@ -34,7 +38,9 @@ enum mpc_executor_operation {
   MPC_EXECUTOR_READ_TRACK,
   MPC_EXECUTOR_SET_MUTE,
   MPC_EXECUTOR_SET_SOLO,
-  MPC_EXECUTOR_SET_RECORD_ARMED
+  MPC_EXECUTOR_SET_RECORD_ARMED,
+  MPC_EXECUTOR_IDENTITIES,
+  MPC_EXECUTOR_VALIDATE_SEQUENCE
 };
 
 struct mpc_executor_request {
@@ -68,6 +74,7 @@ struct mpc_executor_result {
   /* Final observations/write metadata are valid only when COMPLETED. RUNNING
    * with OUTCOME_UNKNOWN does not report whether a native setter has begun. */
   struct mpc_native_write_result write;
+  struct mpc_identity_snapshot identities;
 };
 
 struct mpc_executor_status {
@@ -83,6 +90,11 @@ struct mpc_executor_status {
  * discovery only. userdata must remain valid until successful close. */
 MPC_NATIVE_API enum mpc_native_error
 mpc_executor_open(const struct mpc_executor_config *, struct mpc_executor **);
+/* Firmware-owned root resolution and destruction observers. No external
+ * resolver or raw-address registry. Snapshot/sequence requests require this
+ * mode. Shutdown detaches observers on the UI thread before draining. */
+MPC_NATIVE_API enum mpc_native_error
+mpc_executor_open_authoritative(unsigned capacity, struct mpc_executor **);
 MPC_NATIVE_API enum mpc_native_error mpc_executor_wait_ready(struct mpc_executor *, unsigned);
 MPC_NATIVE_API enum mpc_native_error
 mpc_executor_get_status(struct mpc_executor *, struct mpc_executor_status *);

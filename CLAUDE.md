@@ -93,5 +93,11 @@ before running experiments.
   entries and isolated ARM fixtures pass). A Multi-to-Single arm transition retained two arm flags until a native
   arm call enforced Single behavior; the runner rejects that inconsistent baseline before writes. Original observed
   state/settings were restored, with no restart/addin install. Public writes and other modes/families stay gated.
-- Next: active-project generations (#20), live state (#18) and flag handlers (#19) before enabling further
-  service capabilities. Per-sequence mute needs an explicit sequence target/precondition before public exposure.
+- Active-project identity (#20) implemented: executor ABI 2 owns the application-root resolver, native destruction
+  observers and Project/Sequence lifecycle notifications. Same-file loads can retain the Project object; sequence
+  Clear All can retain both object and used flag. Both retire old generations. Native flag requests revalidate at
+  dispatch and every traversal; stale writes fail before setters. Track rename/reorder preserves IDs. Sequence
+  destructive edits invalidate references conservatively. See `findings/native-identity.md` and its sanitized
+  evidence. UI observer removal precedes executor drain and DSO unload; the native listener weak-reference
+  protocol owns deferred registration cleanup.
+- Next: live state (#18) and flag handlers (#19) before enabling further service capabilities. Per-sequence mute needs an explicit sequence target/precondition before public exposure.

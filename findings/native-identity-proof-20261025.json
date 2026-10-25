@@ -1,0 +1,513 @@
+{
+  "story": 20,
+  "date": "2026-10-25",
+  "firmware": {
+    "model": "Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "interfaces": {
+    "nativeAbi": 1,
+    "executorAbi": 2,
+    "exports": 18,
+    "fingerprints": 24,
+    "publicServiceCapabilities": "discovery only"
+  },
+  "artifactSha256": {
+    "builddir/arm/native-api/libmpc_native.so": "1a44c000c3a719653706230cc7a355ea64d655a5f2989d3d8f3652e8d49cd2b9",
+    "builddir/arm/tools/native_bridge.so": "b320f7d56a650541506dd17d061a0652d94a3667e4777c083cee00e431229585"
+  },
+  "hostMeson": [
+    {
+      "name": "mpc-native:native-api / identity-fixture",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:native-api / executor-fixture",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:native-api / test_adapter",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:privtap / protocol",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:native-api / test_semantics",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:build / elf-guards",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:native-api / test_describe",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:privtap / privtap",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:privtap / privtapX",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:style / formatting",
+      "result": "OK"
+    }
+  ],
+  "asanUbsan": [
+    {
+      "name": "mpc-native:native-api / identity-fixture",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:native-api / executor-fixture",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:native-api / test_adapter",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:native-api / test_semantics",
+      "result": "OK"
+    },
+    {
+      "name": "mpc-native:native-api / test_describe",
+      "result": "OK"
+    }
+  ],
+  "isolatedArmFixtures": {
+    "native_fixture": {
+      "returncode": 0,
+      "stdout": "native_fixture_cases=51\n",
+      "stderr": ""
+    },
+    "executor_fixture": {
+      "returncode": 0,
+      "stdout": "executor lifecycle, typed operations and concurrency passed\n",
+      "stderr": ""
+    },
+    "identity_fixture": {
+      "returncode": 0,
+      "stdout": "identity_lifecycle_cases=19\n",
+      "stderr": ""
+    }
+  },
+  "deviceCheckpoints": [
+    {
+      "checkpoint": "mixer-selection",
+      "stage": "selection experiments",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 0:0",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 1:1",
+          "passed": true
+        },
+        {
+          "name": "stable sequences 0:0",
+          "passed": true
+        },
+        {
+          "name": "current track 0 readable",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "checkpoint": "next-sequence-selection",
+      "stage": "selection experiments",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 0:0",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 1:1",
+          "passed": true
+        },
+        {
+          "name": "stable sequences 0:0",
+          "passed": true
+        },
+        {
+          "name": "stable sequences 1:1",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "checkpoint": "before-edits",
+      "stage": "object lifecycle; cleanup corrected subsequently",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "current track 0 readable",
+          "passed": true
+        },
+        {
+          "name": "current track 1 readable",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "checkpoint": "metadata-edited",
+      "stage": "object lifecycle; cleanup corrected subsequently",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 0:1",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 1:0",
+          "passed": true
+        },
+        {
+          "name": "stable sequences 0:0",
+          "passed": true
+        },
+        {
+          "name": "current track 0 readable",
+          "passed": true
+        },
+        {
+          "name": "current track 1 readable",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "checkpoint": "replaced-track",
+      "stage": "object lifecycle; cleanup corrected subsequently",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 1:0",
+          "passed": true
+        },
+        {
+          "name": "stale track 0 rejected before setter",
+          "passed": true
+        },
+        {
+          "name": "current track 0 readable",
+          "passed": true
+        },
+        {
+          "name": "current track 1 readable",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "checkpoint": "sequence-reset",
+      "stage": "object lifecycle; cleanup corrected subsequently",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 0:0",
+          "passed": true
+        },
+        {
+          "name": "stable tracks 1:1",
+          "passed": true
+        },
+        {
+          "name": "stale sequence 0 rejected",
+          "passed": true
+        },
+        {
+          "name": "current track 0 readable",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "checkpoint": "before-load",
+      "stage": "final corrected listener cleanup",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "current track 0 readable",
+          "passed": true
+        },
+        {
+          "name": "current track 1 readable",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "checkpoint": "after-load",
+      "stage": "final corrected listener cleanup",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "project incarnation changed",
+          "passed": true
+        },
+        {
+          "name": "stale track 0 rejected before setter",
+          "passed": true
+        },
+        {
+          "name": "stale track 1 rejected before setter",
+          "passed": true
+        },
+        {
+          "name": "stale sequence 0 rejected",
+          "passed": true
+        },
+        {
+          "name": "current track 0 readable",
+          "passed": true
+        },
+        {
+          "name": "current track 1 readable",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "checkpoint": "reattached",
+      "stage": "final corrected listener cleanup",
+      "cases": [
+        {
+          "name": "independent normal-track count",
+          "passed": true
+        },
+        {
+          "name": "independent sequence-slot count",
+          "passed": true
+        },
+        {
+          "name": "independent selectedTrack",
+          "passed": true
+        },
+        {
+          "name": "independent selectedSequence",
+          "passed": true
+        },
+        {
+          "name": "adapter instance changed",
+          "passed": true
+        },
+        {
+          "name": "stale track 0 rejected before setter",
+          "passed": true
+        },
+        {
+          "name": "stale track 1 rejected before setter",
+          "passed": true
+        },
+        {
+          "name": "stale sequence 0 rejected",
+          "passed": true
+        },
+        {
+          "name": "current track 0 readable",
+          "passed": true
+        },
+        {
+          "name": "current track 1 readable",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "acceptedDeviceAssertions": 73,
+  "projectLoad": {
+    "sameFileReloaded": true,
+    "adapterInstanceUnchanged": true,
+    "mpcPidUnchanged": true,
+    "projectIdChanged": true,
+    "projectGenerationChanged": true
+  },
+  "reattachment": {
+    "instanceChanged": true,
+    "oldTrackAndSequenceReferencesRejected": true
+  },
+  "forcedAddressReuse": {
+    "source": "isolated host/ARM identity fixture",
+    "projectTrackSequenceAba": true,
+    "deviceAllocatorReuseClaimed": false
+  },
+  "rejectedCandidates": [
+    {
+      "candidate": "destruction-only sequence identity",
+      "failure": "Clear All retained the Sequence object",
+      "resolution": "observe native structural reset notifications"
+    },
+    {
+      "candidate": "used-flag-only sequence identity",
+      "failure": "first slot could reset without a used-flag transition",
+      "resolution": "observe structural notifications; ignore name-only notifications unless used state changes"
+    },
+    {
+      "candidate": "Project root/destruction only",
+      "failure": "same-file load retained the Project object",
+      "resolution": "observe reset begin/end and data installation"
+    },
+    {
+      "candidate": "direct registration-node deletion",
+      "failure": "receiver unlinking did not detach the notifier chain; subsequent capture returned NOT_READY",
+      "resolution": "use native non-deleting listener destruction and notifier-owned deferred cleanup",
+      "ownerApprovedApplicationRestart": true
+    }
+  ],
+  "excludedAttempts": [
+    "a checkpoint overlapped manual selection and failed the non-atomic reader comparison",
+    "a dim-screen touch did not execute the intended reset"
+  ],
+  "restoration": {
+    "savedExperimentProjectRestored": true,
+    "postUnloadReloadSurvived": true,
+    "adapterUnmapped": true,
+    "bridgeUnmapped": true,
+    "restored": {
+      "selectedTrack": true,
+      "selectedSequence": true,
+      "tracks": true,
+      "buses": true,
+      "sequenceSlots": true
+    },
+    "ownedTemporaryFilesRemoved": true,
+    "finalBridgeUnloaded": true
+  },
+  "limits": [
+    "Device cases span development iterations; final corrected cleanup separately passed reload, reattachment, unload and a post-unload reload.",
+    "Sequence references expire conservatively on destructive content/length notifications.",
+    "Other firmware/models, buses, public state/command receipts and release qualification remain outside this story."
+  ]
+}

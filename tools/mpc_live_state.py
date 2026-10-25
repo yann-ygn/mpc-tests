@@ -152,6 +152,31 @@ class MemorySession:
             raise RuntimeError("Expected one Project object with matching secondary virtual tables")
         return valid[0]
 
+    def active_project(self):
+        """Independent diagnostic read of the profiled owner path.
+
+        This external reader is not a lifetime authority or an atomic UI read.
+        The adapter re-resolves it on the UI thread and owns destruction watches.
+        """
+        layout = self.profile["identity"]
+        app = u32(self.read(self.base + layout["applicationSlot"], 4))
+        if u32(self.read(app, 4)) != self.base + layout["applicationVtable"]:
+            raise SnapshotChanged("Active application owner changed")
+        window = u32(self.read(app + layout["applicationWindow"], 4))
+        if u32(self.read(window, 4)) != self.base + layout["windowVtable"]:
+            raise SnapshotChanged("Active window owner changed")
+        component = u32(self.read(window + layout["windowComponent"], 4))
+        engine = component + layout["componentEngine"]
+        if (
+            u32(self.read(component, 4)) != self.base + layout["componentVtable"]
+            or u32(self.read(engine, 4)) != self.base + layout["engineVtable"]
+        ):
+            raise SnapshotChanged("Active engine owner changed")
+        project = u32(self.read(engine + layout["engineProject"], 4))
+        if not self.valid_project(self.read(project, 0xAA8)):
+            raise SnapshotChanged("Active project owner changed")
+        return project
+
     def snapshot(self, project):
         for _ in range(3):
             try:

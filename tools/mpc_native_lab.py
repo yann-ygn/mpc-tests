@@ -41,7 +41,7 @@ def experiment(args):
                 function["prefixHex"]
             ):
                 raise RuntimeError("Native code fingerprint changed: " + function["name"])
-        project = session.find_project()
+        project = session.active_project()
         before = session.snapshot(project)
         report["before"] = before
         project_data = session.read(project, 0xAA8)
@@ -90,6 +90,13 @@ def experiment(args):
         report["callback"] = ping
         if not ping["ok"] or ping["tid"] != session.pid:
             raise RuntimeError("Callback did not run on the verified MPC main thread")
+        if args.identities:
+            identities = json.loads(
+                session.command(f"{remote}/native_client {session.pid}", data=b"IDENTITIES\n")
+            )
+            report["identities"] = identities
+            if not identities["ok"]:
+                raise RuntimeError("Authoritative identity capture failed")
         status = (
             session.command(f"{remote}/native_client {session.pid}", data=b"ADAPTER_STATUS\n")
             .decode()
@@ -108,24 +115,39 @@ def experiment(args):
             "buildId": status[3],
             "codeVerified": True,
         }
+        if args.identities:
+            selected = next(
+                t for t in identities["tracks"] if t["id"] == identities["selectedTrackId"]
+            )
+            command = (
+                f"HANDLE_READ {identities['instanceId']} {identities['projectId']} "
+                f"{identities['projectGeneration']} {selected['id']} {selected['generation']}\n"
+            )
+        else:
+            command = f"READ {project:x} {track:x} {program:x}\n"
         read = json.loads(
             session.command(
                 f"{remote}/native_client {session.pid}",
-                data=f"READ {project:x} {track:x} {program:x}\n".encode(),
+                data=command.encode(),
             )
         )
-        if not read["ok"] or read["tid"] != session.pid:
+        if not read["ok"] or (not args.identities and read["tid"] != session.pid):
             raise RuntimeError("Typed adapter read failed on the MPC UI thread")
-        target_read = [t for t in read["tracks"] if int(t["track"], 16) == track]
-        if len(target_read) != 1:
-            raise RuntimeError("Adapter read did not identify the selected target")
-        observed = target_read[0]
+        if args.identities:
+            observed = read
+        else:
+            target_read = [t for t in read["tracks"] if int(t["track"], 16) == track]
+            if len(target_read) != 1:
+                raise RuntimeError("Adapter read did not identify the selected target")
+            observed = target_read[0]
         for native, snapshot in [
             ("mute", "muted"),
             ("solo", "soloed"),
             ("arm", "recordArmed"),
             ("silenced", "silenced"),
         ]:
+            if args.identities and native == "silenced":
+                continue
             if bool(observed[native]) != before["selectedTrack"][snapshot]:
                 raise RuntimeError("Typed adapter read disagreed with the independent snapshot")
         report["typedReadVerified"] = True
@@ -300,6 +322,9 @@ def main():
     parser.add_argument("--hold-ms", type=int, default=6000)
     parser.add_argument("--output", type=Path)
     parser.add_argument(
+        "--identities", action="store_true", help="Use the authoritative project/handle resolver"
+    )
+    parser.add_argument(
         "--keep",
         action="store_true",
         help="Retain the read-only-tested lab attachment for describe probes",
@@ -310,6 +335,8 @@ def main():
     args = parser.parse_args()
     if args.keep and args.pulse:
         parser.error("--keep cannot be combined with a write experiment")
+    if args.identities and args.pulse:
+        parser.error("--identities is a read-only attachment check")
     if args.detach and (args.keep or args.pulse):
         parser.error("--detach cannot be combined with --keep or --pulse")
     if not 5000 <= args.hold_ms <= 10000:

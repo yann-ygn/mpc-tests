@@ -49,7 +49,7 @@ def validate(state, control):
         raise ValueError("Unqualified program family")
     if control.get("capabilityQualification") != "bounded_lab_proof":
         raise ValueError("Unexpected qualification claim")
-    for name in ("project", "trackPool", "track"):
+    for name in ("project", "trackPool", "track", "sequence"):
         if not integer(state["vtables"][name], name) or state["vtables"][name] % 4:
             raise ValueError("Invalid vtable")
     for offset, vtable in state["projectSecondaryVtables"].items():
@@ -58,9 +58,32 @@ def validate(state, control):
             or integer(vtable, "secondary vtable") % 4
         ):
             raise ValueError("Misaligned secondary vtable")
-    for group in ("project", "track", "trackPool", "program"):
+    for group in ("project", "track", "trackPool", "program", "sequence"):
         for key, value in state["offsets"][group].items():
             integer(value, group + "." + key, 0x10000)
+    lifetime = state["identity"]
+    for key in (
+        "applicationSlot",
+        "applicationVtable",
+        "windowVtable",
+        "componentVtable",
+        "engineVtable",
+        "projectListenerVtable",
+    ):
+        if not integer(lifetime[key], key) or lifetime[key] % 4:
+            raise ValueError("Invalid identity anchor")
+    for key in (
+        "applicationWindow",
+        "windowComponent",
+        "componentEngine",
+        "engineProject",
+        "destructionOffset",
+        "sequenceNotifier",
+        "projectNotifier",
+    ):
+        if not integer(lifetime[key], key, 0x10000) or lifetime[key] % 4:
+            raise ValueError("Invalid identity path")
+    integer(lifetime["sequenceUsed"], "sequenceUsed", 0x10000)
     for family in control["supportedProgramFamilies"]:
         candidates = [
             integer(int(v), "program vtable")
@@ -100,6 +123,29 @@ def validate(state, control):
                 raise ValueError("Unverified arm filter invoker")
     if "juce::MessageManager::callAsync" not in names:
         raise ValueError("Missing executor landmark")
+    if (
+        not {
+            "lifetimeSubjectDestructor",
+            "propertyDestructor",
+            "ProjectDestructor",
+            "TrackDestructor",
+            "SequenceDestructor",
+            "applicationDestructor",
+            "projectOwnerConstructor",
+            "sequenceListenerAdd",
+            "sequenceListenerRemove",
+            "sequenceUsageSetter",
+            "sequenceUsageNotification",
+            "sequenceReset",
+            "projectListenerAdd",
+            "projectListenerDetach",
+            "projectResetBegin",
+            "projectResetEnd",
+            "projectDataInstalled",
+        }
+        <= names
+    ):
+        raise ValueError("Missing identity lifecycle landmarks")
     return state, control
 
 
@@ -117,12 +163,29 @@ def generate(out, state_path=STATE, control_path=CONTROL):
     }
     for key, value in values.items():
         lines.append(f"#define {key} {json.dumps(value)}")
-    for key, label in (("project", "PROJECT"), ("trackPool", "POOL"), ("track", "TRACK")):
+    for key, label in (
+        ("project", "PROJECT"),
+        ("trackPool", "POOL"),
+        ("track", "TRACK"),
+        ("sequence", "SEQUENCE"),
+    ):
         lines.append(f"#define NATIVE_{label}_VTABLE {state['vtables'][key]}u")
     for family in control["supportedProgramFamilies"]:
         vtable = next(int(v) for v, name in state["programTypes"].items() if name == family)
         lines.append(f"#define NATIVE_{family.upper()}_VTABLE {vtable}u")
     fields = {
+        "PROJECT_LISTENER_ADD": next(
+            f["rva"] for f in control["functions"] if f["name"] == "projectListenerAdd"
+        ),
+        "PROJECT_LISTENER_DETACH": next(
+            f["rva"] for f in control["functions"] if f["name"] == "projectListenerDetach"
+        ),
+        "SEQUENCE_LISTENER_ADD": next(
+            f["rva"] for f in control["functions"] if f["name"] == "sequenceListenerAdd"
+        ),
+        "SEQUENCE_LISTENER_REMOVE": next(
+            f["rva"] for f in control["functions"] if f["name"] == "sequenceListenerRemove"
+        ),
         "CALL_ASYNC": next(
             f["rva"] for f in control["functions"] if f["name"] == "juce::MessageManager::callAsync"
         ),
@@ -132,7 +195,29 @@ def generate(out, state_path=STATE, control_path=CONTROL):
         "VECTOR_CAPACITY": state["offsets"]["trackPool"]["normalCapacity"],
         "PROGRAM_OFFSET": state["offsets"]["track"]["program"],
         "SILENCED_OFFSET": state["offsets"]["program"]["silenced"],
+        "SELECTED_TRACK": state["offsets"]["project"]["selectedTrack"],
+        "SELECTED_SEQUENCE": state["offsets"]["project"]["selectedSequence"],
+        "SEQUENCE_ARRAY": state["offsets"]["project"]["sequenceArray"],
+        "SEQUENCE_CAPACITY": state["offsets"]["project"]["sequenceCapacity"],
+        "SEQUENCE_COUNT": state["offsets"]["project"]["sequenceCount"],
     }
+    for key, label in {
+        "applicationSlot": "APPLICATION_SLOT",
+        "applicationVtable": "APPLICATION_VTABLE",
+        "windowVtable": "WINDOW_VTABLE",
+        "componentVtable": "COMPONENT_VTABLE",
+        "engineVtable": "ENGINE_VTABLE",
+        "applicationWindow": "APPLICATION_WINDOW",
+        "windowComponent": "WINDOW_COMPONENT",
+        "componentEngine": "COMPONENT_ENGINE",
+        "engineProject": "ENGINE_PROJECT",
+        "destructionOffset": "DESTRUCTION_OFFSET",
+        "sequenceNotifier": "SEQUENCE_NOTIFIER",
+        "sequenceUsed": "SEQUENCE_USED",
+        "projectNotifier": "PROJECT_NOTIFIER",
+        "projectListenerVtable": "PROJECT_LISTENER_VTABLE",
+    }.items():
+        fields[label] = state["identity"][key]
     for key, value in fields.items():
         lines.append(f"#define NATIVE_{key} {value}u")
     entries = ",".join(

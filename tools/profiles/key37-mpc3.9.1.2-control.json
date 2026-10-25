@@ -1,6 +1,9 @@
 {
   "profileSchemaVersion": 1,
-  "supportedProgramFamilies": ["plugin", "drum"],
+  "supportedProgramFamilies": [
+    "plugin",
+    "drum"
+  ],
   "capabilityQualification": "bounded_lab_proof",
   "firmwareVersion": "3.9.1.2",
   "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
@@ -40,6 +43,91 @@
       "name": "juce::MessageManager::callAsync",
       "rva": 10562108,
       "prefixHex": "7c219fe57c319fe5f0416de108608de50ce08de50050a0e118d04de21800a0e3"
+    },
+    {
+      "name": "lifetimeSubjectDestructor",
+      "rva": 14865884,
+      "prefixHex": "003090e508402de50040a0e104e08de5000053e30f00000a042093e50300a0e1"
+    },
+    {
+      "name": "propertyDestructor",
+      "rva": 32491804,
+      "prefixHex": "34119fe534219fe5043090e5f4416de1f860cde110e08de5085080e214d04de2"
+    },
+    {
+      "name": "ProjectDestructor",
+      "rva": 39207368,
+      "prefixHex": "34199fe534299fe534399fe5f4426de1f860cde1f081cde1f8a1cde120e08de5"
+    },
+    {
+      "name": "TrackDestructor",
+      "rva": 40168332,
+      "prefixHex": "80ce9fe5f4426de10050a0e120e08de541ef80e2700e9fe5f860cde1f081cde1"
+    },
+    {
+      "name": "SequenceDestructor",
+      "rva": 39560188,
+      "prefixHex": "08169fe508269fe508369fe5fc416de1f860cde118e08de5f081cde10060a0e1"
+    },
+    {
+      "name": "applicationDestructor",
+      "rva": 10521284,
+      "prefixHex": "4c309fe508402de548209fe50040a0e10c0090e50010a0e304e08de503308fe0"
+    },
+    {
+      "name": "projectOwnerConstructor",
+      "rva": 14918740,
+      "prefixHex": "440294e514008de51c0194e510008de50500a0e190a15ceb0c00a0e34c5284e5"
+    },
+    {
+      "name": "sequenceListenerAdd",
+      "rva": 15160148,
+      "prefixHex": "f8416de10140a0e10050a0e12000a0e3f860cde114e08de50270a0e110808de5"
+    },
+    {
+      "name": "sequenceListenerRemove",
+      "rva": 15160648,
+      "prefixHex": "f0209fe5f0309fe5f4416de1f860cde110e08de514d04de20060a0e104508de2"
+    },
+    {
+      "name": "sequenceUsageSetter",
+      "rva": 39576256,
+      "prefixHex": "f8416de10150a0e164129fe564229fe55832d0e5f860cde110808de514e08de5"
+    },
+    {
+      "name": "sequenceUsageNotification",
+      "rva": 39576468,
+      "prefixHex": "308084e21430a0e35852c4e50150a0e304308de50800a0e10630a0e108508de5"
+    },
+    {
+      "name": "sequenceReset",
+      "rva": 39588768,
+      "prefixHex": "20249fe520349fe5f0426de1f860cde118a08de5f081cde11ce08de50040a0e1"
+    },
+    {
+      "name": "projectListenerAdd",
+      "rva": 18356168,
+      "prefixHex": "f8416de10150a0e10040a0e12000a0e3f860cde110808de50270a0e114e08de5"
+    },
+    {
+      "name": "projectListenerDetach",
+      "rva": 15002440,
+      "prefixHex": "a8209fe5a8109fe508402de5043090e504e08de50040a0e102208fe0012092e7"
+    },
+    {
+      "name": "projectResetBegin",
+      "rva": 39194504,
+      "prefixHex": "f0426de11430a0e31ce08de5f860cde1f081cde118a08de50290a0e1028b2ded"
+    },
+    {
+      "name": "projectResetEnd",
+      "rva": 39195068,
+      "prefixHex": "1830a0e310308de50130a0e314308de50700a0e1060098e804308de204408de5"
+    },
+    {
+      "name": "projectDataInstalled",
+      "rva": 39196284,
+      "prefixHex": "0130a0e31c20a0e324318de528309de5110d87e220218de5080080e2060093e8"
     }
   ],
   "bindings": [

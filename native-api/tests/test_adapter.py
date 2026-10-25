@@ -88,6 +88,7 @@ class NativeAdapterTests(unittest.TestCase):
                 "mpc_native_set_record_armed",
                 "mpc_native_error_name",
                 "mpc_executor_open",
+                "mpc_executor_open_authoritative",
                 "mpc_executor_wait_ready",
                 "mpc_executor_get_status",
                 "mpc_executor_submit",

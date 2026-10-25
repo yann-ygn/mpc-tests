@@ -1,4 +1,4 @@
-# Firmware adapter and UI executor, C ABI 1
+# Firmware adapter ABI 1 and UI executor ABI 2
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -8,9 +8,9 @@ handles; executor requests carry opaque identities and generations.
 ## Guards and interface
 
 The runtime backend checks 32-bit ARM hard-float/little-endian ABI, the device-tree model and the executable's
-GNU build ID. It verifies seven 32-byte code prefixes before opening an adapter and again before target access
-or native calls. A code/read failure latches it unavailable until closed and reopened. The seventh prefix covers
-the actual record-arm filter invoker, in addition to the original six lab landmarks.
+GNU build ID. It verifies 24 code fingerprints before opening an adapter and again before target access
+or native calls. These cover setters, dispatch, destruction, the application owner and sequence lifecycle
+notifications. A code/read failure latches it unavailable until closed and reopened.
 
 Private profiles in `tools/profiles/` use schema version 1. The generator rejects mismatched build/version/ABI,
 unqualified families, invalid offsets, duplicate functions and bindings without fingerprints. They describe the
@@ -29,10 +29,10 @@ SONAME. The build rejects other exported symbols, including the private fixture 
 is `libmpc_native.so`; the lab host resolves it beside itself using `$ORIGIN`, never a workstation path.
 
 Opening without a target validator permits status checks only. Every target operation must run on the MPC
-main/UI thread and call a trusted `validate_target` hook immediately before traversal. The production hook must
-check the active project and object generations from #20. The adapter then checks vtables, normal-track ownership,
-vector bounds/uniqueness, Program association and family. It does not discover an authoritative active root or
-create public handles. A missing hook or stale target fails before any property call.
+main/UI thread and call a trusted `validate_target` hook immediately before traversal. The authoritative executor supplies this hook and checks
+the active project, adapter instance and object generations. The adapter then checks vtables, normal-track ownership,
+vector bounds/uniqueness, Program association and family. Primitive calls consume a resolved target; the authoritative executor performs root resolution and
+handle creation. A missing hook or stale target fails before any property call.
 `mpc_native_target` is a resolved view for one call: queue public handle IDs, resolve them at dispatch, and keep
 the command's expected generations in the executor context consulted by the validator. Never queue raw targets.
 
@@ -42,11 +42,10 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) adds nine exports to the same allowlisted library without changing
-the existing primitive ABI. It accepts only read-track, set-mute, set-solo and set-record-armed requests. Its
-trusted host supplies a bounded resolver for opaque project/track IDs and their expected generations; there is
-no arbitrary callback, native function address or raw target in a queued request. #20 must supply the production
-resolver before these operations can be exposed publicly.
+The [executor header](include/mpc_executor.h) uses ABI 2; ABI 1 configurations are rejected at open.
+The primitive ABI remains 1. Requests support track reads/flags, identity snapshots and sequence-reference
+validation. The authoritative mode owns the resolver; the original host-resolver mode remains available for
+trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
 
 `mpc_executor_open` copies the configuration, opens its guarded adapter and starts a scheduler. A startup probe
 uses the verified `callAsync` landmark and exact 16-byte GNU ARM function-object layout. Every callback checks
@@ -119,10 +118,10 @@ uv run --no-sync meson compile -C builddir/arm
 ```
 
 Builds produce `builddir/{host,arm}/native-api/libmpc_native.so`, the service and
-`tests/{native_fixture,executor_fixture}`.
+`tests/{native_fixture,executor_fixture,identity_fixture}`.
 See the [root build guide](../../README.md) for requirements and all targets.
 The isolated fixture uses synthetic addresses and private I/O callbacks. No MPC entry point is called by those
-tests. It exercises 34 cases, including each fingerprint mismatch, wrong thread, missing validator, stale
+tests. It exercises 51 cases, including each fingerprint mismatch, wrong thread, missing validator, stale
 ownership, unknown family, expected-value rejection, filtered arm rejection and pending audio propagation.
 Python tests also reject 14 malformed profile variants and check exports and the service attachment boundary.
 
@@ -140,11 +139,45 @@ uncertainty, stale generations, dispatch-time revalidation, wrong threads, start
 The [sanitized evidence](../../findings/native-executor-proof-20261025.json) separates these failure tests from
 the real JUCE read-only smoke test. This does not establish authoritative project lifetime tracking (#20).
 
+## Active projects and handles (#20)
+
+`mpc_executor_open_authoritative(capacity, &executor)` opens a managed authority. Submit
+`MPC_EXECUTOR_IDENTITIES` to capture the current project, normal tracks, sequence slots and selection on the
+verified UI thread. The [snapshot header](include/mpc_identity.h) contains IDs/generations and mutable indices,
+with no pointers. Copy its `instance_id`, project identity and chosen object's ID/generation into a request.
+An optional sequence identity is a precondition on a track request; `MPC_EXECUTOR_VALIDATE_SEQUENCE` validates
+one independently. `MPC_EXECUTOR_READ_TRACK` targets the captured track even after selection changes.
+
+The fixed, fingerprinted owner path starts at JUCE's active application, follows its standalone window and
+filter, and reads the embedded MpcEngine's owned Project. It is traversed afresh for every resolver call.
+Native destruction observers distinguish deletion/recreation at the same address, even between captures.
+Project reset-begin/end and data-installed notifications retire the project generation when loading reuses its
+Project object; observed reset phases return `NOT_READY`.
+Normal-track rename/reorder preserves IDs. Sequence metadata changes preserve IDs while the sequence remains
+in use; used/unused transitions and structural reset/content/length notifications retire sequence references
+conservatively. In particular, Clear All on the first sequence can keep its object and used flag unchanged.
+Those reset notifications must also be observed. Reacquire a sequence reference after destructive edits.
+
+Project replacement or an unreadable/malformed topology retires old references. A new adapter/process lifetime
+gets a fresh instance ID; IDs are never reused within it. Old references return `STALE_TARGET` before native
+setters. During unavailable model transitions, reads/commands can return `NOT_READY`/`READ_FAILED` instead.
+Queued requests resolve at dispatch and every adapter traversal. Socket reconnection alone preserves references
+while the same authority survives; service/adapter reattachment requires discovery and fresh references.
+
+Shutdown cancels queued jobs and posts UI-thread observer removal before capture/scheduler drain. Failed or
+discarded dispatch, or a still-owned native listener, keeps the authority alive and makes close refuse; retry
+shutdown after resolving the failure. The host must still establish external UI quiescence before `dlclose`.
+The identity fixture covers forced project/track/sequence ABA, retained old roots, queued stale writes,
+reconnection and refused/dropped cleanup. See [lifecycle findings](../../findings/native-identity.md) for device
+validation, the conservative sequence rule and a repeatable manual-test runner. Public service state/write
+capabilities remain gated by #18/#19/#32.
+
 ## Temporary device host
 
 The lab consumes the shared executor and retains its bounded loader and root-only diagnostic socket. Its READ
-and PULSE reports contain the requested track's flags; the independent memory reader still compares the project
-snapshot before and after the experiment. Its address registry remains lab-only and does not establish #20.
+and PULSE reports contain the requested track's flags. The default address registry remains lab-only.
+`--identities` switches to the authoritative resolver and compares handle reads with an independent diagnostic
+read of the application-owned root. It can retain an attachment for manual lifecycle experiments.
 
 ```sh
 uv run --no-sync meson compile -C builddir/arm
