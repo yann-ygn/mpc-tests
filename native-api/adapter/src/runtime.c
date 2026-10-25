@@ -75,6 +75,16 @@ static bool on_ui_thread(void *data) {
   return syscall(SYS_gettid) == getpid();
 }
 
+static bool post(void *data, uintptr_t address, struct mpc_native_function *function) {
+  (void)data;
+#if defined(__arm__)
+  _Static_assert(sizeof(struct mpc_native_function) == 16, "GNU ARM std::function ABI");
+  _Static_assert(offsetof(struct mpc_native_function, manager) == 8, "manager offset");
+  _Static_assert(offsetof(struct mpc_native_function, invoke) == 12, "invoker offset");
+#endif
+  return ((bool (*)(struct mpc_native_function *))address)(function);
+}
+
 static enum mpc_native_error
 setter(void *data, uintptr_t function, uintptr_t property, bool value) {
   (void)data;
@@ -129,6 +139,7 @@ mpc_native_open(const struct mpc_native_hooks *hooks, struct mpc_native_adapter 
     .on_ui_thread = on_ui_thread,
     .setter = setter,
     .filter = filter,
+    .post = post,
     .destroy = destroy};
   enum mpc_native_error error = mpc_native_open_backend(&io, hooks, output);
   if (error)

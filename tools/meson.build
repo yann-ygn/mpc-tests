@@ -19,7 +19,6 @@ if host_machine.cpu_family() == 'arm'
   native_bridge = shared_library(
     'native_bridge',
     'mpc_native_bridge.c',
-    profiles[2],
     name_prefix: '',
     include_directories: [root_inc, adapter_inc],
     gnu_symbol_visibility: 'hidden',

@@ -124,8 +124,14 @@ only change its cache unless a bridge routes the command to these native setters
 The subsequent [reusable adapter](../native-api/adapter/README.md) extracts these property/filter paths into
 `libmpc_native.so` with eight C exports and versioned private profiles. It adds the record-arm invoker as a seventh
 code fingerprint. Device tests verified typed UI-thread reads, independent readback, load/unload and discovery of a
-retained attachment. The public service still exposes discovery only; reusable execution and authoritative
-project/object lifetimes remain separate work. The six-fingerprint description above records the earlier proof.
+retained attachment. At that stage, reusable execution and authoritative project/object lifetimes remained
+separate work. The six-fingerprint description above records the earlier proof.
+
+On 2026-10-25, #30 moved the qualified callAsync bridge into the shared adapter's bounded executor. The lab now
+uses typed executor requests, identity resolution/revalidation on the UI thread and shared capture/drain logic.
+Host and isolated ARM failure/concurrency fixtures pass, as do ASan/UBSan and a real read-only JUCE dispatch,
+independent readback and full unload test. See the [executor interface/lifecycle](../native-api/adapter/README.md)
+and [sanitized evidence](native-executor-proof-20261025.json). Authoritative project/object generations remain #20.
 
 The broader static [candidate catalog](native-control-catalog.md) groups the other compiled bindings and separates
 named methods/properties from parameter identifiers. It was collected without additional device tests.

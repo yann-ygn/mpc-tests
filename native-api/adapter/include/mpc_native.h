@@ -24,7 +24,13 @@ enum mpc_native_error {
   MPC_NATIVE_UNSUPPORTED_TRACK_TYPE,
   MPC_NATIVE_PRECONDITION_FAILED,
   MPC_NATIVE_FILTER_MISSING,
-  MPC_NATIVE_VALUE_REJECTED
+  MPC_NATIVE_VALUE_REJECTED,
+  MPC_NATIVE_QUEUE_FULL,
+  MPC_NATIVE_CANCELLED,
+  MPC_NATIVE_OUTCOME_UNKNOWN,
+  MPC_NATIVE_TIMED_OUT,
+  MPC_NATIVE_SHUTTING_DOWN,
+  MPC_NATIVE_DISPATCH_FAILED
 };
 
 enum mpc_native_family { MPC_NATIVE_PLUGIN = 1, MPC_NATIVE_DRUM = 2 };
@@ -68,7 +74,7 @@ struct mpc_native_status {
 
 MPC_NATIVE_API enum mpc_native_error
 mpc_native_open(const struct mpc_native_hooks *, struct mpc_native_adapter **);
-/* Caller must drain all users before close. The executor owns this in #30. */
+/* Direct users must drain before close. mpc_executor owns its adapter lifetime. */
 MPC_NATIVE_API void mpc_native_close(struct mpc_native_adapter *);
 MPC_NATIVE_API enum mpc_native_error
 mpc_native_get_status(struct mpc_native_adapter *, struct mpc_native_status *);

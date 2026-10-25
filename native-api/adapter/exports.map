@@ -8,5 +8,14 @@
     mpc_native_set_solo;
     mpc_native_set_record_armed;
     mpc_native_error_name;
+    mpc_executor_open;
+    mpc_executor_wait_ready;
+    mpc_executor_get_status;
+    mpc_executor_submit;
+    mpc_executor_wait;
+    mpc_executor_cancel;
+    mpc_executor_release;
+    mpc_executor_shutdown;
+    mpc_executor_close;
   local: *;
 };

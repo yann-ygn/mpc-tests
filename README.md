@@ -34,8 +34,8 @@ Use `--buildtype=debug` at setup for unoptimized service and research-tool build
 the explicit privtap and fixture optimization settings are retained.
 
 The tests include the 22 Python API/adapter cases with JSON Schema validation,
-the isolated native fixture, privtap protocol tests, both preload cases (normal and identity X), and
-seven tests exercising the ELF deployment guards.
+the isolated native and executor lifecycle/concurrency fixtures, privtap protocol tests, both preload cases
+(normal and identity X), and seven tests exercising the ELF deployment guards.
 Tests consume Meson's binaries and do not invoke compilers. To run one suite:
 
 ```sh
@@ -62,6 +62,7 @@ The service's Python integration tests run in the host build only.
 | Discovery service | `native-api/mpc-api` |
 | Native adapter | `native-api/libmpc_native.so` |
 | Native fixture | `native-api/tests/native_fixture` |
+| Executor fixture | `native-api/tests/executor_fixture` |
 | Interposition addin | `privtap/privtap.so` |
 | privtap fixtures | `privtap/tests/{test_protocol,test_privtap,libfakeasound.so}` |
 | Memory/web helpers | `tools/{mem_probe,ipc_bridge}` |

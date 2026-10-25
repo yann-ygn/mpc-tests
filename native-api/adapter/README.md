@@ -1,8 +1,9 @@
-# Firmware adapter, C ABI 1
+# Firmware adapter and UI executor, C ABI 1
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
-control lab. It has no constructor, worker, socket, script frontend or public command endpoint. Addresses in the
-trusted C interface never become SDK handles.
+control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
+owns one scheduler thread after explicit open. Addresses in the trusted primitive C interface never become SDK
+handles; executor requests carry opaque identities and generations.
 
 ## Guards and interface
 
@@ -16,7 +17,7 @@ unqualified families, invalid offsets, duplicate functions and bindings without 
 Key 37 / 3.9.1.2 research profile, including layouts and setter/filter paths. This is bounded lab qualification;
 matching the profile is not release qualification for every MPC mode.
 
-The [header](include/mpc_native.h) and [export allowlist](exports.map) define eight functions:
+The [primitive header](include/mpc_native.h) defines the original eight functions:
 
 - `mpc_native_open`, `mpc_native_close`, `mpc_native_get_status`
 - `mpc_native_read_track`
@@ -35,9 +36,63 @@ create public handles. A missing hook or stale target fails before any property 
 `mpc_native_target` is a resolved view for one call: queue public handle IDs, resolve them at dispatch, and keep
 the command's expected generations in the executor context consulted by the validator. Never queue raw targets.
 
-The retained lab provides an ownership-only hook, explicitly weaker than the required production hook. It is
-not used to enable public commands. Executor ownership, queue bounds, cancellation and draining remain #30.
-Callers must drain every user before closing an adapter.
+The retained lab provides a private target registry with an ownership-only check, explicitly weaker than the
+required production registry. It is not used to enable public commands. Direct primitive users must drain every
+user before closing an adapter. The executor owns and closes its own adapter.
+
+## UI executor (#30)
+
+The [executor header](include/mpc_executor.h) adds nine exports to the same allowlisted library without changing
+the existing primitive ABI. It accepts only read-track, set-mute, set-solo and set-record-armed requests. Its
+trusted host supplies a bounded resolver for opaque project/track IDs and their expected generations; there is
+no arbitrary callback, native function address or raw target in a queued request. #20 must supply the production
+resolver before these operations can be exposed publicly.
+
+`mpc_executor_open` copies the configuration, opens its guarded adapter and starts a scheduler. A startup probe
+uses the verified `callAsync` landmark and exact 16-byte GNU ARM function-object layout. Every callback checks
+that its TID equals MPC's process/main-thread ID before model access. Until that probe runs, submissions return
+`NOT_READY`. `wait_ready` uses a monotonic, bounded deadline; a failed/rejected/discarded probe is observable and
+the instance must still be shut down and closed.
+
+The host chooses 1–128 fixed job slots. Queued, running and completed-but-unreleased results all consume slots;
+saturation returns `QUEUE_FULL` without accepting another request. Concurrent acceptance is serialized under a
+short lock and requests execute in FIFO order on the UI thread. Each UI message processes at most the configured
+capacity. Only one native callback capture group can be outstanding, including retained copies after invocation.
+Cancelling/releasing jobs cannot grow JUCE's queue. The scheduler posts the next batch only after all copies of
+the previous group are destroyed. A discarded callback fails pending work rather than silently retrying it.
+
+Requests can carry a monotonic queue deadline relative to acceptance. A wait can shorten that deadline, and the
+UI callback checks it before resolving a target. Expired queued work is cancelled even if its waiting client has
+not been scheduled to observe the timeout. Wait/lifecycle durations and explicit queue deadlines are bounded to
+30 seconds; running operations are never interrupted or rolled back.
+
+The resolver runs when the UI callback starts each job, and again immediately before each adapter traversal,
+including post-setter readback. The adapter compares the fresh resolved target against the current call's view
+and retains all existing ownership, family, firmware and precondition guards. Native targets live only for that
+UI call. Resolver userdata must remain alive until successful executor close.
+
+| Event | Result and ownership |
+|---|---|
+| Deadline/cancel before execution | `CANCELLED`; no target resolution or native call occurs |
+| Deadline/cancel after execution starts | `OUTCOME_UNKNOWN`, job remains `RUNNING`; wait again for the eventual result |
+| Client releases queued work | Removed from the queue, slot reusable immediately |
+| Client releases running work | Detached; callback retains the slot until execution returns |
+| Completed work | Result retained until the client releases its handle |
+| Shutdown | Stop acceptance, cancel queued work, wait for callbacks/captures and scheduler exit |
+| Shutdown deadline | `TIMED_OUT`; keep the instance mapped and retry shutdown later |
+| Close with callbacks, worker or handles remaining | `NOT_READY`; nothing is freed |
+
+Final observation/write fields are meaningful only for `COMPLETED` results. A running job with an unknown outcome
+does not claim whether a setter has begun. An internal successful setter still means requested-model readback,
+not audio propagation or a public applied receipt. All client API use is for non-realtime threads. Blocking waits,
+shutdown and close reject the UI thread. The callback and resolver perform no client I/O or condition waits;
+posting, startup waits and lifecycle coordination belong to the scheduler/client workers.
+
+Before closing, stop/join API callers and release every job handle. Successful shutdown/close establishes data
+ownership draining, but the host must also establish **external UI quiescence before `dlclose`**: a final capture
+destructor can still be returning through DSO instructions after decrementing its count. The lab loader checks
+that both lab and executor workers have exited and that the main UI thread has returned to its normal poll loop.
+If callbacks never drain, keep the DSO mapped; no forced unload is supported.
 
 ## Primitive results
 
@@ -63,7 +118,8 @@ uv run --no-sync meson setup builddir/arm --cross-file build-support/cross/mpc-a
 uv run --no-sync meson compile -C builddir/arm
 ```
 
-Builds produce `builddir/{host,arm}/native-api/libmpc_native.so`, the service and `tests/native_fixture`.
+Builds produce `builddir/{host,arm}/native-api/libmpc_native.so`, the service and
+`tests/{native_fixture,executor_fixture}`.
 See the [root build guide](../../README.md) for requirements and all targets.
 The isolated fixture uses synthetic addresses and private I/O callbacks. No MPC entry point is called by those
 tests. It exercises 28 cases, including each fingerprint mismatch, wrong thread, missing validator, stale
@@ -75,10 +131,20 @@ ARM. Rebuilding the adapter with the same compiler, profiles and inputs produced
 are normalized in debug information. These checks do not establish behavior across untested firmware, models,
 modes or concurrent project replacement.
 
+Verified on 2026-10-25 for #30: all eight host Meson test entries pass (including the existing 22 Python API/adapter
+cases, ELF guards, privtap and formatting). The executor fixture also passes with AddressSanitizer and
+UndefinedBehaviorSanitizer, and both native/executor fixtures pass as isolated ARM processes on the MPC.
+Executor tests pump an isolated fake message queue and exercise delayed/discarded callbacks, capture copies,
+queue/result saturation, FIFO/preconditions, simultaneous clients, queued and running disconnects, timeout
+uncertainty, stale generations, dispatch-time revalidation, wrong threads, startup/post failures and shutdown.
+The [sanitized evidence](../../findings/native-executor-proof-20261025.json) separates these failure tests from
+the real JUCE read-only smoke test. This does not establish authoritative project lifetime tracking (#20).
+
 ## Temporary device host
 
-The existing lab now consumes the shared library. It still owns its experimental JUCE callback dispatcher and
-bounded loader; it no longer implements property calls independently.
+The lab consumes the shared executor and retains its bounded loader and root-only diagnostic socket. Its READ
+and PULSE reports contain the requested track's flags; the independent memory reader still compares the project
+snapshot before and after the experiment. Its address registry remains lab-only and does not establish #20.
 
 ```sh
 uv run --no-sync meson compile -C builddir/arm
@@ -107,3 +173,8 @@ Attachment identity/loss changes invalidate the service instance. Public `descri
 with `qualification: bounded_lab_proof`; all state/write/watch capabilities remain unavailable. This handshake
 is diagnostic, not the future command transport. Device tests verified loading, typed readback, full unload,
 and a retained attachment visible through `describe`, with MPC PID and observed state unchanged.
+
+The #30 read-only smoke test on 2026-10-25 confirmed the executor's callback on UI TID/PID 365, typed readback
+matching the independent snapshot, unchanged observed flags/selection and complete unload of both DSOs. The
+temporary files were removed and MPC's PID stayed unchanged. No flag write, addin installation or restart was
+performed. The private report is `build/native-api/executor-device-unload.json`.

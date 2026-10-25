@@ -108,6 +108,21 @@ void mpc_native_close(struct mpc_native_adapter *adapter) {
   free(adapter);
 }
 
+bool mpc_native_on_ui_thread(struct mpc_native_adapter *adapter) {
+  return adapter->io.on_ui_thread(adapter->io.userdata);
+}
+
+enum mpc_native_error
+mpc_native_post(struct mpc_native_adapter *adapter, struct mpc_native_function *function) {
+  enum mpc_native_error error = verify(adapter);
+  if (error)
+    return error;
+  return adapter->io.post &&
+      adapter->io.post(adapter->io.userdata, adapter->io.image + NATIVE_CALL_ASYNC, function)
+    ? MPC_NATIVE_OK
+    : MPC_NATIVE_DISPATCH_FAILED;
+}
+
 enum mpc_native_error
 mpc_native_get_status(struct mpc_native_adapter *adapter, struct mpc_native_status *output) {
   if (!output)
@@ -336,6 +351,12 @@ const char *mpc_native_error_name(enum mpc_native_error error) {
     "UNSUPPORTED_TRACK_TYPE",
     "PRECONDITION_FAILED",
     "FILTER_MISSING",
-    "VALUE_REJECTED"};
+    "VALUE_REJECTED",
+    "QUEUE_FULL",
+    "CANCELLED",
+    "OUTCOME_UNKNOWN",
+    "TIMED_OUT",
+    "SHUTTING_DOWN",
+    "DISPATCH_FAILED"};
   return (unsigned)error < sizeof names / sizeof *names ? names[error] : "INVALID_ERROR";
 }

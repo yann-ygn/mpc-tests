@@ -123,6 +123,9 @@ def generate(out, state_path=STATE, control_path=CONTROL):
         vtable = next(int(v) for v, name in state["programTypes"].items() if name == family)
         lines.append(f"#define NATIVE_{family.upper()}_VTABLE {vtable}u")
     fields = {
+        "CALL_ASYNC": next(
+            f["rva"] for f in control["functions"] if f["name"] == "juce::MessageManager::callAsync"
+        ),
         "POOL_OFFSET": state["offsets"]["project"]["trackPool"],
         "VECTOR_BEGIN": state["offsets"]["trackPool"]["normalBegin"],
         "VECTOR_END": state["offsets"]["trackPool"]["normalEnd"],

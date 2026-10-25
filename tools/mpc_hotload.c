@@ -185,7 +185,9 @@ static int quiescent(pid_t pid) {
       ok = 0;
       break;
     }
-    if (fgets(comm, sizeof comm, f) && !strcmp(comm, "mpc native lab\n"))
+    if (
+      !fgets(comm, sizeof comm, f) || !strcmp(comm, "mpc native lab\n") ||
+      !strcmp(comm, "mpc executor\n"))
       ok = 0;
     fclose(f);
     if (!ok)
@@ -214,7 +216,9 @@ run(pid_t pid, pid_t tid, const char *path, uint32_t unload, int fixture, uint32
     return -1;
   }
   if (unload && !fixture && !quiescent(pid)) {
-    fprintf(stderr, "refused unload: stop the lab worker and wait for the UI poll loop\n");
+    fprintf(
+      stderr,
+      "refused unload: stop the lab/executor workers and wait for the UI poll loop\n");
     return -1;
   }
   snprintf(proc, sizeof proc, "/proc/%d/task/%d/syscall", pid, tid);

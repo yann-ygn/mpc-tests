@@ -28,7 +28,7 @@ api = executable(
   link_with: elf_id,
 )
 
-adapter_sources = files('adapter/src/adapter.c', 'adapter/src/runtime.c')
+adapter_sources = files('adapter/src/adapter.c', 'adapter/src/runtime.c', 'adapter/src/executor.c')
 adapter_exports = files('adapter/exports.map')
 adapter = shared_library(
   'mpc_native',
@@ -38,7 +38,7 @@ adapter = shared_library(
   c_args: native_args,
   override_options: native_options,
   gnu_symbol_visibility: 'hidden',
-  dependencies: dl_dep,
+  dependencies: [dl_dep, threads_dep],
   link_with: elf_id,
   link_args: ['-Wl,--version-script=' + adapter_exports[0].full_path()],
   link_depends: adapter_exports,

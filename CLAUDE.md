@@ -81,5 +81,10 @@ before running experiments.
   UI thread and an external lifetime validator; the lab hook is experimental and does not satisfy #20.
 - Temporary service details: ignored `build/native-api/device-smoke.json`. Retained lab attachment/unload details:
   `build/native-api/adapter-device-retained.json`; stop via `tools/mpc_native_lab.py --detach REPORT`.
-- Next: reusable UI-thread executor (#30), then active-project generations (#20), live state (#18) and flag
+- UI-thread executor (#30) implemented: nine additive exports, fixed slots, typed FIFO jobs, dispatch-time identity
+  resolution/revalidation, cancellation vs unknown running outcomes, capture draining and guarded close. The lab
+  now uses it; full host tests, ASan/UBSan, ARM fixtures and read-only device dispatch/unload pass. See
+  `native-api/adapter/README.md` and `findings/native-executor-proof-20261025.json`. DSO unload still requires
+  external UI quiescence after capture/worker drain; the lab loader checks both workers and UI poll.
+- Next: active-project generations (#20), live state (#18) and flag
   qualification/handlers (#31/#19) before enabling further service capabilities.

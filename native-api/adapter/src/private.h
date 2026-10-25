@@ -2,6 +2,15 @@
 #define MPC_NATIVE_PRIVATE_H
 
 #include "mpc_native.h"
+#include "mpc_executor.h"
+
+/* Exact GNU ARM std::function<void()> layout qualified on this firmware. The
+ * fixture exercises the same manager protocol without invoking native code. */
+struct mpc_native_function {
+  void *data[2];
+  int (*manager)(void *, const void *, int);
+  void (*invoke)(const void *);
+};
 
 /* Backend injection is private to the isolated fixture, absent from the DSO's
  * exports. Production always supplies runtime.c's read-only memory backend. */
@@ -13,6 +22,7 @@ struct mpc_native_io {
   bool (*on_ui_thread)(void *);
   enum mpc_native_error (*setter)(void *, uintptr_t, uintptr_t, bool);
   enum mpc_native_error (*filter)(void *, uintptr_t, uintptr_t, bool *);
+  bool (*post)(void *, uintptr_t, struct mpc_native_function *);
   void (*destroy)(void *);
 };
 
@@ -32,5 +42,9 @@ struct native_secondary {
 
 enum mpc_native_error mpc_native_open_backend(
   const struct mpc_native_io *, const struct mpc_native_hooks *, struct mpc_native_adapter **);
+bool mpc_native_on_ui_thread(struct mpc_native_adapter *);
+enum mpc_native_error mpc_native_post(struct mpc_native_adapter *, struct mpc_native_function *);
+enum mpc_native_error mpc_executor_open_backend(
+  const struct mpc_native_io *, const struct mpc_executor_config *, struct mpc_executor **);
 
 #endif

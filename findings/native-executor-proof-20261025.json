@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-25",
+  "story": 30,
+  "profile": "key37-mpc3.9.1.2",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "host": {
+    "mesonEntriesPassed": 8,
+    "pythonApiAdapterCases": 22,
+    "nativeFixtureCases": 28,
+    "executorFixture": "passed",
+    "addressSanitizer": "passed",
+    "undefinedBehaviorSanitizer": "passed",
+    "executorFailureTestsUse": "isolated fake message queue and synthetic native backend",
+    "coverage": [
+      "delayed startup and delayed request callbacks",
+      "startup rejection, wrong thread, discarded callbacks and code mismatches",
+      "fixed queue slots and retained result saturation",
+      "FIFO execution and copied request/precondition storage",
+      "eight simultaneous clients with one successful compare-and-set",
+      "queued deadline cancellation and explicit cancellation",
+      "UI-side queue expiry before model access without a waiting client",
+      "queued and running client disconnects",
+      "running deadline returns unknown outcome and permits eventual readback",
+      "generation replacement while queued and target revalidation at execution",
+      "post-setter stale readback preserves native-call uncertainty",
+      "capture cloning, retained copies and subsequent batch scheduling",
+      "shutdown cancellation, delayed capture drain and close refusal",
+      "UI-thread rejection of blocking client lifecycle calls"
+    ]
+  },
+  "arm": {
+    "crossBuildAndElfGuards": "passed",
+    "nativeFixtureOnDevice": "28 cases passed in an isolated process",
+    "executorFixtureOnDevice": "passed in an isolated process"
+  },
+  "realJuceSmoke": {
+    "uiTidMatchesMpcPid": true,
+    "typedReadMatchesIndependentSnapshot": true,
+    "observedFlagsAndSelectionUnchanged": true,
+    "mpcPidUnchanged": true,
+    "executorDrainedAndClosed": true,
+    "bothLibrariesUnloaded": true,
+    "temporaryFilesRemoved": true,
+    "flagWritesPerformed": false,
+    "addinInstalledOrMpcRestarted": false,
+    "privateReport": "build/native-api/executor-device-unload.json"
+  },
+  "limits": [
+    "Production active-project and generation resolver remains US #20",
+    "Public state and write operations remain unavailable",
+    "Final capture reference drain requires external UI quiescence before dlclose",
+    "Real JUCE smoke covers read-only dispatch and unload; failure timing uses the isolated backend"
+  ]
+}
