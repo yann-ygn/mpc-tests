@@ -20,6 +20,7 @@ shot:FILE. Button names are the remote addin's profile (privtap/profiles/mpc-key
 The log is copied incrementally to build/mpcx/ (it holds the device's serial number: keep it out of git).
 MPC_HOST sets the device (default mpc-key-37.lan.arpa).
 """
+
 import os
 import re
 import subprocess
@@ -35,9 +36,19 @@ FIFO = "/dev/midi_inject"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, "build", "mpcx")
 PROFILE = os.path.join(ROOT, "privtap", "profiles", "mpc-key-37-buttons.conf")
-SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ControlMaster=auto", "-o", f"ControlPath={CACHE}/ssh-%C",
-       "-o", "ControlPersist=10m", f"root@{HOST}"]
-BLINKERS = {0x35, 0x71}   # LEDs MPC blinks in tempo (TAP, and 113, which has no light on a Key 37)
+SSH = [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ControlMaster=auto",
+    "-o",
+    f"ControlPath={CACHE}/ssh-%C",
+    "-o",
+    "ControlPersist=10m",
+    f"root@{HOST}",
+]
+BLINKERS = {0x35, 0x71}  # LEDs MPC blinks in tempo (TAP, and 113, which has no light on a Key 37)
 KEEPALIVE = (0x52, 0x53)  # Akai sysex commands MPC and the hardware exchange every 4 s
 
 
@@ -54,6 +65,7 @@ def http(path, **query):
 
 
 # ---- the profile: button and pad names
+
 
 def load_profile():
     names = {}
@@ -73,6 +85,7 @@ def button(note, ch=1):
 
 
 # ---- the log
+
 
 def fetch_log():
     """The device's log, copied incrementally (refetched whole if it was rotated or restarted)."""
@@ -120,7 +133,7 @@ class Stream:
                 if x == 0xF7:
                     out.append(self.msg)
                     self.msg, self.sysex = [], False
-                elif x >= 0x80:   # a status byte ends a sysex
+                elif x >= 0x80:  # a status byte ends a sysex
                     self.msg, self.sysex = [], False
                     out += self.feed([x])
             elif x == 0xF0:
@@ -156,11 +169,15 @@ def parse(lines):
         e = EVENT.match(line)
         if e:
             text = e.group(2)
-            yield (float(e.group(1)), "mark", text[1:].strip()) if text.startswith("@") else \
-                (float(e.group(1)), "event", text)
+            yield (
+                (float(e.group(1)), "mark", text[1:].strip())
+                if text.startswith("@")
+                else (float(e.group(1)), "event", text)
+            )
 
 
 # ---- decoding
+
 
 def akai(msg):
     """(command, payload) of an Akai sysex (F0 47 dev family cmd lenH lenL payload F7), else None. The family is the
@@ -174,7 +191,7 @@ def hexs(b):
     return " ".join(f"{x:02X}" for x in b)
 
 
-BLINK_WINDOW = 1.5   # an LED or pad that changed twice or more in this many seconds is blinking
+BLINK_WINDOW = 1.5  # an LED or pad that changed twice or more in this many seconds is blinking
 
 
 def label(key):
@@ -236,16 +253,22 @@ class State:
 
     def copy(self):
         s = State()
-        s.val, s.lit, s.sysex, s.changed, s.now = dict(self.val), dict(self.lit), dict(self.sysex), \
-            dict(self.changed), self.now
+        s.val, s.lit, s.sysex, s.changed, s.now = (
+            dict(self.val),
+            dict(self.lit),
+            dict(self.sysex),
+            dict(self.changed),
+            self.now,
+        )
         return s
 
 
 def describe_input(d, msg):
     if len(msg) == 3 and msg[0] & 0xF0 in (0x80, 0x90):
         ch, on = (msg[0] & 15) + 1, msg[0] & 0xF0 == 0x90 and msg[2] > 0
-        return f"{'inj' if d == 'inj' else 'hw '} {button(msg[1], ch)} {'down' if on else 'up'}" + \
-            (f" v{msg[2]}" if on and ch != 1 else "")
+        return f"{'inj' if d == 'inj' else 'hw '} {button(msg[1], ch)} {'down' if on else 'up'}" + (
+            f" v{msg[2]}" if on and ch != 1 else ""
+        )
     a = akai(msg)
     if a and a[0] in KEEPALIVE:
         return None
@@ -295,19 +318,22 @@ def scan(lines, start=None, end=None):
 
 
 def diff(a, b):
-    return [f"{label(k)}: {a.show(k)} -> {b.show(k)}" for k in sorted(set(a.val) | set(b.val), key=lambda k: (k[0] != "led",) + k[1:])
-            if not (k[0] == "led" and k[2] in BLINKERS) and a.show(k) != b.show(k)]
+    return [
+        f"{label(k)}: {a.show(k)} -> {b.show(k)}"
+        for k in sorted(set(a.val) | set(b.val), key=lambda k: (k[0] != "led",) + k[1:])
+        if not (k[0] == "led" and k[2] in BLINKERS) and a.show(k) != b.show(k)
+    ]
 
 
 # ---- the MPC X's Q-Link displays (sysex 0B, sent when privtap passes the device off as an MPC X)
 
-OLED_W, OLED_PAGES = 128, 4   # 128 x 32 pixels, monochrome, in pages of 8 rows (SSD1306 style)
+OLED_W, OLED_PAGES = 128, 4  # 128 x 32 pixels, monochrome, in pages of 8 rows (SSD1306 style)
 
 
 def unpack7(data):
     """8-bit bytes sent as a stream of 7-bit MIDI data bytes, most significant bit first."""
     bits = "".join(f"{b & 0x7F:07b}" for b in data)
-    return [int(bits[i:i + 8], 2) for i in range(0, len(bits) - 7, 8)]
+    return [int(bits[i : i + 8], 2) for i in range(0, len(bits) - 7, 8)]
 
 
 def oled_screens(lines, until=None):
@@ -334,11 +360,15 @@ def oled_screens(lines, until=None):
 
 
 def oled_text(fb):
-    return ["".join("#" if fb[page][c] >> bit & 1 else " " for c in range(OLED_W)).rstrip()
-            for page in range(OLED_PAGES) for bit in range(8)]
+    return [
+        "".join("#" if fb[page][c] >> bit & 1 else " " for c in range(OLED_W)).rstrip()
+        for page in range(OLED_PAGES)
+        for bit in range(8)
+    ]
 
 
 # ---- actions
+
 
 def mark(label):
     ssh(f'echo "$(cut -d" " -f1 /proc/uptime) # @{label}" >> {LOG}')
@@ -358,7 +388,7 @@ def act(a):
         http("/tap", x=x, y=y)
     elif kind == "inj":
         ssh(f"cat > {FIFO}", bytes.fromhex(arg))
-    elif kind == "dial":   # the data wheel: relative CC 100 on channel 1, one message per step
+    elif kind == "dial":  # the data wheel: relative CC 100 on channel 1, one message per step
         n = int(arg)
         ssh(f"cat > {FIFO}", bytes([0xB0, 0x64, 1 if n > 0 else 0x7F]) * abs(n))
     elif kind == "wait":
@@ -398,7 +428,9 @@ def main(argv):
         for key in st.keys():
             print(f"{label(key)} = {st.show(key)}")
     elif cmd == "events":
-        _, _, events = scan(fetch_log(), argv[2] if len(argv) > 2 else None, argv[3] if len(argv) > 3 else None)
+        _, _, events = scan(
+            fetch_log(), argv[2] if len(argv) > 2 else None, argv[3] if len(argv) > 3 else None
+        )
         print(*events, sep="\n")
     elif cmd == "oled":
         screens = oled_screens(fetch_log(), argv[3] if len(argv) > 3 else None)

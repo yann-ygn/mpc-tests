@@ -1,4 +1,5 @@
 """Exercise deployment guards against actual Meson-built ELF artifacts."""
+
 import os
 from pathlib import Path
 import subprocess
@@ -20,9 +21,17 @@ class ElfChecks(unittest.TestCase):
 
     def run_check(self, *options, valid=False):
         result = subprocess.run(
-            [sys.executable, str(CHECKER), "--binary", str(self.binary),
-             "--stamp", str(self.stamp), *options],
-            capture_output=True, text=True,
+            [
+                sys.executable,
+                str(CHECKER),
+                "--binary",
+                str(self.binary),
+                "--stamp",
+                str(self.stamp),
+                *options,
+            ],
+            capture_output=True,
+            text=True,
         )
         self.assertEqual(result.returncode == 0, valid, result.stderr)
         self.assertEqual(self.stamp.exists(), valid)

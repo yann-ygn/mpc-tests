@@ -20,6 +20,7 @@ Where things are (MPC 3.9.1.2, project version 28; read from controlled saves, s
                                        (trackMutePerSequence)
     currentTrackIndex, currentSequence, engineMode (the mode on screen: Browser, Track Mute ...)
 """
+
 import json
 import sys
 import zlib
@@ -31,7 +32,7 @@ KINDS = {0: "drum", 3: "plugin", 6: "audio", **BUSES}
 def load(path):
     raw = open(path, "rb").read()
     text = zlib.decompressobj(31).decompress(raw).decode("utf-8")
-    header, body = text[:text.index("{")], text[text.index("{"):]
+    header, body = text[: text.index("{")], text[text.index("{") :]
     return header.split(), json.loads(body)["data"]
 
 
@@ -39,7 +40,11 @@ def seq_mutes(seq):
     """Track name -> mute in this sequence."""
     out = {}
     for clip in seq.get("trackClipMaps", [[]])[0]:
-        params = clip.get("value", {}).get("perClipParameterValues", {}).get("perClipParameterValues", [])
+        params = (
+            clip.get("value", {})
+            .get("perClipParameterValues", {})
+            .get("perClipParameterValues", [])
+        )
         for p in params:
             if p.get("key") == {"parameter": 256, "instrumentIndex": 257}:
                 out[clip.get("key")] = p.get("value", 0) >= 0.5
@@ -51,12 +56,16 @@ def summary(path):
     seqs = [s["value"] for s in d["sequences"]]
     cur_seq = d.get("currentSequence", 0)
     print(f"{path}: {' '.join(header[:2])}, project version {d.get('version')}")
-    print(f"selected: sequence {cur_seq + 1}, track {d.get('currentTrackIndex', 0) + 1}; mode {d.get('engineMode')}; "
-          f"key {d.get('key')}; master tempo {'on' if d.get('masterTempoEnabled') else 'off'} ({d.get('masterTempo')})")
+    print(
+        f"selected: sequence {cur_seq + 1}, track {d.get('currentTrackIndex', 0) + 1}; mode {d.get('engineMode')}; "
+        f"key {d.get('key')}; master tempo {'on' if d.get('masterTempoEnabled') else 'off'} ({d.get('masterTempo')})"
+    )
     print("sequences:")
     for j, s in enumerate(seqs):
-        print(f"  {j + 1:2} {s['name']:<32} {s['bpm']:7.2f} BPM {s['lengthBars']:4} bars"
-              f"  loop {'on' if s.get('loop') else 'off'} {s.get('loopStartBar', 0) + 1}-{s.get('loopEndBar', 0)}")
+        print(
+            f"  {j + 1:2} {s['name']:<32} {s['bpm']:7.2f} BPM {s['lengthBars']:4} bars"
+            f"  loop {'on' if s.get('loop') else 'off'} {s.get('loopStartBar', 0) + 1}-{s.get('loopEndBar', 0)}"
+        )
     mutes = seq_mutes(seqs[cur_seq]) if seqs else {}
     print(f"tracks (mute in sequence {cur_seq + 1} under 'seq'):")
     for i, t in enumerate(d["tracks"]):
@@ -64,10 +73,20 @@ def summary(path):
         if p.get("type") in BUSES:
             continue
         mix = p.get("mixable", {})
-        flags = [f for f, on in (("mute", mix.get("mute")), ("solo", mix.get("solo")), ("seq-mute", mutes.get(t["name"])),
-                                 ("arm", t.get("recordArm"))) if on]
-        print(f"  {i + 1:2} {t['name']:<24} {KINDS.get(p.get('type'), 'type ' + str(p.get('type'))):<7} "
-              f"#{t.get('colour', 0):06X}  vol {t.get('volume', 0):.2f} pan {t.get('pan', 0):.2f}  {' '.join(flags)}")
+        flags = [
+            f
+            for f, on in (
+                ("mute", mix.get("mute")),
+                ("solo", mix.get("solo")),
+                ("seq-mute", mutes.get(t["name"])),
+                ("arm", t.get("recordArm")),
+            )
+            if on
+        ]
+        print(
+            f"  {i + 1:2} {t['name']:<24} {KINDS.get(p.get('type'), 'type ' + str(p.get('type'))):<7} "
+            f"#{t.get('colour', 0):06X}  vol {t.get('volume', 0):.2f} pan {t.get('pan', 0):.2f}  {' '.join(flags)}"
+        )
 
 
 def flat(o, p="", out=None):

@@ -59,6 +59,16 @@ before running experiments.
 - `privtap/src/exports.map` must list every hook. The build fails if anything else is exported (Zig's runtime would
   otherwise replace libc's `memcpy` and the math functions in all of MPC).
 
+## Code style
+
+- `.editorconfig` sets whitespace policy: two spaces generally, four for Python.
+- `.clang-format` follows the Spice style: two spaces, attached braces and a
+  100-column limit. Preserve include order, including generated/private headers.
+- Python uses the pinned Ruff formatter, configured in `pyproject.toml`.
+- Apply formatting with `uv run --no-sync meson compile -C builddir/host format`;
+  check it with the `format-check` target or the normal test run's `style` suite.
+  Keep mechanical formatting separate from naming, function extraction and behavior changes.
+
 ## Tracking
 
 - Git: github.com/yann-ygn/mpc-tests, `main` (default) and `privtap`.

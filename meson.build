@@ -75,6 +75,21 @@ foreach check : elf_checks
   )
 endforeach
 
+run_target(
+  'format',
+  command: [python, files('build-support/format_sources.py')],
+)
+run_target(
+  'format-check',
+  command: [python, files('build-support/format_sources.py'), '--check'],
+)
+test(
+  'formatting',
+  python,
+  args: [files('build-support/format_sources.py'), '--check'],
+  suite: 'style',
+)
+
 summary(
   {
     'Machine': host_machine.cpu_family(),

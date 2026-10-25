@@ -1,4 +1,5 @@
 """Reject unintended exports, workstation dependencies and incompatible ARM ELFs."""
+
 import argparse
 from pathlib import Path
 import re
@@ -8,7 +9,9 @@ import subprocess
 def inspect(args, *options):
     return subprocess.run(
         [args.readelf, "-W", *options, str(args.binary)],
-        check=True, capture_output=True, text=True,
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout
 
 
@@ -18,8 +21,11 @@ def check(args):
         source = re.sub(r"/\*.*?\*/", "", args.exports.read_text(), flags=re.S)
         expected = set(re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*);\s*$", source, re.M))
         symbols = inspect(args, "--dyn-syms")
-        exported = {row[7].split("@")[0] for line in symbols.splitlines()
-                    if len(row := line.split()) >= 8 and row[4] in ("GLOBAL", "WEAK") and row[6] != "UND"}
+        exported = {
+            row[7].split("@")[0]
+            for line in symbols.splitlines()
+            if len(row := line.split()) >= 8 and row[4] in ("GLOBAL", "WEAK") and row[6] != "UND"
+        }
         if exported != expected:
             raise ValueError(f"Export allowlist mismatch: {exported ^ expected}")
 
@@ -35,10 +41,12 @@ def check(args):
         raise ValueError(f"Expected RUNPATH {args.runpath}")
     if args.armhf:
         header = inspect(args, "-h")
-        if not (re.search(r"Class:\s+ELF32", header)
-                and re.search(r"Data:.*little endian", header)
-                and re.search(r"Machine:\s+ARM\s*$", header, re.M)
-                and "hard-float ABI" in header):
+        if not (
+            re.search(r"Class:\s+ELF32", header)
+            and re.search(r"Data:.*little endian", header)
+            and re.search(r"Machine:\s+ARM\s*$", header, re.M)
+            and "hard-float ABI" in header
+        ):
             raise ValueError("Expected a little-endian ELF32 ARM hard-float binary")
     if args.glibc_max:
         versions = re.findall(r"\bGLIBC_(\d+(?:\.\d+)+)\b", inspect(args, "--version-info"))

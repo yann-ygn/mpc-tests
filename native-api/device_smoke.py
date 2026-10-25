@@ -4,6 +4,7 @@
 Default: stop the service and remove its files. --keep leaves this discovery-only
 service running for further requests; it does not install an addin or startup job.
 """
+
 import argparse
 import json
 import os
@@ -23,8 +24,20 @@ def main():
     parser.add_argument("--keep", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    ssh = ["ssh", "-F", "/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=7",
-           "-o", "StrictHostKeyChecking=yes", "-o", "UpdateHostKeys=no", "root@" + args.host]
+    ssh = [
+        "ssh",
+        "-F",
+        "/dev/null",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=7",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "-o",
+        "UpdateHostKeys=no",
+        "root@" + args.host,
+    ]
 
     def command(text, data=None):
         result = subprocess.run(ssh + [text], input=data, capture_output=True, timeout=15)
@@ -45,11 +58,33 @@ def main():
         before = command("pidof MPC").decode().strip()
         command("mkdir -m 700 " + shlex.quote(directory))
         created = True
-        command("cat > " + shlex.quote(directory + "/mpc-api") + " && chmod 700 " + shlex.quote(directory + "/mpc-api"), binary)
+        command(
+            "cat > "
+            + shlex.quote(directory + "/mpc-api")
+            + " && chmod 700 "
+            + shlex.quote(directory + "/mpc-api"),
+            binary,
+        )
         command("cat > " + shlex.quote(directory + "/device-id"), (device_id + "\n").encode())
-        launch = [directory + "/mpc-api", "serve", "--socket", socket_path, "--device-id", device_id]
-        started = command("nohup " + shlex.join(launch) + " > " + shlex.quote(directory + "/service.log")
-                          + " 2>&1 < /dev/null & echo $!").decode().strip()
+        launch = [
+            directory + "/mpc-api",
+            "serve",
+            "--socket",
+            socket_path,
+            "--device-id",
+            device_id,
+        ]
+        started = (
+            command(
+                "nohup "
+                + shlex.join(launch)
+                + " > "
+                + shlex.quote(directory + "/service.log")
+                + " 2>&1 < /dev/null & echo $!"
+            )
+            .decode()
+            .strip()
+        )
         if not started.isdigit():
             raise RuntimeError("Could not identify the discovery service process")
         pid = int(started)
@@ -60,32 +95,54 @@ def main():
                 break
             except RuntimeError:
                 if attempt == 9:
-                    raise RuntimeError(command("cat " + shlex.quote(directory + "/service.log")).decode())
+                    raise RuntimeError(
+                        command("cat " + shlex.quote(directory + "/service.log")).decode()
+                    )
                 time.sleep(0.1)
 
         def call(value):
             payload = json.dumps(value, separators=(",", ":")).encode() + b"\n"
-            return json.loads(command(shlex.join([directory + "/mpc-api", "request", "--socket", socket_path]), payload))
+            return json.loads(
+                command(
+                    shlex.join([directory + "/mpc-api", "request", "--socket", socket_path]),
+                    payload,
+                )
+            )
 
         result = call({"apiVersion": "0.1", "op": "describe"})
         assert result["deviceId"] == device_id
-        assert result["readiness"]["mpcProcess"] == "running", "Discovery did not identify the running MPC executable"
+        assert result["readiness"]["mpcProcess"] == "running", (
+            "Discovery did not identify the running MPC executable"
+        )
         assert result["firmware"]["buildId"] is not None, "Missing live executable build ID"
         assert result["firmware"]["model"] is not None, "Missing device-tree model"
         assert result["capabilities"]["describe"]["available"]
-        assert all(not c["available"] for op, c in result["capabilities"].items() if op != "describe")
+        assert all(
+            not c["available"] for op, c in result["capabilities"].items() if op != "describe"
+        )
         assert result["readiness"]["status"] == "discovery_only"
         if result["readiness"]["nativeAdapter"] == "attached":
             assert result["readiness"]["adapter"]["codeVerified"]
             assert result["readiness"]["adapter"]["qualification"] == "bounded_lab_proof"
         assert call({"apiVersion": "0.1", "op": "describe"})["instanceId"] == result["instanceId"]
-        assert call({"apiVersion": "9", "op": "describe"})["error"]["code"] == "UNSUPPORTED_API_VERSION"
-        assert call({"apiVersion": "0.1", "op": "raw_call"})["error"]["code"] == "UNSUPPORTED_OPERATION"
+        assert (
+            call({"apiVersion": "9", "op": "describe"})["error"]["code"]
+            == "UNSUPPORTED_API_VERSION"
+        )
+        assert (
+            call({"apiVersion": "0.1", "op": "raw_call"})["error"]["code"]
+            == "UNSUPPORTED_OPERATION"
+        )
         assert call({"apiVersion": "0.1", "op": "set_mute"})["error"]["code"] == "NOT_READY"
         assert command("stat -c %a " + shlex.quote(socket_path)).strip() == b"600"
         assert command("pidof MPC").decode().strip() == before
-        report.update(description=result, instanceStable=True, errorResponsesVerified=True, socketMode="600",
-                      mpcPidUnchanged=True)
+        report.update(
+            description=result,
+            instanceStable=True,
+            errorResponsesVerified=True,
+            socketMode="600",
+            mpcPidUnchanged=True,
+        )
         success = True
     except Exception as error:
         report["error"] = str(error)
@@ -96,7 +153,9 @@ def main():
                     # A PID from this launch only; verify its command before signaling.
                     actual = command(f"cat /proc/{pid}/cmdline")
                     if actual.split(b"\0", 1)[0] != (directory + "/mpc-api").encode():
-                        raise RuntimeError("Cleanup refused: service PID no longer identifies our executable")
+                        raise RuntimeError(
+                            "Cleanup refused: service PID no longer identifies our executable"
+                        )
                     command(f"kill -TERM {pid}")
                     for attempt in range(10):
                         try:
@@ -106,8 +165,18 @@ def main():
                             if attempt == 9:
                                 raise
                             time.sleep(0.1)
-                command("rm -f " + shlex.join([directory + "/mpc-api", directory + "/device-id", directory + "/service.log"])
-                        + " && rmdir " + shlex.quote(directory))
+                command(
+                    "rm -f "
+                    + shlex.join(
+                        [
+                            directory + "/mpc-api",
+                            directory + "/device-id",
+                            directory + "/service.log",
+                        ]
+                    )
+                    + " && rmdir "
+                    + shlex.quote(directory)
+                )
                 report["temporaryFilesRemoved"] = True
             except Exception as error:
                 report["cleanupError"] = str(error)
@@ -116,7 +185,22 @@ def main():
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text)
-        print(json.dumps({k: report[k] for k in ("remoteDirectory", "socket", "servicePid", "leftRunning", "error", "cleanupError") if k in report}))
+        print(
+            json.dumps(
+                {
+                    k: report[k]
+                    for k in (
+                        "remoteDirectory",
+                        "socket",
+                        "servicePid",
+                        "leftRunning",
+                        "error",
+                        "cleanupError",
+                    )
+                    if k in report
+                }
+            )
+        )
     else:
         print(text, end="")
     return 0 if success and "cleanupError" not in report else 1

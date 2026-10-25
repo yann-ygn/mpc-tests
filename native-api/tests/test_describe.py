@@ -1,4 +1,5 @@
 """Exercise the actual socket service against synthetic proc/device-tree fixtures."""
+
 import concurrent.futures
 import contextlib
 import json
@@ -44,10 +45,14 @@ class DescribeTests(unittest.TestCase):
         except ImportError:
             cls.validator = None
         else:
-            schema = json.loads((ROOT / "native-api/schema/describe-response.schema.json").read_text())
+            schema = json.loads(
+                (ROOT / "native-api/schema/describe-response.schema.json").read_text()
+            )
             jsonschema.Draft202012Validator.check_schema(schema)
             cls.validator = jsonschema.Draft202012Validator(schema)
-            request_schema = json.loads((ROOT / "native-api/schema/describe-request.schema.json").read_text())
+            request_schema = json.loads(
+                (ROOT / "native-api/schema/describe-request.schema.json").read_text()
+            )
             jsonschema.Draft202012Validator.check_schema(request_schema)
             jsonschema.validate(json.loads(REQUEST), request_schema)
 
@@ -76,11 +81,23 @@ class DescribeTests(unittest.TestCase):
     def set_start(self, pid, started):
         # Field 22 follows fields 3..21. Parentheses/spaces in comm must not shift parsing.
         (self.root / f"proc/{pid}/stat").write_text(
-            f"{pid} (MPC (test worker)) S " + "0 " * 18 + f"{started} 0\n")
+            f"{pid} (MPC (test worker)) S " + "0 " * 18 + f"{started} 0\n"
+        )
 
     def start(self):
-        self.process = subprocess.Popen([str(self.binary), "serve", "--socket", str(self.sock),
-            "--device-id", "dev_fixture", "--root", str(self.root)], stderr=subprocess.PIPE)
+        self.process = subprocess.Popen(
+            [
+                str(self.binary),
+                "serve",
+                "--socket",
+                str(self.sock),
+                "--device-id",
+                "dev_fixture",
+                "--root",
+                str(self.root),
+            ],
+            stderr=subprocess.PIPE,
+        )
         until = time.monotonic() + 5
         while not self.sock.exists():
             if self.process.poll() is not None:
@@ -155,7 +172,9 @@ class DescribeTests(unittest.TestCase):
         self.assertEqual(restarted["deviceId"], before["deviceId"])
 
     def test_same_build_on_other_model_is_not_supported(self):
-        (self.root / "sys/firmware/devicetree/base/model").write_bytes(b"Akai Professional MPC Other\0")
+        (self.root / "sys/firmware/devicetree/base/model").write_bytes(
+            b"Akai Professional MPC Other\0"
+        )
         result = self.call()
         self.assertEqual(result["readiness"]["firmwareProfile"], "unsupported")
         self.assert_unavailable(result, "UNSUPPORTED_FIRMWARE")
@@ -215,7 +234,11 @@ class DescribeTests(unittest.TestCase):
         self.assertNotIn("error", response)
 
     def test_invalid_requests_are_bounded_and_do_not_crash_server(self):
-        requests = [b'{}\n', b'[]\n', b'null\n', b'{"apiVersion":0.1,"op":"describe"}\n',
+        requests = [
+            b"{}\n",
+            b"[]\n",
+            b"null\n",
+            b'{"apiVersion":0.1,"op":"describe"}\n',
             b'{"apiVersion":"0.1","op":"describe","extra":"x"}\n',
             b'{"apiVersion":"0.1","op":"describe","op":"describe"}\n',
             b'{"op":"describe","op":"describe"}\n',
@@ -223,21 +246,33 @@ class DescribeTests(unittest.TestCase):
             b'{"apiVersion":"0.1","op":"de\x00scribe"}\n',
             b'{"apiVersion":"0.1","op":"\\ud800"}\n',
             b'{"apiVersion":"0.1","op":"\\x64escribe"}\n',
-            b'x' * 1025 + b'\n']
+            b"x" * 1025 + b"\n",
+        ]
         for request in requests:
             with self.subTest(request=request[:100]):
                 self.assertEqual(self.call(request)["error"]["code"], "INVALID_ARGUMENT")
         self.assertNotIn("error", self.call())
 
     def test_versions_and_operations_return_structured_errors(self):
-        self.assertEqual(self.call(b'{"apiVersion":"2","op":"describe"}\n')["error"]["code"], "UNSUPPORTED_API_VERSION")
-        self.assertEqual(self.call(b'{"apiVersion":"0.1","op":"raw_call"}\n')["error"]["code"], "UNSUPPORTED_OPERATION")
-        self.assertEqual(self.call(b'{"apiVersion":"0.1","op":"set_mute"}\n')["error"]["code"], "NOT_READY")
+        self.assertEqual(
+            self.call(b'{"apiVersion":"2","op":"describe"}\n')["error"]["code"],
+            "UNSUPPORTED_API_VERSION",
+        )
+        self.assertEqual(
+            self.call(b'{"apiVersion":"0.1","op":"raw_call"}\n')["error"]["code"],
+            "UNSUPPORTED_OPERATION",
+        )
+        self.assertEqual(
+            self.call(b'{"apiVersion":"0.1","op":"set_mute"}\n')["error"]["code"], "NOT_READY"
+        )
 
     def test_socket_permissions_and_live_socket_preserved(self):
         self.assertEqual(stat.S_IMODE(self.sock.stat().st_mode), 0o600)
-        attempt = subprocess.run([str(self.binary), "serve", "--socket", str(self.sock),
-            "--device-id", "other"], capture_output=True, timeout=3)
+        attempt = subprocess.run(
+            [str(self.binary), "serve", "--socket", str(self.sock), "--device-id", "other"],
+            capture_output=True,
+            timeout=3,
+        )
         self.assertNotEqual(attempt.returncode, 0)
         self.assertNotIn("error", self.call())
 
@@ -247,8 +282,18 @@ class DescribeTests(unittest.TestCase):
         link = self.root / "link"
         link.symlink_to(self.root, target_is_directory=True)
         for parent in (public, link):
-            attempt = subprocess.run([str(self.binary), "serve", "--socket", str(parent / "other.sock"),
-                "--device-id", "other"], capture_output=True, timeout=3)
+            attempt = subprocess.run(
+                [
+                    str(self.binary),
+                    "serve",
+                    "--socket",
+                    str(parent / "other.sock"),
+                    "--device-id",
+                    "other",
+                ],
+                capture_output=True,
+                timeout=3,
+            )
             self.assertNotEqual(attempt.returncode, 0)
             self.assertFalse((parent / "other.sock").exists())
 
@@ -256,7 +301,7 @@ class DescribeTests(unittest.TestCase):
         with contextlib.closing(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)) as slow:
             slow.settimeout(3)
             slow.connect(str(self.sock))
-            slow.sendall(b'{')
+            slow.sendall(b"{")
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
                 results = list(pool.map(lambda _: self.call(), range(12)))
             self.assertTrue(all("error" not in result for result in results))
@@ -268,9 +313,14 @@ class DescribeTests(unittest.TestCase):
         self.assertNotIn("error", self.call())
 
     def test_truncated_line_and_cli_relay(self):
-        self.assertEqual(self.call(b'{', shutdown=True)["error"]["code"], "INVALID_ARGUMENT")
-        result = subprocess.run([str(self.binary), "request", "--socket", str(self.sock)],
-            input=REQUEST.rstrip(), capture_output=True, check=True, timeout=3)
+        self.assertEqual(self.call(b"{", shutdown=True)["error"]["code"], "INVALID_ARGUMENT")
+        result = subprocess.run(
+            [str(self.binary), "request", "--socket", str(self.sock)],
+            input=REQUEST.rstrip(),
+            capture_output=True,
+            check=True,
+            timeout=3,
+        )
         self.assertEqual(json.loads(result.stdout)["deviceId"], "dev_fixture")
 
     @contextlib.contextmanager
@@ -281,11 +331,12 @@ class DescribeTests(unittest.TestCase):
             self.add_mpc(pid=pid)
         path = self.root / f"tmp/mpc-native-lab-{pid}.sock"
         path.parent.mkdir(mode=0o700, exist_ok=True)
-        state = {"epoch":"adp_" + "a" * 32, "response":response}
+        state = {"epoch": "adp_" + "a" * 32, "response": response}
         finished = threading.Event()
         server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        server.settimeout(.05)
-        server.bind(str(path)); server.listen(4)
+        server.settimeout(0.05)
+        server.bind(str(path))
+        server.listen(4)
 
         def serve():
             while not finished.is_set():
@@ -294,14 +345,17 @@ class DescribeTests(unittest.TestCase):
                 except TimeoutError:
                     continue
                 with client:
-                    client.settimeout(.2)
+                    client.settimeout(0.2)
                     try:
                         data = client.recv(128)
                         if stall:
-                            finished.wait(.15)
+                            finished.wait(0.15)
                             continue
                         if data == b"ADAPTER_STATUS\n":
-                            payload = state["response"] or f'MPC_ADAPTER_V1 {state["epoch"]} key37-mpc3.9.1.2 {PROFILE["buildId"]} VERIFIED\n'.encode()
+                            payload = (
+                                state["response"]
+                                or f"MPC_ADAPTER_V1 {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
+                            )
                             client.sendall(payload)
                     except (OSError, TimeoutError):
                         pass
@@ -311,7 +365,10 @@ class DescribeTests(unittest.TestCase):
         try:
             yield state
         finally:
-            finished.set(); worker.join(timeout=1); server.close(); path.unlink()
+            finished.set()
+            worker.join(timeout=1)
+            server.close()
+            path.unlink()
 
     def test_verified_attachment_rotates_instance_without_enabling_commands(self):
         with self.attachment() as attachment:
@@ -334,15 +391,18 @@ class DescribeTests(unittest.TestCase):
 
     def test_bad_or_unresponsive_attachment_does_not_claim_readiness(self):
         with self.attachment() as attachment:
-            for payload in [b"MPC_ADAPTER_ERROR FINGERPRINT_MISMATCH\n", b"MPC_ADAPTER_V1 bad profile build VERIFIED\n",
-                            b"MPC_ADAPTER_V1 adp_" + b"a" * 32 + b" key37-mpc3.9.1.2 1122 VERIFIED\n"]:
+            for payload in [
+                b"MPC_ADAPTER_ERROR FINGERPRINT_MISMATCH\n",
+                b"MPC_ADAPTER_V1 bad profile build VERIFIED\n",
+                b"MPC_ADAPTER_V1 adp_" + b"a" * 32 + b" key37-mpc3.9.1.2 1122 VERIFIED\n",
+            ]:
                 attachment["response"] = payload
                 self.assertEqual(self.call()["readiness"]["nativeAdapter"], "not_attached")
         with self.attachment(stall=True):
             started = time.monotonic()
             result = self.call()
             self.assertEqual(result["readiness"]["nativeAdapter"], "not_attached")
-            self.assertLess(time.monotonic() - started, .8)
+            self.assertLess(time.monotonic() - started, 0.8)
 
 
 if __name__ == "__main__":

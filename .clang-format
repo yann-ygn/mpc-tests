@@ -1,0 +1,19 @@
+BasedOnStyle: LLVM
+AlignAfterOpenBracket: AlwaysBreak
+AlignOperands: DontAlign
+AllowAllArgumentsOnNextLine: false
+IndentWidth: 2
+ContinuationIndentWidth: 2
+TabWidth: 2
+UseTab: Never
+BreakBeforeBraces: Attach
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: None
+BinPackArguments: false
+BinPackParameters: false
+BreakTemplateDeclarations: Yes
+ColumnLimit: 100
+# Generated headers and interposition hooks rely on the existing include order.
+SortIncludes: Never

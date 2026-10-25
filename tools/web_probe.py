@@ -6,6 +6,7 @@ Uses SSH to run the bridge in /tmp, pairs only this invocation's unique HTTP cli
 reads the existing object tree, publishes/updates/removes one diagnostic object, and
 unpairs its own session. It does not change MPC projects or server access settings.
 """
+
 import argparse
 import concurrent.futures
 import http.cookiejar
@@ -25,8 +26,12 @@ import cbor2
 
 def sanitized(value):
     if isinstance(value, dict):
-        return {k: "[redacted]" if re.search(r"pin|sessionID|cookie|token|password|secret|serial", k, re.I)
-                else sanitized(v) for k, v in value.items()}
+        return {
+            k: "[redacted]"
+            if re.search(r"pin|sessionID|cookie|token|password|secret|serial", k, re.I)
+            else sanitized(v)
+            for k, v in value.items()
+        }
     if isinstance(value, list):
         return [sanitized(v) for v in value]
     return value
@@ -36,13 +41,34 @@ class NativeClient:
     def __init__(self, host, bridge, name):
         self.name, self.seq = name, 0
         remote = "/tmp/mpc-web-probe-" + uuid.uuid4().hex
-        ssh = ["ssh", "-F", "/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=7",
-               "-o", "StrictHostKeyChecking=yes", "-o", "UpdateHostKeys=no", "root@" + host]
-        subprocess.run(ssh + ["cat > " + remote + " && chmod 700 " + remote],
-                       input=bridge.read_bytes(), capture_output=True, check=True, timeout=10)
+        ssh = [
+            "ssh",
+            "-F",
+            "/dev/null",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "ConnectTimeout=7",
+            "-o",
+            "StrictHostKeyChecking=yes",
+            "-o",
+            "UpdateHostKeys=no",
+            "root@" + host,
+        ]
+        subprocess.run(
+            ssh + ["cat > " + remote + " && chmod 700 " + remote],
+            input=bridge.read_bytes(),
+            capture_output=True,
+            check=True,
+            timeout=10,
+        )
         self.proc = subprocess.Popen(
-            ssh + [remote + '; probe_status=$?; rm -f ' + remote + '; exit "$probe_status"'],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+            ssh + [remote + "; probe_status=$?; rm -f " + remote + '; exit "$probe_status"'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=0,
+        )
         if not select.select([self.proc.stdout], [], [], 10)[0]:
             self.close()
             raise RuntimeError("Native bridge did not start")
@@ -83,10 +109,17 @@ class NativeClient:
 
     def settings(self):
         value = self.response("returnServerSettings", self.send("requestServerSettings"))
-        return {k: value[k] for k in ("webAccessEnabled", "pairingRequestsEnabled", "unpairedSessionsEnabled")}
+        return {
+            k: value[k]
+            for k in ("webAccessEnabled", "pairingRequestsEnabled", "unpairedSessionsEnabled")
+        }
 
     def blocked_count(self):
-        return len(self.response("returnBlockedAddresses", self.send("requestBlockedAddresses"))["addresses"])
+        return len(
+            self.response("returnBlockedAddresses", self.send("requestBlockedAddresses"))[
+                "addresses"
+            ]
+        )
 
     def close(self):
         if self.proc.stdin:
@@ -106,12 +139,20 @@ def run(args):
     tag = uuid.uuid4().hex
     name = "MPCWebProbe_" + tag[:8]
     user_agent = "MPC web service diagnostic " + tag
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    opener = urllib.request.build_opener(
+        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
+    )
 
     def request(path, data=None):
-        req = urllib.request.Request("http://" + args.host + path, data=data,
-                                     headers={"Accept": "application/json", "Content-Type": "application/json",
-                                              "User-Agent": user_agent})
+        req = urllib.request.Request(
+            "http://" + args.host + path,
+            data=data,
+            headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "User-Agent": user_agent,
+            },
+        )
         try:
             response = opener.open(req, timeout=8)
         except urllib.error.HTTPError as error:
@@ -133,12 +174,17 @@ def run(args):
         before_settings, before_blocks = native.settings(), native.blocked_count()
         report["serverSettings"] = before_settings
         if request("/api/v1/subtree")[0] != 401:
-            raise RuntimeError("Expected an unpaired HTTP client; access policy differs from the tested setup")
+            raise RuntimeError(
+                "Expected an unpaired HTTP client; access policy differs from the tested setup"
+            )
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
             auth = pool.submit(request, "/api/auth", b"{}")
             incoming = native.receive()
             web = incoming.get("webSession", {})
-            if incoming.get("message") != "startPairingSession" or web.get("lastClientUserAgent") != user_agent:
+            if (
+                incoming.get("message") != "startPairingSession"
+                or web.get("lastClientUserAgent") != user_agent
+            ):
                 raise RuntimeError("Pair request belongs to another client; it was not approved")
             session_id = web.get("sessionID")
             if not isinstance(session_id, str):
@@ -150,16 +196,23 @@ def run(args):
             native.barrier()
 
         status, baseline = request("/api/v1/subtree")
-        if status not in (200, 404) or not isinstance(baseline, dict) or (status == 404 and baseline != {}):
+        if (
+            status not in (200, 404)
+            or not isinstance(baseline, dict)
+            or (status == 404 and baseline != {})
+        ):
             raise RuntimeError("Authenticated object inventory failed")
         baseline_status = status
         report["baseline"] = {"status": status, "objects": sanitized(baseline)}
         if "/" + name + "/probe" in baseline:
             raise RuntimeError("Diagnostic object path already exists")
 
-        native.send("addObject", objectPath="/probe",
-                    objectMeta={"properties": {"answer": {"type": "integer", "readOnly": True}}},
-                    objectValue={"answer": 42})
+        native.send(
+            "addObject",
+            objectPath="/probe",
+            objectMeta={"properties": {"answer": {"type": "integer", "readOnly": True}}},
+            objectValue={"answer": 42},
+        )
         published = True
         native.barrier()
         object_path = "/" + name + "/probe"
@@ -167,7 +220,9 @@ def run(args):
         value_status, first = request("/api/v1/object-properties" + object_path)
         if meta_status != 200 or value_status != 200 or first != {"answer": 42}:
             raise RuntimeError("Published diagnostic object did not match over HTTP")
-        native.send("changePropertyValue", objectPath="/probe", propertyName="answer", propertyValue=43)
+        native.send(
+            "changePropertyValue", objectPath="/probe", propertyName="answer", propertyValue=43
+        )
         native.barrier()
         status, updated = request("/api/v1/object-properties" + object_path)
         if status != 200 or updated != {"answer": 43}:
@@ -179,7 +234,9 @@ def run(args):
         published = False
         status, restored = request("/api/v1/subtree")
         if status != baseline_status or restored != baseline:
-            raise RuntimeError("Object registry changed during the probe; cleanup requires inspection")
+            raise RuntimeError(
+                "Object registry changed during the probe; cleanup requires inspection"
+            )
         report["afterRemoval"] = {"status": status, "objects": sanitized(restored)}
         native.send("unpairWebSession", sessionID=session_id)
         native.barrier()
@@ -189,8 +246,12 @@ def run(args):
             raise RuntimeError("Diagnostic HTTP client was not unpaired")
         if native.settings() != before_settings or native.blocked_count() != before_blocks:
             raise RuntimeError("Server access state changed during the probe")
-        report["cleanup"] = {"httpStatus": status, "pairState": unpaired["pairState"],
-                             "accessSettingsUnchanged": True, "blockedAddressCountUnchanged": True}
+        report["cleanup"] = {
+            "httpStatus": status,
+            "pairState": unpaired["pairState"],
+            "accessSettingsUnchanged": True,
+            "blockedAddressCountUnchanged": True,
+        }
     finally:
         try:
             if published:
@@ -204,8 +265,17 @@ def run(args):
             native.close()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
-    print(json.dumps({"existingObjects": len(report["baseline"]["objects"]),
-                      "propertyChange": [42, 43], "cleanup": report["cleanup"], "report": str(args.output)}, indent=2))
+    print(
+        json.dumps(
+            {
+                "existingObjects": len(report["baseline"]["objects"]),
+                "propertyChange": [42, 43],
+                "cleanup": report["cleanup"],
+                "report": str(args.output),
+            },
+            indent=2,
+        )
+    )
 
 
 def main():
@@ -213,7 +283,9 @@ def main():
     root = Path(__file__).resolve().parent.parent
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
     parser.add_argument("--bridge", type=Path, default=root / "builddir/arm/tools/ipc_bridge")
-    parser.add_argument("--output", type=Path, default=root / "build/web-probe/verified-report.json")
+    parser.add_argument(
+        "--output", type=Path, default=root / "build/web-probe/verified-report.json"
+    )
     args = parser.parse_args()
     if not args.bridge.is_file():
         parser.error("Compile tools/web_ipc_bridge.c first; see findings/web-service.md")

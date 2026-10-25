@@ -1,4 +1,5 @@
 """Generate all firmware headers from the same validated profile pair."""
+
 import importlib.util
 import json
 from pathlib import Path
@@ -28,14 +29,23 @@ def main():
     )
 
     lines = ["#include <stdint.h>"]
-    for key, name in [("project", "PROJECT_VTABLE"), ("trackPool", "POOL_VTABLE"), ("track", "TRACK_VTABLE")]:
-        lines.append(f'#define {name} {state["vtables"][key]}u')
+    for key, name in [
+        ("project", "PROJECT_VTABLE"),
+        ("trackPool", "POOL_VTABLE"),
+        ("track", "TRACK_VTABLE"),
+    ]:
+        lines.append(f"#define {name} {state['vtables'][key]}u")
     for family, name in [("plugin", "PLUGIN_VTABLE"), ("drum", "DRUM_VTABLE")]:
         vtable = next(int(v) for v, kind in state["programTypes"].items() if kind == family)
         lines.append(f"#define {name} {vtable}u")
-    call_async = next(f["rva"] for f in control["functions"] if f["name"] == "juce::MessageManager::callAsync")
+    call_async = next(
+        f["rva"] for f in control["functions"] if f["name"] == "juce::MessageManager::callAsync"
+    )
     lines.append(f"#define CALL_ASYNC {call_async}u")
-    secondary = ",".join("{" + str(offset) + "," + str(vtable) + "}" for offset, vtable in state["projectSecondaryVtables"].items())
+    secondary = ",".join(
+        "{" + str(offset) + "," + str(vtable) + "}"
+        for offset, vtable in state["projectSecondaryVtables"].items()
+    )
     lines.append("static const struct { uint32_t offset,vtable; } secondary[]={" + secondary + "};")
     (output_path / "native_profile.h").write_text("\n".join(lines) + "\n")
 

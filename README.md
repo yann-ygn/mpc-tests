@@ -8,8 +8,9 @@ and [privtap](privtap/README.md) for their interfaces and limitations.
 ## Requirements
 
 Build on Linux with Meson 1.4 or newer, Ninja, a host C compiler, binutils
-(`readelf`), Python 3.11 or newer, and uv. The development environment pins
-Zig 0.14.1 and JSON Schema validation dependencies in `uv.lock`.
+(`readelf`), Python 3.11 or newer, and uv. Formatting also uses clang-format 19.
+The development environment pins Zig 0.14.1, Ruff and JSON Schema validation
+dependencies in `uv.lock`.
 
 From the repository root, bootstrap once:
 
@@ -77,6 +78,26 @@ replaced by this workflow. `privtap/build.sh` retains its convenience, package a
 device-fixture commands, delegating compilation to Meson. Packaging still uses the
 shared installer from an `mpc-vst-plugins` checkout; set `MPC_VST_PLUGINS` when it is
 not at `../torpedo/mpc/mpc-vst-plugins` relative to this repository.
+
+## Formatting
+
+C follows the Spice style: two spaces, attached braces and a 100-column limit.
+`.clang-format` defines the policy and preserves include order. Python uses Ruff
+with four spaces and the same line-length limit. `.editorconfig` supplies editor
+defaults for whitespace and line endings.
+
+After `uv sync --locked`, format or check all project C/Python sources:
+
+```sh
+uv run --no-sync meson compile -C builddir/host format
+uv run --no-sync meson compile -C builddir/host format-check
+```
+
+These commands include source and test files while excluding ignored build
+artifacts, research captures and dependencies. Checks leave files untouched and
+fail when formatting is needed. The normal `meson test` run includes this check
+in the `style` suite. For one file, use `clang-format-19 -i path/to/file.c`
+or `uv run --no-sync ruff format path/to/file.py`.
 
 ## Local artifacts and device tools
 

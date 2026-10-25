@@ -11,21 +11,21 @@
 #define ADAPTER_PROBE_TIMEOUT_MS 50
 
 struct api {
-    const char *root;
-    const char *device_id;
-    char instance_id[37];
-    char backend_signature[1024];
+  const char *root;
+  const char *device_id;
+  char instance_id[37];
+  char backend_signature[1024];
 };
 
 struct discovery {
-    char model[256];
-    char build_id[129];
-    const char *process;
-    const char *profile;
-    const char *unavailable_reason;
-    int known_build;
-    int adapter_attached;
-    char adapter_id[37];
+  char model[256];
+  char build_id[129];
+  const char *process;
+  const char *profile;
+  const char *unavailable_reason;
+  int known_build;
+  int adapter_attached;
+  char adapter_id[37];
 };
 
 int api_init(struct api *api, const char *root, const char *device_id);

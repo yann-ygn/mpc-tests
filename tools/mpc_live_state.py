@@ -4,6 +4,7 @@
 Requires a compiled tools/mpc_mem_probe.c and the exact supported firmware build.
 Only the temporary helper executable is written to the device. See findings/live-state.md.
 """
+
 import argparse
 from datetime import datetime, timezone
 import json
@@ -28,8 +29,20 @@ def u32(data, offset=0):
 class MemorySession:
     def __init__(self, host, binary, profile):
         self.profile = profile
-        self.ssh = ["ssh", "-F", "/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=7",
-                    "-o", "StrictHostKeyChecking=yes", "-o", "UpdateHostKeys=no", "root@" + host]
+        self.ssh = [
+            "ssh",
+            "-F",
+            "/dev/null",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "ConnectTimeout=7",
+            "-o",
+            "StrictHostKeyChecking=yes",
+            "-o",
+            "UpdateHostKeys=no",
+            "root@" + host,
+        ]
         pids = self.command("pidof MPC").decode().split()
         if len(pids) != 1 or not pids[0].isdigit():
             raise RuntimeError("Expected exactly one MPC process")
@@ -37,16 +50,24 @@ class MemorySession:
         self.refresh_maps()
         offset = int(profile["buildIdFileOffset"])
         expected = bytes.fromhex(profile["buildId"])
-        actual = self.command(f"dd if=/proc/{self.pid}/exe bs=1 skip={offset} count={len(expected)} 2>/dev/null")
+        actual = self.command(
+            f"dd if=/proc/{self.pid}/exe bs=1 skip={offset} count={len(expected)} 2>/dev/null"
+        )
         if actual != expected:
             raise RuntimeError("Unsupported MPC executable build ID; no object offsets were used")
         self.remote = "/tmp/mpc-memory-probe-" + uuid.uuid4().hex
-        self.command("cat > " + self.remote + " && chmod 700 " + self.remote, data=binary.read_bytes())
+        self.command(
+            "cat > " + self.remote + " && chmod 700 " + self.remote, data=binary.read_bytes()
+        )
 
     def command(self, command, data=None, timeout=15):
-        result = subprocess.run(self.ssh + [command], input=data, capture_output=True, timeout=timeout)
+        result = subprocess.run(
+            self.ssh + [command], input=data, capture_output=True, timeout=timeout
+        )
         if result.returncode:
-            raise RuntimeError("Device command failed: " + result.stderr.decode(errors="replace")[:300])
+            raise RuntimeError(
+                "Device command failed: " + result.stderr.decode(errors="replace")[:300]
+            )
         return result.stdout
 
     def refresh_maps(self):
@@ -64,9 +85,15 @@ class MemorySession:
         self.base = bases[0]
 
     def readable(self, address, length):
-        return (isinstance(address, int) and address > 0 and length > 0
-                and any("r" in flags and start <= address < address + length <= end
-                        for start, end, flags in self.maps))
+        return (
+            isinstance(address, int)
+            and address > 0
+            and length > 0
+            and any(
+                "r" in flags and start <= address < address + length <= end
+                for start, end, flags in self.maps
+            )
+        )
 
     def read_many(self, jobs):
         if not jobs:
@@ -82,7 +109,7 @@ class MemorySession:
             raise SnapshotChanged("Incomplete process-memory read")
         result, offset = [], 0
         for _, length in jobs:
-            result.append(data[offset:offset + length])
+            result.append(data[offset : offset + length])
             offset += length
         return result
 
@@ -90,19 +117,26 @@ class MemorySession:
         return self.read_many([(address, length)])[0]
 
     def vector(self, data, offsets, prefix, limit=256):
-        begin, end, capacity = (u32(data, offsets[prefix + key]) for key in ("Begin", "End", "Capacity"))
+        begin, end, capacity = (
+            u32(data, offsets[prefix + key]) for key in ("Begin", "End", "Capacity")
+        )
         if begin == end == capacity == 0:
             return []
-        if not (begin <= end <= capacity and (end - begin) % 4 == 0
-                and (capacity - begin) % 4 == 0 and (capacity - begin) // 4 <= limit):
+        if not (
+            begin <= end <= capacity
+            and (end - begin) % 4 == 0
+            and (capacity - begin) % 4 == 0
+            and (capacity - begin) // 4 <= limit
+        ):
             raise SnapshotChanged("Invalid track-vector bounds")
         count = (end - begin) // 4
         return list(struct.unpack("<" + "I" * count, self.read(begin, count * 4))) if count else []
 
     def valid_project(self, data):
-        return (u32(data) == self.base + self.profile["vtables"]["project"]
-                and all(u32(data, int(off)) == self.base + table
-                        for off, table in self.profile["projectSecondaryVtables"].items()))
+        return u32(data) == self.base + self.profile["vtables"]["project"] and all(
+            u32(data, int(off)) == self.base + table
+            for off, table in self.profile["projectSecondaryVtables"].items()
+        )
 
     def find_project(self):
         target = self.base + self.profile["vtables"]["project"]
@@ -112,7 +146,7 @@ class MemorySession:
             raise RuntimeError("No Project object found in the main heap")
         if len(candidates) > 32:
             raise RuntimeError("Too many Project candidates; refusing an ambiguous layout")
-        data = self.read_many([(a, 0xaa8) for a in candidates])
+        data = self.read_many([(a, 0xAA8) for a in candidates])
         valid = [a for a, d in zip(candidates, data) if self.valid_project(d)]
         if len(valid) != 1:
             raise RuntimeError("Expected one Project object with matching secondary virtual tables")
@@ -129,13 +163,17 @@ class MemorySession:
     def _snapshot(self, project):
         started = time.monotonic()
         profile = self.profile
-        po, to, so, pro, poolo = (profile["offsets"][k] for k in ("project", "track", "sequence", "program", "trackPool"))
-        p = self.read(project, 0xaa8)
+        po, to, so, pro, poolo = (
+            profile["offsets"][k] for k in ("project", "track", "sequence", "program", "trackPool")
+        )
+        p = self.read(project, 0xAA8)
         if not self.valid_project(p):
             raise SnapshotChanged("Project object is no longer valid")
         current_track = u32(p, po["selectedTrack"])
         current_sequence = u32(p, po["selectedSequence"])
-        if current_track != u32(p, po["selectedTrackMirror"]) or current_sequence != u32(p, po["selectedSequenceMirror"]):
+        if current_track != u32(p, po["selectedTrackMirror"]) or current_sequence != u32(
+            p, po["selectedSequenceMirror"]
+        ):
             raise SnapshotChanged("Selection update is in progress")
         pool_address = u32(p, po["trackPool"])
         pool = self.read(pool_address, 0x130)
@@ -149,10 +187,12 @@ class MemorySession:
         count, capacity = u32(p, po["sequenceCount"]), u32(p, po["sequenceCapacity"])
         if not (0 < count <= capacity <= 2048):
             raise SnapshotChanged("Invalid sequence-array bounds")
-        sequence_slots = list(struct.unpack("<" + "I" * count, self.read(u32(p, po["sequenceArray"]), count * 4)))
+        sequence_slots = list(
+            struct.unpack("<" + "I" * count, self.read(u32(p, po["sequenceArray"]), count * 4))
+        )
         if current_sequence not in sequence_slots:
             raise SnapshotChanged("Current sequence is outside the sequence array")
-        sequence = self.read(current_sequence, 0xc8)
+        sequence = self.read(current_sequence, 0xC8)
         if u32(sequence) != self.base + profile["vtables"]["sequence"]:
             raise SnapshotChanged("Sequence virtual table does not match")
         bpm = struct.unpack_from("<f", sequence, so["bpm"])[0]
@@ -162,7 +202,7 @@ class MemorySession:
         addresses = list(all_tracks)
         if current_track not in addresses:
             addresses.append(current_track)
-        track_data = self.read_many([(a, 0x64c) for a in addresses])
+        track_data = self.read_many([(a, 0x64C) for a in addresses])
         for data in track_data:
             if u32(data) != self.base + profile["vtables"]["track"]:
                 raise SnapshotChanged("Track virtual table does not match")
@@ -187,27 +227,62 @@ class MemorySession:
             values = [data[to["recordArm"]], pd[pro["mute"]], pd[pro["solo"]], pd[pro["silenced"]]]
             if any(v not in (0, 1) for v in values):
                 raise SnapshotChanged("Track flags are outside the expected boolean range")
-            rows[address] = dict(name=name, type=kind, recordArmed=bool(values[0]), muted=bool(values[1]),
-                                 soloed=bool(values[2]), silenced=bool(values[3]))
+            rows[address] = dict(
+                name=name,
+                type=kind,
+                recordArmed=bool(values[0]),
+                muted=bool(values[1]),
+                soloed=bool(values[2]),
+                silenced=bool(values[3]),
+            )
 
         selected = dict(rows[current_track])
-        selected["index"] = normal_tracks.index(current_track) if current_track in normal_tracks else None
+        selected["index"] = (
+            normal_tracks.index(current_track) if current_track in normal_tracks else None
+        )
         if selected["index"] is not None and selected["index"] != u32(p, po["selectedTrackIndex"]):
             raise SnapshotChanged("Selected track index and pointer disagree")
-        after_p, after_pool, after_sequence = self.read_many([(project, 0xaa8), (pool_address, 0x50), (current_sequence, 0xc8)])
-        checked = [po[k] for k in ("selectedTrack", "selectedTrackMirror", "selectedSequence", "selectedSequenceMirror",
-                                   "selectedTrackIndex", "trackPool", "sequenceArray", "sequenceCapacity", "sequenceCount")]
-        if (not self.valid_project(after_p) or any(u32(p, off) != u32(after_p, off) for off in checked)
-                or pool[:0x50] != after_pool or u32(sequence, so["name"]) != u32(after_sequence, so["name"])
-                or sequence[so["bpm"]:so["bpm"] + 4] != after_sequence[so["bpm"]:so["bpm"] + 4]):
+        after_p, after_pool, after_sequence = self.read_many(
+            [(project, 0xAA8), (pool_address, 0x50), (current_sequence, 0xC8)]
+        )
+        checked = [
+            po[k]
+            for k in (
+                "selectedTrack",
+                "selectedTrackMirror",
+                "selectedSequence",
+                "selectedSequenceMirror",
+                "selectedTrackIndex",
+                "trackPool",
+                "sequenceArray",
+                "sequenceCapacity",
+                "sequenceCount",
+            )
+        ]
+        if (
+            not self.valid_project(after_p)
+            or any(u32(p, off) != u32(after_p, off) for off in checked)
+            or pool[:0x50] != after_pool
+            or u32(sequence, so["name"]) != u32(after_sequence, so["name"])
+            or sequence[so["bpm"] : so["bpm"] + 4] != after_sequence[so["bpm"] : so["bpm"] + 4]
+        ):
             raise SnapshotChanged("Selection or topology changed during the snapshot")
         return {
-            "source": "process-memory", "experimental": True,
+            "source": "process-memory",
+            "experimental": True,
             "firmware": {"version": profile["mpcVersion"], "buildId": profile["buildId"]},
             "capturedAt": datetime.now(timezone.utc).isoformat(),
-            "consistency": {"selectionChecked": True, "atomic": False, "readSeconds": round(time.monotonic() - started, 3)},
+            "consistency": {
+                "selectionChecked": True,
+                "atomic": False,
+                "readSeconds": round(time.monotonic() - started, 3),
+            },
             "selectedTrack": selected,
-            "selectedSequence": {"index": sequence_slots.index(current_sequence), "name": names[-1], "bpm": bpm},
+            "selectedSequence": {
+                "index": sequence_slots.index(current_sequence),
+                "name": names[-1],
+                "bpm": bpm,
+            },
             "sequenceSlots": count,
             "tracks": [dict(index=i, **rows[a]) for i, a in enumerate(normal_tracks)],
             "buses": [rows[a] for a in all_tracks if a not in normal_tracks],
@@ -222,7 +297,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
     parser.add_argument("--binary", type=Path, default=root / "builddir/arm/tools/mem_probe")
-    parser.add_argument("--profile", type=Path, default=root / "tools/profiles/key37-mpc3.9.1.2.json")
+    parser.add_argument(
+        "--profile", type=Path, default=root / "tools/profiles/key37-mpc3.9.1.2.json"
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if not args.binary.is_file():

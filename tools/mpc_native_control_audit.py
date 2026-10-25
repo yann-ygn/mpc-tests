@@ -4,6 +4,7 @@
 Checks the running build, code fingerprints, live objects, and property listeners.
 The separate control profile records analysis evidence, not an enabled write API.
 """
+
 import argparse
 from datetime import datetime, timezone
 import json
@@ -54,12 +55,18 @@ def audit(session, control):
         address = session.base + function["rva"]
         if session.read(address, len(expected)) != expected:
             raise RuntimeError("Native code fingerprint differs: " + function["name"])
-        functions.append({"name": function["name"], "rva": hex(function["rva"]),
-                          "runtimeAddress": hex(address), "prefixMatched": True})
+        functions.append(
+            {
+                "name": function["name"],
+                "rva": hex(function["rva"]),
+                "runtimeAddress": hex(address),
+                "prefixMatched": True,
+            }
+        )
     project = session.find_project()
     before = session.snapshot(project)
     po, poolo = session.profile["offsets"]["project"], session.profile["offsets"]["trackPool"]
-    project_data = session.read(project, 0xaa8)
+    project_data = session.read(project, 0xAA8)
     if not session.valid_project(project_data):
         raise SnapshotChanged("Project changed")
     pool = u32(project_data, po["trackPool"])
@@ -68,7 +75,7 @@ def audit(session, control):
         raise SnapshotChanged("Track topology changed")
     tracks = []
     for index, address in enumerate(addresses):
-        track = session.read(address, 0x64c)
+        track = session.read(address, 0x64C)
         if u32(track) != session.base + session.profile["vtables"]["track"]:
             raise SnapshotChanged("Track no longer has the expected type")
         name_ptr = u32(track, session.profile["offsets"]["track"]["name"])
@@ -78,39 +85,62 @@ def audit(session, control):
         program = u32(track, session.profile["offsets"]["track"]["program"])
         program_data = session.read(program, 0x270)
         if u32(program_data) - session.base not in {
-                int(x) for x in session.profile["programTypes"]}:
+            int(x) for x in session.profile["programTypes"]
+        }:
             raise SnapshotChanged("Program no longer has a known type")
         bindings = []
         for binding in control["bindings"]:
-            owner, data = ((program, program_data) if binding["propertyOwner"] == "program"
-                           else (address, track))
+            owner, data = (
+                (program, program_data)
+                if binding["propertyOwner"] == "program"
+                else (address, track)
+            )
             script_value = data[binding["scriptValueOffset"]]
             observed = data[binding["observedValueOffset"]]
             if script_value not in (0, 1) or observed not in (0, 1):
                 raise SnapshotChanged("Invalid boolean field")
-            bindings.append({"name": binding["name"], "scriptGetterValue": bool(script_value),
-                             "observerValue": bool(observed),
-                             "listeners": listeners(session, owner, binding["propertyOffset"])})
+            bindings.append(
+                {
+                    "name": binding["name"],
+                    "scriptGetterValue": bool(script_value),
+                    "observerValue": bool(observed),
+                    "listeners": listeners(session, owner, binding["propertyOffset"]),
+                }
+            )
         tracks.append({"index": index, "name": name, "bindings": bindings})
     after = session.snapshot(project)
     for field in ("selectedTrack", "selectedSequence", "tracks", "buses", "sequenceSlots"):
         if before[field] != after[field]:
             raise SnapshotChanged("Live state changed during the audit; repeat while idle")
-    return {"capturedAt": datetime.now(timezone.utc).isoformat(), "pid": session.pid,
-            "buildId": control["buildId"], "mode": "read-only-audit",
-            "nativeCallsTested": False, "writesEnabled": False, "functions": functions,
-            "tracks": tracks, "stateStableAcrossAudit": True,
-            "limitations": ["Listener traversal is not atomic; run while idle.",
-                            "Matching code and listeners do not prove native invocation is safe."]}
+    return {
+        "capturedAt": datetime.now(timezone.utc).isoformat(),
+        "pid": session.pid,
+        "buildId": control["buildId"],
+        "mode": "read-only-audit",
+        "nativeCallsTested": False,
+        "writesEnabled": False,
+        "functions": functions,
+        "tracks": tracks,
+        "stateStableAcrossAudit": True,
+        "limitations": [
+            "Listener traversal is not atomic; run while idle.",
+            "Matching code and listeners do not prove native invocation is safe.",
+        ],
+    }
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
     parser.add_argument("--binary", type=Path, default=ROOT / "builddir/arm/tools/mem_probe")
-    parser.add_argument("--profile", type=Path, default=ROOT / "tools/profiles/key37-mpc3.9.1.2.json")
-    parser.add_argument("--control-profile", type=Path,
-                        default=ROOT / "tools/profiles/key37-mpc3.9.1.2-control.json")
+    parser.add_argument(
+        "--profile", type=Path, default=ROOT / "tools/profiles/key37-mpc3.9.1.2.json"
+    )
+    parser.add_argument(
+        "--control-profile",
+        type=Path,
+        default=ROOT / "tools/profiles/key37-mpc3.9.1.2-control.json",
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     session = MemorySession(args.host, args.binary, json.loads(args.profile.read_text()))

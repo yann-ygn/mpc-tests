@@ -7,7 +7,9 @@ import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-spec = importlib.util.spec_from_file_location("mpc_firmware_profile", ROOT / "native-api/adapter/firmware_profile.py")
+spec = importlib.util.spec_from_file_location(
+    "mpc_firmware_profile", ROOT / "native-api/adapter/firmware_profile.py"
+)
 profile = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(profile)
 
@@ -30,7 +32,9 @@ class ProfileTests(unittest.TestCase):
             "family": lambda s, c: c["supportedProgramFamilies"].append("midi"),
             "qualification": lambda s, c: c.update(capabilityQualification="production"),
             "fingerprint_length": lambda s, c: c["functions"][0].update(prefixHex="abcd"),
-            "duplicate_function": lambda s, c: c["functions"].append(copy.deepcopy(c["functions"][0])),
+            "duplicate_function": lambda s, c: c["functions"].append(
+                copy.deepcopy(c["functions"][0])
+            ),
             "unverified_setter": lambda s, c: c["bindings"][0].update(setterRva=100),
             "unverified_filter": lambda s, c: c["bindings"][2].update(filterInvokerRva=100),
             "owner": lambda s, c: c["bindings"][0].update(propertyOwner="track"),
@@ -48,8 +52,12 @@ class ProfileTests(unittest.TestCase):
 class NativeAdapterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.fixture = os.environ.get("MPC_NATIVE_TEST_FIXTURE", ROOT / "builddir/host/native-api/tests/native_fixture")
-        cls.library = os.environ.get("MPC_NATIVE_TEST_LIBRARY", ROOT / "builddir/host/native-api/libmpc_native.so")
+        cls.fixture = os.environ.get(
+            "MPC_NATIVE_TEST_FIXTURE", ROOT / "builddir/host/native-api/tests/native_fixture"
+        )
+        cls.library = os.environ.get(
+            "MPC_NATIVE_TEST_LIBRARY", ROOT / "builddir/host/native-api/libmpc_native.so"
+        )
         cls.readelf = os.environ.get("MPC_READELF", "readelf")
 
     def test_isolated_native_guards_and_typed_operations(self):
@@ -57,14 +65,33 @@ class NativeAdapterTests(unittest.TestCase):
         self.assertGreaterEqual(int(run.stdout.split("=")[1]), 25)
 
     def test_shared_library_export_allowlist(self):
-        output = subprocess.run([self.readelf, "-W", "--dyn-syms", str(self.library)],
-                                check=True, capture_output=True, text=True).stdout
-        names = {row[7] for line in output.splitlines() if len(row := line.split()) >= 8
-                 and row[4] in ("GLOBAL", "WEAK") and row[6] != "UND"}
-        self.assertEqual(names, {"mpc_native_open", "mpc_native_close", "mpc_native_get_status", "mpc_native_read_track",
-            "mpc_native_set_mute", "mpc_native_set_solo", "mpc_native_set_record_armed", "mpc_native_error_name"})
-        dynamic = subprocess.run([self.readelf, "-d", str(self.library)],
-                                 check=True, capture_output=True, text=True).stdout
+        output = subprocess.run(
+            [self.readelf, "-W", "--dyn-syms", str(self.library)],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        names = {
+            row[7]
+            for line in output.splitlines()
+            if len(row := line.split()) >= 8 and row[4] in ("GLOBAL", "WEAK") and row[6] != "UND"
+        }
+        self.assertEqual(
+            names,
+            {
+                "mpc_native_open",
+                "mpc_native_close",
+                "mpc_native_get_status",
+                "mpc_native_read_track",
+                "mpc_native_set_mute",
+                "mpc_native_set_solo",
+                "mpc_native_set_record_armed",
+                "mpc_native_error_name",
+            },
+        )
+        dynamic = subprocess.run(
+            [self.readelf, "-d", str(self.library)], check=True, capture_output=True, text=True
+        ).stdout
         self.assertIn("Library soname: [libmpc_native.so]", dynamic)
 
 
