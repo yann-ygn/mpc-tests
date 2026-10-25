@@ -125,5 +125,10 @@ before running experiments.
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through
   `/tmp/mpc-native-api/control.sock`. Stop joins API callers, detaches UI observers and drains callbacks; a stalled
   UI retains the executor and reports draining. Full code unload/upgrades require MPC restart. See
-  `native-api/INSTALL.md` and `findings/native-package.md`. Public writes remain #32. Installed lifecycle tests
-  still need the owner's saved-work/restart approval; do not infer it from read-only/isolated fixture tests.
+  `native-api/INSTALL.md` and `findings/native-package.md`. Public writes remain #32. With owner-approved
+  restarts, actual startup, reads on two tracks/28 buses, listener drain, upgrade, uninstall/reinstall and
+  configuration recovery pass. The API is installed at `/data/mpc-addins/mpc-native-api` and left ready on Main;
+  privtap and Remote remain functional. Normal service termination can bypass ELF destructors: the uninstall
+  wrapper uses `mpc-api host-cleanup` under the lifetime lock after process exit. Nine host lifecycle cases,
+  ASan/UBSan, all 14 host entries and ARM deployment guards pass. See sanitized native-package proof.
+  Future instrument installs/restarts still need the owner's approval under the device-work rule above.
