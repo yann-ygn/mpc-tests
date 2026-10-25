@@ -13,12 +13,21 @@
 #define ADAPTER_PROBE_TIMEOUT_MS 50
 #define ADAPTER_STATE_TIMEOUT_MS 200
 
+/* Optional in-process attachment. The transport joins all callers before the
+ * owner retires this backend. Standalone discovery keeps the lab IPC path. */
+struct api_backend {
+  void *userdata;
+  int (*probe)(void *, char instance_id[37], int *state_ready);
+  int (*state)(void *, const char *, struct mpc_state_snapshot *);
+};
+
 struct api {
   const char *root;
   const char *device_id;
   char instance_id[37];
   char backend_signature[1024];
   uint64_t revision;
+  const struct api_backend *backend;
 };
 
 struct discovery {
@@ -35,6 +44,7 @@ struct discovery {
 };
 
 int api_init(struct api *api, const char *root, const char *device_id);
+int api_instance_new(char output[37]);
 int discovery_read(struct api *api, struct discovery *result);
 char *api_error(const char *code, const char *message);
 char *api_respond(struct api *api, const char *request, size_t length);

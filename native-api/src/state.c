@@ -186,7 +186,8 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
   struct mpc_state_snapshot *s = calloc(1, sizeof *s);
   if (!s)
     return api_error("NOT_READY", "Snapshot allocation failed");
-  int error = adapter_state(api->root, discovery->pid, discovery->adapter_id, s);
+  int error = api->backend ? api->backend->state(api->backend->userdata, discovery->adapter_id, s)
+                           : adapter_state(api->root, discovery->pid, discovery->adapter_id, s);
   if (error || !valid_snapshot(s, discovery->adapter_id)) {
     free(s);
     return api_error(

@@ -30,6 +30,8 @@ def check(args):
             raise ValueError(f"Export allowlist mismatch: {exported ^ expected}")
 
     dynamic = inspect(args, "-d")
+    if getattr(args, "nodelete", False) and not re.search(r"\(FLAGS_1\).*\bNODELETE\b", dynamic):
+        raise ValueError("Host must remain mapped until process exit (NODELETE)")
     needed = re.findall(r"\(NEEDED\).*?\[(.*?)\]", dynamic)
     if any("/" in name for name in needed):
         raise ValueError(f"Nonportable shared-library dependencies: {needed}")
@@ -65,6 +67,7 @@ def main():
     parser.add_argument("--needed")
     parser.add_argument("--runpath")
     parser.add_argument("--armhf", action="store_true")
+    parser.add_argument("--nodelete", action="store_true")
     parser.add_argument("--glibc-max")
     args = parser.parse_args()
     check(args)

@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static int instance_new(char output[37]) {
+int api_instance_new(char output[37]) {
   unsigned char bytes[16];
   int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
   if (fd < 0)
@@ -41,7 +41,7 @@ int api_init(struct api *api, const char *root, const char *device_id) {
   memset(api, 0, sizeof *api);
   api->root = root;
   api->device_id = device_id;
-  return instance_new(api->instance_id);
+  return api_instance_new(api->instance_id);
 }
 
 /* Bounded metadata reads only. Never open /proc/PID/mem or attach to MPC. */
@@ -191,8 +191,9 @@ int discovery_read(struct api *api, struct discovery *result) {
   result->known_build = valid && !strcmp(result->build_id, PROFILE_BUILD_ID);
   int matched = result->known_build && !strcmp(result->model, PROFILE_MODEL);
   if (matched) {
-    result->adapter_attached =
-      adapter_probe(api->root, pid, result->adapter_id, &result->state_ready);
+    result->adapter_attached = api->backend
+      ? api->backend->probe(api->backend->userdata, result->adapter_id, &result->state_ready)
+      : adapter_probe(api->root, pid, result->adapter_id, &result->state_ready);
     result->pid = pid;
     if (
       started != start_time(api->root, pid) || stat(path, &after) ||
@@ -223,7 +224,7 @@ int discovery_read(struct api *api, struct discovery *result) {
     result->model,
     result->adapter_id);
   if (api->backend_signature[0] && strcmp(api->backend_signature, signature)) {
-    if (instance_new(api->instance_id))
+    if (api_instance_new(api->instance_id))
       return -1;
     api->revision = 0;
   }

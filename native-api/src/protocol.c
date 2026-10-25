@@ -1,4 +1,5 @@
 #include "api.h"
+#include "host.h"
 #include "profile.h"
 
 #include <stdio.h>
@@ -171,7 +172,8 @@ char *api_respond(struct api *api, const char *request, size_t length) {
   fputs(",\"instanceId\":", output);
   api_quoted(output, api->instance_id);
   fputs(
-    ",\"implementation\":{\"name\":\"mpc-native-api\",\"version\":\"0.1.0-dev\"},\"firmware\":{"
+    ",\"implementation\":{\"name\":\"mpc-native-api\",\"version\":\"" MPC_HOST_VERSION
+    "\"},\"firmware\":{"
     "\"model\":",
     output);
   api_quoted(output, discovery.model[0] ? discovery.model : NULL);

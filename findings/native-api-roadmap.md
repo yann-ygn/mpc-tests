@@ -10,6 +10,9 @@ and verified for all 22 stories. The owner accepted the [public contract](native
 #32 is In progress with discovery, authoritative read operations and verified attachment reporting; #19 now provides transport-independent managed flag handlers; public Unix write binding remains #32.
 #20 is implemented with authoritative owner resolution and native lifecycle generations.
 #18 adds live snapshots and read projections; see [findings](native-state.md).
+#21 implements the persistent addin package, health and draining stop/start;
+installed lifecycle verification awaits the owner's saved-work/restart approval.
+See [packaging findings](native-package.md).
 
 ## Epic #4 — Native control library and live API
 
@@ -30,7 +33,7 @@ Only the bounded native mute/solo/arm proof is already validated; these stories 
 | #34 | Connect paired HTTP state and commands to Akai's web service | New |
 | #35 | Expose the native-control API as typed MCP tools | New |
 | #36 | Provide a Python client library for live state and track control | New |
-| #21 | Package and run the native adapter and local command service on MPC | New |
+| #21 | Package and run the native adapter and local command service on MPC | In progress — package implemented; installed tests await restart approval |
 | #38 | Qualify the native API for release with device and failure tests | New |
 | #37 | Provide a JavaScript/TypeScript client using the shared API contract (follow-up client) | New |
 

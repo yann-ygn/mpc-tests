@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -16,6 +17,30 @@
 #include <unistd.h>
 
 static volatile sig_atomic_t stopping;
+static pthread_mutex_t ownership_mutex = PTHREAD_MUTEX_INITIALIZER;
+static struct {
+  char path[108];
+  struct stat owned;
+} sockets[2];
+
+void api_socket_remember(unsigned slot, const char *path, const struct stat *owned) {
+  pthread_mutex_lock(&ownership_mutex);
+  snprintf(sockets[slot].path, sizeof sockets[slot].path, "%s", path);
+  sockets[slot].owned = *owned;
+  pthread_mutex_unlock(&ownership_mutex);
+}
+
+void api_sockets_cleanup(void) {
+  pthread_mutex_lock(&ownership_mutex);
+  for (unsigned i = 0; i < 2; i++) {
+    struct stat current;
+    if (
+      sockets[i].path[0] && !lstat(sockets[i].path, &current) &&
+      current.st_ino == sockets[i].owned.st_ino && current.st_dev == sockets[i].owned.st_dev)
+      unlink(sockets[i].path);
+  }
+  pthread_mutex_unlock(&ownership_mutex);
+}
 static void stop(int sig) {
   (void)sig;
   stopping = 1;
@@ -148,7 +173,13 @@ static int accept_client(int listener, struct client clients[MAX_CONNECTIONS]) {
   return 0;
 }
 
-int api_serve(const char *path, const char *device_id, const char *root) {
+static int serve(
+  const char *path,
+  const char *device_id,
+  const char *root,
+  const struct api_backend *backend,
+  int (*should_stop)(void *),
+  void *userdata) {
   if (private_parent(path)) {
     fputs("Socket parent must be an existing private directory owned by this user\n", stderr);
     return 1;
@@ -158,6 +189,7 @@ int api_serve(const char *path, const char *device_id, const char *root) {
     perror("instance identity");
     return 1;
   }
+  api.backend = backend;
   int listener = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
   if (listener < 0) {
     perror("socket");
@@ -165,7 +197,6 @@ int api_serve(const char *path, const char *device_id, const char *root) {
   }
   struct sockaddr_un address = {.sun_family = AF_UNIX};
   strcpy(address.sun_path, path);
-  umask(0077);
   /* Never unlink a pre-existing path, including a live service's socket. */
   if (bind(listener, (struct sockaddr *)&address, sizeof address)) {
     perror("bind");
@@ -178,6 +209,8 @@ int api_serve(const char *path, const char *device_id, const char *root) {
     close(listener);
     return 1;
   }
+  if (backend)
+    api_socket_remember(0, path, &owned);
   int status = 1;
   struct client clients[MAX_CONNECTIONS];
   memset(clients, 0, sizeof clients);
@@ -187,13 +220,9 @@ int api_serve(const char *path, const char *device_id, const char *root) {
     perror("listen");
     goto cleanup;
   }
-  struct sigaction action = {.sa_handler = stop};
-  sigemptyset(&action.sa_mask);
-  sigaction(SIGTERM, &action, NULL);
-  sigaction(SIGINT, &action, NULL);
   fprintf(stderr, "Listening on %s (native API)\n", path);
   status = 0;
-  while (!stopping) {
+  while (!should_stop(userdata)) {
     struct pollfd fds[MAX_CONNECTIONS + 1];
     fds[0] = (struct pollfd){listener, POLLIN, 0};
     for (size_t i = 0; i < MAX_CONNECTIONS; i++)
@@ -223,4 +252,27 @@ cleanup:
   if (!lstat(path, &current) && current.st_dev == owned.st_dev && current.st_ino == owned.st_ino)
     unlink(path);
   return status;
+}
+
+static int signal_stopped(void *unused) {
+  (void)unused;
+  return stopping;
+}
+
+int api_serve(const char *path, const char *device_id, const char *root) {
+  struct sigaction action = {.sa_handler = stop};
+  sigemptyset(&action.sa_mask);
+  sigaction(SIGTERM, &action, NULL);
+  sigaction(SIGINT, &action, NULL);
+  return serve(path, device_id, root, NULL, signal_stopped, NULL);
+}
+
+int api_serve_embedded(
+  const char *path,
+  const char *device_id,
+  const struct api_backend *backend,
+  int (*should_stop)(void *),
+  void *userdata,
+  const char *root) {
+  return serve(path, device_id, root, backend, should_stop, userdata);
 }

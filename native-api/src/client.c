@@ -9,17 +9,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-int api_request(const char *path) {
-  char input[MAX_REQUEST_BYTES + 2];
-  size_t used = fread(input, 1, sizeof input, stdin);
-  if (
-    ferror(stdin) || !used || used > MAX_REQUEST_BYTES + 1 ||
-    (used == MAX_REQUEST_BYTES + 1 && input[used - 1] != '\n')) {
-    fputs("Expected one request of at most maxRequestBytes bytes\n", stderr);
-    return 1;
-  }
-  if (input[used - 1] != '\n')
-    input[used++] = '\n';
+static int request(const char *path, const char *input, size_t used) {
   int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
   if (fd < 0) {
     perror("socket");
@@ -75,4 +65,22 @@ int api_request(const char *path) {
     return 1;
   }
   return fwrite(output, 1, used, stdout) == used && !fflush(stdout) ? 0 : 1;
+}
+
+int api_control(const char *path, const char *input) {
+  return request(path, input, strlen(input));
+}
+
+int api_request(const char *path) {
+  char input[MAX_REQUEST_BYTES + 2];
+  size_t used = fread(input, 1, sizeof input, stdin);
+  if (
+    ferror(stdin) || !used || used > MAX_REQUEST_BYTES + 1 ||
+    (used == MAX_REQUEST_BYTES + 1 && input[used - 1] != '\n')) {
+    fputs("Expected one request of at most maxRequestBytes bytes\n", stderr);
+    return 1;
+  }
+  if (input[used - 1] != '\n')
+    input[used++] = '\n';
+  return request(path, input, used);
 }

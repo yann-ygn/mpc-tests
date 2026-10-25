@@ -1,4 +1,5 @@
 #include "transport.h"
+#include "host.h"
 
 #include <limits.h>
 #include <stdio.h>
@@ -7,6 +8,22 @@
 
 int main(int argc, char **argv) {
   const char *path = NULL, *device_id = NULL, *root = "";
+  if (
+    argc >= 2 &&
+    (!strcmp(argv[1], "host-status") || !strcmp(argv[1], "host-start") ||
+     !strcmp(argv[1], "host-stop"))) {
+    if (argc == 2)
+      path = MPC_HOST_DIRECTORY "/control.sock";
+    else if (argc == 4 && !strcmp(argv[2], "--socket"))
+      path = argv[3];
+    if (!path || path[0] != '/' || strlen(path) >= sizeof(((struct sockaddr_un *)0)->sun_path))
+      goto usage;
+    return api_control(
+      path,
+      !strcmp(argv[1], "host-status")    ? "STATUS\n"
+        : !strcmp(argv[1], "host-start") ? "START\n"
+                                         : "STOP\n");
+  }
   if (argc < 2 || (strcmp(argv[1], "serve") && strcmp(argv[1], "request")))
     goto usage;
   for (int i = 2; i < argc; i += 2) {
@@ -40,7 +57,8 @@ int main(int argc, char **argv) {
 usage:
   fputs(
     "Usage: mpc-api serve --socket PATH --device-id ID [--root FIXTURE_ROOT]\n"
-    "       mpc-api request --socket PATH < request.json\n",
+    "       mpc-api request --socket PATH < request.json\n"
+    "       mpc-api host-status|host-start|host-stop [--socket PATH]\n",
     stderr);
   return 2;
 }

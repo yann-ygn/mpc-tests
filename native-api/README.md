@@ -6,7 +6,8 @@ authoritative attachment, `get_state`, `list_tracks`, `current_track`, `current_
 `recovery_snapshot` capture current native state through the UI executor. Public Unix writes, receipt lookup
 and streaming remain unavailable. Transport-independent [flag handlers](adapter/COMMANDS.md) are implemented by #19;
 #32 still supplies the authenticated wire binding and live mode/settings policy. The service does not load
-the [native adapter](adapter/README.md) itself; the temporary lab host supplies the attachment until packaging/supervision work is complete. See the
+the [native adapter](adapter/README.md) itself. The [persistent addin](INSTALL.md) embeds the adapter and the same
+Unix service in MPC, with health and draining stop/start commands; the standalone binary can also use a temporary lab attachment. See the
 [snapshot findings and qualification limits](../findings/native-state.md).
 
 The local transport is a restricted Unix stream socket. Each connection carries **one compact JSON request plus
@@ -21,6 +22,8 @@ HTTP and MCP adapters follow in their own stories; this service has no TCP liste
 - `src/protocol.c`: request parsing and discovery JSON; `src/discovery.c` reads process metadata.
 - `src/state.c`: validated snapshot serialization/projections; `src/attachment.c` checks the MPC peer and
   performs bounded metadata/state transfers.
+- `src/host.c` and `src/addin.c`: persistent in-process attachment, startup gate, lifecycle and management socket.
+  `package.py` builds the checked ARM package with the shared addin installer; [installation guide](INSTALL.md).
 
 `transport.h` is the private CLI/transport boundary; schemas cover discovery and the additive state operations.
 

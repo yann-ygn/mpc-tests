@@ -1,0 +1,7 @@
+ADDIN_ID=mpc-native-api
+ADDIN_NAME="MPC Native API"
+ADDIN_SO=mpc_native_host.so
+ADDIN_CONF=mpc-native-api.conf
+ADDIN_FILES="mpc-api PACKAGE.json SHA256SUMS INSTALL.md install-addin.sh"
+ADDIN_DONE="Health: /data/mpc-addins/mpc-native-api/mpc-api host-status. Local socket: /tmp/mpc-native-api/api.sock."
+ADDIN_NETWORK=""

@@ -48,6 +48,16 @@ class ElfChecks(unittest.TestCase):
     def test_rejects_wrong_soname(self):
         self.assertIn("Expected SONAME", self.run_check("--soname", "wrong.so"))
 
+    def test_requires_pinned_host_and_empty_exports(self):
+        self.assertIn("NODELETE", self.run_check("--nodelete"))
+        self.binary = Path(os.environ["MPC_HOST_TEST_LIBRARY"])
+        self.run_check(
+            "--nodelete",
+            "--exports",
+            str(CHECKER.parents[1] / "native-api/host-exports.map"),
+            valid=True,
+        )
+
     def test_rejects_missing_dependency_and_runpath(self):
         self.assertIn("Missing shared-library dependency", self.run_check("--needed", "missing.so"))
         self.assertIn("Expected RUNPATH", self.run_check("--runpath", "$ORIGIN"))

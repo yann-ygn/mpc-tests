@@ -62,6 +62,9 @@ foreach check : elf_checks
   if check.has_key('needed')
     check_command += ['--needed', check['needed'], '--runpath', '$ORIGIN']
   endif
+  if check.has_key('nodelete')
+    check_command += ['--nodelete']
+  endif
   if meson.is_cross_build()
     check_command += ['--armhf', '--glibc-max', '2.31']
   endif

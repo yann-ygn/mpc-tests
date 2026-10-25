@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-25",
+  "story": 21,
+  "hostVersion": "0.1.0",
+  "firmwareBuildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "hostMesonEntriesPassed": 14,
+  "hostLifecycleCasesPassed": 8,
+  "packageInstallerCasesPassed": 2,
+  "elfGuardCasesPassed": 8,
+  "hostLifecycleAsanUbsanPassed": true,
+  "armBuildAndElfGuardsPassed": true,
+  "deviceEvidenceScope": "isolated fixture processes only; no live MPC attachment installed",
+  "armFixturesPassed": [
+    "native_fixture",
+    "executor_fixture",
+    "identity_fixture",
+    "commands_fixture",
+    "host_fixture"
+  ],
+  "isolatedReadOperationsPassed": [
+    "get_state",
+    "list_tracks",
+    "current_track",
+    "current_sequence",
+    "recovery_snapshot"
+  ],
+  "isolatedStalledUiDrainVerified": true,
+  "isolatedStopStartVerified": true,
+  "isolatedDeviceIdentityStable": true,
+  "isolatedServiceAndAdapterIdentityRotated": true,
+  "isolatedSocketModes": "0600",
+  "mpcPidUnchanged": true,
+  "isolatedFilesRemoved": true,
+  "installedDeviceLifecycleVerified": false,
+  "installationAndMpcRestartPerformed": false,
+  "publicWritesEnabled": false
+}

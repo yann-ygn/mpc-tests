@@ -5,6 +5,9 @@ The API implements discovery and authoritative live state reads through a verifi
 attachment. The [managed flag handlers](native-api/adapter/COMMANDS.md) provide retained, verified command results;
 public Unix writes and streaming remain unavailable pending their transport/policy binding. See [the service](native-api/README.md), [the native adapter](native-api/adapter/README.md)
 and [privtap](privtap/README.md) for their interfaces and limitations.
+US #21 adds the [persistent addin package](native-api/INSTALL.md), including startup,
+health, stop/start and recovery. Build it with `uv run --no-sync python native-api/package.py`;
+installation requires saved work and approval for an MPC restart.
 
 ## Requirements
 
@@ -36,7 +39,7 @@ the explicit privtap and fixture optimization settings are retained.
 
 The tests include Python API/adapter/experiment cases with JSON Schema validation,
 the isolated native, executor and identity lifecycle/concurrency fixtures, privtap protocol tests, both preload cases
-(normal and identity X), and seven tests exercising the ELF deployment guards.
+(normal and identity X), and eight tests exercising the ELF deployment guards.
 Tests consume Meson's binaries and do not invoke compilers.
 The [flag-semantics matrix](findings/native-flag-semantics.md) documents device
 experiments and the private runner for US #31. The [live-state findings](findings/native-state.md)
@@ -65,10 +68,12 @@ The service's Python integration tests run in the host build only.
 |---|---|
 | Discovery/state service | `native-api/mpc-api` |
 | Native adapter | `native-api/libmpc_native.so` |
+| Persistent host (adapter and service, no exports) | `native-api/mpc_native_host.so` |
 | Native fixture | `native-api/tests/native_fixture` |
 | Executor fixture | `native-api/tests/executor_fixture` |
 | Identity/lifecycle fixture | `native-api/tests/identity_fixture` |
 | Command/receipt fixture | `native-api/tests/commands_fixture` |
+| Persistent host lifecycle fixture | `native-api/tests/host_fixture` |
 | Interposition addin | `privtap/privtap.so` |
 | privtap fixtures | `privtap/tests/{test_protocol,test_privtap,libfakeasound.so}` |
 | Memory/web helpers | `tools/{mem_probe,ipc_bridge}` |

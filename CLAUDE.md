@@ -120,3 +120,10 @@ before running experiments.
   native-api/adapter/COMMANDS.md. tools/mpc_command_lab.py is the bounded device runner.
 - Next: local command service binding and validated live qualification policy (#32), then streaming (#33).
   Per-sequence mute needs an explicit sequence target/precondition before public exposure.
+- Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
+  the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports
+  and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through
+  `/tmp/mpc-native-api/control.sock`. Stop joins API callers, detaches UI observers and drains callbacks; a stalled
+  UI retains the executor and reports draining. Full code unload/upgrades require MPC restart. See
+  `native-api/INSTALL.md` and `findings/native-package.md`. Public writes remain #32. Installed lifecycle tests
+  still need the owner's saved-work/restart approval; do not infer it from read-only/isolated fixture tests.
