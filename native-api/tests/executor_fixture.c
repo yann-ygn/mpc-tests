@@ -439,6 +439,44 @@ static void expiry_at_dispatch(void) {
   close_executor(executor, &h);
 }
 
+/* Model an intervening manual UI edit after acceptance but before dispatch.
+ * The queued expected value is checked against current state even when that
+ * edit already produced the desired value. A plain desired-state retry is a no-op. */
+static void manual_edit_conflicts(void) {
+  for (unsigned property = 0; property < 3; property++) {
+    struct harness h;
+    init(&h);
+    struct mpc_executor *executor = ready(&h, 1);
+    struct mpc_executor_request request = {
+      .operation = MPC_EXECUTOR_SET_MUTE + property,
+      .identity = handle,
+      .desired = true,
+      .has_expected = true,
+      .expected = false};
+    struct mpc_executor_job *job;
+    assert(mpc_executor_submit(executor, &request, &job) == MPC_NATIVE_OK);
+    struct mpc_native_function function = take(&h);
+    const struct native_binding *binding = &native_bindings[property];
+    unsigned owner = binding->owner_is_track ? TRACK : PROGRAM;
+    put_bool(&h.native, owner + binding->requested, true);
+    put_bool(&h.native, owner + binding->observed, true);
+    run_function(&function);
+    struct mpc_executor_result result;
+    assert(mpc_executor_wait(job, 0, &result) == MPC_NATIVE_PRECONDITION_FAILED);
+    assert(result.state == MPC_EXECUTOR_COMPLETED && !result.write.native_invoked);
+    assert(!h.native.setters && !h.native.filters);
+    mpc_executor_release(job);
+    request.has_expected = false;
+    assert(mpc_executor_submit(executor, &request, &job) == MPC_NATIVE_OK);
+    run(&h);
+    assert(mpc_executor_wait(job, 0, &result) == MPC_NATIVE_OK);
+    assert(result.write.changed_known && !result.write.changed && !result.write.native_invoked);
+    assert(!h.native.setters && !h.native.filters);
+    mpc_executor_release(job);
+    close_executor(executor, &h);
+  }
+}
+
 struct invocation {
   struct mpc_native_function function;
 };
@@ -534,6 +572,7 @@ static void concurrent_requests(void) {
 }
 
 int main(void) {
+  manual_edit_conflicts();
   startup();
   typed_operations();
   cancellation_and_captures();

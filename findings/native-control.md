@@ -235,3 +235,12 @@ prove a retained Project is still the active Project after a load. The bridge ac
 in its bounded snapshots. Volume, pan, routing and transport bindings have not been invoked. The production service
 should resolve an authoritative current root on dispatch, define completion/timeout semantics, and expose a narrow
 command allowlist.
+
+## Extended flag qualification (#31)
+
+The [semantic matrix](native-flag-semantics.md) extends the bounded proof above
+with repeatable selected/unselected tests, sequence scope, Single/Multi settings,
+peer/selection effects, controller-edit conflicts and client disconnects. It keeps
+independent requested/audio readbacks separate from primitive model completion.
+This narrows the earlier semantic gaps; production object lifetime, live state and
+command receipt dependencies remain #20/#18/#19/#32.

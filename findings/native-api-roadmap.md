@@ -6,6 +6,7 @@ Created 2026-10-24 in Taiga project **MPC Key 37 API** (id 24, slug `mpc-key-37-
 adapter architecture. Descriptions, acceptance criteria, dependencies, statuses and epic membership were read back
 and verified for all 22 stories. The owner accepted the [public contract](native-api-contract.md) on 2026-10-24
 (#28 Done). #29 and #30 are Done with the guarded shared adapter, bounded executor and lab validation.
+#31 adds the stopped-mode flag matrix, repeatable device experiments and failure evidence.
 #32 is In progress with discovery and verified adapter attachment reporting; #19 and #20 remain In progress.
 
 ## Epic #4 — Native control library and live API
@@ -20,7 +21,7 @@ Only the bounded native mute/solo/arm proof is already validated; these stories 
 | #30 | Execute native operations on the MPC UI thread with bounded lifecycle | Done |
 | #20 | Resolve active projects and generation-bound track/sequence handles | In progress |
 | #18 | Expose authoritative live state snapshots from native MPC objects | New |
-| #31 | Validate mute, solo and record-arm semantics beyond the bounded proof | New |
+| #31 | Validate mute, solo and record-arm semantics beyond the bounded proof | Done — stopped-mode matrix |
 | #19 | Provide idempotent native mute, solo and record-arm command handlers | In progress |
 | #32 | Expose the native adapter through a local command service | In progress — `describe` implemented |
 | #33 | Publish live state changes and recover subscriptions after reconnect | New |
@@ -67,6 +68,15 @@ matched independent flag observations, preserved state/PID and drained/unloaded 
 shared executor, with external worker/UI quiescence still required before DSO unload. See the
 [sanitized evidence](native-executor-proof-20261025.json). Public state/write capabilities remain unavailable
 pending #20 and the subsequent state/semantics/handler stories.
+
+Flag-semantics slice (#31, 2026-10-25): the [documented matrix](native-flag-semantics.md) and
+[sanitized evidence](native-flag-semantics-proof-20261025.json) cover 42 passing device cases across nine
+contexts: selected/unselected plugin/drum flags, no-ops, expected conflicts, sequence mute scope,
+Single/Multi peer and selection effects, controller edits and disconnects. A Multi-to-Single arm transition
+also exposed a restoration failure from an inconsistent starting baseline; the runner now rejects that setup.
+All original observed state/settings were restored at the end, both libraries unloaded and MPC's PID stayed
+unchanged. Nine host Meson entries pass, and updated isolated ARM fixtures pass. Playback/automation/clip/Song,
+other families and production project lifetimes remain outside this matrix; public writes stay unavailable.
 
 1. Define the public contract (#28), firmware adapter (#29) and application-thread executor (#30).
 2. Establish active-project/handle lifetimes (#20), live snapshots (#18) and the full flag-semantics matrix (#31), then productize the flag handlers (#19).

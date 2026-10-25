@@ -33,10 +33,12 @@ Meson generates `compile_commands.json` in each build directory for editor suppo
 Use `--buildtype=debug` at setup for unoptimized service and research-tool builds;
 the explicit privtap and fixture optimization settings are retained.
 
-The tests include the 22 Python API/adapter cases with JSON Schema validation,
+The tests include the 26 Python API/adapter/experiment cases with JSON Schema validation,
 the isolated native and executor lifecycle/concurrency fixtures, privtap protocol tests, both preload cases
 (normal and identity X), and seven tests exercising the ELF deployment guards.
-Tests consume Meson's binaries and do not invoke compilers. To run one suite:
+Tests consume Meson's binaries and do not invoke compilers.
+The [flag-semantics matrix](findings/native-flag-semantics.md) documents device
+experiments and the private runner for US #31. To run one suite:
 
 ```sh
 uv run --no-sync meson test -C builddir/host --suite native-api --print-errorlogs

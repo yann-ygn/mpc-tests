@@ -149,7 +149,7 @@ The sanitized verification record is in `build/internals/live-http-proof.json`; 
 - Project loading/replacement, renaming, reordering, large projects, heap-arena changes and multiple Project objects
   remain untested. The current scanner requires one validated Project in the main heap and rejects ambiguity.
 - Mute/solo were controlled on plugin and drum programs, and record arm on the plugin track. Other families/buses
-  were identified and read but need controlled semantic checks. Requested mute versus per-sequence mute remains open.
+  were identified and read but need controlled semantic checks. The [#31 matrix](native-flag-semantics.md) subsequently tests requested mute scope across sequences and Single/Multi settings.
 - Sequence name/index and 120 BPM matched Main. Master tempo, external sync, tempo changes, transport position,
   playing/recording state, volume and pan are not established by this reader. Do not treat sequence BPM as effective
   transport tempo without checking its source.

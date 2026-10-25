@@ -1,0 +1,909 @@
+{
+  "date": "2026-10-25",
+  "story": 31,
+  "model": "MPC Key 37",
+  "firmware": "3.9.1.2",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "qualification": "stopped disposable two-track plugin/drum project; private lab registry, not production handle authority",
+  "settingsVerifiedInUI": {
+    "initialAndFinal": {
+      "perSequenceMute": true,
+      "soloBehavior": "Single",
+      "recordArmBehavior": "Multi"
+    },
+    "otherTestedValues": {
+      "perSequenceMute": false,
+      "soloBehavior": "Multi",
+      "recordArmBehavior": "Single"
+    }
+  },
+  "host": {
+    "mesonEntriesPassed": 9,
+    "pythonCases": 26,
+    "nativeFixtureCases": 34,
+    "executorManualEditCases": "mute/solo/arm; accepted before a manual edit, rejected at dispatch",
+    "timingTests": "synthetic queue/native backend for queued cancellation, running timeout uncertainty, running disconnect and eventual completion",
+    "experimentFailureCases": 4
+  },
+  "arm": {
+    "buildAndElfGuards": "passed",
+    "isolatedNativeFixtureCases": 34,
+    "isolatedExecutorFixture": "passed"
+  },
+  "passingDeviceContexts": 9,
+  "passingDeviceCases": 42,
+  "runs": [
+    {
+      "context": "multi-rec-seq1-per-sequence",
+      "privateReport": "build/native-control/us31-multi-seq1.json",
+      "cases": [
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "mute",
+          "selected": true,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "solo",
+          "selected": true,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "arm",
+          "selected": true,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": true,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "mute",
+          "selected": false,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "solo",
+          "selected": false,
+          "selectedBefore": 1,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "arm",
+          "selected": false,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": true,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "mute",
+          "selected": true,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "solo",
+          "selected": true,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "arm",
+          "selected": true,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": true,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "mute",
+          "selected": false,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "solo",
+          "selected": false,
+          "selectedBefore": 0,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "arm",
+          "selected": false,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": true,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    },
+    {
+      "context": "per-sequence-on",
+      "privateReport": "build/native-control/us31-sequences-on.json",
+      "cases": [
+        {
+          "scenario": "sequence-scope",
+          "targetIndex": 0,
+          "property": "mute",
+          "selectedBefore": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "requestedAcrossSequences": [
+            true,
+            false,
+            true
+          ],
+          "audioAcrossSequences": [
+            null,
+            null,
+            null
+          ],
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "sequence-scope",
+          "targetIndex": 1,
+          "property": "mute",
+          "selectedBefore": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "requestedAcrossSequences": [
+            true,
+            false,
+            true
+          ],
+          "audioAcrossSequences": [
+            null,
+            null,
+            null
+          ],
+          "nativeInvocation": true,
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    },
+    {
+      "context": "disconnect-follow-mode-1",
+      "privateReport": "build/native-control/us31-disconnect.json",
+      "cases": [
+        {
+          "scenario": "disconnect",
+          "property": "mute",
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "phases": [
+            "accepted",
+            "applied"
+          ],
+          "clientDisconnectedAfterApplication": true,
+          "restored": true
+        },
+        {
+          "scenario": "disconnect",
+          "property": "solo",
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "phases": [
+            "accepted",
+            "applied"
+          ],
+          "clientDisconnectedAfterApplication": true,
+          "restored": true
+        },
+        {
+          "scenario": "disconnect",
+          "property": "arm",
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "phases": [
+            "accepted",
+            "applied"
+          ],
+          "clientDisconnectedAfterApplication": true,
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    },
+    {
+      "context": "manual-edit-follow-mode-1",
+      "privateReport": "build/native-control/us31-manual-edit.json",
+      "cases": [
+        {
+          "scenario": "manual-edit",
+          "property": "mute",
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "phases": [
+            "accepted",
+            "applied",
+            "restoreAccepted:PRECONDITION_FAILED",
+            "restored"
+          ],
+          "restored": true
+        },
+        {
+          "scenario": "manual-edit",
+          "property": "solo",
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "phases": [
+            "accepted",
+            "applied",
+            "restoreAccepted:PRECONDITION_FAILED",
+            "restored"
+          ],
+          "restored": true
+        },
+        {
+          "scenario": "manual-edit",
+          "property": "arm",
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "phases": [
+            "accepted",
+            "applied",
+            "restoreAccepted:PRECONDITION_FAILED",
+            "restored"
+          ],
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    },
+    {
+      "context": "single-rec-normalized-single-solo-seq1",
+      "privateReport": "build/native-control/us31-single-rec-normalized.json",
+      "cases": [
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "arm",
+          "selected": true,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": true,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "solo",
+          "selected": true,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "arm",
+          "selected": false,
+          "selectedBefore": 1,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [
+            {
+              "index": 1,
+              "property": "arm",
+              "value": false
+            }
+          ],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "solo",
+          "selected": false,
+          "selectedBefore": 1,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [
+            {
+              "index": 1,
+              "property": "arm",
+              "value": false
+            }
+          ],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "arm",
+          "selected": true,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": true,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "solo",
+          "selected": true,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "arm",
+          "selected": false,
+          "selectedBefore": 0,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [
+            {
+              "index": 0,
+              "property": "arm",
+              "value": false
+            }
+          ],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "solo",
+          "selected": false,
+          "selectedBefore": 0,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [
+            {
+              "index": 0,
+              "property": "arm",
+              "value": false
+            }
+          ],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    },
+    {
+      "context": "multi-rec-single-solo-global-mute",
+      "privateReport": "build/native-control/us31-overlap-single-solo.json",
+      "cases": [
+        {
+          "scenario": "overlap",
+          "property": "solo",
+          "selectedBefore": 0,
+          "selectedAfterSecond": 1,
+          "requestedFirst": [
+            true,
+            false
+          ],
+          "requestedSecond": [
+            false,
+            true
+          ],
+          "audioCopiesMatched": true,
+          "restored": true
+        },
+        {
+          "scenario": "overlap",
+          "property": "arm",
+          "selectedBefore": 0,
+          "selectedAfterSecond": 0,
+          "requestedFirst": [
+            true,
+            false
+          ],
+          "requestedSecond": [
+            true,
+            true
+          ],
+          "audioCopiesMatched": true,
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    },
+    {
+      "context": "multi-rec-single-solo-global-mute",
+      "privateReport": "build/native-control/us31-sequences-off.json",
+      "cases": [
+        {
+          "scenario": "sequence-scope",
+          "targetIndex": 0,
+          "property": "mute",
+          "selectedBefore": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "requestedAcrossSequences": [
+            true,
+            true,
+            true
+          ],
+          "audioAcrossSequences": [
+            null,
+            null,
+            null
+          ],
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "sequence-scope",
+          "targetIndex": 0,
+          "property": "solo",
+          "selectedBefore": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "requestedAcrossSequences": [
+            true,
+            true,
+            true
+          ],
+          "audioAcrossSequences": [
+            true,
+            true,
+            true
+          ],
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "sequence-scope",
+          "targetIndex": 0,
+          "property": "arm",
+          "selectedBefore": 0,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "requestedAcrossSequences": [
+            false,
+            false,
+            false
+          ],
+          "audioAcrossSequences": [
+            false,
+            false,
+            false
+          ],
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "sequence-scope",
+          "targetIndex": 1,
+          "property": "mute",
+          "selectedBefore": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": null,
+          "requestedAcrossSequences": [
+            true,
+            true,
+            true
+          ],
+          "audioAcrossSequences": [
+            null,
+            null,
+            null
+          ],
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "sequence-scope",
+          "targetIndex": 1,
+          "property": "solo",
+          "selectedBefore": 0,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "requestedAcrossSequences": [
+            true,
+            true,
+            true
+          ],
+          "audioAcrossSequences": [
+            true,
+            true,
+            true
+          ],
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "sequence-scope",
+          "targetIndex": 1,
+          "property": "arm",
+          "selectedBefore": 0,
+          "requestedDuring": false,
+          "audioCopyDuring": false,
+          "requestedAcrossSequences": [
+            false,
+            false,
+            false
+          ],
+          "audioAcrossSequences": [
+            false,
+            false,
+            false
+          ],
+          "nativeInvocation": true,
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    },
+    {
+      "context": "multi-rec-multi-solo-global-mute",
+      "privateReport": "build/native-control/us31-overlap-multi-solo.json",
+      "cases": [
+        {
+          "scenario": "overlap",
+          "property": "solo",
+          "selectedBefore": 0,
+          "selectedAfterSecond": 0,
+          "requestedFirst": [
+            true,
+            false
+          ],
+          "requestedSecond": [
+            true,
+            true
+          ],
+          "audioCopiesMatched": true,
+          "restored": true
+        },
+        {
+          "scenario": "overlap",
+          "property": "arm",
+          "selectedBefore": 0,
+          "selectedAfterSecond": 0,
+          "requestedFirst": [
+            true,
+            false
+          ],
+          "requestedSecond": [
+            true,
+            true
+          ],
+          "audioCopiesMatched": true,
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    },
+    {
+      "context": "multi-rec-multi-solo-global-mute",
+      "privateReport": "build/native-control/us31-multi-solo.json",
+      "cases": [
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "solo",
+          "selected": true,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 0,
+          "family": "plugin",
+          "property": "solo",
+          "selected": false,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "solo",
+          "selected": true,
+          "selectedBefore": 1,
+          "selectedDuring": 1,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        },
+        {
+          "scenario": "matrix",
+          "targetIndex": 1,
+          "family": "drum",
+          "property": "solo",
+          "selected": false,
+          "selectedBefore": 0,
+          "selectedDuring": 0,
+          "requestedBefore": false,
+          "requestedDuring": true,
+          "audioCopyDuring": true,
+          "peerRequestedChanges": [],
+          "repeatNativeInvoked": false,
+          "conflict": "PRECONDITION_FAILED",
+          "nativeInvocation": true,
+          "restored": true
+        }
+      ],
+      "observedStateRestored": true,
+      "bridgeUnloaded": true,
+      "temporaryFilesRemoved": true,
+      "requestedAndQualifiedAudioReadbackMatched": true
+    }
+  ],
+  "settingTransition": {
+    "from": "Multi record arm with both tracks armed",
+    "to": "Single record arm",
+    "existingTwoArmFlagsInitiallyRetained": true,
+    "subsequentNativeArmClearedPeer": true,
+    "initialRestorationWithinSingleFailed": true,
+    "privateReport": "build/native-control/us31-single-rec.json",
+    "consistentSingleBaselineThenPassed": true,
+    "originalMultiBaselineRestoredAtEnd": true,
+    "runnerNowRejectsInconsistentSingleBaselineBeforeWrites": true
+  },
+  "finalVerification": {
+    "originalObservedStateRestored": true,
+    "settingsRestored": true,
+    "selectedMode": "Main",
+    "perSequenceMute": true,
+    "soloBehavior": "Single",
+    "recordArmBehavior": "Multi",
+    "mpcPidUnchanged": true,
+    "nativeLibrariesUnloaded": true,
+    "temporaryDeviceFilesRemoved": true,
+    "addinInstalledOrMpcRestarted": false
+  },
+  "limits": [
+    "No public write capability enabled; active-project generations remain #20",
+    "No distinct qualified audio-side mute copy",
+    "Native model success can precede audio-copy convergence",
+    "Per-sequence public mute requires a sequence target/precondition contract",
+    "Playback, automation, clips, Song, other families/buses and other firmware remain unqualified",
+    "Transport disconnect tests use bounded lab pulses; production desired-state commands have no timed restoration",
+    "No real MPC UI stall or project-replacement timing test claimed"
+  ],
+  "modelResultBeforeAudioPropagation": {
+    "property": "arm",
+    "requestedAtNativeReturn": false,
+    "audioCopyAtNativeReturn": true,
+    "independentReadbackThenConverged": true,
+    "publicAppliedRequiresSeparateVerification": true
+  }
+}

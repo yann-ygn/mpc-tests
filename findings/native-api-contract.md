@@ -172,10 +172,11 @@ available only after their firmware, object types, mode constraints and verifica
 Live readiness checks can still reject an otherwise supported operation. A failed firmware/profile guard disables
 native access; there is no best-effort fallback to nearby offsets.
 
-Mute scope across sequence changes, per-sequence mute, clip/song modes and automation remains qualification
-work. Initially reject unqualified modes instead of promising global or per-sequence persistence. A track
-reference does not pin a sequence: if a supported mode makes the operation sequence-scoped, define an explicit
-sequence target/precondition before exposing that mode.
+The [#31 stopped-mode matrix](native-flag-semantics.md) verifies global mute when
+per-sequence mute is disabled, and sequence-specific mute when enabled, on plugin/drum tracks.
+A track reference does not pin a sequence. Keep per-sequence writes unavailable until an explicit
+sequence target/precondition is defined and validated at dispatch. Clip/Song modes, playback and
+automation remain unqualified; reject unqualified modes rather than promising persistence.
 
 All examples use agreed API/schema version `0.1`, independently of MPC firmware.
 Additive optional fields/capabilities remain compatible; changing field meaning or
@@ -266,6 +267,12 @@ can constrain outcomes. Report observed selection/other state changes in `observ
 before/after values and project context; these observations are best-effort and not a complete causal history.
 Do not promise selection preservation, isolated side effects, rollback, atomic batches or uniform undo behavior.
 A constraint rejection after execution may have side effects and must include its observed readback.
+
+The #31 device matrix observes Single solo selecting its target and clearing a peer's solo;
+Multi solo retains both solos and selection. Single record arm can select an armed target and disarm
+its peer; track selection and follow-solo also move arm. Multi arm permits multiple armed tracks.
+Changing a setting does not establish that existing flags already satisfy it. Report these live
+effects instead of inferring them from a setting name or restoring selection implicitly.
 
 ## Retries, ordering and errors
 

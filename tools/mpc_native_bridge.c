@@ -17,7 +17,8 @@
 #include "mpc_executor.h"
 
 /* Bounded lab bridge. No arbitrary calls, raw writes, saves, or transport commands.
- * Commands are local/root-only. PULSE restores its original requested value. */
+ * Commands are local/root-only. PULSE restores its original requested value;
+ * SET is an explicit desired-state lab write with no automatic restoration. */
 _Static_assert(sizeof(void *) == 4, "32-bit ARM only");
 struct flags {
   uint32_t track, program;
@@ -27,6 +28,8 @@ struct job {
   int ok;
   pid_t tid;
   unsigned before, count;
+  bool completed;
+  struct mpc_native_write_result write;
   char error[128];
   struct flags tracks[1];
 };
@@ -93,7 +96,11 @@ static struct job *dispatch(
       if (!error) {
         struct mpc_executor_result result;
         error = mpc_executor_wait(native_job, 3000, &result);
-        if (!error) {
+        job->completed = result.state == MPC_EXECUTOR_COMPLETED;
+        if (job->completed) {
+          job->write = result.write;
+        }
+        if (job->completed && (!error || result.write.changed_known)) {
           const struct mpc_native_track_state *state = &result.observed;
           job->count = 1;
           job->before = expected;
@@ -123,12 +130,19 @@ static void report(FILE *f, const char *phase, struct job *j) {
   }
   fprintf(
     f,
-    "{\"phase\":\"%s\",\"ok\":%s,\"tid\":%d,\"pid\":%d,\"error\":\"%s\",\"tracks\":[",
+    "{\"phase\":\"%s\",\"ok\":%s,\"tid\":%d,\"pid\":%d,\"error\":\"%s\","
+    "\"completed\":%s,\"nativeInvoked\":%s,\"changedKnown\":%s,\"changed\":%s,\"tracks\":[",
     phase,
     j->ok ? "true" : "false",
     j->tid,
     getpid(),
-    j->error);
+    j->error,
+    j->completed ? "true" : "false",
+    !j->completed               ? "null"
+      : j->write.native_invoked ? "true"
+                                : "false",
+    j->write.changed_known ? "true" : "false",
+    j->write.changed ? "true" : "false");
   for (unsigned k = 0; k < j->count; k++) {
     struct flags *s = &j->tracks[k];
     fprintf(
@@ -223,6 +237,29 @@ static void *worker(void *unused) {
             release(j);
         } else
           fprintf(f, "{\"ok\":false,\"error\":\"invalid READ target\"}\n");
+      } else if (!strncmp(line, "SET ", 4)) {
+        unsigned value, expected;
+        uint32_t project, track, program;
+        int n = sscanf(
+          line,
+          "SET %15s %u %u %x %x %x %c",
+          prop,
+          &value,
+          &expected,
+          &project,
+          &track,
+          &program,
+          &extra);
+        int property = !strcmp(prop, "mute") ? 0
+          : !strcmp(prop, "solo")            ? 1
+          : !strcmp(prop, "arm")             ? 2
+                                             : -1;
+        if (n == 6 && property >= 0 && value <= 1 && expected <= 1) {
+          struct job *j = dispatch(2, property, value, expected, project, track, program);
+          report(f, "set", j);
+          release(j);
+        } else
+          fprintf(f, "{\"ok\":false,\"error\":\"invalid SET request\"}\n");
       } else if (!strcmp(line, "PING\n")) {
         struct job *j = dispatch(0, 0, 0, 0, 0, 0, 0);
         report(f, "ping", j);

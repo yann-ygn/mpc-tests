@@ -13,6 +13,44 @@ static struct mpc_native_adapter *open_fixture(struct fixture *f, bool validator
   assert(mpc_native_open_backend(&backend, validator ? &host : NULL, &adapter) == MPC_NATIVE_OK);
   return adapter;
 }
+
+/* Expectations precede no-op detection for every flag and both lab families.
+ * An already-desired arm must not run its filter or re-trigger peer listeners. */
+static void desired_state_matrix(void) {
+  typedef enum mpc_native_error (*set_fn)(
+    struct mpc_native_adapter *,
+    const struct mpc_native_target *,
+    bool,
+    const bool *,
+    struct mpc_native_write_result *);
+  const set_fn setters[] = {mpc_native_set_mute, mpc_native_set_solo, mpc_native_set_record_armed};
+  for (unsigned family = 0; family < 2; family++) {
+    for (unsigned property = 0; property < 3; property++) {
+      struct fixture f;
+      reset(&f);
+      if (family)
+        put32(&f, PROGRAM, IMAGE + NATIVE_DRUM_VTABLE);
+      struct mpc_native_adapter *adapter = open_fixture(&f, true);
+      struct mpc_native_write_result result;
+      bool expected = false;
+      assert(setters[property](adapter, &target, true, &expected, &result) == MPC_NATIVE_OK);
+      assert(result.native_invoked && result.changed_known && result.changed && f.setters == 1);
+      unsigned filters = f.filters;
+      expected = true;
+      assert(setters[property](adapter, &target, true, &expected, &result) == MPC_NATIVE_OK);
+      assert(!result.native_invoked && result.changed_known && !result.changed);
+      expected = false;
+      assert(
+        setters[property](adapter, &target, true, &expected, &result) ==
+        MPC_NATIVE_PRECONDITION_FAILED);
+      assert(!result.native_invoked && !result.changed && f.setters == 1 && f.filters == filters);
+      expected = true;
+      assert(setters[property](adapter, &target, false, &expected, &result) == MPC_NATIVE_OK);
+      assert(result.native_invoked && result.changed && f.setters == 2);
+      mpc_native_close(adapter);
+    }
+  }
+}
 int main(void) {
   struct fixture f;
   struct mpc_native_adapter *a;
@@ -22,6 +60,8 @@ int main(void) {
   struct mpc_native_io backend;
   bool expected;
   unsigned cases = 0;
+  desired_state_matrix();
+  cases += 6;
   reset(&f);
   backend = io(&f);
   strcpy(f.build, "1122");

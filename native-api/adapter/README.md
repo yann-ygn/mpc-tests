@@ -122,7 +122,7 @@ Builds produce `builddir/{host,arm}/native-api/libmpc_native.so`, the service an
 `tests/{native_fixture,executor_fixture}`.
 See the [root build guide](../../README.md) for requirements and all targets.
 The isolated fixture uses synthetic addresses and private I/O callbacks. No MPC entry point is called by those
-tests. It exercises 28 cases, including each fingerprint mismatch, wrong thread, missing validator, stale
+tests. It exercises 34 cases, including each fingerprint mismatch, wrong thread, missing validator, stale
 ownership, unknown family, expected-value rejection, filtered arm rejection and pending audio propagation.
 Python tests also reject 14 malformed profile variants and check exports and the service attachment boundary.
 
@@ -178,3 +178,20 @@ The #30 read-only smoke test on 2026-10-25 confirmed the executor's callback on 
 matching the independent snapshot, unchanged observed flags/selection and complete unload of both DSOs. The
 temporary files were removed and MPC's PID stayed unchanged. No flag write, addin installation or restart was
 performed. The private report is `build/native-api/executor-device-unload.json`.
+
+## Flag semantics (#31)
+
+The [device matrix](../../findings/native-flag-semantics.md) extends the initial
+plugin/drum proof to selected/unselected targets, repeated desired values, conflicts,
+sequence mute scope, Single/Multi arm and solo behavior, and intervening controller
+edits/disconnects. The private lab adds a desired-state `SET` diagnostic and reports
+completion, native invocation and changed/readback metadata. `SET` has no timed
+restoration; the experiment runner owns restoration and verification. It is not a
+public endpoint and retains the lab registry's #20 limitations.
+
+A non-completed lab response reports `nativeInvoked: null`; it cannot claim that no
+native call began. Completed failures include observations only when known.
+The matrix runner preserves failure evidence, checks peer flags and selection, and
+aborts on restoration mismatch. Host tests cover those failure paths and manual
+edits between queue acceptance and dispatch for every flag. The primitive ABI,
+firmware qualification level and public discovery capabilities are unchanged.

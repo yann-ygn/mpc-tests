@@ -86,5 +86,12 @@ before running experiments.
   now uses it; full host tests, ASan/UBSan, ARM fixtures and read-only device dispatch/unload pass. See
   `native-api/adapter/README.md` and `findings/native-executor-proof-20261025.json`. DSO unload still requires
   external UI quiescence after capture/worker drain; the lab loader checks both workers and UI poll.
-- Next: active-project generations (#20), live state (#18) and flag
-  qualification/handlers (#31/#19) before enabling further service capabilities.
+- Flag semantics (#31) implemented: `tools/mpc_flag_semantics.py` and the lab's private `SET` diagnostic
+  qualify stopped plugin/drum behavior across selected/unselected targets, no-ops/conflicts, sequence mute,
+  Single/Multi peer/selection effects, controller edits and disconnects. See `findings/native-flag-semantics.md`
+  and `findings/native-flag-semantics-proof-20261025.json` (42 passing device cases, nine contexts; nine host Meson
+  entries and isolated ARM fixtures pass). A Multi-to-Single arm transition retained two arm flags until a native
+  arm call enforced Single behavior; the runner rejects that inconsistent baseline before writes. Original observed
+  state/settings were restored, with no restart/addin install. Public writes and other modes/families stay gated.
+- Next: active-project generations (#20), live state (#18) and flag handlers (#19) before enabling further
+  service capabilities. Per-sequence mute needs an explicit sequence target/precondition before public exposure.
