@@ -9,7 +9,6 @@
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -87,15 +86,6 @@ static void *serve(void *data) {
     h->ops->discovery_root);
   atomic_store(&h->service_exited, 1);
   return NULL;
-}
-
-static int remove_stale(int directory, const char *name) {
-  struct stat s;
-  if (fstatat(directory, name, &s, AT_SYMLINK_NOFOLLOW))
-    return errno == ENOENT ? 0 : -1;
-  /* Only under the lifetime flock. Never replace files, symlinks or a socket
-   * belonging to another UID. A second host cannot acquire this lock. */
-  return S_ISSOCK(s.st_mode) && s.st_uid == geteuid() ? unlinkat(directory, name, 0) : -1;
 }
 
 static int configuration(int installation) {
@@ -195,7 +185,7 @@ static void start_host(struct host *h, int installation, int directory) {
     h->phase = enabled == 0 ? "disabled" : "configuration_error";
     return;
   }
-  if (remove_stale(directory, "api.sock")) {
+  if (mpc_host_remove_stale(directory, "api.sock")) {
     h->phase = "service_failed";
     return;
   }
@@ -313,27 +303,25 @@ int mpc_host_run(const char *installation, const char *runtime, const struct mpc
     close(install);
     return 1;
   }
-  int directory = open(runtime, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+  int directory = mpc_host_directory(runtime);
   struct stat s;
-  if (directory < 0 || fstat(directory, &s) || s.st_uid != geteuid() || (s.st_mode & 0077)) {
-    if (directory >= 0)
-      close(directory);
+  if (directory < 0) {
     close(install);
     return 1;
   }
-  int lock = openat(directory, "host.lock", O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0600);
+  int lock = mpc_host_lock(directory);
   int listener = -1, result = 1;
   struct host h = {.ops = ops, .phase = "stopped"};
   pthread_mutex_init(&h.mutex, NULL);
   h.backend = (struct api_backend){&h, probe, state};
-  if (lock < 0 || flock(lock, LOCK_EX | LOCK_NB) || device_id(install, h.device_id))
+  if (lock < 0 || device_id(install, h.device_id))
     goto done;
   struct sockaddr_un address = {.sun_family = AF_UNIX};
   int n = snprintf(address.sun_path, sizeof address.sun_path, "%s/control.sock", runtime);
   int m = snprintf(h.socket, sizeof h.socket, "%s/api.sock", runtime);
   if (n < 0 || n >= (int)sizeof address.sun_path || m < 0 || m >= (int)sizeof h.socket)
     goto done;
-  if (remove_stale(directory, "control.sock"))
+  if (mpc_host_remove_stale(directory, "control.sock"))
     goto done;
   listener = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
   if (listener < 0 || bind(listener, (struct sockaddr *)&address, sizeof address))

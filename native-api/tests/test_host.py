@@ -203,6 +203,37 @@ class HostTests(unittest.TestCase):
         self.assertEqual(self.call(b"START\n")["status"], "service_failed")
         self.api.unlink()
 
+    def test_cleanup_requires_exited_host_and_preserves_replacement_paths(self):
+        self.launch()
+
+        def cleanup():
+            return subprocess.run(
+                [
+                    os.environ["MPC_API_TEST_BINARY"],
+                    "host-cleanup",
+                    "--directory",
+                    str(self.runtime),
+                ],
+                capture_output=True,
+            )
+
+        self.assertNotEqual(cleanup().returncode, 0)
+        self.assertTrue(self.control.exists())
+        self.assertTrue(self.api.exists())
+        self.call(b"STOP\n")
+        self.assertNotEqual(cleanup().returncode, 0)
+        self.process.kill()  # Reproduce service termination without ELF destructors.
+        self.process.communicate()
+        self.assertTrue(self.control.exists())
+        self.assertEqual(cleanup().returncode, 0)
+        self.assertFalse(self.control.exists())
+        self.assertTrue((self.runtime / "host.lock").is_file())
+        self.api.write_text("owned replacement")
+        self.control.symlink_to(self.api)
+        self.assertNotEqual(cleanup().returncode, 0)
+        self.assertTrue(self.control.is_symlink())
+        self.assertEqual(self.api.read_text(), "owned replacement")
+
     def test_library_is_inert_in_other_executables_and_exports_nothing(self):
         library = os.environ["MPC_HOST_TEST_LIBRARY"]
         dynamic = subprocess.check_output([os.environ["MPC_READELF"], "-Wd", library], text=True)

@@ -52,11 +52,11 @@ def stage(directory, artifacts, installer, metadata):
     """Assemble only explicit payload files; keep private reports out of releases."""
     for name in ("mpc_native_host.so", "mpc-api"):
         shutil.copyfile(artifacts / name, directory / name)
-    for name in ("mpc-native-api.conf", "install.sh"):
+    for name in ("mpc-native-api.conf", "install.sh", "uninstall.sh"):
         shutil.copyfile(PACKAGE / name, directory / name)
     for source, target in (
         ("install.sh", "install-addin.sh"),
-        ("uninstall.sh", "uninstall.sh"),
+        ("uninstall.sh", "uninstall-addin.sh"),
         ("addin-lib.sh", "addin-lib.sh"),
     ):
         shutil.copyfile(installer / source, directory / target)

@@ -20,7 +20,7 @@ service_sources = files(
 )
 api = executable(
   'mpc-api',
-  files('src/main.c', 'src/client.c'),
+  files('src/main.c', 'src/client.c', 'src/host_paths.c'),
   service_sources,
   profiles[0],
   include_directories: [root_inc, adapter_inc],
@@ -54,7 +54,7 @@ elf_checks += [
 host_exports = files('host-exports.map')
 native_host = shared_library(
   'mpc_native_host',
-  files('src/host.c', 'src/addin.c'),
+  files('src/host.c', 'src/host_paths.c', 'src/addin.c'),
   service_sources, adapter_sources, profiles,
   name_prefix: '',
   include_directories: [root_inc, api_inc, adapter_inc],

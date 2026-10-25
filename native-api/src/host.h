@@ -16,5 +16,11 @@ struct mpc_host_ops {
 };
 
 int mpc_host_run(const char *installation, const char *runtime, const struct mpc_host_ops *);
+int mpc_host_directory(const char *runtime);
+/* The shared lock inode is never unlinked: hosts and cleanup must serialize on
+ * the same inode, including across MPC restarts and deferred uninstallation. */
+int mpc_host_lock(int directory);
+int mpc_host_remove_stale(int directory, const char *name);
+int mpc_host_cleanup(const char *runtime);
 
 #endif

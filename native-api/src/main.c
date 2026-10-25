@@ -8,6 +8,21 @@
 
 int main(int argc, char **argv) {
   const char *path = NULL, *device_id = NULL, *root = "";
+  if (argc >= 2 && !strcmp(argv[1], "host-cleanup")) {
+    path = MPC_HOST_DIRECTORY;
+    if (argc == 4 && !strcmp(argv[2], "--directory"))
+      path = argv[3];
+    else if (argc != 2)
+      goto usage;
+    if (path[0] != '/')
+      goto usage;
+    int result = mpc_host_cleanup(path);
+    fputs(
+      result ? "Runtime cleanup refused: host active or path not owned\n"
+             : "Native host runtime sockets cleaned\n",
+      result ? stderr : stdout);
+    return result;
+  }
   if (
     argc >= 2 &&
     (!strcmp(argv[1], "host-status") || !strcmp(argv[1], "host-start") ||
@@ -58,7 +73,8 @@ usage:
   fputs(
     "Usage: mpc-api serve --socket PATH --device-id ID [--root FIXTURE_ROOT]\n"
     "       mpc-api request --socket PATH < request.json\n"
-    "       mpc-api host-status|host-start|host-stop [--socket PATH]\n",
+    "       mpc-api host-status|host-start|host-stop [--socket PATH]\n"
+    "       mpc-api host-cleanup [--directory PATH]\n",
     stderr);
   return 2;
 }

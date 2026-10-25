@@ -137,12 +137,19 @@ reported as `service_failed`; fix its path/permissions, stop and start to retry.
 ## Remove and recover
 
 With saved work and approval, stop the API, wait until health says `stopped`, and
-use the installed shared uninstaller:
+use the installed uninstaller:
 
 ```sh
 /data/mpc-addins/mpc-native-api/mpc-api host-stop
 sh /data/mpc-addins/mpc-native-api/uninstall.sh -y
 ```
+
+The wrapper delegates preload removal and restart to the shared uninstaller,
+then cleans stale runtime sockets under the host's lifetime lock. Normal MPC
+service termination can bypass ELF destructors, so this external cleanup is
+required too. It refuses cleanup while a host still owns the lock, including a
+stopped host with management still available. `mpc-api host-cleanup` provides
+the same guarded cleanup for recovery after MPC exits.
 
 This removes only this addin from the preload list, restarts MPC, then removes
 the package and its configuration. Back up edited configuration first. It leaves

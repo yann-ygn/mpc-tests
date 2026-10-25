@@ -49,7 +49,7 @@ elf_checks += [{'binary': commands_fixture}]
 test('commands-fixture', commands_fixture, suite: 'native-api', timeout: 30)
 
 host_fixture = executable(
-  'host_fixture', 'host_fixture.c', '../src/host.c', service_sources, adapter_sources, profiles,
+  'host_fixture', 'host_fixture.c', '../src/host.c', '../src/host_paths.c', service_sources, adapter_sources, profiles,
   include_directories: [root_inc, api_inc, adapter_inc],
   c_args: native_args, override_options: native_options + ['optimization=1'],
   dependencies: [dl_dep, threads_dep], link_with: elf_id,
