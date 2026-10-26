@@ -1,6 +1,7 @@
 #include "api.h"
 #include "host.h"
 #include "profile.h"
+#include "mpc_family_profile.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +23,77 @@ void api_quoted(FILE *output, const char *value) {
       fputc(*p, output);
   }
   fputc('"', output);
+}
+
+void api_flag_support(FILE *f, const char *type, unsigned known, int normal) {
+  const struct mpc_family_support *support = mpc_family_by_type(type);
+  static const char *fields[] = {
+    "requested.muted",
+    "requested.soloed",
+    "requested.recordArmed",
+    "audioSide.soloed",
+    "audioSide.recordArmed",
+    "silenced",
+    "audioSide.muted",
+    "audioActivity"};
+  static const char *operations[] = {"set_mute", "set_solo", "set_record_armed"};
+  fputs("{\"family\":", f);
+  api_quoted(f, type);
+  fputs(",\"readableFields\":[", f);
+  bool comma = false;
+  for (unsigned i = 0; i < 6; i++)
+    if (known & (1u << i)) {
+      if (comma)
+        fputc(',', f);
+      api_quoted(f, fields[i]);
+      comma = true;
+    }
+  fputs("],\"unsupportedReasons\":{", f);
+  comma = false;
+  for (unsigned i = 0; i < sizeof fields / sizeof *fields; i++)
+    if (!(known & (1u << i))) {
+      if (comma)
+        fputc(',', f);
+      api_quoted(f, fields[i]);
+      fputc(':', f);
+      api_quoted(
+        f,
+        !normal             ? "BUS_METADATA_ONLY"
+          : support->reason ? support->reason
+          : i == 7          ? "NOT_MEASURED"
+                            : "UNQUALIFIED_OBSERVATION");
+      comma = true;
+    }
+  fputs("},\"operations\":{", f);
+  for (unsigned i = 0; i < 3; i++) {
+    if (i)
+      fputc(',', f);
+    api_quoted(f, operations[i]);
+    unsigned required = support->required[i];
+    bool available =
+      normal && required && (support->operations & (1u << i)) && (known & required) == required;
+    fprintf(f, ":{\"available\":%s,\"reason\":", available ? "true" : "false");
+    api_quoted(
+      f,
+      available           ? NULL
+        : !normal         ? "BUS_METADATA_ONLY"
+        : support->reason ? support->reason
+                          : "UNQUALIFIED_OBSERVATION");
+    fputs(",\"verification\":[", f);
+    if (available) {
+      fputs("\"model\"", f);
+      if (required & (MPC_NATIVE_SOLO_COPY | MPC_NATIVE_ARM_COPY))
+        fputs(",\"audio_copy\"", f);
+    }
+    fputs(
+      "],\"conditions\":[\"qualified_screen\",\"no_popup\",\"stopped\",\"automation_off\","
+      "\"recognized_solo_arm_settings\"",
+      f);
+    if (!i)
+      fputs(",\"matching_mute_scope\",\"global_or_named_active_sequence\"", f);
+    fputs("]}", f);
+  }
+  fputs("},\"outputVerified\":false}", f);
 }
 
 char *api_error(const char *code, const char *message) {
@@ -140,7 +212,7 @@ char *api_respond(
   api_quoted(output, discovery.adapter_attached ? "attached" : "not_attached");
   fputs(",\"adapter\":", output);
   if (discovery.adapter_attached) {
-    fputs("{\"abiVersion\":1,\"instanceId\":", output);
+    fprintf(output, "{\"abiVersion\":%u,\"instanceId\":", MPC_NATIVE_ABI);
     api_quoted(output, discovery.adapter_id);
     fputs(",\"codeVerified\":true,\"qualification\":\"bounded_lab_proof\"}", output);
   } else
@@ -160,7 +232,14 @@ char *api_respond(
         "bpm\",\"muteContext\",\"sequence.ref\",\"selection\",\"buses.metadata\"]"
       : "[]",
     output);
-  fputs(",\"capabilities\":{\"describe\":{\"available\":true,\"reason\":null}", output);
+  fputs(",\"flagFamilies\":[", output);
+  if (!strcmp(discovery.profile, "matched"))
+    for (unsigned i = 0; i < sizeof mpc_family_matrix / sizeof *mpc_family_matrix; i++) {
+      if (i)
+        fputc(',', output);
+      api_flag_support(output, mpc_family_matrix[i].type, mpc_family_matrix[i].fields, 1);
+    }
+  fputs("],\"capabilities\":{\"describe\":{\"available\":true,\"reason\":null}", output);
   for (size_t i = 0; i < sizeof reads / sizeof *reads; i++) {
     fputc(',', output);
     api_quoted(output, reads[i]);
@@ -180,10 +259,18 @@ char *api_respond(
     fprintf(output, ":{\"available\":%s,\"reason\":", available ? "true" : "false");
     api_quoted(output, available ? NULL : discovery.unavailable_reason);
     if (i <= 2) {
-      fputs(
-        available ? ",\"trackTypes\":[\"plugin\",\"drum\"],\"verification\":[\"model\""
-                  : ",\"trackTypes\":[],\"verification\":[]",
-        output);
+      fputs(",\"trackTypes\":[", output);
+      bool comma = false;
+      if (available)
+        for (unsigned family = 0; family < sizeof mpc_family_matrix / sizeof *mpc_family_matrix;
+             family++)
+          if (mpc_family_matrix[family].operations & (1u << i)) {
+            if (comma)
+              fputc(',', output);
+            api_quoted(output, mpc_family_matrix[family].type);
+            comma = true;
+          }
+      fputs(available ? "],\"verification\":[\"model\"" : "],\"verification\":[]", output);
       if (available) {
         fputs(i ? ",\"audio_copy\"]" : "]", output);
         fputs(

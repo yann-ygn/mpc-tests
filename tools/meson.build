@@ -1,6 +1,15 @@
 mem_probe = executable('mem_probe', 'mpc_mem_probe.c')
 ipc_bridge = executable('ipc_bridge', 'web_ipc_bridge.c')
 elf_checks += [{'binary': mem_probe}, {'binary': ipc_bridge}]
+if not meson.is_cross_build()
+  test(
+    'memory-reader', python,
+    args: [files('tests/test_mem_probe.py')],
+    env: {'MPC_MEMORY_TEST_PROBE': mem_probe.full_path()},
+    depends: mem_probe,
+    suite: 'native-api',
+  )
+endif
 
 if host_machine.cpu_family() == 'arm'
   native_client = executable('native_client', 'mpc_native_client.c')

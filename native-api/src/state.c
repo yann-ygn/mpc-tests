@@ -1,5 +1,6 @@
 #include "api.h"
 #include "mpc_native.h"
+#include "mpc_family_profile.h"
 
 #include <inttypes.h>
 #include <math.h>
@@ -93,13 +94,12 @@ static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instan
     const struct mpc_state_track *t = normal ? &s->tracks[i] : &s->buses[i - s->track_count];
     if (
       !valid_text(t->name, sizeof t->name) || !valid_text(t->type, sizeof t->type) ||
-      !known_track_type(t->type) || (t->known && t->known != 15u) || !t->type[0] || t->muted > 1 ||
-      t->soloed > 1 || t->record_armed > 1 || t->audio_soloed > 1 || t->audio_record_armed > 1 ||
-      t->silenced > 1 || t->identity.index != (normal ? i : i - s->track_count) ||
+      !known_track_type(t->type) || (t->known & ~mpc_family_by_type(t->type)->fields) ||
+      !t->type[0] || t->muted > 1 || t->soloed > 1 || t->record_armed > 1 || t->audio_soloed > 1 ||
+      t->audio_record_armed > 1 || t->silenced > 1 ||
+      t->identity.index != (normal ? i : i - s->track_count) ||
       (normal && (!t->identity.id || !t->identity.generation)) ||
-      (normal && (!strcmp(t->type, "plugin") || !strcmp(t->type, "drum")) && t->known != 15u) ||
-      (!normal && (t->known || t->identity.id || t->identity.generation)) ||
-      (t->known && strcmp(t->type, "plugin") && strcmp(t->type, "drum")))
+      (!normal && (t->known || t->identity.id || t->identity.generation)))
       return 0;
     if (normal) {
       if (t->collection == MPC_STATE_MIDI_TRIGGERED) {
@@ -113,7 +113,7 @@ static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instan
         if (
           t->collection_index >= MPC_IDENTITY_MAX_AUDIO_TRACKS ||
           audio_indices[t->collection_index] ||
-          (strcmp(t->type, "audio") && strcmp(t->type, "unknown")) || t->known)
+          (strcmp(t->type, "audio") && strcmp(t->type, "unknown")))
           return 0;
         audio_indices[t->collection_index] = true;
         audio_count++;
@@ -230,11 +230,11 @@ static void track(
   fputs(",\"type\":", f);
   api_quoted(f, strcmp(t->type, "unknown") ? t->type : NULL);
   fputs(",\"requested\":{\"muted\":", f);
-  nullable_bool(f, t->known & MPC_STATE_REQUESTED, t->muted);
+  nullable_bool(f, t->known & MPC_STATE_MUTE, t->muted);
   fputs(",\"soloed\":", f);
-  nullable_bool(f, t->known & MPC_STATE_REQUESTED, t->soloed);
+  nullable_bool(f, t->known & MPC_STATE_SOLO, t->soloed);
   fputs(",\"recordArmed\":", f);
-  nullable_bool(f, t->known & MPC_STATE_REQUESTED, t->record_armed);
+  nullable_bool(f, t->known & MPC_STATE_ARM, t->record_armed);
   fputs("},\"audioSide\":{\"muted\":null,\"soloed\":", f);
   nullable_bool(f, t->known & MPC_STATE_AUDIO_SOLO, t->audio_soloed);
   fputs(",\"recordArmed\":", f);
@@ -242,12 +242,26 @@ static void track(
   fputs("},\"silenced\":", f);
   nullable_bool(f, t->known & MPC_STATE_SILENCED, t->silenced);
   fputs(",\"unsupportedFields\":", f);
-  fputs(
-    t->known
-      ? "[\"audioSide.muted\",\"audioActivity\"]"
-      : "[\"requested.muted\",\"requested.soloed\",\"requested.recordArmed\",\"audioSide.muted\","
-        "\"audioSide.soloed\",\"audioSide.recordArmed\",\"silenced\",\"audioActivity\"]",
-    f);
+  static const char *fields[] = {
+    "requested.muted",
+    "requested.soloed",
+    "requested.recordArmed",
+    "audioSide.soloed",
+    "audioSide.recordArmed",
+    "silenced",
+    "audioSide.muted",
+    "audioActivity"};
+  fputc('[', f);
+  bool comma = false;
+  for (unsigned i = 0; i < sizeof fields / sizeof *fields; i++)
+    if (!(t->known & (1u << i))) {
+      if (comma)
+        fputc(',', f);
+      api_quoted(f, fields[i]);
+      comma = true;
+    }
+  fputs("],\"flagSupport\":", f);
+  api_flag_support(f, t->type, t->known, normal);
   fputc('}', f);
 }
 

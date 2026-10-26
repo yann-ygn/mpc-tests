@@ -2,7 +2,11 @@
   "profileSchemaVersion": 1,
   "supportedProgramFamilies": [
     "plugin",
-    "drum"
+    "drum",
+    "keygroup",
+    "midi",
+    "cv",
+    "audio"
   ],
   "capabilityQualification": "bounded_lab_proof",
   "firmwareVersion": "3.9.1.2",
@@ -253,6 +257,81 @@
       "name": "commandQualifiedModeCases",
       "rva": 22511508,
       "prefixHex": "940200ea2e0000ea8e0200eaa10200ea9c0200ea970200ea920200ea810200ea"
+    },
+    {
+      "name": "familyRequestedMute",
+      "rva": 42371264,
+      "prefixHex": "c4219fe5c4319fe5f4416de1604090e5f860cde110e08de5b4719fe544d04de2"
+    },
+    {
+      "name": "familyRequestedSolo",
+      "rva": 42366484,
+      "prefixHex": "c4219fe5c4319fe5f4416de1604090e5f860cde110e08de5b4719fe544d04de2"
+    },
+    {
+      "name": "familyRequestedArm",
+      "rva": 42366988,
+      "prefixHex": "c0219fe5c0319fe5f4416de1604090e5f860cde110e08de5b0719fe544d04de2"
+    },
+    {
+      "name": "familyMutePropagation",
+      "rva": 37178608,
+      "prefixHex": "6c3190e5f0416de1a8509fe50040a0e1283093e508608de505508fe00ce08de5"
+    },
+    {
+      "name": "familyMuteForwarding",
+      "rva": 31264260,
+      "prefixHex": "8cc19fe58c219fe5fc416de1f860cde1f081cde118e08de57c519fe5a4d04de2"
+    },
+    {
+      "name": "familySequenceMutePropagation",
+      "rva": 39541132,
+      "prefixHex": "f4426de1f860cde10270a0e190229fe5f081cde10380a0e188329fe5f8a1cde1"
+    },
+    {
+      "name": "familySoloCopyPropagation",
+      "rva": 15354088,
+      "prefixHex": "68219fe568319fe5fc416de1f860cde1f081cde118e08de5028b2ded54519fe5"
+    },
+    {
+      "name": "familySoloSuppression",
+      "rva": 38878740,
+      "prefixHex": "f4416de1000052e3624d80e22c2090e5617adfed0050a0e180019fe5f860cde1"
+    },
+    {
+      "name": "familySoloPeerBehaviour",
+      "rva": 39340512,
+      "prefixHex": "2c30d0e5000053e31eff2f110130a0e3f0416de108608de50ce08de52c30c0e5"
+    },
+    {
+      "name": "familyArmCopyPropagation",
+      "rva": 39302116,
+      "prefixHex": "d0219fe5d0319fe5f0426de1f860cde1f081cde118a08de51ce08de5bc819fe5"
+    },
+    {
+      "name": "familyAudioClass",
+      "rva": 38193928,
+      "prefixHex": "70349fe5f8416de1f860cde110808de514e08de5028b2ded012a80e2024a80e2"
+    },
+    {
+      "name": "familyKeygroupClass",
+      "rva": 38556704,
+      "prefixHex": "38339fe5f0426de1f860cde10060a0e1027a80e2f081cde11ce08de518a08de5"
+    },
+    {
+      "name": "familyMidiClass",
+      "rva": 38722844,
+      "prefixHex": "e4309fe5f0416de10040a0e108608de50ce08de5016a84e2630d80e2cc509fe5"
+    },
+    {
+      "name": "familyCvClass",
+      "rva": 38320800,
+      "prefixHex": "b0179fe5b0279fe5f4426de1f860cde1f081cde1f8a1cde120e08de5036a80e2"
+    },
+    {
+      "name": "familyArmFilterTarget",
+      "rva": 40174728,
+      "prefixHex": "38229fe538329fe5f8416de10040a0e1dc0190e5f860cde110808de514e08de5"
     }
   ],
   "bindings": [
@@ -366,5 +445,183 @@
     "armModeValue": 1260,
     "mixerMode": 8323,
     "trackMuteMode": 8333
+  },
+  "flagFamilies": {
+    "plugin": {
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced"
+      ],
+      "operations": {
+        "set_mute": [
+          "requested.muted"
+        ],
+        "set_solo": [
+          "requested.soloed",
+          "audioSide.soloed"
+        ],
+        "set_record_armed": [
+          "requested.recordArmed",
+          "audioSide.recordArmed"
+        ]
+      },
+      "reason": null
+    },
+    "drum": {
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced"
+      ],
+      "operations": {
+        "set_mute": [
+          "requested.muted"
+        ],
+        "set_solo": [
+          "requested.soloed",
+          "audioSide.soloed"
+        ],
+        "set_record_armed": [
+          "requested.recordArmed",
+          "audioSide.recordArmed"
+        ]
+      },
+      "reason": null
+    },
+    "keygroup": {
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced"
+      ],
+      "operations": {
+        "set_mute": [
+          "requested.muted"
+        ],
+        "set_solo": [
+          "requested.soloed",
+          "audioSide.soloed"
+        ],
+        "set_record_armed": [
+          "requested.recordArmed",
+          "audioSide.recordArmed"
+        ]
+      },
+      "reason": null
+    },
+    "midi": {
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed"
+      ],
+      "operations": {
+        "set_mute": [
+          "requested.muted"
+        ],
+        "set_solo": [
+          "requested.soloed"
+        ],
+        "set_record_armed": [
+          "requested.recordArmed"
+        ]
+      },
+      "reason": null
+    },
+    "cv": {
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed"
+      ],
+      "operations": {
+        "set_mute": [
+          "requested.muted"
+        ],
+        "set_solo": [
+          "requested.soloed"
+        ],
+        "set_record_armed": [
+          "requested.recordArmed"
+        ]
+      },
+      "reason": null
+    },
+    "audio": {
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced"
+      ],
+      "operations": {
+        "set_mute": [
+          "requested.muted"
+        ],
+        "set_solo": [
+          "requested.soloed",
+          "audioSide.soloed"
+        ],
+        "set_record_armed": [
+          "requested.recordArmed",
+          "audioSide.recordArmed"
+        ]
+      },
+      "reason": null
+    },
+    "clip": {
+      "readableFields": [],
+      "operations": {},
+      "reason": "UNQUALIFIED_TRACK_TYPE"
+    },
+    "unknown": {
+      "readableFields": [],
+      "operations": {},
+      "reason": "UNQUALIFIED_TRACK_TYPE"
+    }
+  },
+  "familyEvidence": {
+    "plugin": {
+      "nativeMatrix": "findings/native-family-flags.md",
+      "listenerTrace": "live_property_subscriptions",
+      "outputVerified": false
+    },
+    "drum": {
+      "nativeMatrix": "findings/native-family-flags.md",
+      "listenerTrace": "live_property_subscriptions",
+      "outputVerified": false
+    },
+    "keygroup": {
+      "nativeMatrix": "findings/native-family-flags.md",
+      "listenerTrace": "live_property_subscriptions",
+      "outputVerified": false
+    },
+    "midi": {
+      "nativeMatrix": "findings/native-family-flags.md",
+      "listenerTrace": "live_property_subscriptions",
+      "outputVerified": false
+    },
+    "cv": {
+      "nativeMatrix": "findings/native-family-flags.md",
+      "listenerTrace": "live_property_subscriptions",
+      "outputVerified": false
+    },
+    "audio": {
+      "nativeMatrix": "findings/native-family-flags.md",
+      "listenerTrace": "live_property_subscriptions",
+      "outputVerified": false
+    }
   }
 }

@@ -14,7 +14,7 @@ static struct mpc_native_adapter *open_fixture(struct fixture *f, bool validator
   return adapter;
 }
 
-/* Expectations precede no-op detection for every flag and both lab families.
+/* Expectations precede no-op detection for every flag and qualified family.
  * An already-desired arm must not run its filter or re-trigger peer listeners. */
 static void desired_state_matrix(void) {
   typedef enum mpc_native_error (*set_fn)(
@@ -24,12 +24,24 @@ static void desired_state_matrix(void) {
     const bool *,
     struct mpc_native_write_result *);
   const set_fn setters[] = {mpc_native_set_mute, mpc_native_set_solo, mpc_native_set_record_armed};
-  for (unsigned family = 0; family < 2; family++) {
+  const uint32_t families[] = {
+    NATIVE_PLUGIN_VTABLE,
+    NATIVE_DRUM_VTABLE,
+    NATIVE_KEYGROUP_VTABLE,
+    NATIVE_MIDI_VTABLE,
+    NATIVE_CV_VTABLE,
+    NATIVE_AUDIO_VTABLE};
+  for (unsigned family = 0; family < sizeof families / sizeof *families; family++) {
     for (unsigned property = 0; property < 3; property++) {
       struct fixture f;
       reset(&f);
-      if (family)
-        put32(&f, PROGRAM, IMAGE + NATIVE_DRUM_VTABLE);
+      put32(&f, PROGRAM, IMAGE + families[family]);
+      if (family == 3 || family == 4) {
+        /* Unqualified copies cannot be read, even for a different operation. */
+        put_bool(&f, PROGRAM + native_bindings[1].observed, 2);
+        put_bool(&f, TRACK + native_bindings[2].observed, 2);
+        put_bool(&f, PROGRAM + NATIVE_SILENCED_OFFSET, 2);
+      }
       struct mpc_native_adapter *adapter = open_fixture(&f, true);
       struct mpc_native_write_result result;
       bool expected = false;
@@ -47,6 +59,14 @@ static void desired_state_matrix(void) {
       expected = true;
       assert(setters[property](adapter, &target, false, &expected, &result) == MPC_NATIVE_OK);
       assert(result.native_invoked && result.changed && f.setters == 2);
+      if (property == 2) {
+        f.filter_allows = false;
+        expected = false;
+        assert(
+          setters[property](adapter, &target, true, &expected, &result) ==
+          MPC_NATIVE_VALUE_REJECTED);
+        assert(result.native_invoked && !result.changed && !result.observed.record_armed);
+      }
       mpc_native_close(adapter);
     }
   }
@@ -62,6 +82,30 @@ int main(void) {
   unsigned cases = 0;
   desired_state_matrix();
   cases += 6;
+  for (unsigned stage = 0; stage < 2; stage++) {
+    reset(&f);
+    if (stage)
+      f.family_after_set = NATIVE_MIDI_VTABLE;
+    else
+      f.family_after_filter = NATIVE_MIDI_VTABLE;
+    a = open_fixture(&f, true);
+    assert(mpc_native_set_record_armed(a, &target, true, NULL, &result) == MPC_NATIVE_STALE_TARGET);
+    assert(result.native_invoked && !result.changed_known && f.setters == stage);
+    mpc_native_close(a);
+    cases++;
+  }
+  reset(&f);
+  a = open_fixture(&f, true);
+  for (unsigned i = 0; i < sizeof native_program_types / sizeof *native_program_types; i++)
+    if (!strcmp(native_program_types[i].name, "clip"))
+      put32(&f, PROGRAM, IMAGE + native_program_types[i].vtable);
+  assert(mpc_native_read_track(a, &target, &state) == MPC_NATIVE_OK && !state.known);
+  assert(
+    mpc_native_set_record_armed(a, &target, false, NULL, &result) ==
+    MPC_NATIVE_UNSUPPORTED_TRACK_TYPE);
+  assert(!result.native_invoked && !f.filters && !f.setters);
+  mpc_native_close(a);
+  cases++;
   reset(&f);
   backend = io(&f);
   strcpy(f.build, "1122");
@@ -77,7 +121,9 @@ int main(void) {
   reset(&f);
   backend = io(&f);
   struct mpc_native_hooks wrong = hooks(&f);
-  wrong.abi_version++;
+  wrong.abi_version = 1;
+  assert(mpc_native_open_backend(&backend, &wrong, &a) == MPC_NATIVE_ABI_MISMATCH);
+  wrong.abi_version = MPC_NATIVE_ABI + 1;
   assert(mpc_native_open_backend(&backend, &wrong, &a) == MPC_NATIVE_ABI_MISMATCH);
   assert(!a && !f.code_reads);
   cases++;
@@ -119,6 +165,11 @@ int main(void) {
   cases++;
   reset(&f);
   a = open_fixture(&f, false);
+  _Alignas(struct mpc_native_track_state) unsigned char legacy_state[16];
+  memset(legacy_state, 0xa5, sizeof legacy_state);
+  assert(mpc_native_read_track(a, &target, (void *)legacy_state) == MPC_NATIVE_NOT_READY);
+  for (unsigned i = 0; i < sizeof legacy_state; i++)
+    assert(legacy_state[i] == 0xa5);
   assert(mpc_native_set_mute(a, &target, true, NULL, &result) == MPC_NATIVE_NOT_READY);
   assert(!f.object_reads && !f.setters);
   mpc_native_close(a);

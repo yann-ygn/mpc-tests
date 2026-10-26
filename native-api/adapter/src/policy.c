@@ -1,6 +1,7 @@
 #include "private.h"
 #include "mpc_commands.h"
 #include "mpc_adapter_profile.h"
+#include "mpc_family_profile.h"
 
 #include <string.h>
 
@@ -47,9 +48,11 @@ static bool capture(
   const struct mpc_native_target *target,
   struct mpc_command_context *out) {
   memset(out, 0, sizeof *out);
+  out->target_program = target->program;
   const struct native_command_context_layout *p = &native_command_context;
   uint32_t project, arm_project, arm_properties;
-  return pointer(a, (uint32_t)a->io.image, NATIVE_APPLICATION_SLOT, &out->app) &&
+  return read_value(a, target->program, 0, &out->target_vtable, 4) &&
+    pointer(a, (uint32_t)a->io.image, NATIVE_APPLICATION_SLOT, &out->app) &&
     object(a, out->app, NATIVE_APPLICATION_VTABLE) &&
     pointer(a, out->app, NATIVE_APPLICATION_WINDOW, &out->window) &&
     object(a, out->window, NATIVE_WINDOW_VTABLE) &&
@@ -101,6 +104,8 @@ enum mpc_native_error mpc_native_qualify_command(
   enum mpc_native_error error = mpc_native_read_track(a, target, &state);
   if (error)
     return error;
+  if (!(mpc_family_by_id(state.family)->operations & (1u << operation)))
+    return MPC_NATIVE_UNSUPPORTED_TRACK_TYPE;
   struct mpc_command_context before, after;
   if (!capture(a, target, &before) || !capture(a, target, &after))
     return MPC_NATIVE_READ_FAILED;

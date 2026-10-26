@@ -1,4 +1,5 @@
 #include "command_private.h"
+#include "mpc_family_profile.h"
 
 #include <errno.h>
 #include <pthread.h>
@@ -91,7 +92,12 @@ static const struct mpc_command_track *target_track(const struct mpc_command_rec
 }
 static bool verified(const struct mpc_command_receipt *receipt) {
   const struct mpc_command_track *track = target_track(receipt);
-  if (!track || track->known != 15)
+  unsigned property = receipt->request.operation;
+  if (!track)
+    return false;
+  const struct mpc_family_support *support = mpc_family_by_id(track->family);
+  unsigned required = support->required[property];
+  if (!required || (track->known & required) != required)
     return false;
   if (
     receipt->request.operation == MPC_COMMAND_MUTE &&
@@ -100,13 +106,13 @@ static bool verified(const struct mpc_command_receipt *receipt) {
       (receipt->after.selected_sequence != receipt->request.sequence.sequence ||
        receipt->after.selected_sequence_generation != receipt->request.sequence.generation))))
     return false;
-  unsigned property = receipt->request.operation;
   bool value = property == MPC_COMMAND_MUTE ? track->muted
     : property == MPC_COMMAND_SOLO          ? track->soloed
                                             : track->record_armed;
   if (value != receipt->request.value)
     return false;
-  return property == MPC_COMMAND_MUTE ||
+  unsigned copy = property == MPC_COMMAND_SOLO ? MPC_NATIVE_SOLO_COPY : MPC_NATIVE_ARM_COPY;
+  return property == MPC_COMMAND_MUTE || !(required & copy) ||
     (property == MPC_COMMAND_SOLO ? track->audio_soloed : track->audio_record_armed) ==
     receipt->request.value;
 }
@@ -422,6 +428,8 @@ enum mpc_native_error mpc_commands_submit(
     empty->serial = commands->next_serial++;
     empty->accepted_ms = now;
     empty->start_deadline = now + request.start_within_ms;
+    empty->receipt.abi_version = MPC_COMMANDS_ABI;
+    empty->receipt.struct_bytes = sizeof empty->receipt;
     empty->receipt.request = request;
     empty->receipt.status = MPC_COMMAND_ACCEPTED;
     commands->pending++;

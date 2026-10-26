@@ -139,7 +139,11 @@ int main(int argc, char **argv) {
   assert(first->selected_track == first->tracks[7].identity.id);
   for (unsigned i = 0; i < 8; i++) {
     assert(first->tracks[i].identity.index == i && !strcmp(first->tracks[i].type, families[i]));
-    assert(first->tracks[i].known == (i < 2 ? 15u : 0u));
+    assert(
+      first->tracks[i].known ==
+      ((!strcmp(families[i], "midi") || !strcmp(families[i], "cv")) ? 7u
+         : i < 3 || i == 7                                          ? 63u
+                                                                    : 0u));
   }
   assert(first->tracks[7].collection == MPC_STATE_AUDIO && !first->tracks[7].collection_index);
   for (unsigned i = 0; i < 5; i++)
@@ -152,7 +156,7 @@ int main(int argc, char **argv) {
   }
   struct mpc_identity_snapshot ids = snapshot(f, executor);
   struct mpc_executor_identity audio_ref = handle(&ids, 7);
-  finish(f, submit(executor, MPC_EXECUTOR_SET_MUTE, audio_ref), MPC_NATIVE_UNSUPPORTED_TRACK_TYPE);
+  finish(f, submit(executor, MPC_EXECUTOR_READ_TRACK, audio_ref), MPC_NATIVE_OK);
   assert(!f->native.setters);
   /* Interleave audio before MIDI; legacy collection indices stay unchanged. */
   put32(&f->native, USERS, track_address(7));

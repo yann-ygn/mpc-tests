@@ -7,7 +7,7 @@
 
 /* Trusted, in-process C ABI. Addresses here are private implementation details:
  * none of these types is a public wire/SDK target or a lifetime authority. */
-#define MPC_NATIVE_ABI 1u
+#define MPC_NATIVE_ABI 2u
 #define MPC_NATIVE_API __attribute__((visibility("default")))
 
 enum mpc_native_error {
@@ -46,7 +46,26 @@ enum mpc_native_error {
   MPC_NATIVE_MUTE_SCOPE_MISMATCH
 };
 
-enum mpc_native_family { MPC_NATIVE_PLUGIN = 1, MPC_NATIVE_DRUM = 2 };
+enum mpc_native_family {
+  MPC_NATIVE_UNKNOWN,
+  MPC_NATIVE_PLUGIN,
+  MPC_NATIVE_DRUM,
+  MPC_NATIVE_KEYGROUP,
+  MPC_NATIVE_MIDI,
+  MPC_NATIVE_CV,
+  MPC_NATIVE_AUDIO,
+  MPC_NATIVE_CLIP
+};
+/* Independent observations. A native engine copy never establishes audibility. */
+enum mpc_native_known {
+  MPC_NATIVE_MUTED = 1,
+  MPC_NATIVE_SOLOED = 2,
+  MPC_NATIVE_ARMED = 4,
+  MPC_NATIVE_SOLO_COPY = 8,
+  MPC_NATIVE_ARM_COPY = 16,
+  MPC_NATIVE_SILENCED = 32,
+  MPC_NATIVE_ALL_FIELDS = 63
+};
 enum mpc_native_audio_known { MPC_NATIVE_AUDIO_SOLO = 1, MPC_NATIVE_AUDIO_ARM = 2 };
 
 struct mpc_native_adapter;
@@ -67,6 +86,7 @@ struct mpc_native_hooks {
 
 struct mpc_native_track_state {
   enum mpc_native_family family;
+  unsigned known;
   bool muted, soloed, record_armed, silenced;
   unsigned audio_known;
   bool audio_soloed, audio_record_armed;

@@ -2,10 +2,11 @@
 #define MPC_STATE_H
 
 #include "mpc_identity.h"
+#include "mpc_native.h"
 
 /* Pointer-free snapshot, owned by its executor job until release. The private
  * attachment protocol checks this version and size before transferring it. */
-#define MPC_STATE_ABI 3u
+#define MPC_STATE_ABI 4u
 #define MPC_STATE_MAX_BUSES 128u
 #define MPC_STATE_NAME_BYTES 256u
 #define MPC_STATE_ATTEMPTS 3u
@@ -13,10 +14,13 @@
 enum mpc_mute_scope { MPC_MUTE_GLOBAL, MPC_MUTE_SEQUENCE, MPC_MUTE_UNKNOWN };
 
 enum mpc_state_known {
-  MPC_STATE_REQUESTED = 1,
-  MPC_STATE_AUDIO_SOLO = 2,
-  MPC_STATE_AUDIO_ARM = 4,
-  MPC_STATE_SILENCED = 8
+  MPC_STATE_MUTE = MPC_NATIVE_MUTED,
+  MPC_STATE_SOLO = MPC_NATIVE_SOLOED,
+  MPC_STATE_ARM = MPC_NATIVE_ARMED,
+  MPC_STATE_REQUESTED = MPC_STATE_MUTE | MPC_STATE_SOLO | MPC_STATE_ARM,
+  MPC_STATE_AUDIO_SOLO = MPC_NATIVE_SOLO_COPY,
+  MPC_STATE_AUDIO_ARM = MPC_NATIVE_ARM_COPY,
+  MPC_STATE_SILENCED = MPC_NATIVE_SILENCED
 };
 
 enum mpc_state_collection {

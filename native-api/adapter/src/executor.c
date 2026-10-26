@@ -1,5 +1,6 @@
 #include "private.h"
 #include "command_private.h"
+#include "mpc_family_profile.h"
 
 #include <errno.h>
 #include <pthread.h>
@@ -158,7 +159,8 @@ observation(const struct mpc_state_snapshot *state, struct mpc_command_observati
                                                 t->record_armed,
                                                 t->audio_soloed,
                                                 t->audio_record_armed,
-                                                t->silenced};
+                                                t->silenced,
+                                                mpc_family_by_type(t->type)->family};
   }
 }
 

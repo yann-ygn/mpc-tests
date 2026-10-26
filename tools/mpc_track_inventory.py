@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MASTER_TYPES = {"input", "output", "master-output", "return", "submix"}
 
 
-def capture(session):
+def capture(session, flags=False):
     profile = session.profile
     po, poolo, to = (profile["offsets"][k] for k in ("project", "trackPool", "track"))
     project = session.active_project()
@@ -49,10 +49,15 @@ def capture(session):
     if any(u32(d) != session.base + profile["vtables"]["track"] for d in data):
         raise SnapshotChanged("Invalid track type")
     programs = [u32(d, to["program"]) for d in data]
-    program_data = session.read_many([(a, 4) for a in programs])
+    program_data = session.read_many([(a, 0x270 if flags else 4) for a in programs])
     names = session.read_many([(u32(d, to["name"]), 256) for d in data])
     rows = {}
-    for address, pd, name in zip(all_tracks, program_data, names):
+    control = (
+        json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2-control.json").read_text())
+        if flags
+        else None
+    )
+    for address, td, pd, name in zip(all_tracks, data, program_data, names):
         if b"\0" not in name:
             raise SnapshotChanged("Unbounded track name")
         kind = profile["programTypes"].get(str(u32(pd) - session.base))
@@ -73,6 +78,35 @@ def capture(session):
             ),
             "uiIndex": users.index(address) if address in users else None,
         }
+        if flags:
+            supported = (
+                control["flagFamilies"].get(kind, {}).get("readableFields", [])
+                if address in users
+                else []
+            )
+            requested, copies = {}, {"muted": None}
+            for field, binding in zip(("muted", "soloed", "recordArmed"), control["bindings"]):
+                source = td if binding["propertyOwner"] == "track" else pd
+
+                def observation(path, offset):
+                    if path not in supported:
+                        return None
+                    if source[offset] > 1:
+                        raise SnapshotChanged("Independent field is not boolean")
+                    return bool(source[offset])
+
+                requested[field] = observation("requested." + field, binding["scriptValueOffset"])
+                if field != "muted":
+                    copies[field] = observation(
+                        "audioSide." + field, binding["observedValueOffset"]
+                    )
+            silenced = None
+            if "silenced" in supported:
+                value = pd[profile["offsets"]["program"]["silenced"]]
+                if value > 1:
+                    raise SnapshotChanged("Independent silenced field is not boolean")
+                silenced = bool(value)
+            rows[address].update(requested=requested, audioSide=copies, silenced=silenced)
     selected = u32(before, po["selectedTrack"])
     if (
         selected != u32(before, po["selectedTrackMirror"])
@@ -96,7 +130,7 @@ def capture(session):
         raise SnapshotChanged("Inventory, order or selection changed during capture")
     after_programs = session.read_many([(a + to["program"], 4) for a in all_tracks])
     after_types = session.read_many([(a, 4) for a in programs])
-    if [u32(p) for p in after_programs] != programs or after_types != program_data:
+    if [u32(p) for p in after_programs] != programs or after_types != [p[:4] for p in program_data]:
         raise SnapshotChanged("Program association changed during capture")
     return {
         "source": "independent_process_memory",

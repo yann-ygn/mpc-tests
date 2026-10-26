@@ -14,7 +14,7 @@
  * into the target. Scan prints addresses only; read returns bounded binary data. */
 int main(int argc, char **argv) {
   if (argc < 4) {
-    fprintf(stderr, "usage: mem_probe PID scan HEX... | PID read HEX LENGTH\n");
+    fprintf(stderr, "usage: mem_probe PID scan HEX... | PID read HEX LENGTH [HEX LENGTH...]\n");
     return 2;
   }
   char path[80];
@@ -25,25 +25,39 @@ int main(int argc, char **argv) {
     return 1;
   }
   if (!strcmp(argv[2], "read")) {
-    if (argc != 5)
+    if (argc < 5 || (argc - 3) % 2 || (argc - 3) / 2 > 1024)
       return 2;
-    uint64_t address = strtoull(argv[3], NULL, 16);
-    size_t length = strtoul(argv[4], NULL, 10);
-    if (!length || length > 8 * 1024 * 1024)
-      return 2;
+    size_t total = 0;
+    for (int i = 3; i < argc; i += 2) {
+      char *end;
+      errno = 0;
+      uint64_t address = strtoull(argv[i], &end, 16);
+      if (errno || !argv[i][0] || *end || address > INT64_MAX)
+        return 2;
+      unsigned long length = strtoul(argv[i + 1], &end, 10);
+      if (
+        errno || !argv[i + 1][0] || *end || !length || length > 8 * 1024 * 1024 - total ||
+        address > INT64_MAX - length)
+        return 2;
+      total += length;
+    }
     unsigned char buf[65536];
-    while (length) {
-      size_t want = length < sizeof buf ? length : sizeof buf;
-      ssize_t n = pread(fd, buf, want, (off_t)address);
-      if (n <= 0) {
-        perror("read memory");
-        close(fd);
-        return 1;
+    for (int i = 3; i < argc; i += 2) {
+      uint64_t address = strtoull(argv[i], NULL, 16);
+      size_t length = strtoul(argv[i + 1], NULL, 10);
+      while (length) {
+        size_t want = length < sizeof buf ? length : sizeof buf;
+        ssize_t n = pread(fd, buf, want, (off_t)address);
+        if (n <= 0) {
+          perror("read memory");
+          close(fd);
+          return 1;
+        }
+        if (fwrite(buf, 1, (size_t)n, stdout) != (size_t)n)
+          return 1;
+        address += (size_t)n;
+        length -= (size_t)n;
       }
-      if (fwrite(buf, 1, (size_t)n, stdout) != (size_t)n)
-        return 1;
-      address += (size_t)n;
-      length -= (size_t)n;
     }
     close(fd);
     return 0;

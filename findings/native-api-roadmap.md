@@ -134,3 +134,10 @@ Host/sanitizer/ARM fixtures and real controller edits in Sounds pass; public wri
 Command-handler slice (#19): [managed handlers](native-commands.md) add caller-scoped retained receipts,
 deduplication, dispatch-time expected values, verified model/audio completion, peer/selection observations
 and guarded shutdown. Public Unix writes and production mode/settings policy stay in #32.
+
+Family qualification (#49, 2026-10-26): [the family matrix](native-family-flags.md)
+adds independently qualified keygroup/audio flags and native MIDI/CV requested
+flags, alongside the plugin/drum baseline. Discovery/state expose field and
+operation qualification; completion uses each family's required evidence. Legacy
+clip/unknown flags and physical MIDI/CV output remain unqualified. Streaming #33
+and playback qualification #50 remain separate work.

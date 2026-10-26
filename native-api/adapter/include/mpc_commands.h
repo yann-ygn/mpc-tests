@@ -5,7 +5,7 @@
 #include "mpc_identity.h"
 #include "mpc_state.h"
 
-#define MPC_COMMANDS_ABI 3u
+#define MPC_COMMANDS_ABI 4u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u
@@ -85,6 +85,7 @@ struct mpc_commands_config {
 struct mpc_command_track {
   uint64_t id, generation;
   uint32_t known, muted, soloed, record_armed, audio_soloed, audio_record_armed, silenced;
+  uint32_t family;
 };
 struct mpc_command_observation {
   uint64_t project, generation, selected_track, selected_sequence, captured_ms;
@@ -94,6 +95,7 @@ struct mpc_command_observation {
   struct mpc_command_track tracks[MPC_IDENTITY_MAX_TRACKS];
 };
 struct mpc_command_receipt {
+  uint32_t abi_version, struct_bytes;
   struct mpc_command_request request;
   enum mpc_command_status status;
   enum mpc_command_execution execution;

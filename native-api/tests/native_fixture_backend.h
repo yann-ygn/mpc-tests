@@ -24,6 +24,7 @@ struct fixture {
   int corrupt, unreadable;
   unsigned code_reads, object_reads, validations, setters, filters, sequence, filter_order,
     setter_order;
+  uint32_t family_after_filter, family_after_set;
   char build[129], model[256];
 };
 static const struct mpc_native_target target = {OBJECTS, TRACK, PROGRAM};
@@ -114,6 +115,8 @@ setter(void *data, uintptr_t function, uintptr_t property, bool value) {
       put_bool(f, owner + b->observed, value);
     if (f->invalidate_after_set)
       f->authorized = false;
+    if (f->family_after_set)
+      put32(f, PROGRAM, IMAGE + f->family_after_set);
     return MPC_NATIVE_OK;
   }
   assert(!"Wrong setter receiver/function ABI");
@@ -126,6 +129,8 @@ filter(void *data, uintptr_t storage, uintptr_t function, bool *value) {
     storage == TRACK + native_bindings[2].filter_storage &&
     function == IMAGE + native_bindings[2].filter_rva);
   f->filters++;
+  if (f->family_after_filter)
+    put32(f, PROGRAM, IMAGE + f->family_after_filter);
   f->filter_order = ++f->sequence;
   *value = *value && f->filter_allows;
   return MPC_NATIVE_OK;

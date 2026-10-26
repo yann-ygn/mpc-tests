@@ -73,5 +73,6 @@ int adapter_probe(const char *root, long pid, char instance_id[37], int *state_r
 char *api_state(struct api *, const struct discovery *, const char *operation);
 int adapter_state(const char *, long, const char *, struct mpc_state_snapshot *);
 void api_quoted(FILE *, const char *);
+void api_flag_support(FILE *, const char *, unsigned, int);
 
 #endif

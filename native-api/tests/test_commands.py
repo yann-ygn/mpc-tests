@@ -47,7 +47,11 @@ class CommandContractTests(unittest.TestCase):
                 validator.validate(receipt)
                 if receipt["status"] == "applied":
                     self.assertEqual(receipt["verification"]["requestedValue"], receipt["value"])
-                    if receipt["op"] == "set_mute":
+                    parts = receipt["requestId"].split("_")
+                    model_only = receipt["requestId"] == "family_race"
+                    if parts[0] == "family" and len(parts) == 7:
+                        model_only = (int(parts[1]) + int(parts[4])) % 6 in (3, 4)
+                    if receipt["op"] == "set_mute" or model_only:
                         self.assertEqual(receipt["verification"]["by"], ["model"])
                         self.assertIsNone(receipt["verification"]["audioSideValue"])
                     else:

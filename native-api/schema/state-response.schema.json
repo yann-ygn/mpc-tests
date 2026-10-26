@@ -172,7 +172,8 @@
         "silenced",
         "unsupportedFields",
         "uiIndex",
-        "collection"
+        "collection",
+        "flagSupport"
       ],
       "properties": {
         "ref": {
@@ -309,6 +310,9 @@
             "audio",
             "master"
           ]
+        },
+        "flagSupport": {
+          "$ref": "#/$defs/flagSupport"
         }
       },
       "allOf": [
@@ -489,6 +493,247 @@
           }
         }
       ]
+    },
+    "flagSupport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "readableFields",
+        "unsupportedReasons",
+        "operations",
+        "outputVerified"
+      ],
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "readableFields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unsupportedReasons": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "set_mute",
+            "set_solo",
+            "set_record_armed"
+          ],
+          "properties": {
+            "set_mute": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "reason",
+                "verification",
+                "conditions"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "verification": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "model",
+                      "audio_copy"
+                    ]
+                  }
+                },
+                "conditions": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "available": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "reason": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "set_solo": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "reason",
+                "verification",
+                "conditions"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "verification": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "model",
+                      "audio_copy"
+                    ]
+                  }
+                },
+                "conditions": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "available": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "reason": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "set_record_armed": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "reason",
+                "verification",
+                "conditions"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "verification": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "model",
+                      "audio_copy"
+                    ]
+                  }
+                },
+                "conditions": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "available": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "reason": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "outputVerified": {
+          "const": false
+        }
+      }
     }
   }
 }

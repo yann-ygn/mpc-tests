@@ -1,5 +1,6 @@
 #include "private.h"
 #include "mpc_adapter_profile.h"
+#include "mpc_family_profile.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -206,13 +207,12 @@ static enum mpc_native_error target_check(
     get32(adapter, (uintptr_t)target->track + NATIVE_PROGRAM_OFFSET, &value) ||
     value != target->program || get32(adapter, target->program, &value))
     return MPC_NATIVE_STALE_TARGET;
-  if (value == adapter->io.image + NATIVE_PLUGIN_VTABLE)
-    *family = MPC_NATIVE_PLUGIN;
-  else if (value == adapter->io.image + NATIVE_DRUM_VTABLE)
-    *family = MPC_NATIVE_DRUM;
-  else
-    return MPC_NATIVE_UNSUPPORTED_TRACK_TYPE;
-  return MPC_NATIVE_OK;
+  for (unsigned i = 1; i < sizeof mpc_family_matrix / sizeof *mpc_family_matrix; i++)
+    if (value == adapter->io.image + mpc_family_matrix[i].vtable) {
+      *family = (enum mpc_native_family)mpc_family_matrix[i].family;
+      return MPC_NATIVE_OK;
+    }
+  return MPC_NATIVE_UNSUPPORTED_TRACK_TYPE;
 }
 
 static enum mpc_native_error state_read(
@@ -223,20 +223,26 @@ static enum mpc_native_error state_read(
   enum mpc_native_error error = target_check(adapter, target, &family);
   if (error)
     return error;
-  struct mpc_native_track_state state = {
-    .family = family,
-    .audio_known = MPC_NATIVE_AUDIO_SOLO | MPC_NATIVE_AUDIO_ARM};
+  const struct mpc_family_support *support = mpc_family_by_id(family);
+  struct mpc_native_track_state state = {.family = family, .known = support->fields};
   bool *requested[] = {&state.muted, &state.soloed, &state.record_armed};
   bool *observed[] = {NULL, &state.audio_soloed, &state.audio_record_armed};
   for (size_t i = 0; i < 3; i++) {
     const struct native_binding *binding = &native_bindings[i];
     uintptr_t owner = binding->owner_is_track ? target->track : target->program;
     if (
-      get_bool(adapter, owner + binding->requested, requested[i]) ||
-      (observed[i] && get_bool(adapter, owner + binding->observed, observed[i])))
+      ((state.known & (1u << i)) && get_bool(adapter, owner + binding->requested, requested[i])) ||
+      (observed[i] && (state.known & (1u << (i + 2))) &&
+       get_bool(adapter, owner + binding->observed, observed[i])))
       return MPC_NATIVE_READ_FAILED;
   }
-  if (get_bool(adapter, (uintptr_t)target->program + NATIVE_SILENCED_OFFSET, &state.silenced))
+  if ((state.known & MPC_NATIVE_SOLO_COPY))
+    state.audio_known |= MPC_NATIVE_AUDIO_SOLO;
+  if ((state.known & MPC_NATIVE_ARM_COPY))
+    state.audio_known |= MPC_NATIVE_AUDIO_ARM;
+  if (
+    (state.known & MPC_NATIVE_SILENCED) &&
+    get_bool(adapter, (uintptr_t)target->program + NATIVE_SILENCED_OFFSET, &state.silenced))
     return MPC_NATIVE_READ_FAILED;
   *output = state;
   return MPC_NATIVE_OK;
@@ -248,6 +254,10 @@ enum mpc_native_error mpc_native_read_track(
   struct mpc_native_track_state *output) {
   if (!output)
     return MPC_NATIVE_INVALID_ARGUMENT;
+  /* NULL-hook opens are status-only, including older callers whose typed
+   * output buffers predate ABI 2. Do not touch those buffers. */
+  if (!adapter || adapter->hooks.abi_version != MPC_NATIVE_ABI)
+    return adapter ? MPC_NATIVE_NOT_READY : MPC_NATIVE_INVALID_ARGUMENT;
   memset(output, 0, sizeof *output);
   return state_read(adapter, target, output);
 }
@@ -261,11 +271,16 @@ static enum mpc_native_error set_flag(
   struct mpc_native_write_result *output) {
   if (!output)
     return MPC_NATIVE_INVALID_ARGUMENT;
+  if (!adapter || adapter->hooks.abi_version != MPC_NATIVE_ABI)
+    return adapter ? MPC_NATIVE_NOT_READY : MPC_NATIVE_INVALID_ARGUMENT;
   memset(output, 0, sizeof *output);
   struct mpc_native_track_state before;
   enum mpc_native_error error = state_read(adapter, target, &before);
   if (error)
     return error;
+  const struct mpc_family_support *support = mpc_family_by_id(before.family);
+  if (!(support->operations & (1u << property)) || !(before.known & (1u << property)))
+    return MPC_NATIVE_UNSUPPORTED_TRACK_TYPE;
   bool current = property == 0 ? before.muted : property == 1 ? before.soloed : before.record_armed;
   output->observed = before;
   output->changed_known = true;
@@ -296,6 +311,8 @@ static enum mpc_native_error set_flag(
   error = target_check(adapter, target, &family);
   if (error)
     return error;
+  if (family != before.family)
+    return MPC_NATIVE_STALE_TARGET;
   output->native_invoked = true;
   output->changed_known = false;
   error = adapter->io.setter(
@@ -308,6 +325,8 @@ static enum mpc_native_error set_flag(
   error = state_read(adapter, target, &output->observed);
   if (error)
     return error;
+  if (output->observed.family != before.family)
+    return MPC_NATIVE_STALE_TARGET;
   bool after = property == 0 ? output->observed.muted
     : property == 1          ? output->observed.soloed
                              : output->observed.record_armed;

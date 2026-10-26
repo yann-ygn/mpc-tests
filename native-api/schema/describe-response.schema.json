@@ -3,6 +3,247 @@
   "title": "MPC native API 0.1 describe response or protocol error",
   "oneOf": [{"$ref": "#/$defs/description"}, {"$ref": "#/$defs/error"}],
   "$defs": {
+    "flagSupport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "readableFields",
+        "unsupportedReasons",
+        "operations",
+        "outputVerified"
+      ],
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "readableFields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unsupportedReasons": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "set_mute",
+            "set_solo",
+            "set_record_armed"
+          ],
+          "properties": {
+            "set_mute": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "reason",
+                "verification",
+                "conditions"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "verification": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "model",
+                      "audio_copy"
+                    ]
+                  }
+                },
+                "conditions": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "available": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "reason": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "set_solo": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "reason",
+                "verification",
+                "conditions"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "verification": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "model",
+                      "audio_copy"
+                    ]
+                  }
+                },
+                "conditions": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "available": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "reason": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "set_record_armed": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "reason",
+                "verification",
+                "conditions"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "verification": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "model",
+                      "audio_copy"
+                    ]
+                  }
+                },
+                "conditions": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "available": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "reason": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "outputVerified": {
+          "const": false
+        }
+      }
+    },
     "capability": {
       "type": "object",
       "required": ["available", "reason"],
@@ -26,7 +267,7 @@
     "nullableMilliseconds": {"type": ["integer", "null"], "minimum": 0},
     "description": {
       "type": "object",
-      "required": ["apiVersion", "deviceId", "instanceId", "implementation", "firmware", "readiness", "readableFields", "capabilities", "limits"],
+      "required": ["apiVersion", "deviceId", "instanceId", "implementation", "firmware", "readiness", "readableFields", "capabilities", "limits", "flagFamilies"],
       "properties": {
         "apiVersion": {"const": "0.1"},
         "deviceId": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[A-Za-z0-9_-]+$"},
@@ -57,7 +298,7 @@
               "type": ["object", "null"],
               "required": ["abiVersion", "instanceId", "codeVerified", "qualification"],
               "properties": {
-                "abiVersion": {"const": 1},
+                "abiVersion": {"const": 2},
                 "instanceId": {"type": "string", "pattern": "^adp_[0-9a-f]{32}$"},
                 "codeVerified": {"const": true},
                 "qualification": {"type":"string","minLength":1}
@@ -69,6 +310,7 @@
           }
         },
         "readableFields": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "flagFamilies": {"type":"array","maxItems":8,"items":{"$ref":"#/$defs/flagSupport"}},
         "capabilities": {
           "type": "object",
           "required": ["describe", "get_state", "current_track", "set_mute", "set_solo", "set_record_armed", "get_command", "watch"],
@@ -104,7 +346,7 @@
             "maxMidiTracks": {"const":128},
             "maxAudioTracks": {"const":8},
             "maxBuses": {"const":128},
-            "snapshotAbiVersion": {"const":3}
+            "snapshotAbiVersion": {"const":4}
           }
         }
       }

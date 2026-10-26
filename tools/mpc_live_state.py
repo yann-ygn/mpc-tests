@@ -103,8 +103,8 @@ class MemorySession:
         for address, length in jobs:
             if not self.readable(address, length):
                 raise SnapshotChanged("Object pointer is outside a readable mapping")
-        script = "set -e\n" + "\n".join(f"{self.remote} {self.pid} read {a:x} {n}" for a, n in jobs)
-        data = self.command("sh", data=script.encode(), timeout=30)
+        ranges = " ".join(f"{a:x} {n}" for a, n in jobs)
+        data = self.command(f"{self.remote} {self.pid} read {ranges}", timeout=30)
         if len(data) != sum(n for _, n in jobs):
             raise SnapshotChanged("Incomplete process-memory read")
         result, offset = [], 0

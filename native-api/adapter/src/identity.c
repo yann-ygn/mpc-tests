@@ -1,5 +1,6 @@
 #include "private.h"
 #include "mpc_adapter_profile.h"
+#include "mpc_family_profile.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -630,22 +631,26 @@ static enum mpc_native_error state_track(
   for (unsigned i = 0; i < sizeof native_program_types / sizeof *native_program_types; i++)
     if (vtable == registry->adapter->io.image + native_program_types[i].vtable)
       strcpy(output->type, native_program_types[i].name);
-  if (!normal || (strcmp(output->type, "plugin") && strcmp(output->type, "drum")))
+  const struct mpc_family_support *support = mpc_family_by_type(output->type);
+  if (!normal || !support->fields)
     return MPC_NATIVE_OK;
+  output->known = support->fields;
   uint32_t *requested[] = {&output->muted, &output->soloed, &output->record_armed};
   uint32_t *audio[] = {NULL, &output->audio_soloed, &output->audio_record_armed};
   for (unsigned i = 0; i < 3; i++) {
     const struct native_binding *binding = &native_bindings[i];
     uint32_t owner = binding->owner_is_track ? address : *program;
     if (
-      state_bool(registry, owner + binding->requested, requested[i]) ||
-      (audio[i] && state_bool(registry, owner + binding->observed, audio[i])))
+      ((output->known & (1u << i)) &&
+       state_bool(registry, owner + binding->requested, requested[i])) ||
+      (audio[i] && (output->known & (1u << (i + 2))) &&
+       state_bool(registry, owner + binding->observed, audio[i])))
       return MPC_NATIVE_READ_FAILED;
   }
-  if (state_bool(registry, *program + NATIVE_SILENCED_OFFSET, &output->silenced))
+  if (
+    (output->known & MPC_STATE_SILENCED) &&
+    state_bool(registry, *program + NATIVE_SILENCED_OFFSET, &output->silenced))
     return MPC_NATIVE_READ_FAILED;
-  output->known =
-    MPC_STATE_REQUESTED | MPC_STATE_AUDIO_SOLO | MPC_STATE_AUDIO_ARM | MPC_STATE_SILENCED;
   return MPC_NATIVE_OK;
 }
 

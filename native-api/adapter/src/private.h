@@ -114,6 +114,7 @@ struct native_command_context_layout {
 };
 /* Disposable UI-thread policy sample. Never part of a public ABI or receipt. */
 struct mpc_command_context {
+  uint32_t target_program, target_vtable;
   uint32_t app, window, component, engine, mode, thread, sequencer, timeline, mute, solo,
     solo_property, arm, recorder, record_properties;
   uint32_t view, popup, arm_mode, solo_mode, automation;

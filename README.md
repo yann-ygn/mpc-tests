@@ -2,7 +2,9 @@
 
 Native state/control research and a local service for the Akai MPC Key 37.
 The API implements discovery, authoritative live state reads for every user track (including audio) in Track List order,
-and guarded Unix mute/solo/arm commands, including explicit active-sequence mute targets.
+and guarded Unix mute/solo/arm commands across plugin, drum, keygroup, MIDI, CV and audio tracks,
+including explicit active-sequence mute targets. [Family qualification](findings/native-family-flags.md)
+separates native requested flags from engine copies; MIDI/CV output remains unmeasured.
 The [managed flag handlers](native-api/adapter/COMMANDS.md) retain verified command results across retries and disconnects;
 a native live policy restricts writes to qualified Main/Mixer/Track Mute, stopped, automation-Off contexts. Streaming follows separately. See [the service](native-api/README.md), [the native adapter](native-api/adapter/README.md)
 and [privtap](privtap/README.md) for their interfaces and limitations.

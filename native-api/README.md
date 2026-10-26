@@ -155,11 +155,23 @@ See [the native inventory map and device evidence](../findings/native-track-inve
 
 The combined API limit is 136 user tracks (128 MIDI-triggered and 8 audio), 128 master
 objects and 128 sequence slots. Discovery advertises these inventory limits and
-`snapshotAbiVersion: 3`. The private transfer requires `STATE_V3`; older attachments
+`snapshotAbiVersion: 4`. The private transfer requires `STATE_V4`; older attachments
 remain incompatible. No cached or partial list is published as a complete capture.
 
-Requested flags and separate audio-side copies are qualified only for plugin/drum normal tracks. Bus flags,
-other families' flags, project name, actual audio activity and effective transport tempo remain null.
+Plugin, drum, keygroup and audio tracks expose independently qualified requested flags,
+solo/arm engine copies and effective `silenced` state. MIDI/CV tracks expose requested
+mute/solo/arm only; engine copies and `silenced` remain null. Legacy clip/unknown tracks
+and buses retain null flags. Project name, actual audio activity and effective transport
+tempo remain null. Neither `!silenced` nor command completion establishes audibility.
+
+Discovery's `flagFamilies` describes firmware qualification independently of attachment
+readiness. Each track's `flagSupport` narrows it to that capture's known fields. Both
+provide per-operation verification and context conditions, unsupported-field reasons and
+`outputVerified: false`. `available` in this matrix is conditional qualification; callers
+must also consult the top-level command capability and satisfy the listed live conditions.
+MIDI/CV completion uses `verification.by: ["model"]` and `audioSideValue: null`.
+Physical MIDI/CV output was not measured; no external endpoint was connected.
+See [the family matrix](../findings/native-family-flags.md).
 A sequence's `bpm` is its own property; `used` comes from the native usage flag rather than its name or slot.
 Unsupported fields are identified explicitly. A supported field read failure returns `READ_FAILED`; three
 unstable topology/identity/selection attempts return `STATE_UNSTABLE`.
@@ -208,7 +220,7 @@ Read the returned receipt's `status`, `execution`, `nativeInvoked`, `verificatio
 copy for solo/arm. Mute remains explicitly model-only. `unknown` preserves execution uncertainty.
 `get_command` takes `instanceId`, `requestId` and optional `waitMs`; it never executes a command.
 
-The native live policy permits **Main, Mixer or Track Mute, no popup, stopped, automation Off**, on qualified plugin/drum tracks.
+The native live policy permits **Main, Mixer or Track Mute, no popup, stopped, automation Off**, on qualified plugin, drum, keygroup, MIDI, CV and audio tracks.
 Mute requires the live **Track Mute State Per Sequence** preference to match the requested scope. Single/Multi solo and arm settings are
 read live and must be recognized. Native follow/filter effects are retained and reported in `observedChanges`.
 The policy re-resolves owners and samples its context twice at dispatch, before native invocation and readback,
@@ -256,9 +268,11 @@ Mute receipts echo canonical `muteScope` and `sequence`, including while pending
 generations are not compared as if they were edits to one property. Expected-value checks
 and desired-state no-ops use the addressed live scope and still require full qualification.
 
-Trusted C callers must recompile: command ABI **3**, executor ABI **6**, snapshot ABI **3**
-and private `STATE_V3` / `MPC_ADAPTER_STATE_V3` replace the older layouts. Primitive adapter
-ABI 1 and the public JSON API version 0.1 stay unchanged. Package 0.5.0 contains this increment.
+US #49 requires trusted C callers to recompile: primitive ABI **2**, command ABI **4**,
+executor ABI **7**, snapshot ABI **4**, and private `STATE_V4` / `MPC_ADAPTER_STATE_V4`
+replace the older interfaces. Snapshot byte sizes are retained, but known-field bits have
+new independent meanings. Command observations also carry family qualification. The C
+export set and public JSON API version 0.1 remain unchanged. Package 0.6.0 contains this increment.
 See [sequence qualification and device restoration evidence](../findings/native-sequence-mute.md).
 
 Project and track IDs are decimal strings representing nonzero unsigned 64-bit values, at most

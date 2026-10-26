@@ -161,6 +161,21 @@ before running experiments.
   is 11.032 ms. Original flags, sequence, selection, inventory, automation/settings and Mixer Effects viewport were
   restored; the temporary drum, lab mappings and files were removed. Installed 0.2.0 resumed ready without restart
   or save/load. Package 0.5.0 is built, not installed. See `findings/native-sequence-mute.md` and its sanitized proof.
+- Family qualification (#49), branch `us-49-track-family-flags`: a validated shared matrix now separates
+  recognized family, individual readable flags, applicable operations and required completion evidence.
+  Plugin/drum/keygroup/audio qualify requested flags, solo/arm engine copies and silenced state; MIDI/CV
+  qualify native requested flags only, with explicit nulls and no physical-output claim. Legacy clip/unknown
+  flags and bus writes stay unavailable. Dispatch and delayed verification fence Program address/vtable;
+  family changes cannot inherit old eligibility. Recompile for primitive ABI 2, executor ABI 7, command ABI 4,
+  snapshot ABI 4 / STATE_V4; receipts carry a checked ABI/size prefix. All 18 host entries, 13 ASan/UBSan entries,
+  five isolated ARM fixtures and ARM deployment guards pass. Device evidence covers 96 new-family flag rows,
+  48 cross-family Single/Multi peer rows, 12 controller edits, 12 discarded-response recoveries and eight
+  two-sequence pattern rows, plus 12 final plugin/drum regression rows. All five reads match independent
+  observations; final capture p95 is 11.911 ms. Four empty temporary tracks were removed; original flags,
+  inventory, selection, sequence, automation/settings and Mixer Effects view restored, lab unloaded and
+  installed 0.2.0 resumed ready without save/load or restart. Package 0.6.0 is built, not installed. See
+  `findings/native-family-flags.md` and its sanitized proof. MIDI/CV have no connected external endpoint;
+  physical output remains unqualified at the owner's request.
 - Next: streaming (#33).
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
   the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports

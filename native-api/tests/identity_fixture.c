@@ -37,7 +37,9 @@ static void state_tests(void) {
   assert(first->track_count == 2 && first->bus_count == 0 && first->sequence_slots == 2);
   assert(first->used_sequences == 1 && first->sequences[0].used && !first->sequences[1].used);
   assert(first->sequences[0].bpm == 123.5f && first->started_ms && first->finished_ms);
-  assert(first->tracks[0].known == 15 && first->tracks[0].soloed && !first->tracks[0].audio_soloed);
+  assert(
+    first->tracks[0].known == MPC_NATIVE_ALL_FIELDS && first->tracks[0].soloed &&
+    !first->tracks[0].audio_soloed);
   assert(
     first->tracks[0].record_armed && !first->tracks[0].audio_record_armed &&
     first->tracks[0].silenced);

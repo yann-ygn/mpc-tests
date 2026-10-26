@@ -15,6 +15,8 @@ struct commands_fixture {
   unsigned change_at_qualification;
   uint32_t change_after_set, change_after_filter;
   bool popup_after_set, broken_owner_after_set;
+  uint32_t family_after_filter, family_after_set;
+  uint32_t program_after_set;
   bool sequence_values[2][2], switch_sequence_after_set, scope_after_set, reset_after_set;
   unsigned switch_sequence_at_qualification;
   unsigned qualifications;
@@ -128,6 +130,10 @@ command_setter(void *data, uintptr_t function, uintptr_t property, bool value) {
         put32(native, POLICY_MODE + native_command_context.modeValue, f->change_after_set);
       if (native->invalidate_after_set)
         select_project(&f->identity, PROJECT2);
+      if (f->family_after_set)
+        put32(native, PROGRAM, IMAGE + f->family_after_set);
+      if (f->program_after_set)
+        put32(native, TRACK + NATIVE_PROGRAM_OFFSET, f->program_after_set);
       return MPC_NATIVE_OK;
     }
   }
@@ -147,6 +153,8 @@ command_filter(void *data, uintptr_t storage, uintptr_t function, bool *value) {
       POLICY_MODE + native_command_context.modeValue,
       f->change_after_filter);
   f->identity.native.filters++;
+  if (f->family_after_filter)
+    put32(&f->identity.native, PROGRAM, IMAGE + f->family_after_filter);
   *value = *value && f->identity.native.filter_allows;
   return MPC_NATIVE_OK;
 }
@@ -330,7 +338,7 @@ static void races_gates_and_constraints(void) {
     receipt.status == MPC_COMMAND_REJECTED && receipt.error == MPC_NATIVE_NOT_READY &&
     !receipt.native_invoked);
   f.context_error = MPC_NATIVE_OK;
-  put32(&f.identity.native, PROGRAM2, IMAGE + native_program_types[0].vtable);
+  put32(&f.identity.native, PROGRAM2, IMAGE + 4);
   put32(&f.identity.native, POOL + NATIVE_MIDI_END, VECTOR + 4);
   put32(&f.identity.native, POOL + NATIVE_AUDIO_BEGIN, VECTOR + 4);
   put32(&f.identity.native, POOL + NATIVE_AUDIO_END, VECTOR + 8);
@@ -882,9 +890,142 @@ static void sequence_scope_and_races(void) {
   }
 }
 
+static void family_pair(struct commands_fixture *f, uint32_t left, uint32_t right) {
+  struct fixture *n = &f->identity.native;
+  put32(n, PROGRAM, IMAGE + left);
+  put32(n, PROGRAM2, IMAGE + right);
+  unsigned midi = 0, audio = 0;
+  for (unsigned i = 0; i < 2; i++) {
+    bool is_audio = (i ? right : left) == NATIVE_AUDIO_VTABLE;
+    put32(
+      n,
+      OBJECTS + (is_audio ? 0x18100 : 0x18000) + 4 * (is_audio ? audio++ : midi++),
+      i ? TRACK2 : TRACK);
+  }
+  put32(n, POOL + NATIVE_MIDI_BEGIN, OBJECTS + 0x18000);
+  put32(n, POOL + NATIVE_MIDI_END, OBJECTS + 0x18000 + 4 * midi);
+  put32(n, POOL + NATIVE_MIDI_CAPACITY, OBJECTS + 0x18000 + 4 * midi);
+  put32(n, POOL + NATIVE_AUDIO_BEGIN, OBJECTS + 0x18100);
+  put32(n, POOL + NATIVE_AUDIO_END, OBJECTS + 0x18100 + 4 * audio);
+  put32(n, POOL + NATIVE_AUDIO_CAPACITY, OBJECTS + 0x18100 + 4 * audio);
+}
+
+static void qualified_family_matrix(void) {
+  const uint32_t families[] = {
+    NATIVE_PLUGIN_VTABLE,
+    NATIVE_DRUM_VTABLE,
+    NATIVE_KEYGROUP_VTABLE,
+    NATIVE_MIDI_VTABLE,
+    NATIVE_CV_VTABLE,
+    NATIVE_AUDIO_VTABLE};
+  const uint32_t screens[] = {
+    native_command_context.mainMode,
+    native_command_context.mixerMode,
+    native_command_context.trackMuteMode};
+  for (unsigned family = 0; family < 6; family++)
+    for (unsigned screen = 0; screen < 3; screen++)
+      for (unsigned single = 0; single < 2; single++) {
+        struct commands_fixture f;
+        setup(&f, 8, 64, true);
+        f.live_policy = true;
+        f.single_arm = f.single_solo = single;
+        family_pair(&f, families[family], families[(family + 1) % 6]);
+        put32(&f.identity.native, POLICY_MODE + native_command_context.modeValue, screens[screen]);
+        put32(
+          &f.identity.native,
+          POLICY_RECORD_PROPERTIES + native_command_context.armModeValue,
+          !single);
+        put32(&f.identity.native, POLICY_SOLO_PROPERTY + native_command_context.soloValue, !single);
+        for (unsigned target = 0; target < 2; target++)
+          for (unsigned selected = 0; selected < 2; selected++)
+            for (unsigned property = 0; property < 3; property++) {
+              choose(&f, (target == selected) ? TRACK2 : TRACK);
+              uint32_t owner =
+                property == 2 ? (target ? TRACK2 : TRACK) : (target ? PROGRAM2 : PROGRAM);
+              bool original =
+                get32(&f.identity.native, owner + native_bindings[property].requested) & 1;
+              char id[80];
+              snprintf(
+                id,
+                sizeof id,
+                "family_%u_%u_%u_%u_%u_%u",
+                family,
+                screen,
+                single,
+                target,
+                selected,
+                property);
+              struct mpc_command_request input = request(&f, id, property, target, !original);
+              input.has_expected = true;
+              input.expected = original;
+              struct mpc_command_receipt receipt = send(&f, input);
+              assert(receipt.status == MPC_COMMAND_APPLIED && receipt.native_invoked);
+              unsigned setters = f.identity.native.setters;
+              struct mpc_command_receipt replay;
+              assert(mpc_commands_submit(f.commands, 7, &input, 0, &replay) == MPC_NATIVE_OK);
+              assert(replay.status == MPC_COMMAND_APPLIED && f.identity.native.setters == setters);
+              if (family == 3 || family == 4)
+                emit(&receipt);
+            }
+        cleanup(&f);
+      }
+  /* Requalify a queued target; an old family's support cannot grant permission. */
+  for (unsigned stage = 0; stage < 6; stage++) {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    f.live_policy = true;
+    struct mpc_command_request input =
+      request(&f, "family_race", MPC_COMMAND_RECORD_ARMED, 0, true);
+    if (stage == 2)
+      f.family_after_filter = NATIVE_MIDI_VTABLE;
+    if (stage == 3)
+      f.family_after_set = NATIVE_MIDI_VTABLE;
+    if (stage >= 4) {
+      memcpy(
+        f.identity.native.objects + 0x17000,
+        f.identity.native.objects + PROGRAM - OBJECTS,
+        0x400);
+      if (stage == 4)
+        f.program_after_set = OBJECTS + 0x17000;
+      else
+        f.identity.native.propagate_audio = false;
+    }
+    struct mpc_command_receipt receipt;
+    assert(mpc_commands_submit(f.commands, 7, &input, 0, &receipt) == MPC_NATIVE_OK);
+    if (stage < 2)
+      family_pair(
+        &f,
+        stage ? NATIVE_MIDI_VTABLE : native_program_types[1].vtable,
+        NATIVE_DRUM_VTABLE);
+    if (stage == 5) {
+      while (!queued(&f))
+        tiny_pause();
+      pump(&f.identity);
+      while (!queued(&f))
+        tiny_pause();
+      put32(&f.identity.native, TRACK + NATIVE_PROGRAM_OFFSET, OBJECTS + 0x17000);
+    }
+    receipt = drive(&f, input.request_id);
+    assert(
+      receipt.status ==
+      (stage == 0     ? MPC_COMMAND_REJECTED
+         : stage == 1 ? MPC_COMMAND_APPLIED
+                      : MPC_COMMAND_UNKNOWN));
+    assert(receipt.native_invoked == (stage != 0));
+    assert(f.identity.native.setters == (stage == 1 || stage >= 3));
+    emit(&receipt);
+    cleanup(&f);
+  }
+}
+
 int main(void) {
   (void)validate_target;
   (void)get32;
+  struct mpc_command_receipt incompatible = {
+    .abi_version = MPC_COMMANDS_ABI - 1,
+    .struct_bytes = sizeof incompatible};
+  assert(!mpc_commands_receipt_json(&incompatible));
+  qualified_family_matrix();
   sequence_scope_and_races();
   live_screens_and_transitions();
   idempotence_and_preconditions();

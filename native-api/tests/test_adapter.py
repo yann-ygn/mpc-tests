@@ -46,6 +46,23 @@ class ProfileTests(unittest.TestCase):
             ),
             "screen_layout": lambda s, c: c["commandContext"].pop("trackMuteMode"),
             "screen_alias": lambda s, c: c["commandContext"].update(mixerMode=8320),
+            "family_missing": lambda s, c: c["flagFamilies"].pop("audio"),
+            "family_unknown_field": lambda s, c: c["flagFamilies"]["midi"]["readableFields"].append(
+                "audioActivity"
+            ),
+            "family_verification": lambda s, c: c["flagFamilies"]["midi"]["operations"].update(
+                set_solo=["audioSide.soloed"]
+            ),
+            "family_landmark": lambda s, c: c.update(
+                functions=[f for f in c["functions"] if f["name"] != "familyAudioClass"]
+            ),
+            "family_evidence": lambda s, c: c["familyEvidence"].pop("midi"),
+            "family_unqualified_copy": lambda s, c: c["flagFamilies"]["midi"][
+                "readableFields"
+            ].append("audioSide.soloed"),
+            "family_missing_copy_verification": lambda s, c: c["flagFamilies"]["audio"][
+                "operations"
+            ].update(set_solo=["requested.soloed"]),
             "qualification": lambda s, c: c.update(capabilityQualification="production"),
             "fingerprint_length": lambda s, c: c["functions"][0].update(prefixHex="abcd"),
             "duplicate_function": lambda s, c: c["functions"].append(

@@ -1,4 +1,4 @@
-# Firmware adapter ABI 1 and UI executor ABI 5
+# Firmware adapter ABI 2 and UI executor ABI 7
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -24,8 +24,8 @@ The [primitive header](include/mpc_native.h) defines the original eight function
 - `mpc_native_set_mute`, `mpc_native_set_solo`, `mpc_native_set_record_armed`
 - `mpc_native_error_name`
 
-ABI 1 layouts/signatures are fixed; an incompatible future ABI needs separate entry points or a new library
-SONAME. The build rejects other exported symbols, including the private fixture backend. The deployment SONAME
+ABI versions guard incompatible layouts: opens reject older hook/executor configurations.
+Trusted callers must recompile for a new ABI. The build rejects other exported symbols, including the private fixture backend. The deployment SONAME
 is `libmpc_native.so`; the lab host resolves it beside itself using `$ORIGIN`, never a workstation path.
 
 Opening without a target validator permits status checks only. Every target operation must run on the MPC
@@ -42,8 +42,8 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) uses ABI 5; ABI 1/2/3/4 configurations are rejected at open.
-The primitive ABI remains 1. Requests support track reads/flags, identity snapshots and sequence-reference
+The [executor header](include/mpc_executor.h) uses ABI 7; older configurations are rejected at open.
+The primitive adapter uses ABI 2. Requests support track reads/flags, identity snapshots and sequence-reference
 validation and full live state snapshots. The authoritative mode owns the resolver; the original
 host-resolver mode remains available for trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
 
@@ -236,7 +236,7 @@ firmware qualification level and public discovery capabilities are unchanged.
 that pointer; release frees its buffer. Allocation occurs during submission, outside the UI callback.
 Cancelled/running/failed jobs expose no snapshot pointer. Capacity still bounds outstanding job storage.
 
-The capture reads native metadata, qualified plugin/drum requested/audio flags, bus metadata and all existing
+The capture reads native metadata, independently qualified family requested/engine-copy flags, bus metadata and all existing
 sequences with their usage flag/BPM. It fences project generations, topology, Program associations and selection,
 retries instability three times, and fails supported field read errors rather than caching. The result reports
 capture interval/duration and attempts. No atomicity or effective transport tempo is implied.
@@ -278,13 +278,40 @@ UI evidence and validation. Listing a family does not qualify its flags or sette
 
 ## Explicit sequence mute (#48)
 
-Current trusted interfaces are executor ABI 6, command ABI 3 and snapshot ABI 3.
+US #48 introduced executor ABI 6, command ABI 3 and snapshot ABI 3.
+US #49 supersedes them with the family interfaces described below.
 The #46 inventory limits/layouts above are retained, with scope/generation context appended
-to snapshots. The private attachment protocol is now `STATE_V3` / `MPC_ADAPTER_STATE_V3`.
-Older attachments cannot enable state reads. Primitive ABI 1 and exports are unchanged.
+to snapshots. The #48 attachment protocol was `STATE_V3` / `MPC_ADAPTER_STATE_V3`.
+Older attachments cannot enable state reads. US #49 supersedes the primitive ABI; the export set is unchanged.
 
 An optional executor sequence precondition now requires that exact live generation to
 be **active**, with both native selection properties agreeing. A live inactive sequence
 returns `SEQUENCE_NOT_ACTIVE`; a retired generation returns `STALE_SEQUENCE`. Managed mute
 jobs additionally match their explicit global/sequence scope to the live native preference.
 See [command integration](COMMANDS.md#sequence-scoped-mute-48) and [the wire contract](../README.md#sequence-scoped-mute).
+
+
+## Family flag qualification (#49)
+
+Current interfaces are **primitive ABI 2, executor ABI 7, command ABI 4 and snapshot
+ABI 4**. Recompile every trusted C caller. The snapshot transfer remains 127824 bytes,
+with 344-byte track rows, but the independent six-bit `known` mask replaces the grouped
+requested bit. `STATE_V4` / `MPC_ADAPTER_STATE_V4` reject older transfers; the primitive
+attachment tag is `MPC_ADAPTER_V2`. The exported symbol set is unchanged.
+
+The validated firmware profile generates `mpc_family_profile.h` for the adapter,
+command handlers, receipt serializer and service. It separates recognized family,
+qualified observations, enabled operations and required verification. Plugin/drum/
+keygroup/audio qualify six fields; MIDI/CV qualify three requested flags. Legacy clip,
+unknown and master objects do not authorize setters. Unqualified fields are not read.
+
+Native dispatch rechecks family and support on every traversal, including after the
+arm filter and setter. The live context fence retains Program address and vtable across
+delayed verification. Program/family changes preserve Track references while retiring
+old command eligibility; queued work requalifies the current target. After-invocation
+loss remains unknown, with the retained native invocation/execution metadata.
+
+Completion requires only that family's operation-specific mask. Missing unrelated
+fields cannot invent an audio acknowledgement. Peer changes compare individual fields
+known in both observations and never compare different families. See the
+[family matrix and device evidence](../../findings/native-family-flags.md).

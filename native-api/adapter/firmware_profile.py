@@ -6,6 +6,62 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 STATE = ROOT / "tools/profiles/key37-mpc3.9.1.2.json"
 CONTROL = ROOT / "tools/profiles/key37-mpc3.9.1.2-control.json"
+FAMILIES = ["unknown", "plugin", "drum", "keygroup", "midi", "cv", "audio", "clip"]
+FIELDS = [
+    "requested.muted",
+    "requested.soloed",
+    "requested.recordArmed",
+    "audioSide.soloed",
+    "audioSide.recordArmed",
+    "silenced",
+]
+OPERATIONS = ["set_mute", "set_solo", "set_record_armed"]
+
+
+def family_matrix(control):
+    matrix = control.get("flagFamilies", {})
+    if set(matrix) != set(FAMILIES):
+        raise ValueError("Incomplete family qualification matrix")
+    for name, row in matrix.items():
+        if set(row) != {"readableFields", "operations", "reason"}:
+            raise ValueError("Invalid family qualification")
+        fields, operations = row["readableFields"], row["operations"]
+        if (
+            not isinstance(fields, list)
+            or len(set(fields)) != len(fields)
+            or not set(fields) <= set(FIELDS)
+            or not isinstance(operations, dict)
+            or not set(operations) <= set(OPERATIONS)
+        ):
+            raise ValueError("Invalid family field/operation")
+        qualified_fields = FIELDS[:3] if name in ("midi", "cv") else FIELDS
+        if name in ("unknown", "clip"):
+            qualified_fields = []
+        if not set(fields) <= set(qualified_fields):
+            raise ValueError("Unqualified family observation")
+        for operation, required in operations.items():
+            property_index = OPERATIONS.index(operation)
+            expected = {FIELDS[property_index]}
+            if property_index and name in ("plugin", "drum", "keygroup", "audio"):
+                expected.add(FIELDS[property_index + 2])
+            if (
+                not isinstance(required, list)
+                or not required
+                or len(set(required)) != len(required)
+                or not set(required) <= set(fields)
+                or set(required) != expected
+            ):
+                raise ValueError("Unverifiable family operation")
+        if row["reason"] not in (None, "UNQUALIFIED_TRACK_TYPE", "HARDWARE_UNAVAILABLE"):
+            raise ValueError("Invalid family qualification reason")
+        if bool(fields) == bool(row["reason"]):
+            raise ValueError("Missing family qualification reason")
+    qualified = [name for name in FAMILIES if matrix[name]["operations"]]
+    if control.get("supportedProgramFamilies") != qualified:
+        raise ValueError("Family list disagrees with operation qualification")
+    if matrix["unknown"]["readableFields"] or matrix["clip"]["readableFields"]:
+        raise ValueError("Unqualified legacy/unknown family")
+    return matrix
 
 
 def integer(value, label, limit=0xFFFFFFFF):
@@ -45,8 +101,7 @@ def validate(state, control):
         or not all(32 <= ord(char) < 127 for char in state["deviceTreeModel"])
     ):
         raise ValueError("Missing device model")
-    if control.get("supportedProgramFamilies") != ["plugin", "drum"]:
-        raise ValueError("Unqualified program family")
+    family_matrix(control)
     if control.get("capabilityQualification") != "bounded_lab_proof":
         raise ValueError("Unexpected qualification claim")
     context = control["commandContext"]
@@ -262,6 +317,38 @@ def validate(state, control):
         <= names
     ):
         raise ValueError("Missing command qualification landmarks")
+    if (
+        not {
+            "familyRequestedMute",
+            "familyRequestedSolo",
+            "familyRequestedArm",
+            "familyMutePropagation",
+            "familyMuteForwarding",
+            "familySequenceMutePropagation",
+            "familySoloCopyPropagation",
+            "familySoloSuppression",
+            "familySoloPeerBehaviour",
+            "familyArmCopyPropagation",
+            "familyArmFilterTarget",
+            "familyAudioClass",
+            "familyKeygroupClass",
+            "familyMidiClass",
+            "familyCvClass",
+        }
+        <= names
+    ):
+        raise ValueError("Missing family qualification landmarks")
+    evidence = control.get("familyEvidence", {})
+    if set(evidence) != set(control["supportedProgramFamilies"]) or any(
+        row
+        != {
+            "nativeMatrix": "findings/native-family-flags.md",
+            "listenerTrace": "live_property_subscriptions",
+            "outputVerified": False,
+        }
+        for row in evidence.values()
+    ):
+        raise ValueError("Missing family qualification evidence")
     return state, control
 
 
@@ -397,4 +484,46 @@ def generate(out, state_path=STATE, control_path=CONTROL):
         "static const struct native_binding native_bindings[]={" + ",".join(entries) + "};"
     )
     (out / "mpc_adapter_profile.h").write_text("\n".join(lines) + "\n")
+    matrix = family_matrix(control)
+    lines = [
+        "/* Generated from the qualified firmware family matrix. */",
+        "#ifndef MPC_FAMILY_PROFILE_H",
+        "#define MPC_FAMILY_PROFILE_H",
+        '#include "mpc_native.h"',
+        "#include <string.h>",
+        "struct mpc_family_support {",
+        "  unsigned family, vtable, fields, operations, required[3];",
+        "  const char *type, *reason;",
+        "};",
+        "static const struct mpc_family_support mpc_family_matrix[]={",
+    ]
+
+    def mask(fields):
+        return sum(1 << FIELDS.index(field) for field in fields)
+
+    for family, name in enumerate(FAMILIES):
+        row = matrix[name]
+        vtable = next((int(v) for v, n in state["programTypes"].items() if n == name), 0)
+        ops = sum(1 << OPERATIONS.index(op) for op in row["operations"])
+        required = ",".join(str(mask(row["operations"].get(op, []))) for op in OPERATIONS)
+        reason = json.dumps(row["reason"]) if row["reason"] else "NULL"
+        lines.append(
+            f"  {{{family}u,{vtable}u,{mask(row['readableFields'])}u,{ops}u,"
+            f"{{{required}}},{json.dumps(name)},{reason}}},"
+        )
+    lines.extend(
+        [
+            "};",
+            "static inline const struct mpc_family_support *mpc_family_by_type(const char *type) {",
+            "  for (unsigned i=0; i<sizeof mpc_family_matrix/sizeof *mpc_family_matrix; i++)",
+            "    if (!strcmp(type,mpc_family_matrix[i].type)) return &mpc_family_matrix[i];",
+            "  return &mpc_family_matrix[0];",
+            "}",
+            "static inline const struct mpc_family_support *mpc_family_by_id(unsigned family) {",
+            "  return &mpc_family_matrix[family < sizeof mpc_family_matrix/sizeof *mpc_family_matrix ? family : 0];",
+            "}",
+            "#endif",
+        ]
+    )
+    (out / "mpc_family_profile.h").write_text("\n".join(lines) + "\n")
     return out

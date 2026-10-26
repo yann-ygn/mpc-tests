@@ -97,13 +97,13 @@ static int wire_read(void *data, uintptr_t address, void *output, size_t bytes) 
   if (ui && native_policy) {
     if (address == PROGRAM && bytes == 4 && marker("policy-unsupported")) {
       for (unsigned i = 0; i < sizeof native_program_types / sizeof *native_program_types; i++) {
-        if (strcmp(native_program_types[i].name, "midi"))
+        if (strcmp(native_program_types[i].name, "clip"))
           continue;
         uint32_t value = IMAGE + native_program_types[i].vtable;
         memcpy(output, &value, 4);
         return 0;
       }
-      assert(!"fixture MIDI vtable missing");
+      assert(!"fixture unqualified vtable missing");
     }
     for (unsigned i = 0; i < sizeof changes / sizeof *changes; i++) {
       if (address == changes[i].address && marker(changes[i].marker)) {

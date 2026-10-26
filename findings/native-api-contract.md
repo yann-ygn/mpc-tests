@@ -398,3 +398,23 @@ requests, retained receipts, caller-scoped retries, dispatch preconditions, nati
 observed peer/selection changes. [Domain request](../native-api/schema/command-request.schema.json) and
 [receipt](../native-api/schema/command-receipt.schema.json) schemas describe that boundary. The [#32 Unix binding and native live policy](native-service.md) now expose these commands in the embedded host.
 `describe` advertises its actual authority limits and Main/no-popup/stopped/automation-Off conditions; mute additionally requires global scope.
+
+## Family qualification (#49)
+
+[The firmware family matrix](native-family-flags.md) now separates recognized
+families, individually readable flags and per-operation completion evidence.
+`describe.flagFamilies` reports conditional firmware qualification; each state
+track's `flagSupport` narrows it to fields known in that capture and names
+unsupported reasons, verification and live context requirements. Top-level
+attachment/command readiness still applies.
+
+Plugin, drum, keygroup and audio solo/arm require model and engine-copy agreement.
+MIDI/CV commands qualify native requested state only and return model verification
+with a null audio-side value. Physical output remains unmeasured. Legacy clip and
+unknown flags remain unavailable, and buses remain metadata-only. `silenced`
+never implies audio activity or audibility.
+
+Trusted clients must recompile for primitive ABI 2, executor ABI 7, command ABI 4
+and snapshot ABI 4 (`STATE_V4` / `MPC_ADAPTER_STATE_V4`). Old layouts are rejected;
+receipts carry an ABI/size prefix. The JSON API version remains 0.1. Updated strict
+schemas and examples are in `native-api/schema` and `native-api/examples`.

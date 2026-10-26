@@ -147,7 +147,7 @@ def main():
             with_session = MemorySession(args.host, ROOT / "builddir/arm/tools/mem_probe", profile)
             try:
                 independent = with_session.snapshot(with_session.active_project())
-                inventory = track_inventory(with_session)
+                inventory = track_inventory(with_session, flags=True)
                 snapshots = {op: call({"apiVersion": "0.1", "op": op}) for op in sorted(reads)}
                 state = snapshots["get_state"]
                 assert "error" not in state, state
@@ -172,15 +172,10 @@ def main():
                 for actual, expected in zip(state["tracks"], inventory["tracks"], strict=True):
                     for key in ("index", "uiIndex", "collection", "name", "type"):
                         assert actual[key] == expected[key], (key, actual, expected)
-                    if actual["type"] in ("plugin", "drum"):
-                        flags = independent["tracks"][actual["index"]]
-                        for key in ("muted", "soloed", "recordArmed"):
-                            assert actual["requested"][key] == flags[key]
-                        assert actual["silenced"] == flags["silenced"]
-                    else:
-                        assert all(value is None for value in actual["requested"].values())
+                    for field in ("requested", "audioSide", "silenced"):
+                        assert actual[field] == expected[field], (field, actual, expected)
                 assert len(state["buses"]) == len(inventory["buses"])
-                after_inventory = track_inventory(with_session)
+                after_inventory = track_inventory(with_session, flags=True)
                 for key in ("tracks", "buses", "selectedTrack", "counts"):
                     assert after_inventory[key] == inventory[key]
                 assert state["sequenceSlotCount"] == independent["sequenceSlots"]

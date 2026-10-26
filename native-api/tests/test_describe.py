@@ -341,7 +341,7 @@ class DescribeTests(unittest.TestCase):
             self.add_mpc(pid=pid)
         path = self.root / f"tmp/mpc-native-lab-{pid}.sock"
         path.parent.mkdir(mode=0o700, exist_ok=True)
-        state = {"epoch": "adp_" + "a" * 32, "response": response, "tag": "MPC_ADAPTER_V1"}
+        state = {"epoch": "adp_" + "a" * 32, "response": response, "tag": "MPC_ADAPTER_V2"}
         finished = threading.Event()
         state["state_idle"] = threading.Event()
         state["state_idle"].set()
@@ -369,7 +369,7 @@ class DescribeTests(unittest.TestCase):
                                 or f"{state['tag']} {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
                             )
                             client.sendall(payload)
-                        elif data.startswith(b"STATE_V3 "):
+                        elif data.startswith(b"STATE_V4 "):
                             if state.get("stall_state"):
                                 state["state_idle"].clear()
                                 finished.wait(0.3)
@@ -386,7 +386,7 @@ class DescribeTests(unittest.TestCase):
                             if state.get("bad_count"):
                                 # Track count follows attempts in the fixed snapshot header.
                                 struct.pack_into("<I", wire, 108, 137)
-                            # ABI 3: retained 128-byte prefix and 344-byte track rows.
+                            # ABI 4: retained 128-byte prefix and 344-byte track rows.
                             if state.get("bad_ui_index"):
                                 struct.pack_into("<I", wire, 128 + 16, 1)
                             if state.get("bad_collection"):
@@ -397,6 +397,10 @@ class DescribeTests(unittest.TestCase):
                                 struct.pack_into("<I", wire, 128 + 344 + 28, 0)
                             if state.get("bad_type"):
                                 wire[128 + 32 + 256] = ord("X")
+                            if state.get("partial_fields"):
+                                struct.pack_into("<I", wire, 128 + 312, 1)
+                            if state.get("bad_field_mask"):
+                                struct.pack_into("<I", wire, 128 + 312, 64)
                             if state.get("bad_mute_scope"):
                                 struct.pack_into("<I", wire, 127808, 99)
                             if state.get("bad_sequence_generation"):
@@ -406,7 +410,7 @@ class DescribeTests(unittest.TestCase):
                                 struct.pack_into("<I4xQ", wire, 127808, 1, 0)
                             if state.get("bad_abi"):
                                 struct.pack_into("<I", wire, 0, 99)
-                            payload = struct.pack("<III", 3, len(wire), state.get("error", 0))
+                            payload = struct.pack("<III", 4, len(wire), state.get("error", 0))
                             if not state.get("error"):
                                 payload += wire
                             if state.get("truncate"):
@@ -439,7 +443,7 @@ class DescribeTests(unittest.TestCase):
         wire = subprocess.run(
             [str(fixture), "--snapshot-wire"], check=True, capture_output=True
         ).stdout
-        attachment.update(tag="MPC_ADAPTER_STATE_V3", wire=wire)
+        attachment.update(tag="MPC_ADAPTER_STATE_V4", wire=wire)
 
     def test_snapshot_operations_share_fresh_observations_and_handles(self):
         with self.attachment() as attachment:
@@ -500,8 +504,8 @@ class DescribeTests(unittest.TestCase):
             for op in ("list_tracks", "recovery_snapshot"):
                 self.assertEqual(results[op]["tracks"], tracks)
             self.assertEqual(len({t["ref"]["trackId"] for t in tracks}), 8)
-            self.assertIsNone(tracks[-1]["requested"]["muted"])
-            self.assertIn("requested.muted", tracks[-1]["unsupportedFields"])
+            self.assertFalse(tracks[-1]["requested"]["muted"])
+            self.assertNotIn("requested.muted", tracks[-1]["unsupportedFields"])
             self.assertEqual(len(results["get_state"]["buses"]), 5)
             for bus in results["get_state"]["buses"]:
                 self.assertEqual(bus["collection"], "master")
@@ -510,10 +514,35 @@ class DescribeTests(unittest.TestCase):
 
     def test_old_snapshot_attachment_is_not_compatible(self):
         with self.attachment() as attachment:
-            attachment["tag"] = "MPC_ADAPTER_STATE_V1"
-            self.assertEqual(self.call()["readiness"]["nativeAdapter"], "not_attached")
-            result = self.call(b'{"apiVersion":"0.1","op":"get_state"}\n')
-            self.assertEqual(result["error"]["code"], "NOT_READY")
+            for tag in (
+                "MPC_ADAPTER_STATE_V1",
+                "MPC_ADAPTER_STATE_V2",
+                "MPC_ADAPTER_STATE_V3",
+                "MPC_ADAPTER_V1",
+            ):
+                attachment["tag"] = tag
+                self.assertEqual(self.call()["readiness"]["nativeAdapter"], "not_attached")
+                result = self.call(b'{"apiVersion":"0.1","op":"get_state"}\n')
+                self.assertEqual(result["error"]["code"], "NOT_READY")
+
+    def test_partial_fields_preserve_independent_nulls_and_operation_requirements(self):
+        with self.attachment() as attachment:
+            self.snapshot_attachment(attachment)
+            attachment["partial_fields"] = True
+            request = b'{"apiVersion":"0.1","op":"get_state"}\n'
+            track = self.call(request)["tracks"][0]
+            self.assertFalse(track["requested"]["muted"])
+            self.assertIsNone(track["requested"]["soloed"])
+            self.assertIsNone(track["requested"]["recordArmed"])
+            self.assertIsNone(track["silenced"])
+            support = track["flagSupport"]
+            self.assertEqual(support["readableFields"], ["requested.muted"])
+            self.assertTrue(support["operations"]["set_mute"]["available"])
+            self.assertFalse(support["operations"]["set_solo"]["available"])
+            self.assertEqual(set(track["unsupportedFields"]), set(support["unsupportedReasons"]))
+            self.assertFalse(support["outputVerified"])
+            attachment["bad_field_mask"] = True
+            self.assertEqual(self.call(request)["error"]["code"], "READ_FAILED")
 
     def test_no_active_project_is_an_empty_fresh_snapshot(self):
         with self.attachment() as attachment:
@@ -593,8 +622,8 @@ class DescribeTests(unittest.TestCase):
         with self.attachment() as attachment:
             for payload in [
                 b"MPC_ADAPTER_ERROR FINGERPRINT_MISMATCH\n",
-                b"MPC_ADAPTER_V1 bad profile build VERIFIED\n",
-                b"MPC_ADAPTER_V1 adp_" + b"a" * 32 + b" key37-mpc3.9.1.2 1122 VERIFIED\n",
+                b"MPC_ADAPTER_V2 bad profile build VERIFIED\n",
+                b"MPC_ADAPTER_V2 adp_" + b"a" * 32 + b" key37-mpc3.9.1.2 1122 VERIFIED\n",
             ]:
                 attachment["response"] = payload
                 self.assertEqual(self.call()["readiness"]["nativeAdapter"], "not_attached")

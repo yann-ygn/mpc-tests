@@ -1,0 +1,2170 @@
+{
+  "story": 49,
+  "capturedAt": "2026-10-26T21:08:27.409807+00:00",
+  "firmware": {
+    "model": "Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "implementation": {
+    "packageVersion": "0.6.0",
+    "primitiveAbi": 2,
+    "executorAbi": 7,
+    "commandAbi": 4,
+    "snapshotAbi": 4,
+    "snapshotBytes": 127824,
+    "snapshotTrackBytes": 344,
+    "knownFields": {
+      "requested.muted": 1,
+      "requested.soloed": 2,
+      "requested.recordArmed": 4,
+      "audioSide.soloed": 8,
+      "audioSide.recordArmed": 16,
+      "silenced": 32
+    },
+    "receiptAbiSizePrefix": true,
+    "exportSetUnchanged": true,
+    "packageSha256": "02a591ad3640374de82bc040245521c2c22e89d7bbc9a97a6db1235241ee38ea",
+    "firmwareFingerprintCount": 64
+  },
+  "validation": {
+    "hostMesonEntriesPassed": 18,
+    "asanUbsanNativeEntriesPassed": 13,
+    "armBuildAndElfGuardsPassed": true,
+    "isolatedArmFixturesPassed": [
+      "native_fixture",
+      "executor_fixture",
+      "identity_fixture",
+      "inventory_fixture",
+      "commands_fixture"
+    ],
+    "fixtureCoverage": [
+      "independent field masks and nulls; poisoned unsupported copies are not read",
+      "every qualified family and operation; selected/unselected; native view IDs; Single/Multi peers",
+      "queued family changes, arm-filter changes and post-setter family loss",
+      "same-family Program replacement during invocation and delayed verification",
+      "legacy/unknown refusal, native filter rejection, no-ops and expected conflicts",
+      "status-only legacy buffer guard; old ABI/configuration/transfer/receipt refusal",
+      "idempotence, disconnects, retention pressure, capture races and lifetime invalidation",
+      "bounded independent memory gathers and failure limits"
+    ]
+  },
+  "device": {
+    "newFamilyFlagRowsPassed": 96,
+    "flagRows": [
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "audio",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "keygroup",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "midi",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_solo",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_record_armed",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_solo",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "sequence",
+        "family": "cv",
+        "operation": "set_record_armed",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "global",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "global",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "global",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "global",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "global",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "global",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "global",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "main",
+        "scope": "global",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "global",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "global",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "global",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "global",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "global",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "global",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "global",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "mixer_effects",
+        "scope": "global",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "global",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "global",
+        "family": "audio",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "global",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "global",
+        "family": "keygroup",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "global",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "global",
+        "family": "midi",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "global",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": true,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "screen": "track_mute",
+        "scope": "global",
+        "family": "cv",
+        "operation": "set_mute",
+        "selected": false,
+        "verification": [
+          "model"
+        ],
+        "nativeInvoked": true,
+        "restored": true,
+        "retainedRetryAfterRestore": true,
+        "noOpAndConflictSkippedNative": true
+      }
+    ],
+    "crossFamilyPeerRowsPassed": 48,
+    "peerRows": [
+      {
+        "screen": "main",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "main",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "mixer_effects",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "solo",
+        "mode": "single",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "arm",
+        "mode": "single",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          4,
+          10
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          8,
+          11
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          10,
+          0
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "solo",
+        "mode": "multi",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      },
+      {
+        "screen": "track_mute",
+        "operation": "arm",
+        "mode": "multi",
+        "canonicalPair": [
+          11,
+          8
+        ],
+        "restored": true
+      }
+    ],
+    "controllerEditRowsPassed": 12,
+    "discardedResponseRecoveryRowsPassed": 12,
+    "controllerRows": [
+      {
+        "family": "audio",
+        "operation": "mute",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "audio",
+        "operation": "solo",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "audio",
+        "operation": "arm",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "keygroup",
+        "operation": "mute",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "keygroup",
+        "operation": "solo",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "keygroup",
+        "operation": "arm",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "midi",
+        "operation": "mute",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "midi",
+        "operation": "solo",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "midi",
+        "operation": "arm",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "cv",
+        "operation": "mute",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "cv",
+        "operation": "solo",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      },
+      {
+        "family": "cv",
+        "operation": "arm",
+        "manualEditObserved": true,
+        "expectedConflictSkippedNative": true,
+        "discardedResponseRecovered": true,
+        "retainedRetryAfterRestore": true
+      }
+    ],
+    "twoSequencePatternRowsPassed": 8,
+    "sequencePatternRows": [
+      {
+        "screen": "main",
+        "family": "audio",
+        "selected": true,
+        "differentPatterns": true,
+        "inactiveRejectedBeforeNative": true,
+        "staleRejectedBeforeNative": true,
+        "bothSequencesRestored": true
+      },
+      {
+        "screen": "main",
+        "family": "audio",
+        "selected": false,
+        "differentPatterns": true,
+        "inactiveRejectedBeforeNative": true,
+        "staleRejectedBeforeNative": true,
+        "bothSequencesRestored": true
+      },
+      {
+        "screen": "main",
+        "family": "keygroup",
+        "selected": true,
+        "differentPatterns": true,
+        "inactiveRejectedBeforeNative": true,
+        "staleRejectedBeforeNative": true,
+        "bothSequencesRestored": true
+      },
+      {
+        "screen": "main",
+        "family": "keygroup",
+        "selected": false,
+        "differentPatterns": true,
+        "inactiveRejectedBeforeNative": true,
+        "staleRejectedBeforeNative": true,
+        "bothSequencesRestored": true
+      },
+      {
+        "screen": "main",
+        "family": "midi",
+        "selected": true,
+        "differentPatterns": true,
+        "inactiveRejectedBeforeNative": true,
+        "staleRejectedBeforeNative": true,
+        "bothSequencesRestored": true
+      },
+      {
+        "screen": "main",
+        "family": "midi",
+        "selected": false,
+        "differentPatterns": true,
+        "inactiveRejectedBeforeNative": true,
+        "staleRejectedBeforeNative": true,
+        "bothSequencesRestored": true
+      },
+      {
+        "screen": "main",
+        "family": "cv",
+        "selected": true,
+        "differentPatterns": true,
+        "inactiveRejectedBeforeNative": true,
+        "staleRejectedBeforeNative": true,
+        "bothSequencesRestored": true
+      },
+      {
+        "screen": "main",
+        "family": "cv",
+        "selected": false,
+        "differentPatterns": true,
+        "inactiveRejectedBeforeNative": true,
+        "staleRejectedBeforeNative": true,
+        "bothSequencesRestored": true
+      }
+    ],
+    "readProjectionsPassed": [
+      "current_sequence",
+      "current_track",
+      "get_state",
+      "list_tracks",
+      "recovery_snapshot"
+    ],
+    "freshReadSamples": 20,
+    "captureP95Ms": 11.911,
+    "independentFlagsAndNullsMatched": true,
+    "nativeArmFilterTargets": [
+      {
+        "family": "plugin",
+        "methodRva": "0x2650488",
+        "prefixHex": "38229fe538329fe5f8416de10040a0e1dc0190e5f860cde110808de514e08de5",
+        "virtual": true,
+        "vtableRva": "0x69355e0"
+      },
+      {
+        "family": "audio",
+        "methodRva": "0x2650488",
+        "prefixHex": "38229fe538329fe5f8416de10040a0e1dc0190e5f860cde110808de514e08de5",
+        "virtual": true,
+        "vtableRva": "0x69355e0"
+      },
+      {
+        "family": "keygroup",
+        "methodRva": "0x2650488",
+        "prefixHex": "38229fe538329fe5f8416de10040a0e1dc0190e5f860cde110808de514e08de5",
+        "virtual": true,
+        "vtableRva": "0x69355e0"
+      },
+      {
+        "family": "drum",
+        "methodRva": "0x2650488",
+        "prefixHex": "38229fe538329fe5f8416de10040a0e1dc0190e5f860cde110808de514e08de5",
+        "virtual": true,
+        "vtableRva": "0x69355e0"
+      },
+      {
+        "family": "midi",
+        "methodRva": "0x2650488",
+        "prefixHex": "38229fe538329fe5f8416de10040a0e1dc0190e5f860cde110808de514e08de5",
+        "virtual": true,
+        "vtableRva": "0x69355e0"
+      },
+      {
+        "family": "cv",
+        "methodRva": "0x2650488",
+        "prefixHex": "38229fe538329fe5f8416de10040a0e1dc0190e5f860cde110808de514e08de5",
+        "virtual": true,
+        "vtableRva": "0x69355e0"
+      }
+    ],
+    "initialHarnessRetentionLimitObserved": true,
+    "finalPluginDrumRegressionRowsPassed": 12
+  },
+  "restoration": {
+    "mpcPidUnchanged": true,
+    "inventoryRestored": true,
+    "snapshotRestored": true,
+    "requestedEngineAndSilencedFlagsRestored": true,
+    "automationRestored": true,
+    "nativeContextRestored": true,
+    "savedCommandPreferencesRestored": true,
+    "projectPathUnchanged": true,
+    "temporaryTracksRemoved": true,
+    "labUnloaded": true,
+    "temporaryLabFilesRemoved": true,
+    "installedHostReady": true,
+    "installedHostReadPassed": true,
+    "savedSettingsAllKeysMatch": true
+  },
+  "deployment": {
+    "installedVersion": "0.2.0",
+    "upgraded": false,
+    "mpcRestarted": false,
+    "projectSavedOrLoaded": false
+  },
+  "limits": [
+    "native MIDI/CV requested-state behavior only; owner confirmed no external endpoint",
+    "physical MIDI output, synth behavior and CV/gate voltages were not measured",
+    "legacy clip/unknown user flags remain unavailable; buses are metadata only",
+    "stopped Main/Mixer/Track Mute, automation Off, matching mute scope and recognized settings",
+    "new-family Mixer evidence uses Effects; the inherited Mixer view ID is shared by all five pages",
+    "differential two-sequence patterns use Main; scoped writes also cover Mixer and Track Mute",
+    "synthetic race/destruction/reload cases run in host and isolated ARM fixtures"
+  ]
+}

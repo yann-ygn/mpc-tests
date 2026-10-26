@@ -1,10 +1,10 @@
 {
   "apiVersion": "0.1",
-  "deviceId": "dev_example",
-  "instanceId": "run_00000000000000000000000000000000",
+  "deviceId": "dev_fixture",
+  "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -18,8 +18,8 @@
     "status": "discovery_only",
     "nativeAdapter": "attached",
     "adapter": {
-      "abiVersion": 1,
-      "instanceId": "adp_00000000000000000000000000000000",
+      "abiVersion": 2,
+      "instanceId": "adp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "codeVerified": true,
       "qualification": "bounded_lab_proof"
     },
@@ -28,6 +28,498 @@
     "profileId": "key37-mpc3.9.1.2"
   },
   "readableFields": [],
+  "flagFamilies": [
+    {
+      "family": "unknown",
+      "readableFields": [],
+      "unsupportedReasons": {
+        "requested.muted": "UNQUALIFIED_TRACK_TYPE",
+        "requested.soloed": "UNQUALIFIED_TRACK_TYPE",
+        "requested.recordArmed": "UNQUALIFIED_TRACK_TYPE",
+        "audioSide.soloed": "UNQUALIFIED_TRACK_TYPE",
+        "audioSide.recordArmed": "UNQUALIFIED_TRACK_TYPE",
+        "silenced": "UNQUALIFIED_TRACK_TYPE",
+        "audioSide.muted": "UNQUALIFIED_TRACK_TYPE",
+        "audioActivity": "UNQUALIFIED_TRACK_TYPE"
+      },
+      "operations": {
+        "set_mute": {
+          "available": false,
+          "reason": "UNQUALIFIED_TRACK_TYPE",
+          "verification": [],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings",
+            "matching_mute_scope",
+            "global_or_named_active_sequence"
+          ]
+        },
+        "set_solo": {
+          "available": false,
+          "reason": "UNQUALIFIED_TRACK_TYPE",
+          "verification": [],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        },
+        "set_record_armed": {
+          "available": false,
+          "reason": "UNQUALIFIED_TRACK_TYPE",
+          "verification": [],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        }
+      },
+      "outputVerified": false
+    },
+    {
+      "family": "plugin",
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced"
+      ],
+      "unsupportedReasons": {
+        "audioSide.muted": "UNQUALIFIED_OBSERVATION",
+        "audioActivity": "NOT_MEASURED"
+      },
+      "operations": {
+        "set_mute": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings",
+            "matching_mute_scope",
+            "global_or_named_active_sequence"
+          ]
+        },
+        "set_solo": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model",
+            "audio_copy"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        },
+        "set_record_armed": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model",
+            "audio_copy"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        }
+      },
+      "outputVerified": false
+    },
+    {
+      "family": "drum",
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced"
+      ],
+      "unsupportedReasons": {
+        "audioSide.muted": "UNQUALIFIED_OBSERVATION",
+        "audioActivity": "NOT_MEASURED"
+      },
+      "operations": {
+        "set_mute": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings",
+            "matching_mute_scope",
+            "global_or_named_active_sequence"
+          ]
+        },
+        "set_solo": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model",
+            "audio_copy"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        },
+        "set_record_armed": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model",
+            "audio_copy"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        }
+      },
+      "outputVerified": false
+    },
+    {
+      "family": "keygroup",
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced"
+      ],
+      "unsupportedReasons": {
+        "audioSide.muted": "UNQUALIFIED_OBSERVATION",
+        "audioActivity": "NOT_MEASURED"
+      },
+      "operations": {
+        "set_mute": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings",
+            "matching_mute_scope",
+            "global_or_named_active_sequence"
+          ]
+        },
+        "set_solo": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model",
+            "audio_copy"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        },
+        "set_record_armed": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model",
+            "audio_copy"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        }
+      },
+      "outputVerified": false
+    },
+    {
+      "family": "midi",
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed"
+      ],
+      "unsupportedReasons": {
+        "audioSide.soloed": "UNQUALIFIED_OBSERVATION",
+        "audioSide.recordArmed": "UNQUALIFIED_OBSERVATION",
+        "silenced": "UNQUALIFIED_OBSERVATION",
+        "audioSide.muted": "UNQUALIFIED_OBSERVATION",
+        "audioActivity": "NOT_MEASURED"
+      },
+      "operations": {
+        "set_mute": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings",
+            "matching_mute_scope",
+            "global_or_named_active_sequence"
+          ]
+        },
+        "set_solo": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        },
+        "set_record_armed": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        }
+      },
+      "outputVerified": false
+    },
+    {
+      "family": "cv",
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed"
+      ],
+      "unsupportedReasons": {
+        "audioSide.soloed": "UNQUALIFIED_OBSERVATION",
+        "audioSide.recordArmed": "UNQUALIFIED_OBSERVATION",
+        "silenced": "UNQUALIFIED_OBSERVATION",
+        "audioSide.muted": "UNQUALIFIED_OBSERVATION",
+        "audioActivity": "NOT_MEASURED"
+      },
+      "operations": {
+        "set_mute": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings",
+            "matching_mute_scope",
+            "global_or_named_active_sequence"
+          ]
+        },
+        "set_solo": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        },
+        "set_record_armed": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        }
+      },
+      "outputVerified": false
+    },
+    {
+      "family": "audio",
+      "readableFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced"
+      ],
+      "unsupportedReasons": {
+        "audioSide.muted": "UNQUALIFIED_OBSERVATION",
+        "audioActivity": "NOT_MEASURED"
+      },
+      "operations": {
+        "set_mute": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings",
+            "matching_mute_scope",
+            "global_or_named_active_sequence"
+          ]
+        },
+        "set_solo": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model",
+            "audio_copy"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        },
+        "set_record_armed": {
+          "available": true,
+          "reason": null,
+          "verification": [
+            "model",
+            "audio_copy"
+          ],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        }
+      },
+      "outputVerified": false
+    },
+    {
+      "family": "clip",
+      "readableFields": [],
+      "unsupportedReasons": {
+        "requested.muted": "UNQUALIFIED_TRACK_TYPE",
+        "requested.soloed": "UNQUALIFIED_TRACK_TYPE",
+        "requested.recordArmed": "UNQUALIFIED_TRACK_TYPE",
+        "audioSide.soloed": "UNQUALIFIED_TRACK_TYPE",
+        "audioSide.recordArmed": "UNQUALIFIED_TRACK_TYPE",
+        "silenced": "UNQUALIFIED_TRACK_TYPE",
+        "audioSide.muted": "UNQUALIFIED_TRACK_TYPE",
+        "audioActivity": "UNQUALIFIED_TRACK_TYPE"
+      },
+      "operations": {
+        "set_mute": {
+          "available": false,
+          "reason": "UNQUALIFIED_TRACK_TYPE",
+          "verification": [],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings",
+            "matching_mute_scope",
+            "global_or_named_active_sequence"
+          ]
+        },
+        "set_solo": {
+          "available": false,
+          "reason": "UNQUALIFIED_TRACK_TYPE",
+          "verification": [],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        },
+        "set_record_armed": {
+          "available": false,
+          "reason": "UNQUALIFIED_TRACK_TYPE",
+          "verification": [],
+          "conditions": [
+            "qualified_screen",
+            "no_popup",
+            "stopped",
+            "automation_off",
+            "recognized_solo_arm_settings"
+          ]
+        }
+      },
+      "outputVerified": false
+    }
+  ],
   "capabilities": {
     "describe": {
       "available": true,
@@ -35,11 +527,88 @@
     },
     "get_state": {
       "available": false,
-      "reason": "NOT_IMPLEMENTED"
+      "reason": "NOT_IMPLEMENTED",
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
+    },
+    "list_tracks": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
     },
     "current_track": {
       "available": false,
-      "reason": "NOT_IMPLEMENTED"
+      "reason": "NOT_IMPLEMENTED",
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
+    },
+    "current_sequence": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
+    },
+    "recovery_snapshot": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
     },
     "set_mute": {
       "available": false,
@@ -70,19 +639,21 @@
   },
   "limits": {
     "maxRequestBytes": 1024,
-    "maxResponseBytes": 16384,
+    "maxResponseBytes": 1048576,
     "maxConnections": 16,
     "connectionTimeoutMs": 1000,
     "queueCapacity": 0,
+    "receiptCapacity": 0,
     "requestRetentionMs": 0,
     "defaultStartWithinMs": null,
     "maxStartWithinMs": null,
+    "maxWaitMs": null,
     "verificationTimeoutMs": null,
     "adapterProbeTimeoutMs": 50,
     "maxTracks": 136,
     "maxMidiTracks": 128,
     "maxAudioTracks": 8,
     "maxBuses": 128,
-    "snapshotAbiVersion": 3
+    "snapshotAbiVersion": 4
   }
 }

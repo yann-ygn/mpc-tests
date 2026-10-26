@@ -1,4 +1,5 @@
 #include "mpc_commands.h"
+#include "mpc_family_profile.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -99,17 +100,24 @@ static void changes(FILE *output, const struct mpc_command_receipt *receipt) {
     "audioSide.soloed",
     "audioSide.recordArmed",
     "silenced"};
+  static const unsigned masks[] = {
+    MPC_NATIVE_MUTED,
+    MPC_NATIVE_SOLOED,
+    MPC_NATIVE_ARMED,
+    MPC_NATIVE_SOLO_COPY,
+    MPC_NATIVE_ARM_COPY,
+    MPC_NATIVE_SILENCED};
   for (unsigned i = 0; i < receipt->before.track_count; i++) {
     const struct mpc_command_track *a = &receipt->before.tracks[i];
     const struct mpc_command_track *b = find(&receipt->after, a->id);
-    if (!b || a->generation != b->generation || a->known != 15 || b->known != 15)
+    if (!b || a->generation != b->generation || a->family != b->family)
       continue;
     const uint32_t before[] =
       {a->muted, a->soloed, a->record_armed, a->audio_soloed, a->audio_record_armed, a->silenced};
     const uint32_t after[] =
       {b->muted, b->soloed, b->record_armed, b->audio_soloed, b->audio_record_armed, b->silenced};
     for (unsigned field = 0; field < sizeof paths / sizeof *paths; field++) {
-      if (before[field] == after[field])
+      if (!(a->known & b->known & masks[field]) || before[field] == after[field])
         continue;
       if (
         !field &&
@@ -143,7 +151,8 @@ static void changes(FILE *output, const struct mpc_command_receipt *receipt) {
 
 char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
   if (
-    !receipt || (unsigned)receipt->status > MPC_COMMAND_UNKNOWN ||
+    !receipt || receipt->abi_version != MPC_COMMANDS_ABI ||
+    receipt->struct_bytes != sizeof *receipt || (unsigned)receipt->status > MPC_COMMAND_UNKNOWN ||
     (unsigned)receipt->execution > MPC_COMMAND_COMPLETED ||
     (unsigned)receipt->request.operation > MPC_COMMAND_RECORD_ARMED ||
     (unsigned)receipt->request.mute_scope > MPC_MUTE_SEQUENCE ||
@@ -193,20 +202,23 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     ? find(&receipt->after, receipt->request.target.track)
     : NULL;
   bool requested = false;
-  if (track && track->known == 15) {
+  unsigned property = receipt->request.operation;
+  if (track && (track->known & (1u << property))) {
     bool mute = receipt->request.operation == MPC_COMMAND_MUTE;
+    bool copy_known = !mute &&
+      (track->known & (property == MPC_COMMAND_SOLO ? MPC_NATIVE_SOLO_COPY : MPC_NATIVE_ARM_COPY));
     requested = mute                                   ? track->muted
       : receipt->request.operation == MPC_COMMAND_SOLO ? track->soloed
                                                        : track->record_armed;
     fprintf(
       output,
       "{\"by\":[\"model\"%s],\"requestedValue\":%s,\"audioSideValue\":%s,\"observedAt\":",
-      mute ? "" : ",\"audio_copy\"",
+      copy_known ? ",\"audio_copy\"" : "",
       boolean(requested),
-      mute ? "null"
-           : boolean(
-               receipt->request.operation == MPC_COMMAND_SOLO ? track->audio_soloed
-                                                              : track->audio_record_armed));
+      !copy_known ? "null"
+                  : boolean(
+                      receipt->request.operation == MPC_COMMAND_SOLO ? track->audio_soloed
+                                                                     : track->audio_record_armed));
     time_t seconds = (time_t)(receipt->after.captured_ms / 1000);
     struct tm time;
     char date[32];

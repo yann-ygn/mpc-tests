@@ -1,12 +1,13 @@
 # Native command handlers (#19)
 
 `libmpc_native.so` now provides the transport-independent command API in
-[`mpc_commands.h`](include/mpc_commands.h), ABI 3. It runs on executor ABI 6 and primitive adapter ABI 1.
+[`mpc_commands.h`](include/mpc_commands.h), ABI 4. It runs on executor ABI 7 and primitive adapter ABI 2.
 The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
 The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
 `mpc_executor_qualify_command`. US #46 expanded observations to 136 user tracks; US #48 adds
-explicit sequence targets/context and versions command ABI 3 / executor ABI 6.
+explicit sequence targets/context. US #49 adds per-family observations and versions
+command ABI 4 / executor ABI 7 / primitive ABI 2.
 Recompile trusted callers; configurations using the earlier ABIs are rejected.
 
 [US #32](../../findings/native-service.md) binds the public Unix setters and `get_command` in the persistent
@@ -82,7 +83,10 @@ See the [service guide](../README.md#send-flag-commands) for delivery and authen
 The handler resolves public project/track incarnation IDs through #20 on the UI thread. It binds current
 generations and resolves again before each adapter traversal. Index/name/address lookup is never a write target.
 Old instances fail admission; replaced projects and deleted/recreated tracks fail before a setter. Rename/reorder
-preserve the reference rules. Normal plugin/drum families use the existing notifying setters and record-arm filter.
+preserve the reference rules. Qualified plugin/drum/keygroup/MIDI/CV/audio families use their traced native notifying
+properties and Track record-arm filter. The family matrix determines required readbacks;
+MIDI/CV completion verifies the requested model value only. See
+[family qualification](../../findings/native-family-flags.md).
 There is no toggle, scripting call, filter bypass, timed restoration or implicit selection rollback.
 
 `expected.value` is checked against the native requested property in the setter callback, before the no-op check.
@@ -170,8 +174,9 @@ carry scope and the active sequence's generation; verification must match both. 
 relationship after invocation remains unknown with actual invocation/execution metadata.
 There is no inactive-sequence setter and no implicit selection change.
 
-Use command ABI 3, executor ABI 6 and snapshot ABI 3 together. The layouts reject old
-trusted hosts at open/transfer; the primitive adapter ABI and export list stay unchanged.
+Use command ABI 4, executor ABI 7, snapshot ABI 4 and primitive ABI 2 together.
+Older layouts are rejected at open/transfer or receipt serialization. The export set
+is unchanged.
 The [public service guide](../README.md#sequence-scoped-mute) defines wire shapes and errors.
 `tools/mpc_sequence_mute.py` runs the bounded device matrix using the production live policy;
 the operator owns lab attach/detach, existing sequences and automation/preference setup.
