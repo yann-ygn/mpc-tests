@@ -194,6 +194,10 @@ lab_command_policy(void *unused, enum mpc_command_operation operation) {
                                                          : MPC_NATIVE_INVALID_ARGUMENT;
 }
 
+static enum mpc_native_error live_command_policy(void *data, enum mpc_command_operation operation) {
+  return mpc_executor_qualify_command(data, operation);
+}
+
 static void command_request(FILE *stream, const char *line) {
   enum mpc_native_error error = MPC_NATIVE_INVALID_ARGUMENT;
   char instance[37], id[MPC_COMMAND_ID_BYTES], property[16], expected[2], extra;
@@ -207,8 +211,10 @@ static void command_request(FILE *stream, const char *line) {
     return;
   }
   if (
-    sscanf(line, "LAB_COMMAND_OPEN %36s %c", instance, &extra) == 1 &&
-    !strncmp(line, "LAB_COMMAND_OPEN ", 17)) {
+    (sscanf(line, "LAB_COMMAND_OPEN %36s %c", instance, &extra) == 1 &&
+     !strncmp(line, "LAB_COMMAND_OPEN ", 17)) ||
+    (sscanf(line, "LIVE_COMMAND_OPEN %36s %c", instance, &extra) == 1 &&
+     !strncmp(line, "LIVE_COMMAND_OPEN ", 18))) {
     if (authoritative && !commands) {
       struct mpc_commands_config config = {
         .abi_version = MPC_COMMANDS_ABI,
@@ -219,6 +225,8 @@ static void command_request(FILE *stream, const char *line) {
         .retention_ms = MPC_COMMAND_MIN_RETENTION_MS,
         .policy = {NULL, lab_command_policy}};
       memcpy(config.instance_id, instance, 37);
+      if (!strncmp(line, "LIVE_COMMAND_OPEN ", 18))
+        config.policy = (struct mpc_command_policy){executor, live_command_policy};
       error = mpc_commands_open(&config, &commands);
     } else
       error = MPC_NATIVE_NOT_READY;
@@ -472,7 +480,7 @@ static void *worker(void *unused) {
     }
     char line[256], verb[16] = {0}, prop[16] = {0}, extra;
     if (fgets(line, sizeof line, f)) {
-      if (!strncmp(line, "LAB_COMMAND_", 12)) {
+      if (!strncmp(line, "LAB_COMMAND_", 12) || !strncmp(line, "LIVE_COMMAND_", 13)) {
         command_request(f, line);
       } else if (!strncmp(line, "STATE_V1 ", 9)) {
         state_command(f, line);

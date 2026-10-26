@@ -229,5 +229,7 @@ int discovery_read(struct api *api, struct discovery *result) {
     api->revision = 0;
   }
   strcpy(api->backend_signature, signature);
+  result->commands_ready = result->state_ready && api->backend && api->backend->bind_commands &&
+    api->backend->bind_commands(api->backend->userdata, api->instance_id);
   return 0;
 }

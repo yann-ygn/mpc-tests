@@ -2,9 +2,9 @@
 
 US #21 packages the existing authoritative read service and native adapter as one
 addin. It supports MPC Key 37, MPC 3.9.1.2, exact GNU build ID
-`8371199f945ecc40f79cb19c17ff5de72810a91c`. Public flag setters and receipt lookup
-remain unavailable pending #32's authenticated command binding and validated live
-mode/settings policy. The package advertises this in `describe`.
+`8371199f945ecc40f79cb19c17ff5de72810a91c`. US #32 adds authenticated Unix flag setters and receipt lookup, with a live Main/stopped/automation-Off policy.
+Mute also requires global mute scope. Consult `describe` for command availability and limits, and the
+[service guide](README.md#send-flag-commands) for request and receipt semantics.
 
 ## Build and inspect
 
@@ -21,8 +21,8 @@ the same shared addin installer as privtap: set `MPC_VST_PLUGINS` to an
 No device is contacted. Outputs:
 
 ```text
-build/native-api/packages/mpc-native-api-0.1.0/
-build/native-api/packages/mpc-native-api-0.1.0.tar.gz
+build/native-api/packages/mpc-native-api-0.2.0/
+build/native-api/packages/mpc-native-api-0.2.0.tar.gz
 ```
 
 `PACKAGE.json` records the source revision and source-content SHA-256, dirty
@@ -47,7 +47,7 @@ MPC restart to retire its code. No reboot is normally necessary.
 Copy the directory to the device, verify the checksums there, then install:
 
 ```sh
-cd /tmp/mpc-native-api-0.1.0
+cd /tmp/mpc-native-api-0.2.0
 sha256sum -c SHA256SUMS
 sh install.sh -y
 ```

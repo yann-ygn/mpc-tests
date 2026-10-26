@@ -15,7 +15,7 @@ import unittest
 from test_describe import PROFILE, ROOT, elf
 
 
-class HostTests(unittest.TestCase):
+class HostHarness(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="mpc-host-")
         self.root = Path(self.temp.name)
@@ -44,7 +44,9 @@ class HostTests(unittest.TestCase):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        return self.wait_status({"ready"} if mode == "normal" else {"discovery_only"})
+        return self.wait_status(
+            {"discovery_only"} if mode in {"build", "fingerprint"} else {"ready"}
+        )
 
     def tearDown(self):
         if self.process and self.process.poll() is None:
@@ -81,12 +83,22 @@ class HostTests(unittest.TestCase):
             try:
                 last = self.call()
                 if last["status"] in expected:
+                    # Native startup and socket binding run on separate threads.
+                    # Await the endpoint before tests issue public requests.
+                    if (
+                        last["status"] in {"ready", "discovery_only", "waiting_for_ui"}
+                        and not self.api.is_socket()
+                    ):
+                        time.sleep(0.01)
+                        continue
                     return last
             except (FileNotFoundError, ConnectionRefusedError):
                 pass
             time.sleep(0.02)
         self.fail(f"Expected {expected}, last status: {last}")
 
+
+class HostTests(HostHarness):
     def test_reads_stop_restart_identity_and_permissions(self):
         status = self.launch()
         first = self.public()
@@ -95,7 +107,7 @@ class HostTests(unittest.TestCase):
         self.assertEqual(state["tracks"][0]["name"], 'Live "é"\n')
         self.assertEqual(state["instanceId"], first["instanceId"])
         self.assertFalse(first["capabilities"]["set_mute"]["available"])
-        self.assertEqual(self.public("set_mute")["error"]["code"], "NOT_READY")
+        self.assertEqual(self.public("set_mute")["error"]["code"], "INVALID_ARGUMENT")
         self.assertEqual(stat.S_IMODE(self.runtime.stat().st_mode), 0o700)
         for path in (self.control, self.api):
             self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)

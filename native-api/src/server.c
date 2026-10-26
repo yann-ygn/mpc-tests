@@ -55,6 +55,9 @@ static int64_t now_ms(void) {
 
 struct client {
   int fd;
+  uint64_t caller;
+  struct api_delivery delivery;
+  int waiting;
   char input[MAX_REQUEST_BYTES + 1];
   size_t used, sent, length;
   char *output;
@@ -109,9 +112,20 @@ static void read_request(struct client *client, struct api *api) {
   if (n > 0) {
     client->used += (size_t)n;
     char *newline = memchr(client->input, '\n', client->used);
-    if (newline)
-      client_reply(client, api_respond(api, client->input, (size_t)(newline - client->input)));
-    else if (client->used > MAX_REQUEST_BYTES)
+    if (newline) {
+      client_reply(
+        client,
+        api_respond(
+          api,
+          client->caller,
+          client->input,
+          (size_t)(newline - client->input),
+          &client->delivery));
+      if (client->fd >= 0 && client->delivery.pending && client->delivery.wait_ms) {
+        client->waiting = 1;
+        client->deadline = now_ms() + client->delivery.wait_ms;
+      }
+    } else if (client->used > MAX_REQUEST_BYTES)
       client_reply(client, api_error("INVALID_ARGUMENT", "Request exceeds maxRequestBytes"));
   } else if (!n)
     client_reply(client, api_error("INVALID_ARGUMENT", "Request must end with a newline"));
@@ -125,6 +139,27 @@ static void process_client(struct client *client, short events, struct api *api)
   }
   if (events & (POLLERR | POLLNVAL)) {
     client_close(client);
+    return;
+  }
+  if (!client->output && now_ms() >= client->deadline) {
+    client_reply(client, api_error("INVALID_ARGUMENT", "Request line timed out"));
+    return;
+  }
+  if (client->waiting) {
+    if (events & POLLHUP) {
+      client_close(client);
+      return;
+    }
+    int64_t deadline = client->deadline;
+    char *response = api_command_poll(api, client->caller, &client->delivery);
+    free(client->output);
+    client->output = NULL;
+    client_reply(client, response);
+    if (client->fd < 0)
+      return;
+    client->waiting = client->delivery.pending && now_ms() < deadline;
+    if (client->waiting)
+      client->deadline = deadline;
     return;
   }
   if (client->output && (events & POLLOUT)) {
@@ -152,7 +187,9 @@ static int accept_client(int listener, struct client clients[MAX_CONNECTIONS]) {
   struct ucred peer;
   socklen_t length = sizeof peer;
   const char *error = NULL;
-  if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &peer, &length) || peer.uid != geteuid())
+  if (
+    getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &peer, &length) || length != sizeof peer ||
+    peer.uid != geteuid())
     error = "UNAUTHORIZED";
   size_t slot;
   for (slot = 0; slot < MAX_CONNECTIONS && clients[slot].fd >= 0; slot++) {
@@ -168,6 +205,9 @@ static int accept_client(int listener, struct client clients[MAX_CONNECTIONS]) {
     close(fd);
   } else {
     clients[slot].fd = fd;
+    /* Same-UID clients share one stable authenticated namespace across PIDs
+     * and reconnects. The JSON body cannot select or impersonate a caller. */
+    clients[slot].caller = (uint64_t)peer.uid;
     clients[slot].deadline = now_ms() + CONNECTION_TIMEOUT_MS;
   }
   return 0;
@@ -224,10 +264,18 @@ static int serve(
   status = 0;
   while (!should_stop(userdata)) {
     struct pollfd fds[MAX_CONNECTIONS + 1];
+    int poll_ms = 100;
     fds[0] = (struct pollfd){listener, POLLIN, 0};
-    for (size_t i = 0; i < MAX_CONNECTIONS; i++)
-      fds[i + 1] = (struct pollfd){clients[i].fd, clients[i].output ? POLLOUT : POLLIN, 0};
-    int ready = poll(fds, MAX_CONNECTIONS + 1, 100);
+    for (size_t i = 0; i < MAX_CONNECTIONS; i++) {
+      fds[i + 1] = (struct pollfd){clients[i].fd,
+                                   clients[i].waiting    ? 0
+                                     : clients[i].output ? POLLOUT
+                                                         : POLLIN,
+                                   0};
+      if (clients[i].waiting)
+        poll_ms = 10;
+    }
+    int ready = poll(fds, MAX_CONNECTIONS + 1, poll_ms);
     if (ready < 0) {
       if (errno == EINTR)
         continue;

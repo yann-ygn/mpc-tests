@@ -137,7 +137,9 @@ def main():
             fixture_pid = (
                 command(
                     "nohup "
-                    + shlex.join([remote + "/host_fixture", installation, runtime, root, "normal"])
+                    + shlex.join(
+                        [remote + "/host_fixture", installation, runtime, root, "native-commands"]
+                    )
                     + " > "
                     + shlex.quote(remote + "/host.log")
                     + " 2>&1 < /dev/null & echo $!"
@@ -170,7 +172,10 @@ def main():
             return json.loads(
                 command(
                     shlex.join([binary, "request", "--socket", runtime + "/api.sock"]),
-                    json.dumps({"apiVersion": "0.1", "op": op}).encode() + b"\n",
+                    json.dumps(
+                        {"apiVersion": "0.1", "op": op} if isinstance(op, str) else op
+                    ).encode()
+                    + b"\n",
                 )
             )
 
@@ -187,9 +192,34 @@ def main():
         for op in reads:
             assert description["capabilities"][op]["available"]
             assert "error" not in public(op), op
-        assert not description["capabilities"]["set_mute"]["available"]
-        assert public("set_mute")["error"]["code"] == "NOT_READY"
         state = public("get_state")
+        if not args.installed:
+            operations = ["set_mute", "set_solo", "set_record_armed"]
+            target = state["tracks"][0]["ref"]
+            for op in operations:
+                assert description["capabilities"][op]["available"]
+                for value in (True, False):
+                    request = {
+                        "apiVersion": "0.1",
+                        "op": op,
+                        "requestId": op + str(value),
+                        "target": target,
+                        "value": value,
+                        "waitMs": 1000,
+                    }
+                    receipt = public(request)
+                    assert receipt["status"] == "applied", receipt
+                    assert receipt["verification"]["requestedValue"] == value
+                    assert public({**request, "waitMs": 0}) == receipt
+                    lookup = {
+                        "apiVersion": "0.1",
+                        "op": "get_command",
+                        "instanceId": target["instanceId"],
+                        "requestId": request["requestId"],
+                    }
+                    assert public(lookup) == receipt
+            report["commandOperations"] = operations
+            report["retainedLookupAndReplayVerified"] = True
         report.update(
             readOperations=reads,
             trackCount=len(state["tracks"]),
@@ -197,7 +227,7 @@ def main():
             hostVersion=status["hostVersion"],
             nativePid=status["pid"],
             nativeError=status["nativeError"],
-            publicWritesDisabled=True,
+            publicWritesDisabled=not description["capabilities"]["set_mute"]["available"],
         )
         for path in ("api.sock", "control.sock"):
             assert command(shlex.join(["stat", "-c", "%a", runtime + "/" + path])).strip() == b"600"

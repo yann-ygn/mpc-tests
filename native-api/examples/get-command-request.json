@@ -1,0 +1,7 @@
+{
+  "apiVersion": "0.1",
+  "op": "get_command",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "requestId": "req_solo_1",
+  "waitMs": 500
+}

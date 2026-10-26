@@ -271,7 +271,8 @@ class DescribeTests(unittest.TestCase):
             "UNSUPPORTED_OPERATION",
         )
         self.assertEqual(
-            self.call(b'{"apiVersion":"0.1","op":"set_mute"}\n')["error"]["code"], "NOT_READY"
+            self.call(b'{"apiVersion":"0.1","op":"set_mute"}\n')["error"]["code"],
+            "INVALID_ARGUMENT",
         )
 
     def test_socket_permissions_and_live_socket_preserved(self):

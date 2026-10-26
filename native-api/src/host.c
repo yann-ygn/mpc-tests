@@ -19,6 +19,8 @@ struct host {
   pthread_mutex_t mutex;
   pthread_t service;
   struct mpc_executor *executor;
+  struct mpc_commands *commands;
+  char command_instance[37];
   const struct mpc_host_ops *ops;
   struct api_backend backend;
   char socket[108], device_id[37];
@@ -65,6 +67,70 @@ static int state(void *data, const char *instance, struct mpc_state_snapshot *ou
     mpc_executor_release(job);
   pthread_mutex_unlock(&h->mutex);
   return error;
+}
+
+/* Only the service thread binds/uses commands; stop joins it before closing.
+ * An authority identity change retires every old receipt before opening again. */
+static enum mpc_native_error live_policy(void *executor, enum mpc_command_operation operation) {
+  return mpc_executor_qualify_command(executor, operation);
+}
+
+static int bind_commands(void *data, const char *instance) {
+  struct host *h = data;
+  if (!h->ops->command_policy.qualify && !h->ops->native_command_policy)
+    return 0;
+  if (h->commands && !strcmp(instance, h->command_instance))
+    return 1;
+  if (h->commands) {
+    if (mpc_commands_shutdown(h->commands, 0) || mpc_commands_close(h->commands))
+      return 0;
+    h->commands = NULL;
+  }
+  struct mpc_commands_config config = {
+    .abi_version = MPC_COMMANDS_ABI,
+    .struct_bytes = sizeof config,
+    .pending_capacity = API_COMMAND_CAPACITY,
+    .receipt_capacity = API_RECEIPT_CAPACITY,
+    .retention_ms = MPC_COMMAND_MIN_RETENTION_MS,
+    .policy = h->ops->command_policy};
+  strcpy(config.instance_id, instance);
+  pthread_mutex_lock(&h->mutex);
+  config.executor = h->executor;
+  if (h->ops->native_command_policy)
+    config.policy = (struct mpc_command_policy){h->executor, live_policy};
+  int ok = config.executor && !mpc_commands_open(&config, &h->commands);
+  pthread_mutex_unlock(&h->mutex);
+  if (ok)
+    strcpy(h->command_instance, instance);
+  return ok;
+}
+
+static char *command(
+  void *data,
+  const char *instance,
+  uint64_t caller,
+  const struct api_request_data *request,
+  int *pending) {
+  struct host *h = data;
+  *pending = 0;
+  if (!h->commands || strcmp(instance, h->command_instance))
+    return api_error("NOT_READY", "Command authority is unavailable");
+  struct mpc_command_receipt receipt;
+  enum mpc_native_error error = !strcmp(request->op, "get_command")
+    ? mpc_commands_get(
+        h->commands,
+        caller,
+        request->instance_id,
+        request->command.request_id,
+        0,
+        &receipt)
+    : mpc_commands_submit(h->commands, caller, &request->command, 0, &receipt);
+  if (error)
+    return api_error(
+      mpc_native_error_name(error),
+      "Command was not admitted or its outcome is unavailable");
+  *pending = receipt.status == MPC_COMMAND_ACCEPTED;
+  return mpc_commands_receipt_json(&receipt);
 }
 
 static int service_stopping(void *data) {
@@ -164,7 +230,14 @@ static void stop_host(struct host *h) {
   if (h->executor) {
     /* All API callers have joined. A deadline never frees pending native
      * captures or listeners; keep the executor and pinned DSO and retry. */
-    h->error = mpc_executor_shutdown(h->executor, 100);
+    h->error = h->commands ? mpc_commands_shutdown(h->commands, 100) : MPC_NATIVE_OK;
+    if (!h->error && h->commands) {
+      h->error = mpc_commands_close(h->commands);
+      if (!h->error)
+        h->commands = NULL;
+    }
+    if (!h->error)
+      h->error = mpc_executor_shutdown(h->executor, 100);
     if (!h->error)
       h->error = mpc_executor_close(h->executor);
     if (h->error) {
@@ -313,7 +386,7 @@ int mpc_host_run(const char *installation, const char *runtime, const struct mpc
   int listener = -1, result = 1;
   struct host h = {.ops = ops, .phase = "stopped"};
   pthread_mutex_init(&h.mutex, NULL);
-  h.backend = (struct api_backend){&h, probe, state};
+  h.backend = (struct api_backend){&h, probe, state, bind_commands, command};
   if (lock < 0 || device_id(install, h.device_id))
     goto done;
   struct sockaddr_un address = {.sun_family = AF_UNIX};

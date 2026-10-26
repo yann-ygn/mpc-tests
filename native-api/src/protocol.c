@@ -42,99 +42,48 @@ char *api_error(const char *code, const char *message) {
   return buffer;
 }
 
-struct parser {
-  const char *p, *end;
-};
-
-static void whitespace(struct parser *parser) {
-  while (parser->p < parser->end && strchr(" \t\r\n", *parser->p) && *parser->p)
-    parser->p++;
+static char *command_reply(
+  struct api *api,
+  uint64_t caller,
+  const struct api_request_data *request,
+  struct api_delivery *delivery) {
+  if (!api->backend || !api->backend->command)
+    return api_error("NOT_READY", "Command authority is unavailable; consult describe");
+  delivery->pending = 0;
+  char *response =
+    api->backend
+      ->command(api->backend->userdata, api->instance_id, caller, request, &delivery->pending);
+  delivery->wait_ms = request->wait_ms;
+  strcpy(
+    delivery->instance_id,
+    !strcmp(request->op, "get_command") ? request->instance_id
+                                        : request->command.target.instance_id);
+  strcpy(delivery->request_id, request->command.request_id);
+  return response;
 }
 
-static int token(struct parser *parser, char expected) {
-  whitespace(parser);
-  if (parser->p == parser->end || *parser->p != expected)
-    return -1;
-  parser->p++;
-  return 0;
+char *api_command_poll(struct api *api, uint64_t caller, struct api_delivery *delivery) {
+  struct api_request_data request = {0};
+  strcpy(request.op, "get_command");
+  strcpy(request.instance_id, delivery->instance_id);
+  strcpy(request.command.request_id, delivery->request_id);
+  request.wait_ms = delivery->wait_ms;
+  return command_reply(api, caller, &request, delivery);
 }
 
-/* This endpoint accepts a flat object of ASCII identifier strings, not general RPC arguments. */
-static int string(struct parser *parser, char *output, size_t capacity) {
-  if (token(parser, '"'))
-    return -1;
-  size_t used = 0;
-  while (parser->p < parser->end) {
-    unsigned char c = (unsigned char)*parser->p++;
-    if (c == '"') {
-      output[used] = 0;
-      return 0;
-    }
-    if (c == '\\') {
-      if (parser->p == parser->end)
-        return -1;
-      c = (unsigned char)*parser->p++;
-      if (c == 'u') {
-        unsigned value = 0;
-        for (int i = 0; i < 4; i++) {
-          if (parser->p == parser->end)
-            return -1;
-          char h = *parser->p++;
-          unsigned digit = h >= '0' && h <= '9' ? (unsigned)(h - '0')
-            : h >= 'a' && h <= 'f'              ? (unsigned)(h - 'a' + 10)
-            : h >= 'A' && h <= 'F'              ? (unsigned)(h - 'A' + 10)
-                                                : 16;
-          if (digit == 16)
-            return -1;
-          value = value * 16 + digit;
-        }
-        if (value < 32 || value > 126)
-          return -1;
-        c = (unsigned char)value;
-      } else if (c != '"' && c != '\\' && c != '/')
-        return -1;
-    }
-    if (c < 32 || c > 126 || used + 1 >= capacity)
-      return -1;
-    output[used++] = (char)c;
-  }
-  return -1;
-}
-
-static int request_parse(const char *input, size_t size, char version[80], char op[80]) {
-  struct parser parser = {input, input + size};
-  if (token(&parser, '{'))
-    return -1;
-  int seen_version = 0, seen_op = 0;
-  for (int i = 0; i < 2; i++) {
-    char key[80], value[80];
-    if (
-      (i && token(&parser, ',')) || string(&parser, key, sizeof key) || token(&parser, ':') ||
-      string(&parser, value, sizeof value))
-      return -1;
-    if (!strcmp(key, "apiVersion") && !seen_version) {
-      strcpy(version, value);
-      seen_version = 1;
-    } else if (!strcmp(key, "op") && !seen_op) {
-      strcpy(op, value);
-      seen_op = 1;
-    } else
-      return -1;
-  }
-  if (token(&parser, '}'))
-    return -1;
-  whitespace(&parser);
-  return !seen_version || !seen_op || parser.p != parser.end ? -1 : 0;
-}
-
-char *api_respond(struct api *api, const char *request, size_t length) {
-  char version[80], op[80];
-  if (length > MAX_REQUEST_BYTES || request_parse(request, length, version, op))
-    return api_error(
-      "INVALID_ARGUMENT",
-      "Expected apiVersion and op strings, with no duplicate or extra fields");
-  if (strcmp(version, API_VERSION))
+char *api_respond(
+  struct api *api,
+  uint64_t caller,
+  const char *request,
+  size_t length,
+  struct api_delivery *delivery) {
+  memset(delivery, 0, sizeof *delivery);
+  struct api_request_data parsed;
+  if (api_parse(request, length, &parsed))
+    return api_error("INVALID_ARGUMENT", "Request does not match the operation schema");
+  if (strcmp(parsed.version, API_VERSION))
     return api_error("UNSUPPORTED_API_VERSION", "Supported API version is " API_VERSION);
+  const char *op = parsed.op;
   struct discovery discovery;
   if (discovery_read(api, &discovery))
     return api_error("NOT_READY", "Could not establish a fresh instance identity");
@@ -148,20 +97,17 @@ char *api_respond(struct api *api, const char *request, size_t length) {
           "Authoritative snapshot attachment is unavailable; consult describe");
       return api_state(api, &discovery, op);
     }
-  if (strcmp(op, "describe")) {
-    static const char *reserved[] = {
-      "get_state",
-      "current_track",
-      "set_mute",
-      "set_solo",
-      "set_record_armed",
-      "get_command",
-      "watch"};
-    for (size_t i = 0; i < sizeof reserved / sizeof *reserved; i++)
-      if (!strcmp(op, reserved[i]))
-        return api_error("NOT_READY", "This operation is not implemented; consult describe");
-    return api_error("UNSUPPORTED_OPERATION", "Unknown operation");
+  if (
+    !strcmp(op, "set_mute") || !strcmp(op, "set_solo") || !strcmp(op, "set_record_armed") ||
+    !strcmp(op, "get_command")) {
+    if (!discovery.commands_ready)
+      return api_error("NOT_READY", "Command authority is unavailable; consult describe");
+    return command_reply(api, caller, &parsed, delivery);
   }
+  if (!strcmp(op, "watch"))
+    return api_error("NOT_READY", "Streaming is not implemented; consult describe");
+  if (strcmp(op, "describe"))
+    return api_error("UNSUPPORTED_OPERATION", "Unknown operation");
   char *buffer = NULL;
   size_t size = 0;
   FILE *output = open_memstream(&buffer, &size);
@@ -228,23 +174,41 @@ char *api_respond(struct api *api, const char *request, size_t length) {
   for (size_t i = 0; i < sizeof operations / sizeof *operations; i++) {
     fputc(',', output);
     api_quoted(output, operations[i]);
-    fputs(":{\"available\":false,\"reason\":", output);
-    api_quoted(output, discovery.unavailable_reason);
-    if (i <= 2)
-      fputs(",\"trackTypes\":[],\"verification\":[]", output);
+    int available = i < 4 && discovery.commands_ready;
+    fprintf(output, ":{\"available\":%s,\"reason\":", available ? "true" : "false");
+    api_quoted(output, available ? NULL : discovery.unavailable_reason);
+    if (i <= 2) {
+      fputs(
+        available ? ",\"trackTypes\":[\"plugin\",\"drum\"],\"verification\":[\"model\""
+                  : ",\"trackTypes\":[],\"verification\":[]",
+        output);
+      if (available) {
+        fputs(i ? ",\"audio_copy\"]" : "]", output);
+        fputs(",\"conditions\":[\"main_mode\",\"no_popup\",\"stopped\",\"automation_off\"", output);
+        if (!i)
+          fputs(",\"global_mute\"", output);
+        fputc(']', output);
+      }
+    }
     fputc('}', output);
   }
   fprintf(
     output,
     "},\"limits\":{\"maxRequestBytes\":%d,\"maxResponseBytes\":%d,\"maxConnections\":%d,"
-    "\"connectionTimeoutMs\":%d,"
-    "\"queueCapacity\":0,\"requestRetentionMs\":0,\"defaultStartWithinMs\":null,"
-    "\"maxStartWithinMs\":null,"
-    "\"verificationTimeoutMs\":null,\"adapterProbeTimeoutMs\":%d}}\n",
+    "\"connectionTimeoutMs\":%d,\"queueCapacity\":%d,\"receiptCapacity\":%d,"
+    "\"requestRetentionMs\":%d,\"defaultStartWithinMs\":%s,\"maxStartWithinMs\":%s,"
+    "\"maxWaitMs\":%s,\"verificationTimeoutMs\":%s,\"adapterProbeTimeoutMs\":%d}}\n",
     MAX_REQUEST_BYTES,
     MAX_RESPONSE_BYTES,
     MAX_CONNECTIONS,
     CONNECTION_TIMEOUT_MS,
+    discovery.commands_ready ? API_COMMAND_CAPACITY : 0,
+    discovery.commands_ready ? API_RECEIPT_CAPACITY : 0,
+    discovery.commands_ready ? MPC_COMMAND_MIN_RETENTION_MS : 0,
+    discovery.commands_ready ? "1000" : "null",
+    discovery.commands_ready ? "30000" : "null",
+    discovery.commands_ready ? "30000" : "null",
+    discovery.commands_ready ? "500" : "null",
     ADAPTER_PROBE_TIMEOUT_MS);
   if (fclose(output)) {
     free(buffer);

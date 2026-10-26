@@ -18,8 +18,9 @@ before running experiments.
   and bounded native mute/solo/arm pulses; it loads/unloads a lab bridge without restart. Native solo can select its
   target through follow-solo behaviour; restore selection after unselected-track experiments.
 - `native-api/`: C discovery/live-state service, JSON schemas and a guarded shared native adapter. `describe` reports
-  live metadata and verified attachment status. Authoritative attachments enable snapshots; public writes/watch
-  remain unavailable. See `native-api/README.md` and `native-api/adapter/README.md` for tests, builds and lifecycle limits.
+  live metadata and verified attachment status. Authoritative attachments enable snapshots; the embedded host also
+  provides authenticated flag commands under native live qualification. Watch remains unavailable. See
+  `native-api/README.md` and `native-api/adapter/README.md` for tests, builds and lifecycle limits.
 - `build/` is gitignored: local copies of the log, project saves and the settings backup.
 - `builddir/{host,arm}/` is gitignored: canonical Meson build directories. See `README.md` for all targets.
 
@@ -38,8 +39,8 @@ before running experiments.
 
 ## Rules
 
-- This is someone's instrument. Installing privtap or restarting MPC loses unsaved work: ask first. Save experiment
-  projects only to `MPC Documents/Projects/Claude Experiments`; don't touch the user's other projects.
+- This is someone's instrument. Installing privtap or restarting MPC loses unsaved work: ask first. New Project can also
+  restart MPC on this firmware; ask before using it for cleanup. Save experiment projects only to `MPC Documents/Projects/Claude Experiments`; don't touch the user's other projects.
 - Never commit privtap logs: the hardware's identity reply contains the device's serial number.
 - After an experiment, put back what it changed (mute, solo, arm, mode), pressing twice where a press toggles.
 
@@ -75,7 +76,7 @@ before running experiments.
 - Taiga: project "MPC Key 37 API" (id 24). Move a story's status when its work starts or ends.
 - Native API roadmap: `findings/native-api-roadmap.md` (Taiga epic #4, capability expansion epic #27).
 - Accepted public API contract: `findings/native-api-contract.md` (#28). Initial `describe` implementation is in
-  `native-api/` under local-service story #32 (In progress; reads now implemented by #18; writes/watch unavailable).
+  `native-api/` under local-service story #32 (implemented: state, authenticated commands/receipts and native live policy; watch remains #33).
 - Firmware adapter (#29) implemented: eight C exports, profile schema v1, exact build/model/ABI plus seven code
   fingerprints, typed read/setter/filter paths and isolated host/ARM fixtures. Native target operations require a
   UI thread and an external lifetime validator; the lab hook is experimental and does not satisfy #20.
@@ -92,7 +93,7 @@ before running experiments.
   and `findings/native-flag-semantics-proof-20261025.json` (42 passing device cases, nine contexts; nine host Meson
   entries and isolated ARM fixtures pass). A Multi-to-Single arm transition retained two arm flags until a native
   arm call enforced Single behavior; the runner rejects that inconsistent baseline before writes. Original observed
-  state/settings were restored, with no restart/addin install. Public writes and other modes/families stay gated.
+  state/settings were restored, with no restart/addin install. Other modes/families stay gated; #32 adds the production public binding.
 - Active-project identity (#20) implemented: executor ABI 2 owns the application-root resolver, native destruction
   observers and Project/Sequence lifecycle notifications. Same-file loads can retain the Project object; sequence
   Clear All can retain both object and used flag. Both retire old generations. Native flag requests revalidate at
@@ -107,25 +108,31 @@ before running experiments.
   ASan/UBSan native entries and isolated ARM fixtures pass. Device captures matched the independent reader;
   Sounds-mode controller mute edits were visible/restored; small-project native capture p95 was 9.058 ms.
   See findings/native-state.md and findings/native-state-proof-20261025.json. Both DSOs and temporary service
-  files were removed. Public writes/watch stay gated; persistent attachment supervision remains #21/#32.
+  files were removed. Command binding and persistent supervision are implemented by #32/#21; watch remains #33.
 - Flag handlers (#19) implemented: command ABI 1 on executor ABI 4 provides caller-scoped retained receipts,
   desired-state writes, dispatch-time expected values, native/audio verification, observed peer/selection changes,
   and draining shutdown. The handler owns work across waits/disconnects; retries return the retained outcome.
-  Missing live host policy rejects writes; the lab policy is explicitly manual/experimental. Public Unix setters
-  and get_command remain gated pending #32's authenticated binding and production live mode/settings policy.
+  Missing live host policy rejects writes; the lab policy is explicitly manual/experimental. US #32 now binds the public Unix setters/get_command and supplies production live mode/settings qualification.
   Twelve host entries, seven ASan/UBSan native entries and four isolated ARM fixtures pass. Twelve device rows
   cover all flags on selected/unselected plugin/drum tracks, no-ops/conflicts, retries and complete restoration.
   Both DSOs were unloaded; per-sequence mute was restored enabled and Main restored. See
   findings/native-commands.md and findings/native-commands-proof-20261025.json; C integration is documented in
   native-api/adapter/COMMANDS.md. tools/mpc_command_lab.py is the bounded device runner.
-- Next: local command service binding and validated live qualification policy (#32), then streaming (#33).
+- Local command service (#32), branch `us-32-local-command-service`: strict Unix setters/get_command now bind peer UID to retained handlers.
+  Native Main/no-popup/stopped/automation-Off qualification reads verified live owners/settings at dispatch; mute requires global scope.
+  Queue/retention pressure, asynchronous waits/disconnects and draining shutdown are covered by 16 host Meson entries, eleven
+  ASan/UBSan native entries and isolated ARM wire/handler fixtures. Twelve actual device write rows and sixty no-op policy checks pass;
+  flags/settings restored. See `findings/native-service.md` and sanitized proof. During test-project cleanup MPC exited cleanly and
+  auto-restarted after New Project; the old installed 0.1.0 read host recovered. Temporary mappings/files are gone; graceful lab dlclose
+  was not established in that cleanup. A new 0.2.0 package is local only; installation needs restart approval.
+- Next: streaming (#33).
   Per-sequence mute needs an explicit sequence target/precondition before public exposure.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
   the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through
   `/tmp/mpc-native-api/control.sock`. Stop joins API callers, detaches UI observers and drains callbacks; a stalled
   UI retains the executor and reports draining. Full code unload/upgrades require MPC restart. See
-  `native-api/INSTALL.md` and `findings/native-package.md`. Public writes remain #32. With owner-approved
+  `native-api/INSTALL.md` and `findings/native-package.md`. The installed 0.1.0 build remains read-only; #32 prepares the 0.2.0 command-capable package. With owner-approved
   restarts, actual startup, reads on two tracks/28 buses, listener drain, upgrade, uninstall/reinstall and
   configuration recovery pass. The API is installed at `/data/mpc-addins/mpc-native-api` and left ready on Main;
   privtap and Remote remain functional. Normal service termination can bypass ELF destructors: the uninstall

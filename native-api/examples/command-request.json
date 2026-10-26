@@ -1,0 +1,14 @@
+{
+  "apiVersion": "0.1",
+  "op": "set_solo",
+  "requestId": "req_solo_1",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "value": true,
+  "expected": {"value": false},
+  "startWithinMs": 1000,
+  "waitMs": 500
+}

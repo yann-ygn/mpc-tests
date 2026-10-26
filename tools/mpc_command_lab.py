@@ -2,9 +2,9 @@
 """Bounded #19 handler qualification through the private diagnostic host.
 
 Run stopped in Main with an existing disposable plugin/drum project. The operator
-owns current-mode/settings qualification; this lab policy is not production live
-mode detection. Public Unix writes remain gated pending #32. Mute tests require
-explicit --global-mute-confirmed after checking the CURRENT UI setting. Every row
+owns current-mode/settings qualification for the default manual lab policy.
+--live-policy uses #32's production native callback and checks eligibility at dispatch.
+Manual mute tests require --global-mute-confirmed after checking the CURRENT UI setting. Every row
 restores requested/audio peer flags and selection; no project save/load/restart.
 """
 
@@ -29,7 +29,10 @@ class HandlerMatrix(Matrix):
         )
         self.identities = attachment["identities"]
         self.instance = "run_" + uuid.uuid4().hex
-        if self.command("LAB_COMMAND_OPEN " + self.instance).get("ok") is not True:
+        opening = (
+            "LIVE_COMMAND_OPEN " if getattr(args, "live_policy", False) else "LAB_COMMAND_OPEN "
+        )
+        if self.command(opening + self.instance).get("ok") is not True:
             raise RuntimeError("Could not open the managed lab command authority")
 
     def command(self, text):
@@ -103,16 +106,16 @@ class HandlerMatrix(Matrix):
 
 
 def run(args):
-    if "mute" in args.properties and not args.global_mute_confirmed:
+    if "mute" in args.properties and not args.global_mute_confirmed and not args.live_policy:
         raise RuntimeError(
             "Mute qualification requires the current UI's per-sequence mute to be disabled"
         )
     profile = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2.json").read_text())
     report = {
-        "story": 19,
+        "story": 32 if args.live_policy else 19,
         "context": args.context,
         "rows": [],
-        "qualification": "bounded_lab_proof",
+        "qualification": "native_live_policy" if args.live_policy else "bounded_lab_proof",
     }
     attachment_path = args.output.with_suffix(".attachment.json")
     attachment, matrix, flags, initial = None, None, None, None
@@ -168,6 +171,11 @@ def main():
         "--properties", nargs="+", choices=list(PROPERTIES), default=["solo", "arm"]
     )
     parser.add_argument("--global-mute-confirmed", action="store_true")
+    parser.add_argument(
+        "--live-policy",
+        action="store_true",
+        help="Use the production native qualification callback",
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)

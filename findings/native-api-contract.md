@@ -366,5 +366,5 @@ Evidence: [live state](live-state.md), [native control](native-control.md),
 The [transport-independent handler API](../native-api/adapter/COMMANDS.md) implements typed desired-state
 requests, retained receipts, caller-scoped retries, dispatch preconditions, native/audio verification and
 observed peer/selection changes. [Domain request](../native-api/schema/command-request.schema.json) and
-[receipt](../native-api/schema/command-receipt.schema.json) schemas describe that boundary. Public Unix command
-binding and validated live mode/settings qualification remain #32; `describe` still gates those operations.
+[receipt](../native-api/schema/command-receipt.schema.json) schemas describe that boundary. The [#32 Unix binding and native live policy](native-service.md) now expose these commands in the embedded host.
+`describe` advertises its actual authority limits and Main/no-popup/stopped/automation-Off conditions; mute additionally requires global scope.

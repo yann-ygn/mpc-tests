@@ -1,0 +1,901 @@
+{
+  "date": "2026-10-26",
+  "story": 32,
+  "packageVersion": "0.2.0",
+  "apiVersion": "0.1",
+  "model": "MPC Key 37",
+  "firmware": "3.9.1.2",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "hostMesonEntriesPassed": 16,
+  "asanUbsanNativeEntriesPassed": 11,
+  "wireCases": 12,
+  "livePolicyCases": 5,
+  "armBuildAndDeploymentGuardsPassed": true,
+  "isolatedArm": {
+    "armFixtures": [
+      "native_fixture",
+      "executor_fixture",
+      "identity_fixture",
+      "commands_fixture"
+    ],
+    "commandOperations": [
+      "set_mute",
+      "set_solo",
+      "set_record_armed"
+    ],
+    "retainedLookupAndReplayVerified": true,
+    "readOperations": [
+      "get_state",
+      "list_tracks",
+      "current_track",
+      "current_sequence",
+      "recovery_snapshot"
+    ],
+    "stalledUiDrainVerified": true,
+    "stopStartVerified": true,
+    "deviceIdentityStable": true,
+    "instanceRotated": true,
+    "socketModes": "600",
+    "mpcPidUnchanged": true,
+    "isolatedFilesRemoved": true
+  },
+  "nativeWriteRows": [
+    {
+      "index": 0,
+      "family": "drum",
+      "property": "mute",
+      "selected": true,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 0,
+      "family": "drum",
+      "property": "solo",
+      "selected": true,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 0,
+      "family": "drum",
+      "property": "arm",
+      "selected": true,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 0,
+      "family": "drum",
+      "property": "mute",
+      "selected": false,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 0,
+      "family": "drum",
+      "property": "solo",
+      "selected": false,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 0,
+      "family": "drum",
+      "property": "arm",
+      "selected": false,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 1,
+      "family": "plugin",
+      "property": "mute",
+      "selected": true,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 1,
+      "family": "plugin",
+      "property": "solo",
+      "selected": true,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 1,
+      "family": "plugin",
+      "property": "arm",
+      "selected": true,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 1,
+      "family": "plugin",
+      "property": "mute",
+      "selected": false,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 1,
+      "family": "plugin",
+      "property": "solo",
+      "selected": false,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    },
+    {
+      "index": 1,
+      "family": "plugin",
+      "property": "arm",
+      "selected": false,
+      "status": "applied",
+      "execution": "completed",
+      "nativeInvoked": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "noopSkippedNative": true,
+      "expectedConflict": "PRECONDITION_FAILED",
+      "replayStable": true,
+      "restored": true
+    }
+  ],
+  "nativeWriteBaselineRestored": true,
+  "nativePolicyContexts": [
+    {
+      "label": "off_global_multi",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "soloMode": 1,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 0
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 0
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_solo",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_mute",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_solo",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        }
+      ]
+    },
+    {
+      "label": "automation_read",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "soloMode": 1,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 1
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 1
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "automation_write",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "soloMode": 1,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 2
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 2
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "playing",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 1,
+        "perSequenceMute": 0,
+        "soloMode": 1,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 0
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 0
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "menu_popup",
+      "context": {
+        "mode": 8320,
+        "popup": 12544,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "soloMode": 1,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 0
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 0
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "sounds",
+      "context": {
+        "mode": 8352,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "soloMode": 1,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 0
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 0
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "track_mute",
+      "context": {
+        "mode": 8333,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "soloMode": 1,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 0
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 0
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "mute_settings_popup",
+      "context": {
+        "mode": 8333,
+        "popup": 12527,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "soloMode": 1,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 0
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 0
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "off_sequence_single",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 1,
+        "soloMode": 0,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 0
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 0
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        }
+      ]
+    },
+    {
+      "label": "restored_settings",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 1,
+        "soloMode": 0,
+        "tracks": [
+          {
+            "index": 0,
+            "family": "drum",
+            "automation": 1
+          },
+          {
+            "index": 1,
+            "family": "plugin",
+            "automation": 1
+          }
+        ],
+        "atomic": false,
+        "legacySequencerArmSlot": 0
+      },
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    }
+  ],
+  "installedPackageUpgraded": false,
+  "cleanup": {
+    "labCommandsAndExecutorDrained": true,
+    "persistentReadHostDrained": true,
+    "gracefulLabDlcloseVerified": false,
+    "mpcProcessReplacedDuringCleanup": true,
+    "journalOutcome": "Deactivated successfully, followed by normal service restart",
+    "trigger": "New Project / Don't Save inferred from timing; no crash signal reported",
+    "oldTemporaryMappingsGone": true,
+    "temporaryFilesRemoved": true,
+    "installedReadHostRecovered": true,
+    "finalProjectEmpty": true,
+    "originalSettingsRestored": true
+  },
+  "armOwnerCorrection": {
+    "recorderMatchesBehaviour": true,
+    "projectMatchesBehaviour": true,
+    "armMode": 1,
+    "recorderVtableRva": 109708056,
+    "armBehaviourVtableRva": 110313284,
+    "earlierLiveRowsPrecededCorrection": true,
+    "oldSequencerSlotPoisonedInFixtures": true,
+    "finalExternalSample": {
+      "mode": 8352,
+      "popup": 12559,
+      "playing": 0,
+      "perSequenceMute": 1,
+      "recordArmMode": 1,
+      "soloMode": 0,
+      "tracks": [],
+      "atomic": false
+    },
+    "bothRecognizedModesTestedInFixtures": true
+  }
+}

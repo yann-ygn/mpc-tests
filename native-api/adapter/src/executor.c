@@ -159,10 +159,13 @@ static struct mpc_executor_result command_execute(
   result.error = mpc_identity_bind(executor->registry, &request.identity);
   if (result.error)
     return result;
+  executor->identity = request.identity;
+  executor->active = true;
   result.error = executor->command_policy.qualify ? executor->command_policy.qualify(
                                                       executor->command_policy.userdata,
                                                       (enum mpc_command_operation)property)
                                                   : MPC_NATIVE_NOT_READY;
+  executor->active = false;
   if (result.error)
     return result;
   bool writing = input->operation != MPC_EXECUTOR_COMMAND_OBSERVE;
@@ -738,6 +741,19 @@ enum mpc_native_error mpc_executor_close(struct mpc_executor *executor) {
 
 bool mpc_executor_on_ui(struct mpc_executor *executor) {
   return mpc_native_on_ui_thread(executor->adapter);
+}
+
+enum mpc_native_error
+mpc_executor_qualify_command(struct mpc_executor *executor, enum mpc_command_operation operation) {
+  if (!executor)
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  if (!mpc_executor_on_ui(executor))
+    return MPC_NATIVE_WRONG_THREAD;
+  if (!executor->active || !executor->registry)
+    return MPC_NATIVE_NOT_READY;
+  struct mpc_native_target target;
+  enum mpc_native_error error = resolve_target(executor, &executor->identity, &target);
+  return error ? error : mpc_native_qualify_command(executor->adapter, &target, operation);
 }
 
 enum mpc_native_error mpc_executor_commands_attach(

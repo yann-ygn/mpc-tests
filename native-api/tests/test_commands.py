@@ -12,6 +12,20 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class CommandContractTests(unittest.TestCase):
+    def test_wire_examples_and_retained_lookup_schema(self):
+        for name, schema in (
+            ("command-request", "command-request"),
+            ("get-command-request", "get-command-request"),
+        ):
+            request = json.loads((ROOT / f"native-api/examples/{name}.json").read_text())
+            contract = json.loads((ROOT / f"native-api/schema/{schema}.schema.json").read_text())
+            jsonschema.Draft202012Validator.check_schema(contract)
+            validator = jsonschema.Draft202012Validator(contract)
+            validator.validate(request)
+            self.assertFalse(validator.is_valid({**request, "caller": "admin"}))
+        self.assertFalse(validator.is_valid({**request, "waitMs": 30001}))
+        self.assertFalse(validator.is_valid({**request, "target": {"index": 0}}))
+
     def test_receipts_and_native_verification_match_the_contract(self):
         fixture = os.environ.get(
             "MPC_COMMANDS_TEST_FIXTURE", ROOT / "builddir/host/native-api/tests/commands_fixture"

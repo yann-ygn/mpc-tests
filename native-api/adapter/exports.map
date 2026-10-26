@@ -19,6 +19,7 @@
     mpc_executor_shutdown;
     mpc_executor_close;
     mpc_executor_poll;
+    mpc_executor_qualify_command;
     mpc_commands_open;
     mpc_commands_submit;
     mpc_commands_get;

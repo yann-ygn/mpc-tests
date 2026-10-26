@@ -86,7 +86,12 @@ static int process_exiting(void *unused) {
 
 static void *worker(void *unused) {
   (void)unused;
-  const struct mpc_host_ops ops = {NULL, "", start_executor, cancel_start, process_exiting};
+  const struct mpc_host_ops ops = {
+    .discovery_root = "",
+    .open = start_executor,
+    .cancel_start = cancel_start,
+    .exiting = process_exiting,
+    .native_command_policy = true};
   if (mpc_host_run(installation, MPC_HOST_DIRECTORY, &ops))
     fputs("mpc-native-api: host unavailable; MPC continues without native API\n", stderr);
   return NULL;

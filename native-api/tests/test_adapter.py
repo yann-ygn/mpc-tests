@@ -97,6 +97,7 @@ class NativeAdapterTests(unittest.TestCase):
                 "mpc_executor_wait",
                 "mpc_executor_cancel",
                 "mpc_executor_poll",
+                "mpc_executor_qualify_command",
                 "mpc_commands_open",
                 "mpc_commands_submit",
                 "mpc_commands_get",

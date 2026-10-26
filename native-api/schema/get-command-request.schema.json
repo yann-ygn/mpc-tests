@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MPC native API 0.1 retained command lookup",
+  "type": "object",
+  "required": ["apiVersion", "op", "instanceId", "requestId"],
+  "properties": {
+    "apiVersion": {"const": "0.1"},
+    "op": {"const": "get_command"},
+    "instanceId": {"type": "string", "pattern": "^run_[0-9a-f]{32}$"},
+    "requestId": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[A-Za-z0-9_-]+$"},
+    "waitMs": {"type": "integer", "minimum": 0, "maximum": 30000, "default": 0}
+  },
+  "additionalProperties": false
+}

@@ -128,6 +128,86 @@
       "name": "projectDataInstalled",
       "rva": 39196284,
       "prefixHex": "0130a0e31c20a0e324318de528309de5110d87e220218de5080080e2060093e8"
+    },
+    {
+      "name": "commandModeGetter",
+      "rva": 41856280,
+      "prefixHex": "401093e5002092e504208de50020a0e3f333b6eb0510a0e10400a0e1a92085eb"
+    },
+    {
+      "name": "commandPopupGetter",
+      "rva": 41856072,
+      "prefixHex": "6c1093e5002092e504208de50020a0e32734b6eb0510a0e10400a0e1dd2085eb"
+    },
+    {
+      "name": "commandModeNames",
+      "rva": 22511476,
+      "prefixHex": "000051e3cf02000a821d41e2220051e32500008a220051e301f18f90220000ea"
+    },
+    {
+      "name": "commandMainModeName",
+      "rva": 22514156,
+      "prefixHex": "44139fe501108fe0c9a1cfeb8afdffea38139fe501108fe0c5a1cfeb86fdffea"
+    },
+    {
+      "name": "commandTimelinePlaying",
+      "rva": 15394400,
+      "prefixHex": "1401d0e51eff2fe1d420c0e1000053e3003082e5002083151eff2fe1d422c0e1"
+    },
+    {
+      "name": "commandSequencerPlaying",
+      "rva": 15871452,
+      "prefixHex": "f01190e528309fe528209fe5000491e503308fe0022093e7003090e50c3093e5"
+    },
+    {
+      "name": "commandSequencerOwner",
+      "rva": 14921156,
+      "prefixHex": "e43294e5e85284e51400a0e3bc5393e54c3294e5906a93e53daed9eb0510a0e1"
+    },
+    {
+      "name": "commandMuteScopeOwner",
+      "rva": 14934616,
+      "prefixHex": "e43294e57400a0e34c6294e5bc7393e5a88093e59c5684e5dc5294e517a1d9eb"
+    },
+    {
+      "name": "commandMuteScopeValue",
+      "rva": 26864120,
+      "prefixHex": "6310d7e50500a0e1001051e20110a0134075beeb0520a0e10410a0e10600a0e1"
+    },
+    {
+      "name": "commandSoloSettingsOwner",
+      "rva": 14922132,
+      "prefixHex": "8c3194e54c1294e50050a0e1102093e5f02082e2e80b5deb5c00a0e3145384e5"
+    },
+    {
+      "name": "commandSoloSettingsValue",
+      "rva": 28015380,
+      "prefixHex": "c8129fe50400a0e101108fe07ea5baeb001197e50500a0e1e910baeb0520a0e1"
+    },
+    {
+      "name": "commandArmSettingsValue",
+      "rva": 29358412,
+      "prefixHex": "80139fe50400a0e101108fe0f085b5ebec1497e50500a0e15bf1b4eb0520a0e1"
+    },
+    {
+      "name": "commandAutomationValue",
+      "rva": 42369132,
+      "prefixHex": "483695e50400a0e1141293e5459aeceb0410a0e10600a0e1d52b83eb0400a0e1"
+    },
+    {
+      "name": "commandAutomationNames",
+      "rva": 37284244,
+      "prefixHex": "010051e308402de50040a0e104e08de51100000a020051e30800000a000051e3"
+    },
+    {
+      "name": "commandArmSettingsOwner",
+      "rva": 14922092,
+      "prefixHex": "e43294e54c1294e50050a0e1bc3393e5ec3393e5982093e59bfb5ceb4000a0e3"
+    },
+    {
+      "name": "commandArmBehaviourBinding",
+      "rva": 39297124,
+      "prefixHex": "507084e5548084e5d51db0eb503094e5940a93e5b21100eb043090e5081090e5"
     }
   ],
   "bindings": [
@@ -209,5 +289,35 @@
       "nameRva": 78636284,
       "registrationSite": 42420876
     }
-  ]
+  ],
+  "commandContext": {
+    "engineMode": 276,
+    "modeVtable": 109687324,
+    "modeValue": 64,
+    "popupValue": 108,
+    "mainMode": 8320,
+    "noPopup": 12416,
+    "engineAudioThread": 740,
+    "audioThreadVtable": 110022512,
+    "audioThreadSequencer": 956,
+    "sequencerVtable": 110135984,
+    "sequencerTimeline": 1024,
+    "timelineVtable": 110137776,
+    "timelinePlaying": 276,
+    "engineMuteProperties": 732,
+    "perSequenceMute": 99,
+    "engineSoloBehaviour": 788,
+    "soloBehaviourVtable": 110313968,
+    "soloProperty": 56,
+    "soloValue": 16,
+    "programAutomation": 532,
+    "sequencerRecorder": 1004,
+    "recorderVtable": 109708056,
+    "recorderProperties": 152,
+    "engineArmBehaviour": 784,
+    "armBehaviourVtable": 110313284,
+    "armBehaviourProject": 80,
+    "armBehaviourProperties": 84,
+    "armModeValue": 1260
+  }
 }

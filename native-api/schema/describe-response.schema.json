@@ -10,7 +10,8 @@
         "available": {"type": "boolean"},
         "reason": {"type": ["string", "null"]},
         "trackTypes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-        "verification": {"type": "array", "uniqueItems": true, "items": {"enum": ["model", "audio_copy"]}}
+        "verification": {"type": "array", "uniqueItems": true, "items": {"enum": ["model", "audio_copy"]}},
+        "conditions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
       },
       "allOf": [
         {"if": {"properties": {"available": {"const": true}}},
@@ -88,9 +89,11 @@
             "maxConnections": {"type": "integer", "minimum": 1},
             "connectionTimeoutMs": {"type": "integer", "minimum": 1},
             "queueCapacity": {"type": "integer", "minimum": 0},
+            "receiptCapacity": {"type": "integer", "minimum": 0},
             "requestRetentionMs": {"type": "integer", "minimum": 0},
             "defaultStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
             "maxStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
+            "maxWaitMs": {"$ref": "#/$defs/nullableMilliseconds"},
             "verificationTimeoutMs": {"$ref": "#/$defs/nullableMilliseconds"},
             "adapterProbeTimeoutMs": {"type":"integer","minimum":1}
           }

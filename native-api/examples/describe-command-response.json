@@ -1,0 +1,185 @@
+{
+  "apiVersion": "0.1",
+  "deviceId": "dev_example",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "implementation": {
+    "name": "mpc-native-api",
+    "version": "0.2.0"
+  },
+  "firmware": {
+    "model": "Akai Professional MPC Key 37",
+    "modelSource": "device_tree",
+    "version": "3.9.1.2",
+    "versionSource": "build_profile",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+    "buildIdSource": "elf_note"
+  },
+  "readiness": {
+    "status": "ready",
+    "nativeAdapter": "attached",
+    "adapter": {
+      "abiVersion": 1,
+      "instanceId": "adp_0123456789abcdef0123456789abcdef",
+      "codeVerified": true,
+      "qualification": "bounded_lab_proof"
+    },
+    "mpcProcess": "running",
+    "firmwareProfile": "matched",
+    "profileId": "key37-mpc3.9.1.2"
+  },
+  "readableFields": [
+    "track.name",
+    "track.type",
+    "track.requested",
+    "track.audioSide.soloed",
+    "track.audioSide.recordArmed",
+    "track.silenced",
+    "sequence.name",
+    "sequence.used",
+    "sequence.bpm",
+    "selection",
+    "buses.metadata"
+  ],
+  "capabilities": {
+    "describe": {
+      "available": true,
+      "reason": null
+    },
+    "get_state": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
+    },
+    "list_tracks": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
+    },
+    "current_track": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
+    },
+    "current_sequence": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
+    },
+    "recovery_snapshot": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ]
+    },
+    "set_mute": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "main_mode",
+        "no_popup",
+        "stopped",
+        "automation_off",
+        "global_mute"
+      ]
+    },
+    "set_solo": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ],
+      "conditions": [
+        "main_mode",
+        "no_popup",
+        "stopped",
+        "automation_off"
+      ]
+    },
+    "set_record_armed": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum"
+      ],
+      "verification": [
+        "model",
+        "audio_copy"
+      ],
+      "conditions": [
+        "main_mode",
+        "no_popup",
+        "stopped",
+        "automation_off"
+      ]
+    },
+    "get_command": {
+      "available": true,
+      "reason": null
+    },
+    "watch": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    }
+  },
+  "limits": {
+    "maxRequestBytes": 1024,
+    "maxResponseBytes": 1048576,
+    "maxConnections": 16,
+    "connectionTimeoutMs": 1000,
+    "queueCapacity": 16,
+    "receiptCapacity": 128,
+    "requestRetentionMs": 600000,
+    "defaultStartWithinMs": 1000,
+    "maxStartWithinMs": 30000,
+    "maxWaitMs": 30000,
+    "verificationTimeoutMs": 500,
+    "adapterProbeTimeoutMs": 50
+  }
+}

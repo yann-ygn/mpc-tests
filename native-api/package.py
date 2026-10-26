@@ -177,7 +177,7 @@ def main():
         },
         "toolchain": "Zig 0.14.1, arm-linux-gnueabihf.2.31, cortex_a7; uv.lock",
         "transport": "Unix socket /tmp/mpc-native-api/api.sock; matching UID; no TCP",
-        "publicCommands": False,
+        "publicCommands": True,
     }
     args.output_dir.mkdir(parents=True, exist_ok=True)
     target = args.output_dir / f"mpc-native-api-{version}"

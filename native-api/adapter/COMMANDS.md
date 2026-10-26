@@ -2,14 +2,17 @@
 
 `libmpc_native.so` now provides the transport-independent command API in
 [`mpc_commands.h`](include/mpc_commands.h), ABI 1. It runs on executor ABI 4 and primitive adapter ABI 1.
-The six new exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
+The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
-The executor additionally exports a non-mutating `mpc_executor_poll`.
+The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
+`mpc_executor_qualify_command`. These additions preserve command ABI 1 and executor ABI 4 structure layouts.
 
-The public Unix write and `get_command` endpoints remain unavailable until #32 binds authenticated callers,
-validates wire requests and supplies a live mode/settings policy. This library does not open sockets.
-The private lab uses the same handlers with an explicitly experimental, manually qualified host policy;
-it does not establish production live mode detection.
+[US #32](../../findings/native-service.md) binds the public Unix setters and `get_command` in the persistent
+host. The socket authenticates callers by peer UID and validates strict schemas before enqueueing.
+This library opens no sockets. Its production `mpc_executor_qualify_command` callback checks live native
+Main/no-popup, stopped transport, recognized solo/arm settings, target automation Off and global mute scope.
+The private lab can select this same policy with `LIVE_COMMAND_OPEN`; `LAB_COMMAND_OPEN` retains the older
+explicitly manual experimental policy.
 
 ## Host contract
 
@@ -25,7 +28,8 @@ per-sequence mute is enabled. A saved setting, session label or null callback ca
 qualification. Missing callbacks reject even no-ops with `NOT_READY`. The lab's manual policy is diagnostic only.
 Family/ownership checks remain inside the guarded adapter regardless of host policy.
 
-All client calls are for non-UI, non-realtime threads. Caller identity is an authenticated host argument, never a
+All client calls except `mpc_executor_qualify_command` are for non-UI, non-realtime threads.
+The policy helper is UI-only and must run inside an active managed-command qualification callback. Caller identity is an authenticated host argument, never a
 field clients may choose. The same authority can serve several caller IDs without sharing their deduplication keys.
 UI hooks must be bounded and nonblocking; their userdata remains alive until successful handler close.
 
@@ -57,13 +61,16 @@ struct mpc_command_receipt receipt;
 mpc_commands_submit(commands, authenticated_caller_id, &request, 500, &receipt);
 ```
 
-`qualify_live_context` is supplied by the integrating host; it is not an implemented global mode detector here.
+`qualify_live_context` can call `mpc_executor_qualify_command(executor, operation)` to use the exact-firmware
+production policy. Supply the executor as callback userdata and keep it borrowed through handler close.
+The helper resolves the active request, verifies its target/family, samples native owners/context twice and
+rejects unreadable, unsupported or changing values before any setter or no-op.
 An API return of `MPC_NATIVE_OK` means that a receipt was accepted/retrieved, not that its command applied.
 Inspect `receipt.status`, `receipt.execution`, and `receipt.error`. Pre-acceptance errors create no receipt.
 `mpc_commands_receipt_json` returns a heap string owned by the caller, matching the
 [receipt schema](../schema/command-receipt.schema.json). The
-[domain request schema](../schema/command-request.schema.json) defines strict boolean/handle inputs for future
-transport binding; this story does not add them to the public Unix parser.
+[domain request schema](../schema/command-request.schema.json) defines strict boolean/handle inputs for the public Unix binding.
+See the [service guide](../README.md#send-flag-commands) for delivery and authenticated caller semantics.
 
 ## Dispatch and outcomes
 

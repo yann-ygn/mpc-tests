@@ -49,6 +49,42 @@ def validate(state, control):
         raise ValueError("Unqualified program family")
     if control.get("capabilityQualification") != "bounded_lab_proof":
         raise ValueError("Unexpected qualification claim")
+    context = control["commandContext"]
+    if set(context) != {
+        "engineMode",
+        "modeVtable",
+        "modeValue",
+        "popupValue",
+        "mainMode",
+        "noPopup",
+        "engineAudioThread",
+        "audioThreadVtable",
+        "audioThreadSequencer",
+        "sequencerVtable",
+        "sequencerTimeline",
+        "timelineVtable",
+        "timelinePlaying",
+        "sequencerRecorder",
+        "recorderVtable",
+        "recorderProperties",
+        "engineArmBehaviour",
+        "armBehaviourVtable",
+        "armBehaviourProject",
+        "armBehaviourProperties",
+        "armModeValue",
+        "engineMuteProperties",
+        "perSequenceMute",
+        "engineSoloBehaviour",
+        "soloBehaviourVtable",
+        "soloProperty",
+        "soloValue",
+        "programAutomation",
+    }:
+        raise ValueError("Invalid command context layout")
+    for key, value in context.items():
+        limit = 0xFFFFFFFF if key.endswith("Vtable") else 0x10000
+        if not integer(value, key, limit) or (key.endswith("Vtable") and value % 4):
+            raise ValueError("Invalid command context field")
     for name in ("project", "trackPool", "track", "sequence"):
         if not integer(state["vtables"][name], name) or state["vtables"][name] % 4:
             raise ValueError("Invalid vtable")
@@ -164,6 +200,28 @@ def validate(state, control):
         <= names
     ):
         raise ValueError("Missing identity lifecycle landmarks")
+    if (
+        not {
+            "commandModeGetter",
+            "commandPopupGetter",
+            "commandModeNames",
+            "commandMainModeName",
+            "commandTimelinePlaying",
+            "commandSequencerPlaying",
+            "commandSequencerOwner",
+            "commandMuteScopeOwner",
+            "commandMuteScopeValue",
+            "commandSoloSettingsOwner",
+            "commandSoloSettingsValue",
+            "commandArmSettingsValue",
+            "commandArmSettingsOwner",
+            "commandArmBehaviourBinding",
+            "commandAutomationValue",
+            "commandAutomationNames",
+        }
+        <= names
+    ):
+        raise ValueError("Missing command qualification landmarks")
     return state, control
 
 
@@ -255,6 +313,9 @@ def generate(out, state_path=STATE, control_path=CONTROL):
         fields[label] = state["identity"][key]
     for key, value in fields.items():
         lines.append(f"#define NATIVE_{key} {value}u")
+    lines.append("static const struct native_command_context_layout native_command_context={")
+    lines.extend(f"  .{key}={value}u," for key, value in control["commandContext"].items())
+    lines.append("};")
     entries = ",".join(
         "{" + str(offset) + "u," + str(vtable) + "u}"
         for offset, vtable in state["projectSecondaryVtables"].items()

@@ -15,7 +15,7 @@ static int request(const char *path, const char *input, size_t used) {
     perror("socket");
     return 1;
   }
-  struct timeval timeout = {.tv_sec = 2};
+  struct timeval timeout = {.tv_sec = MPC_COMMAND_MAX_WAIT_MS / 1000 + 2};
   if (
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout) ||
     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout)) {

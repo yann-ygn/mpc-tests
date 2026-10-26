@@ -7,7 +7,7 @@ adapter architecture. Descriptions, acceptance criteria, dependencies, statuses 
 and verified for all 22 stories. The owner accepted the [public contract](native-api-contract.md) on 2026-10-24
 (#28 Done). #29 and #30 are Done with the guarded shared adapter, bounded executor and lab validation.
 #31 adds the stopped-mode flag matrix, repeatable device experiments and failure evidence.
-#32 is In progress with discovery, authoritative read operations and verified attachment reporting; #19 now provides transport-independent managed flag handlers; public Unix write binding remains #32.
+#32 implements discovery, authoritative reads, authenticated Unix setters/receipt lookup and native live qualification. The 0.2.0 package awaits owner-approved deployment; see [service findings](native-service.md).
 #20 is implemented with authoritative owner resolution and native lifecycle generations.
 #18 adds live snapshots and read projections; see [findings](native-state.md).
 #21 implements the persistent addin package, health and draining stop/start;
@@ -28,7 +28,7 @@ Only the bounded native mute/solo/arm proof is already validated; these stories 
 | #18 | Expose authoritative live state snapshots from native MPC objects | Done — live reads |
 | #31 | Validate mute, solo and record-arm semantics beyond the bounded proof | Done — stopped-mode matrix |
 | #19 | Provide idempotent native mute, solo and record-arm command handlers | Done — managed handlers |
-| #32 | Expose the native adapter through a local command service | In progress — discovery and reads implemented |
+| #32 | Expose the native adapter through a local command service | Implemented — discovery, state, authenticated commands and live policy |
 | #33 | Publish live state changes and recover subscriptions after reconnect | New |
 | #34 | Connect paired HTTP state and commands to Akai's web service | New |
 | #35 | Expose the native-control API as typed MCP tools | New |

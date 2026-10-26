@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Native command domain request (Unix binding follows in US 32)",
+  "title": "MPC native API 0.1 Unix flag command request",
   "type": "object",
   "required": [
     "apiVersion",
@@ -40,10 +40,14 @@
         },
         "projectId": {
           "type": "string",
+          "maxLength": 20,
+          "description": "Nonzero unsigned 64-bit incarnation ID, at most 18446744073709551615",
           "pattern": "^[1-9][0-9]*$"
         },
         "trackId": {
           "type": "string",
+          "maxLength": 20,
+          "description": "Nonzero unsigned 64-bit incarnation ID, at most 18446744073709551615",
           "pattern": "^[1-9][0-9]*$"
         }
       },

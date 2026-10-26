@@ -1,14 +1,13 @@
-# Native API: discovery and live state service
+# Native API: local state and command service
 
-The first implementation of the [accepted 0.1 contract](../findings/native-api-contract.md).
+The implementation of the [accepted 0.1 contract](../findings/native-api-contract.md).
 `describe` reads device-tree metadata, GNU ELF notes and verified adapter attachment status. With an
-authoritative attachment, `get_state`, `list_tracks`, `current_track`, `current_sequence` and
-`recovery_snapshot` capture current native state through the UI executor. Public Unix writes, receipt lookup
-and streaming remain unavailable. Transport-independent [flag handlers](adapter/COMMANDS.md) are implemented by #19;
-#32 still supplies the authenticated wire binding and live mode/settings policy. The service does not load
-the [native adapter](adapter/README.md) itself. The [persistent addin](INSTALL.md) embeds the adapter and the same
-Unix service in MPC, with health and draining stop/start commands; the standalone binary can also use a temporary lab attachment. See the
-[snapshot findings and qualification limits](../findings/native-state.md).
+authoritative attachment, state queries capture current native objects through the UI executor.
+The [persistent addin](INSTALL.md) also binds `set_mute`, `set_solo`, `set_record_armed` and `get_command`
+to the retained [flag handlers](adapter/COMMANDS.md), with Unix peer authentication and a native live
+mode/settings policy. Streaming remains unavailable. The standalone binary can discover and read through
+a temporary lab attachment; it cannot forward commands to the lab's diagnostic socket.
+See [state qualification](../findings/native-state.md) and [command service qualification](../findings/native-service.md).
 
 The local transport is a restricted Unix stream socket. Each connection carries **one compact JSON request plus
 a newline**, then one JSON response plus a newline. Read through the response newline and close the connection.
@@ -19,13 +18,14 @@ HTTP and MCP adapters follow in their own stories; this service has no TCP liste
 - `src/main.c`: command-line parsing and validation.
 - `src/server.c`: socket ownership, peer admission, bounded client I/O and shutdown.
 - `src/client.c`: the `request` command's delivery and response relay.
-- `src/protocol.c`: request parsing and discovery JSON; `src/discovery.c` reads process metadata.
+- `src/request.c`: bounded operation-specific JSON validation; `src/protocol.c` routes operations and writes discovery JSON.
+  `src/discovery.c` reads process metadata and binds the command authority to the current service instance.
 - `src/state.c`: validated snapshot serialization/projections; `src/attachment.c` checks the MPC peer and
   performs bounded metadata/state transfers.
 - `src/host.c` and `src/addin.c`: persistent in-process attachment, startup gate, lifecycle and management socket.
   `package.py` builds the checked ARM package with the shared addin installer; [installation guide](INSTALL.md).
 
-`transport.h` is the private CLI/transport boundary; schemas cover discovery and the additive state operations.
+`transport.h` is the private CLI/transport boundary; schemas cover discovery, state operations, flag requests, retained lookup and receipts.
 
 ## Build and test
 
@@ -90,7 +90,7 @@ The configured `deviceId` must stay the same when this installation restarts. It
 serial. The smoke test stores its generated value in `device-id` beside the temporary executable. The opaque
 `instanceId` stays stable between queries, changes on service restart and rotates on observed MPC process or
 executable/model identity changes. Observed attachment identity/loss also changes the service instance.
-No public object handles are issued yet.
+State responses issue lifetime-bound project/track references for commands.
 
 ## Response semantics
 
@@ -103,8 +103,8 @@ No public object handles are issued yet.
   snapshots are attached. Verified attachment metadata includes its ABI, incarnation ID and `bounded_lab_proof`
   qualification; clients still consult each operation's availability.
 - `capabilities.describe.available`: true even when MPC is absent or its firmware is unsupported. Read operations
-  become available only through an authoritative snapshot attachment. Other operations remain unavailable, with
-  `NOT_IMPLEMENTED`, `UNSUPPORTED_FIRMWARE` or `NOT_READY` reasons.
+  become available only through an authoritative snapshot attachment. The embedded host enables command capabilities when its handler authority is ready; `conditions` lists live dispatch constraints.
+  Streaming stays unavailable. Unsupported firmware and missing attachments fail closed.
 - `readableFields`: qualified native state fields exposed by the attachment; empty when reads are unavailable.
 - `limits`: enforced frame/connection limits. Native queue/receipt capacities are zero and command timing values
   are null while command operations are unavailable. Before enabling commands, receipt retention must meet the
@@ -113,9 +113,8 @@ No public object handles are issued yet.
 Connections require a private parent directory owned by the service user, a socket with mode `0600`, and matching
 Unix peer UID. Requests are limited to 1024 bytes excluding the framing newline; there are at most 16 active
 connections. A request must finish within 1000 ms of acceptance, even if it trickles in. These are IPC resource
-bounds, not native command execution limits. Input permits the two ASCII string identifiers `apiVersion` and
-`op`, with ordinary JSON escaping; duplicate/extra fields, invalid types and unsupported API versions produce
-structured errors. Unavailable operations return `NOT_READY`; unknown operations return `UNSUPPORTED_OPERATION`.
+bounds, not native command execution limits. Each operation has a strict schema using bounded ASCII identifiers and ordinary JSON escaping. Duplicate or extra fields,
+invalid types and unsupported API versions produce structured errors before native enqueueing. Unavailable operations return `NOT_READY`; unknown operations return `UNSUPPORTED_OPERATION`.
 The response limit is 1 MiB. Snapshot transfer has a 200 ms total deadline and fails closed on malformed,
 partial or stale data. Snapshot reads never serve a cached fallback.
 
@@ -178,7 +177,48 @@ and [receipt schema](schema/command-receipt.schema.json). The handler retains ca
 deduplicates retries, checks expected values at UI dispatch, verifies required native/audio readbacks,
 and reports observed selection/peer changes. It keeps running work alive across client waits/disconnects.
 
-These are library/domain interfaces. Public Unix setters and `get_command` remain unavailable until #32
-supplies authenticated wire routing and a validated live mode/settings qualification policy. The bounded
-private lab policy is manually qualified and does not enable public commands. See
-[device evidence](../findings/native-commands.md).
+The public Unix binding uses the same receipts and lifecycle rules. Only the embedded host supplies its
+production live policy; the older manual lab policy cannot enable public commands.
+
+## Send flag commands
+
+Use a fresh `target.ref` from `list_tracks` or `get_state`, an application-chosen request ID and an explicit
+boolean. See the [setter example](examples/command-request.json), [setter schema](schema/command-request.schema.json),
+[lookup example](examples/get-command-request.json) and [lookup schema](schema/get-command-request.schema.json).
+For example, with real instance/project/track IDs substituted:
+
+```json
+{"apiVersion":"0.1","op":"set_solo","requestId":"solo_1","target":{"instanceId":"run_0123456789abcdef0123456789abcdef","projectId":"1","trackId":"2"},"value":true,"expected":{"value":false},"waitMs":500}
+```
+
+Read the returned receipt's `status`, `execution`, `nativeInvoked`, `verification` and `error`.
+`accepted` means retained work is pending; `applied` requires native readback, plus an independent audio-side
+copy for solo/arm. Mute remains explicitly model-only. `unknown` preserves execution uncertainty.
+`get_command` takes `instanceId`, `requestId` and optional `waitMs`; it never executes a command.
+
+The native live policy permits **Main, no popup, stopped, automation Off**, on qualified plugin/drum tracks.
+Mute additionally requires **Track Mute State Per Sequence disabled**. Single/Multi solo and arm settings are
+read live and must be recognized. Native follow/filter effects are retained and reported in `observedChanges`.
+The policy re-resolves owners and samples its context twice at every UI dispatch and verification. Unsupported,
+unreadable or changing contexts reject even no-ops. A queued command cannot reuse earlier eligibility.
+Use SHIFT+AUTOMATION in the UI to change the global automation Off setting. This API does not change settings.
+
+Project and track IDs are decimal strings representing nonzero unsigned 64-bit values, at most
+18446744073709551615. Names, indices, addresses, numeric coercions, caller IDs and revision preconditions are rejected.
+`expected.value` is checked against the live native property immediately before the setter, before the no-op check.
+
+The authenticated caller is the Unix peer **UID**, obtained with `SO_PEERCRED`. Same-UID processes share a retry
+namespace across connections and PIDs. Caller identity cannot be supplied in JSON. Request IDs are scoped to that
+caller and service instance. A canonical retry returns the retained result; changing operation, reference, value,
+expectation or start budget gives `REQUEST_ID_CONFLICT`. Changing only `waitMs` does not re-enqueue or renew work.
+
+There are 16 pending slots and 128 retained receipts. Retention is at least 600,000 ms from acceptance, and pending
+commands remain retained. Pressure returns `QUEUE_FULL` or `RETENTION_CAPACITY` without evicting live receipts.
+`startWithinMs` defaults to 1000, ranges from 1 to 30000, and bounds the original monotonic queued-start deadline.
+`waitMs` defaults to 0 and ranges from 0 to 30000. Delivery waits are polled independently of socket admission;
+a waiting or disconnected client does not block other clients or cancel native work. Receipt lookup after expiry
+or a new authority returns `OUTCOME_UNAVAILABLE`. Retention is in memory and does not survive restart.
+
+Shutdown first stops and joins socket callers, then cancels/drains command handlers, then detaches/drains the
+executor. A stalled native callback retains its authority and reports draining; a timeout cannot free it.
+See [implementation evidence](../findings/native-service.md) for fixture, sanitizer, ARM and live-device coverage.

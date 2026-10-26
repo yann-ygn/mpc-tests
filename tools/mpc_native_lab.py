@@ -62,6 +62,18 @@ def experiment(args):
         )
         if len(worker_paths) != 1:
             raise RuntimeError("Expected one existing privtap injection worker")
+        # The unload guard checks all executor workers in MPC, including the
+        # persistent NODELETE host's independent executor. Avoid loading a lab
+        # which cannot later satisfy that guard while the installed host runs.
+        existing_executors = session.command(
+            f"for f in /proc/{session.pid}/task/*/comm; do "
+            'if test "$(cat "$f")" = "mpc executor"; then echo executor; fi; done'
+        ).strip()
+        if existing_executors:
+            raise RuntimeError(
+                "A native executor is already running. Stop the persistent native host before "
+                "the temporary lab, and start it again after lab cleanup."
+            )
         worker = int(worker_paths[0].split("/")[-2])
         session.command("mkdir -m 700 " + remote)
         created = True

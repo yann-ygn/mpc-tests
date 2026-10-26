@@ -250,4 +250,5 @@ executor. It checks expected values at dispatch, verifies solo/arm audio copies,
 and preserves accepted/unknown outcomes across disconnects. See [integration and lifecycle](COMMANDS.md),
 [domain schemas](../schema/command-request.schema.json), and [device findings](../../findings/native-commands.md).
 A required UI-thread host policy gates unqualified contexts; the private lab policy is manually qualified.
-Public Unix write/receipt binding and production live mode/settings validation remain #32.
+US #32 now supplies [public Unix write/receipt binding and production live qualification](../../findings/native-service.md).
+The production policy is exposed by the additive UI-only `mpc_executor_qualify_command` helper.
