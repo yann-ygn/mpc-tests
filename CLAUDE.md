@@ -124,7 +124,9 @@ before running experiments.
   ASan/UBSan native entries and isolated ARM wire/handler fixtures. Twelve actual device write rows and sixty no-op policy checks pass;
   flags/settings restored. See `findings/native-service.md` and sanitized proof. During test-project cleanup MPC exited cleanly and
   auto-restarted after New Project; the old installed 0.1.0 read host recovered. Temporary mappings/files are gone; graceful lab dlclose
-  was not established in that cleanup. A new 0.2.0 package is local only; installation needs restart approval.
+  was not established in that cleanup. The owner-approved 0.2.0 upgrade is installed and ready: all five reads,
+  host stop/start and rejected-target receipt/replay checks pass. Configuration, identity and other addins were preserved.
+  See `findings/native-service-installed-20261026.json`. Final corrected-policy native write requalification remains pending.
 - Next: streaming (#33).
   Per-sequence mute needs an explicit sequence target/precondition before public exposure.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
@@ -132,7 +134,7 @@ before running experiments.
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through
   `/tmp/mpc-native-api/control.sock`. Stop joins API callers, detaches UI observers and drains callbacks; a stalled
   UI retains the executor and reports draining. Full code unload/upgrades require MPC restart. See
-  `native-api/INSTALL.md` and `findings/native-package.md`. The installed 0.1.0 build remains read-only; #32 prepares the 0.2.0 command-capable package. With owner-approved
+  `native-api/INSTALL.md` and `findings/native-package.md`. The installed 0.2.0 build adds #32's conditional command capabilities. With owner-approved
   restarts, actual startup, reads on two tracks/28 buses, listener drain, upgrade, uninstall/reinstall and
   configuration recovery pass. The API is installed at `/data/mpc-addins/mpc-native-api` and left ready on Main;
   privtap and Remote remain functional. Normal service termination can bypass ELF destructors: the uninstall

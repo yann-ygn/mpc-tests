@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-26",
+  "story": 32,
+  "ownerApprovedInstallAndRestart": true,
+  "model": "MPC Key 37",
+  "firmware": "3.9.1.2",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "packageVersion": "0.2.0",
+  "sourceRevision": "40f1b13202540f7d7b5ae04598707b87f5d46f49",
+  "sourceSha256": "06932505e30f39a3203f6753e78c373cff6702d9e4ddb8325ee8508d82a2a41f",
+  "packageSha256": "a702d0bfe1b0e872aa554b425ca9f644bc33b395f6ff9a77539120154088a4f1",
+  "artifactSha256": {
+    "mpc-api": "d4c1bc8ec0a446fcbda48d7d8c0d9a15f5b35d0269fb06593fe8f12a10040859",
+    "mpc_native_host.so": "cfa649684226e3d953904a672d49792c4ed28a730d984e7aa67e40fb78bd60b0"
+  },
+  "installation": "/data/mpc-addins/mpc-native-api",
+  "previousHostVersion": "0.1.0",
+  "hostVersion": "0.2.0",
+  "status": "ready",
+  "nativeError": "OK",
+  "previousInstallationBackedUpLocally": true,
+  "transferredPayloadChecksumsVerified": true,
+  "installedArtifactHashesMatch": true,
+  "configurationPreserved": true,
+  "deviceIdentityPreserved": true,
+  "preloadListPreserved": true,
+  "oldHostDrainedBeforeRestart": true,
+  "mpcPidChangedForUpgrade": true,
+  "readOperations": [
+    "get_state",
+    "list_tracks",
+    "current_track",
+    "current_sequence",
+    "recovery_snapshot"
+  ],
+  "commandCapabilities": [
+    "set_mute",
+    "set_solo",
+    "set_record_armed",
+    "get_command"
+  ],
+  "rejectedTargetChecks": [
+    {
+      "op": "set_mute",
+      "status": "rejected",
+      "error": "TARGET_NOT_FOUND",
+      "nativeInvoked": false,
+      "replayAndLookupStable": true
+    },
+    {
+      "op": "set_solo",
+      "status": "rejected",
+      "error": "TARGET_NOT_FOUND",
+      "nativeInvoked": false,
+      "replayAndLookupStable": true
+    },
+    {
+      "op": "set_record_armed",
+      "status": "rejected",
+      "error": "TARGET_NOT_FOUND",
+      "nativeInvoked": false,
+      "replayAndLookupStable": true
+    }
+  ],
+  "stopStartVerified": true,
+  "deviceIdentityStable": true,
+  "instanceRotated": true,
+  "socketModes": "600",
+  "coexistence": {
+    "privtap.so": true,
+    "mpc_remote": true,
+    "mpc_native_host.so": true
+  },
+  "mpcPidUnchangedDuringHostStopStart": true,
+  "remoteScreenshotWorks": true,
+  "initialProjectEmpty": true,
+  "finalProjectEmpty": true,
+  "finalScreen": "Select Demo",
+  "projectSavedOrEdited": false,
+  "actualFlagWritesExercisedDuringInstall": false,
+  "finalCorrectedPolicyNativeWriteRequalificationPending": true
+}

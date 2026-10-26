@@ -95,9 +95,23 @@ The lab now refuses attachment while another native executor runs: stop the inst
 and start it after cleanup. `tools/mpc_command_lab.py --live-policy` selects the production policy for future
 requalification on a disposable project.
 
-The 0.2.0 production package is prepared locally. It has not replaced the installed addin. Installing/upgrading
-it requires the owner's approval for an MPC restart, as specified in `CLAUDE.md`. Production uses the existing
-NODELETE host lifecycle rather than the temporary lab's unload mechanism. Latency/load qualification remains #38.
+The owner approved installation on 2026-10-26. The 0.2.0 package from implementation commit `40f1b13` is now
+installed at `/data/mpc-addins/mpc-native-api`. The standard upgrade drained the old 0.1.0 host and restarted
+MPC once. Package checksums matched before installation; installed binary hashes match the package.
+The configuration, device identity and exact existing preload list were preserved. The original installation
+was backed up locally in ignored `build/native-service/` before the upgrade.
+
+The installed host reports `ready` / `OK`, and all five public state operations pass. Command discovery exposes
+all three setters and receipt lookup under their documented conditions. Each setter rejected a nonexistent track
+without a native setter call; canonical retry and retained lookup returned the same rejection. Host stop/start
+drained successfully without another MPC restart, preserving installation identity and rotating service/adapter
+instances. Both privtap and MPC Remote remain mapped, and Remote screenshots work. The instrument remains at
+the same Select Demo startup screen with zero tracks, buses and used sequences. No project was saved or changed.
+
+This installed smoke check made no actual flag writes. The final corrected-policy native write requalification
+described above remains pending. [Installation evidence](native-service-installed-20261026.json) records these
+bounds and the package identity. Future upgrades/restarts need owner approval as specified in `CLAUDE.md`.
+Production uses the existing NODELETE host lifecycle. Latency/load qualification remains #38.
 
 See [sanitized evidence](native-service-proof-20261026.json), [wire guide](../native-api/README.md#send-flag-commands)
 and [C integration](../native-api/adapter/COMMANDS.md). Private captures, addresses and logs remain in ignored

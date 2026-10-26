@@ -7,7 +7,7 @@ adapter architecture. Descriptions, acceptance criteria, dependencies, statuses 
 and verified for all 22 stories. The owner accepted the [public contract](native-api-contract.md) on 2026-10-24
 (#28 Done). #29 and #30 are Done with the guarded shared adapter, bounded executor and lab validation.
 #31 adds the stopped-mode flag matrix, repeatable device experiments and failure evidence.
-#32 implements discovery, authoritative reads, authenticated Unix setters/receipt lookup and native live qualification. The 0.2.0 package awaits owner-approved deployment; see [service findings](native-service.md).
+#32 implements discovery, authoritative reads, authenticated Unix setters/receipt lookup and native live qualification. The owner-approved 0.2.0 upgrade is installed and ready; see [service findings](native-service.md).
 #20 is implemented with authoritative owner resolution and native lifecycle generations.
 #18 adds live snapshots and read projections; see [findings](native-state.md).
 #21 implements the persistent addin package, health and draining stop/start;

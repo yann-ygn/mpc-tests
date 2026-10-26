@@ -864,7 +864,8 @@
       ]
     }
   ],
-  "installedPackageUpgraded": false,
+  "installedPackageUpgraded": true,
+  "installationProof": "native-service-installed-20261026.json",
   "cleanup": {
     "labCommandsAndExecutorDrained": true,
     "persistentReadHostDrained": true,
