@@ -60,7 +60,9 @@ A final empty-project check caught an earlier incorrect arm-mode read from Seque
 recording-properties owner is cross-checked through the native arm behaviour, and fixtures poison the old slot.
 The corrected owner was verified read-only on the device, including matching Project/properties identities and mode value 1; fixtures exercise both recognized modes.
 The twelve live write rows and sixty policy checks preceded that correction; they establish flag behavior and
-the other live gates, while the corrected traversal is covered by the host/ARM fixtures and owner audit.
+the other live gates. A later owner-loaded project run verified the corrected policy through the installed Unix
+service: all three flag writes on a selected plugin passed with independent readback and complete captured
+baseline restoration. See [installed live proof](native-service-live-20261026.json) for the narrower scope of that run.
 The policy is restricted to this model/build and Main scope. Other modes/families and per-sequence command
 references remain unqualified. Applied receipts do not establish audio activity, persistence or isolation.
 
@@ -108,10 +110,24 @@ drained successfully without another MPC restart, preserving installation identi
 instances. Both privtap and MPC Remote remain mapped, and Remote screenshots work. The instrument remains at
 the same Select Demo startup screen with zero tracks, buses and used sequences. No project was saved or changed.
 
-This installed smoke check made no actual flag writes. The final corrected-policy native write requalification
-described above remains pending. [Installation evidence](native-service-installed-20261026.json) records these
-bounds and the package identity. Future upgrades/restarts need owner approval as specified in `CLAUDE.md`.
+This initial installation smoke check made no actual flag writes. [Installation evidence](native-service-installed-20261026.json)
+records those bounds and the package identity. Future upgrades/restarts need owner approval as specified in `CLAUDE.md`.
 Production uses the existing NODELETE host lifecycle. Latency/load qualification remains #38.
+
+After the owner loaded a project, the installed service passed actual mute, solo and record-arm writes on the
+selected plugin track, restoring each flag through the same public setters. Independent process-memory reads
+confirmed requested values and the required solo/arm audio copies. Each case also verified retained lookup,
+canonical retry before and after restoration, no-op suppression and rejection of a stale expected value.
+Fifteen no-op policy checks covered the original mixer view, Main with Automation Read, Main/Off with sequence
+mute, Main/Off with global mute, and the restored mixer/settings. Unsupported contexts rejected before setters.
+The run used record-arm mode 1 and Single solo; automation and mute scope were restored after testing.
+
+The final public and independent baselines matched across six normal tracks and thirty bus/other entries,
+including flags, silencing, selection and sequence state. The original Mixer Effects view and native settings
+were restored; MPC's PID and the service instance were unchanged, with the host still `ready` / `OK`.
+No project load/unload, save, addin upgrade or restart was performed during this run. This establishes the
+corrected installed path on one selected plugin in stopped Main mode; it does not expand the qualified modes,
+families or persistence/audio claims. Sanitized details are in [the live proof](native-service-live-20261026.json).
 
 See [sanitized evidence](native-service-proof-20261026.json), [wire guide](../native-api/README.md#send-flag-commands)
 and [C integration](../native-api/adapter/COMMANDS.md). Private captures, addresses and logs remain in ignored

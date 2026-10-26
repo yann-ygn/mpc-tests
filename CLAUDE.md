@@ -126,7 +126,10 @@ before running experiments.
   auto-restarted after New Project; the old installed 0.1.0 read host recovered. Temporary mappings/files are gone; graceful lab dlclose
   was not established in that cleanup. The owner-approved 0.2.0 upgrade is installed and ready: all five reads,
   host stop/start and rejected-target receipt/replay checks pass. Configuration, identity and other addins were preserved.
-  See `findings/native-service-installed-20261026.json`. Final corrected-policy native write requalification remains pending.
+  See `findings/native-service-installed-20261026.json`. The corrected production policy also passed installed Unix
+  mute/solo/arm writes on a selected plugin in an owner-loaded project, independent readback, retries/no-ops/conflicts
+  and fifteen policy no-op checks. All captured track/bus flags, selection, sequence state, settings and Mixer Effects
+  view were restored without save/restart. See `findings/native-service-live-20261026.json`.
 - Next: streaming (#33).
   Per-sequence mute needs an explicit sequence target/precondition before public exposure.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
@@ -136,7 +139,7 @@ before running experiments.
   UI retains the executor and reports draining. Full code unload/upgrades require MPC restart. See
   `native-api/INSTALL.md` and `findings/native-package.md`. The installed 0.2.0 build adds #32's conditional command capabilities. With owner-approved
   restarts, actual startup, reads on two tracks/28 buses, listener drain, upgrade, uninstall/reinstall and
-  configuration recovery pass. The API is installed at `/data/mpc-addins/mpc-native-api` and left ready on Main;
+  configuration recovery pass. The API is installed at `/data/mpc-addins/mpc-native-api` and remains ready;
   privtap and Remote remain functional. Normal service termination can bypass ELF destructors: the uninstall
   wrapper uses `mpc-api host-cleanup` under the lifetime lock after process exit. Nine host lifecycle cases,
   ASan/UBSan, all 14 host entries and ARM deployment guards pass. See sanitized native-package proof.

@@ -78,5 +78,7 @@
   "finalScreen": "Select Demo",
   "projectSavedOrEdited": false,
   "actualFlagWritesExercisedDuringInstall": false,
-  "finalCorrectedPolicyNativeWriteRequalificationPending": true
+  "finalCorrectedPolicyNativeWriteRequalificationPending": false,
+  "subsequentLoadedProjectNativeWritesPassed": true,
+  "subsequentLiveProof": "native-service-live-20261026.json"
 }

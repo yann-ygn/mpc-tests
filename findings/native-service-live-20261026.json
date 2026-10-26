@@ -1,0 +1,258 @@
+{
+  "date": "2026-10-26",
+  "story": 32,
+  "hostVersion": "0.2.0",
+  "sourceRevision": "40f1b13202540f7d7b5ae04598707b87f5d46f49",
+  "packageSha256": "a702d0bfe1b0e872aa554b425ca9f644bc33b395f6ff9a77539120154088a4f1",
+  "model": "MPC Key 37",
+  "firmware": "3.9.1.2",
+  "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "transport": "Installed same-UID Unix socket",
+  "qualification": "Production native live policy, with corrected recording-properties owner",
+  "projectProvidedByOwner": true,
+  "targetScope": "One selected plugin track",
+  "targetIndex": 2,
+  "normalTrackCount": 6,
+  "busOrOtherTrackCount": 30,
+  "writeContext": {
+    "mode": 8320,
+    "popup": 12416,
+    "playing": 0,
+    "perSequenceMute": 0,
+    "recordArmMode": 1,
+    "soloMode": 0
+  },
+  "targetAutomationDuringWrites": 0,
+  "nativeWriteRows": [
+    {
+      "operation": "set_mute",
+      "status": "applied",
+      "nativeInvoked": true,
+      "changed": true,
+      "verificationBy": [
+        "model"
+      ],
+      "independentRequestedAndRequiredAudioReadbackVerified": true,
+      "retainedLookupAndReplayVerified": true,
+      "noopSkippedNative": true,
+      "staleExpectedRejectedBeforeNative": true,
+      "publicBaselineRestored": true,
+      "independentBaselineRestored": true,
+      "replayAfterRestoreStable": true
+    },
+    {
+      "operation": "set_solo",
+      "status": "applied",
+      "nativeInvoked": true,
+      "changed": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "independentRequestedAndRequiredAudioReadbackVerified": true,
+      "retainedLookupAndReplayVerified": true,
+      "noopSkippedNative": true,
+      "staleExpectedRejectedBeforeNative": true,
+      "publicBaselineRestored": true,
+      "independentBaselineRestored": true,
+      "replayAfterRestoreStable": true
+    },
+    {
+      "operation": "set_record_armed",
+      "status": "applied",
+      "nativeInvoked": true,
+      "changed": true,
+      "verificationBy": [
+        "model",
+        "audio_copy"
+      ],
+      "independentRequestedAndRequiredAudioReadbackVerified": true,
+      "retainedLookupAndReplayVerified": true,
+      "noopSkippedNative": true,
+      "staleExpectedRejectedBeforeNative": true,
+      "publicBaselineRestored": true,
+      "independentBaselineRestored": true,
+      "replayAfterRestoreStable": true
+    }
+  ],
+  "noOpPolicyContexts": [
+    {
+      "label": "original_mixer",
+      "context": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 1,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "targetAutomation": 1,
+      "stateUnchanged": true,
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "main_read",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 1,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "targetAutomation": 1,
+      "stateUnchanged": true,
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    },
+    {
+      "label": "main_off_sequence",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 1,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "targetAutomation": 0,
+      "stateUnchanged": true,
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        }
+      ]
+    },
+    {
+      "label": "main_off_global",
+      "context": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "targetAutomation": 0,
+      "stateUnchanged": true,
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_solo",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "applied",
+          "nativeInvoked": false,
+          "error": null
+        }
+      ]
+    },
+    {
+      "label": "restored_mixer",
+      "context": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 1,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "targetAutomation": 1,
+      "stateUnchanged": true,
+      "results": [
+        {
+          "operation": "set_mute",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_solo",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        },
+        {
+          "operation": "set_record_armed",
+          "status": "rejected",
+          "nativeInvoked": false,
+          "error": "NOT_READY"
+        }
+      ]
+    }
+  ],
+  "restoration": {
+    "publicBaselineRestored": true,
+    "independentBaselineRestored": true,
+    "settingsAndViewRestored": true,
+    "hostHealthy": true,
+    "mpcPidUnchanged": true,
+    "serviceInstanceUnchanged": true
+  },
+  "finalView": "Mixer Effects",
+  "projectSaved": false,
+  "projectLoadedOrUnloadedByTest": false,
+  "addinReplacedDuringTest": false,
+  "scopeLimits": "Stopped Main mode and selected plugin target; no claim of audible output, disk persistence, other families, playback, or general release qualification."
+}
