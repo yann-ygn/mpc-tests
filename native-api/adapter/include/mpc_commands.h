@@ -55,8 +55,9 @@ struct mpc_command_policy {
 
 /* Production live policy for the exact profiled firmware. UI-thread only,
  * called from qualify while a managed command is active on this executor.
- * Checks current Main/no-popup, stopped transport, native settings and target
- * automation. Does not invoke a setter, accept saved settings or retain pointers. */
+ * Checks qualified Main/Mixer/Track Mute, no popup, stopped transport, settings and target
+ * automation. Samples a command-local context fence; never invokes a setter or accepts saved
+ * settings. */
 MPC_NATIVE_API enum mpc_native_error
 mpc_executor_qualify_command(struct mpc_executor *, enum mpc_command_operation);
 

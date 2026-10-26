@@ -19,15 +19,10 @@ static bool object(struct mpc_native_adapter *a, uint32_t address, uint32_t rva)
   return read_value(a, address, 0, &vtable, 4) && vtable == a->io.image + rva;
 }
 
-struct context {
-  uint32_t app, window, component, engine, mode, thread, sequencer, timeline, mute, solo,
-    solo_property, arm, recorder, record_properties;
-  uint32_t view, popup, arm_mode, solo_mode, automation;
-  unsigned char playing, sequence_mute;
-};
-
-static bool
-capture(struct mpc_native_adapter *a, const struct mpc_native_target *target, struct context *out) {
+static bool capture(
+  struct mpc_native_adapter *a,
+  const struct mpc_native_target *target,
+  struct mpc_command_context *out) {
   memset(out, 0, sizeof *out);
   const struct native_command_context_layout *p = &native_command_context;
   uint32_t project, arm_project, arm_properties;
@@ -71,7 +66,9 @@ capture(struct mpc_native_adapter *a, const struct mpc_native_target *target, st
 enum mpc_native_error mpc_native_qualify_command(
   struct mpc_native_adapter *a,
   const struct mpc_native_target *target,
-  enum mpc_command_operation operation) {
+  enum mpc_command_operation operation,
+  struct mpc_command_context *baseline,
+  bool *known) {
   if ((unsigned)operation > MPC_COMMAND_RECORD_ARMED)
     return MPC_NATIVE_INVALID_ARGUMENT;
   /* Verifies firmware, UI ownership, family and live target before using the
@@ -80,15 +77,22 @@ enum mpc_native_error mpc_native_qualify_command(
   enum mpc_native_error error = mpc_native_read_track(a, target, &state);
   if (error)
     return error;
-  struct context before, after;
+  struct mpc_command_context before, after;
   if (!capture(a, target, &before) || !capture(a, target, &after))
     return MPC_NATIVE_READ_FAILED;
   if (memcmp(&before, &after, sizeof before))
     return MPC_NATIVE_STATE_UNSTABLE;
   const struct native_command_context_layout *p = &native_command_context;
-  return before.view != p->mainMode || before.popup != p->noPopup || before.playing ||
-      before.automation || before.arm_mode > 1 || before.solo_mode > 1 ||
-      before.sequence_mute > 1 || (operation == MPC_COMMAND_MUTE && before.sequence_mute)
-    ? MPC_NATIVE_NOT_READY
-    : MPC_NATIVE_OK;
+  if (
+    (before.view != p->mainMode && before.view != p->mixerMode &&
+     before.view != p->trackMuteMode) ||
+    before.popup != p->noPopup || before.playing || before.automation || before.arm_mode > 1 ||
+    before.solo_mode > 1 || before.sequence_mute > 1 ||
+    (operation == MPC_COMMAND_MUTE && before.sequence_mute))
+    return MPC_NATIVE_NOT_READY;
+  if (*known && memcmp(baseline, &before, sizeof before))
+    return MPC_NATIVE_STATE_UNSTABLE;
+  *baseline = before;
+  *known = true;
+  return MPC_NATIVE_OK;
 }

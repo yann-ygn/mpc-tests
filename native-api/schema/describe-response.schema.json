@@ -11,6 +11,7 @@
         "reason": {"type": ["string", "null"]},
         "trackTypes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
         "verification": {"type": "array", "uniqueItems": true, "items": {"enum": ["model", "audio_copy"]}},
+        "screens": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
         "conditions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
       },
       "allOf": [

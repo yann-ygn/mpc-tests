@@ -1,7 +1,7 @@
 """Run the production policy through the public transport and emulated live owners."""
 
-from test_host import HostHarness
 import test_wire_commands as wire_tests
+from test_host import HostHarness
 
 
 class LivePolicyTests(HostHarness):
@@ -25,6 +25,53 @@ class LivePolicyTests(HostHarness):
                 self.assertEqual(result["status"], "applied", result)
                 self.assertTrue(result["nativeInvoked"])
                 self.assertEqual(result["verification"]["requestedValue"], value)
+
+    def test_qualified_screens_and_discovery(self):
+        caps = self.public("describe")["capabilities"]
+        for op in ("set_mute", "set_solo", "set_record_armed"):
+            self.assertEqual(caps[op]["screens"], ["main", "mixer", "track_mute"])
+        for marker in ("policy-mixer", "policy-track-mute"):
+            path = self.install / marker
+            path.touch()
+            try:
+                for value in (True, False):
+                    for op in ("set_mute", "set_solo", "set_record_armed"):
+                        result = self.send(
+                            self.command(marker + op + str(value), op=op, value=value)
+                        )
+                        self.assertEqual(result["status"], "applied", result)
+                        self.assertTrue(result["nativeInvoked"])
+            finally:
+                path.unlink()
+
+    def test_queued_command_qualifies_the_screen_at_dispatch(self):
+        for marker in ("policy-mixer", "policy-track-mute"):
+            paused = self.install / "pause-ui"
+            paused.touch()
+            request = self.command(marker, waitMs=0)
+            result = self.send(request)
+            self.assertEqual(result["status"], "accepted")
+            screen = self.install / marker
+            screen.touch()
+            paused.unlink()
+            result = self.get(marker)
+            self.assertEqual(result["status"], "applied", result)
+            self.assertTrue(result["nativeInvoked"])
+            screen.unlink()
+            self.assertEqual(
+                self.send(self.command(marker + "restore", value=False))["status"], "applied"
+            )
+
+    def test_screen_transition_after_setter_retains_uncertainty(self):
+        (self.install / "policy-change-after-set").touch()
+        request = self.command("screen-transition")
+        result = self.send(request)
+        self.assertEqual(result["status"], "unknown", result)
+        self.assertTrue(result["nativeInvoked"])
+        self.assertEqual(result["error"]["code"], "STATE_UNSTABLE")
+        self.assertEqual(self.send(request), result)
+        state = self.public("get_state")
+        self.assertTrue(state["tracks"][0]["requested"]["muted"])
 
     def test_modes_playback_settings_and_automation_reject_before_native_access(self):
         for marker in (

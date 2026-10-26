@@ -56,6 +56,8 @@ def validate(state, control):
         "modeValue",
         "popupValue",
         "mainMode",
+        "mixerMode",
+        "trackMuteMode",
         "noPopup",
         "engineAudioThread",
         "audioThreadVtable",
@@ -85,6 +87,8 @@ def validate(state, control):
         limit = 0xFFFFFFFF if key.endswith("Vtable") else 0x10000
         if not integer(value, key, limit) or (key.endswith("Vtable") and value % 4):
             raise ValueError("Invalid command context field")
+    if len({context[k] for k in ("mainMode", "mixerMode", "trackMuteMode")}) != 3:
+        raise ValueError("Aliased qualified screens")
     for name in ("project", "trackPool", "track", "sequence"):
         if not integer(state["vtables"][name], name) or state["vtables"][name] % 4:
             raise ValueError("Invalid vtable")
@@ -239,6 +243,9 @@ def validate(state, control):
             "commandPopupGetter",
             "commandModeNames",
             "commandMainModeName",
+            "commandMixerModeName",
+            "commandTrackMuteModeName",
+            "commandQualifiedModeCases",
             "commandTimelinePlaying",
             "commandSequencerPlaying",
             "commandSequencerOwner",

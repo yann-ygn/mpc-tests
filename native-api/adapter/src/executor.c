@@ -37,6 +37,9 @@ struct mpc_executor {
   struct mpc_executor_identity identity;
   void *command_owner;
   struct mpc_command_policy command_policy;
+  struct mpc_command_native_result *command_context;
+  enum mpc_command_operation command_property;
+  bool qualifying;
 };
 
 static bool time_before(const struct timespec *left, const struct timespec *right) {
@@ -106,6 +109,17 @@ static enum mpc_native_error resolve_target(
     : MPC_NATIVE_NOT_READY;
 }
 
+static enum mpc_native_error qualify_command(struct mpc_executor *executor) {
+  executor->qualifying = true;
+  enum mpc_native_error error = executor->command_policy.qualify
+    ? executor->command_policy.qualify(
+        executor->command_policy.userdata,
+        executor->command_property)
+    : MPC_NATIVE_NOT_READY;
+  executor->qualifying = false;
+  return error;
+}
+
 static enum mpc_native_error revalidate(void *data, const struct mpc_native_target *target) {
   struct mpc_executor *executor = data;
   if (!executor->active)
@@ -114,10 +128,12 @@ static enum mpc_native_error revalidate(void *data, const struct mpc_native_targ
   enum mpc_native_error error = resolve_target(executor, &executor->identity, &current);
   if (error)
     return error;
-  return current.project == target->project && current.track == target->track &&
-      current.program == target->program
-    ? MPC_NATIVE_OK
-    : MPC_NATIVE_STALE_TARGET;
+  if (
+    current.project != target->project || current.track != target->track ||
+    current.program != target->program)
+    return MPC_NATIVE_STALE_TARGET;
+  return executor->command_context && !executor->qualifying ? qualify_command(executor)
+                                                            : MPC_NATIVE_OK;
 }
 
 static void
@@ -161,18 +177,17 @@ static struct mpc_executor_result command_execute(
     return result;
   executor->identity = request.identity;
   executor->active = true;
-  result.error = executor->command_policy.qualify ? executor->command_policy.qualify(
-                                                      executor->command_policy.userdata,
-                                                      (enum mpc_command_operation)property)
-                                                  : MPC_NATIVE_NOT_READY;
+  executor->command_context = out;
+  executor->command_property = (enum mpc_command_operation)property;
+  result.error = qualify_command(executor);
   executor->active = false;
   if (result.error)
-    return result;
+    goto done;
   bool writing = input->operation != MPC_EXECUTOR_COMMAND_OBSERVE;
   if (writing) {
     result.error = mpc_identity_state(executor->registry, scratch);
     if (result.error)
-      return result;
+      goto done;
     observation(scratch, &out->before);
     out->before_known = true;
   }
@@ -201,7 +216,17 @@ static struct mpc_executor_result command_execute(
   executor->active = false;
   if (writing)
     result.observed = result.write.observed;
-  enum mpc_native_error captured = mpc_identity_state(executor->registry, scratch);
+  executor->active = true;
+  enum mpc_native_error captured = qualify_command(executor);
+  executor->active = false;
+  if (!captured)
+    captured = mpc_identity_state(executor->registry, scratch);
+  executor->active = true;
+  if (!captured)
+    captured = qualify_command(executor);
+  executor->active = false;
+  if (!result.error && captured)
+    result.error = captured;
   if (
     !captured && scratch->project == request.identity.project &&
     scratch->project_generation == request.identity.project_generation) {
@@ -209,6 +234,9 @@ static struct mpc_executor_result command_execute(
     out->after_known = true;
   } else if (!result.error)
     result.error = captured ? captured : MPC_NATIVE_STALE_TARGET;
+done:
+  executor->command_context = NULL;
+  executor->active = false;
   return result;
 }
 
@@ -564,6 +592,14 @@ enum mpc_native_error mpc_executor_submit(
   struct mpc_executor *executor,
   const struct mpc_executor_request *request,
   struct mpc_executor_job **output) {
+  return mpc_executor_command_submit(executor, request, NULL, output);
+}
+
+enum mpc_native_error mpc_executor_command_submit(
+  struct mpc_executor *executor,
+  const struct mpc_executor_request *request,
+  const struct mpc_command_context *context,
+  struct mpc_executor_job **output) {
   if (!output)
     return MPC_NATIVE_INVALID_ARGUMENT;
   *output = NULL;
@@ -609,6 +645,10 @@ enum mpc_native_error mpc_executor_submit(
           error = MPC_NATIVE_NOT_READY;
           break;
         }
+      }
+      if (context && job->command) {
+        job->command->context = *context;
+        job->command->context_known = true;
       }
       job->request = *request;
       job->result = (struct mpc_executor_result){.state = MPC_EXECUTOR_QUEUED};
@@ -753,7 +793,17 @@ mpc_executor_qualify_command(struct mpc_executor *executor, enum mpc_command_ope
     return MPC_NATIVE_NOT_READY;
   struct mpc_native_target target;
   enum mpc_native_error error = resolve_target(executor, &executor->identity, &target);
-  return error ? error : mpc_native_qualify_command(executor->adapter, &target, operation);
+  if (error)
+    return error;
+  struct mpc_command_native_result *context = executor->command_context;
+  if (!context || !executor->qualifying)
+    return MPC_NATIVE_NOT_READY;
+  return mpc_native_qualify_command(
+    executor->adapter,
+    &target,
+    operation,
+    &context->context,
+    &context->context_known);
 }
 
 enum mpc_native_error mpc_executor_commands_attach(

@@ -1,13 +1,14 @@
 """Failure-path checks for the device experiment's restoration and evidence."""
 
 import copy
-from pathlib import Path
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import Mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
-from mpc_flag_semantics import Matrix, STATE_KEYS
+from mpc_flag_semantics import STATE_KEYS, Matrix
+from mpc_screen_flags import ScreenMatrix
 
 
 class RestorationTests(unittest.TestCase):
@@ -68,6 +69,32 @@ class RestorationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "peer arm"):
             matrix.row(0, "mute", True, rows)
         self.assertIn("after", rows[0])
+
+
+class ScreenMatrixTests(unittest.TestCase):
+    def test_midi_index_after_audio_maps_to_the_canonical_command_target(self):
+        matrix = ScreenMatrix.__new__(ScreenMatrix)
+        matrix.ui_indices = {0: 0, 6: 8}
+        matrix.identities = {
+            "projectId": "1",
+            "tracks": [{"index": i, "id": str(10 + i)} for i in range(9)],
+        }
+        matrix.instance = "run_" + "0" * 32
+        submission = matrix.submission(6, "arm", True, False, request_id="drum")
+        self.assertIn(" 1 18 drum ", submission)
+
+    def test_selection_uses_track_list_order_when_audio_precedes_the_target(self):
+        matrix = ScreenMatrix.__new__(ScreenMatrix)
+        matrix.ui_indices = {0: 0, 6: 8}
+        matrix.project = 100
+        matrix.session = Mock()
+        matrix.session.profile = {"offsets": {"project": {"selectedTrackIndex": 4}}}
+        matrix.session.read.side_effect = [(6).to_bytes(4, "little"), (8).to_bytes(4, "little")]
+        matrix.ui, matrix.screen = Mock(), Mock()
+        matrix.select(6)
+        self.assertEqual(matrix.ui.call_count, 3)
+        matrix.ui.assert_called_with("/tap", x=770, y=770)
+        matrix.screen.assert_called_once()
 
 
 if __name__ == "__main__":

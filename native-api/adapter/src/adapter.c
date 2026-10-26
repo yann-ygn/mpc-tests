@@ -290,6 +290,12 @@ static enum mpc_native_error set_flag(
     if (error)
       return error;
   }
+  /* A native arm filter can call listeners; revalidate context and lifetime
+   * after it returns, before entering the notifying property setter. */
+  enum mpc_native_family family;
+  error = target_check(adapter, target, &family);
+  if (error)
+    return error;
   output->native_invoked = true;
   output->changed_known = false;
   error = adapter->io.setter(

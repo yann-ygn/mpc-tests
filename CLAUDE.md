@@ -140,6 +140,15 @@ before running experiments.
   flags, sequence state, selection and Mixer Effects view were restored; lab mappings/files removed and installed
   host resumed without MPC restart. See `findings/native-track-inventory.md` and sanitized proof. Additional
   family flags/setters remain US #49.
+- Screen qualification (#47), branch `us-47-mixer-track-mute`: production flag commands now qualify Main,
+  all five Channel Mixer pages and Track Mute, with stopped/automation-Off/global-mute restrictions retained.
+  A private context fence survives native filters/setters and delayed verification; transitions reject before
+  invocation or retain uncertainty afterward. Discovery names supported screens; public C ABIs remain unchanged.
+  All 17 host entries, 12 ASan/UBSan native entries and five isolated ARM fixtures pass. Device evidence covers
+  168 writes, 12 Single/Multi peer cases, nine controller edits and nine lost-response retries. Original flags,
+  native/saved command settings, inventory, selection and Mixer Effects view were restored; temporary drum track,
+  lab mappings and files removed. MPC was not restarted or saved; installed 0.2.0 resumed ready. Package 0.4.0 is
+  built but not installed. See `findings/native-command-screens.md` and its sanitized proof.
 - Next: streaming (#33).
   Per-sequence mute needs an explicit sequence target/precondition before public exposure.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with

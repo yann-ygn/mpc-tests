@@ -12,6 +12,8 @@ struct record {
   uint64_t caller, serial, accepted_ms, start_deadline, verify_deadline;
   struct mpc_executor_job *job;
   struct mpc_command_receipt receipt;
+  bool context_known;
+  struct mpc_command_context context;
 };
 struct mpc_commands {
   struct mpc_commands_config config;
@@ -138,8 +140,11 @@ static void advance(struct mpc_commands *commands, struct record *record) {
       .command_property = receipt->request.operation,
       .command_deadline_ms = record->verifying ? record->verify_deadline : record->start_deadline};
     memcpy(request.identity.instance_id, commands->adapter_id, 37);
-    enum mpc_native_error error =
-      mpc_executor_submit(commands->config.executor, &request, &record->job);
+    enum mpc_native_error error = mpc_executor_command_submit(
+      commands->config.executor,
+      &request,
+      record->context_known ? &record->context : NULL,
+      &record->job);
     if (error == MPC_NATIVE_QUEUE_FULL)
       return; /* Acceptance order and original deadline remain unchanged. */
     if (error) {
@@ -179,6 +184,10 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     return;
   }
   if (result.command) {
+    if (result.command->context_known) {
+      record->context_known = true;
+      record->context = result.command->context;
+    }
     if (!record->verifying)
       record->verify_deadline = result.command->dispatched_ms + MPC_COMMAND_VERIFICATION_MS;
     if (result.command->before_known && !record->verifying) {

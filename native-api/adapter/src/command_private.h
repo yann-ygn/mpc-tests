@@ -3,14 +3,23 @@
 
 #include "mpc_commands.h"
 #include "mpc_executor.h"
+#include "private.h"
 
 struct mpc_identity_registry;
 
 struct mpc_command_native_result {
   uint64_t dispatched_ms;
   bool before_known, after_known;
+  bool context_known;
+  struct mpc_command_context context;
   struct mpc_command_observation before, after;
 };
+
+enum mpc_native_error mpc_executor_command_submit(
+  struct mpc_executor *,
+  const struct mpc_executor_request *,
+  const struct mpc_command_context *,
+  struct mpc_executor_job **);
 
 enum mpc_native_error
 mpc_executor_commands_attach(struct mpc_executor *, void *owner, const struct mpc_command_policy *);

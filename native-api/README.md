@@ -208,11 +208,16 @@ Read the returned receipt's `status`, `execution`, `nativeInvoked`, `verificatio
 copy for solo/arm. Mute remains explicitly model-only. `unknown` preserves execution uncertainty.
 `get_command` takes `instanceId`, `requestId` and optional `waitMs`; it never executes a command.
 
-The native live policy permits **Main, no popup, stopped, automation Off**, on qualified plugin/drum tracks.
+The native live policy permits **Main, Mixer or Track Mute, no popup, stopped, automation Off**, on qualified plugin/drum tracks.
 Mute additionally requires **Track Mute State Per Sequence disabled**. Single/Multi solo and arm settings are
 read live and must be recognized. Native follow/filter effects are retained and reported in `observedChanges`.
-The policy re-resolves owners and samples its context twice at every UI dispatch and verification. Unsupported,
-unreadable or changing contexts reject even no-ops. A queued command cannot reuse earlier eligibility.
+The policy re-resolves owners and samples its context twice at dispatch, before native invocation and readback,
+and around each owned verification snapshot. Its initial context is retained through delayed audio verification.
+Unsupported or unreadable contexts reject even no-ops. A context change before native invocation rejects; after
+a filter/setter it retains `unknown`. A queued command cannot reuse earlier eligibility.
+`describe` lists the qualified `screens` and the separate stopped/automation/settings/mute-scope `conditions`.
+Mixer Volume, Pan & Volume, Sends, Effects and I/O pages address the same model tracks; commands do not navigate
+the UI. Pad Mixer, Song, Clip and other views/popups remain unqualified. See [screen qualification](../findings/native-command-screens.md).
 Use SHIFT+AUTOMATION in the UI to change the global automation Off setting. This API does not change settings.
 
 Project and track IDs are decimal strings representing nonzero unsigned 64-bit values, at most

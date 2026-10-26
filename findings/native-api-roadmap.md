@@ -51,6 +51,8 @@ is callable or supported. Each story requires the specified mapping and device v
 | #43 | Probe note-event and automation editing through native model operations |
 | #44 | Probe audio-event, sample-pool and clip-export operations |
 | #45 | Map generic program/instrument parameters and separate IDs from controls |
+| #46 | Complete user-track inventory and canonical Track List order — implemented; [findings](native-track-inventory.md) |
+| #47 | Qualify flag commands in Main, Mixer and Track Mute — implemented; [findings](native-command-screens.md) |
 
 ## Delivery order
 

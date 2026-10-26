@@ -1,0 +1,2526 @@
+{
+  "story": 47,
+  "capturedAt": "2026-10-26T15:52:29.763698+00:00",
+  "firmware": {
+    "model": "Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "implementation": {
+    "packageVersion": "0.4.0",
+    "primitiveAbi": 1,
+    "executorAbi": 5,
+    "commandAbi": 2,
+    "snapshotAbi": 2,
+    "publicLayoutsChanged": false,
+    "newExports": [],
+    "qualifiedViews": {
+      "main": "0x2080",
+      "mixer": "0x2083",
+      "track_mute": "0x208d"
+    },
+    "noPopup": "0x3080",
+    "packageSha256": "d34f81682ca05371ef8d75466cf0bbee2cf27e6d1fec1bc3b0927c3490c66d76"
+  },
+  "validation": {
+    "hostMesonEntriesPassed": 17,
+    "asanUbsanNativeEntriesPassed": 12,
+    "armBuildAndElfGuardsPassed": true,
+    "isolatedArmFixturesPassed": [
+      "native_fixture",
+      "executor_fixture",
+      "identity_fixture",
+      "inventory_fixture",
+      "commands_fixture"
+    ],
+    "finalArmTransitionFixturePassed": true,
+    "productionPolicyNativeFixtureWrites": 72,
+    "productionPolicyNativeFixtureTransitions": 7,
+    "fixtureCoverage": [
+      "all flags, both families, selected/unselected, Main/Mixer/Track Mute, Single/Multi",
+      "no-op and expected-value conflict skip setter and arm filter",
+      "queued supported screen requalified at dispatch; unsupported screen rejects",
+      "context change before setter rejects; after filter no property setter runs",
+      "qualified view changes, popup and unreadable owner after setter retain uncertainty",
+      "original context survives delayed audio verification",
+      "manual edits, disconnected clients, retained retries, shutdown and draining"
+    ],
+    "deviceReadProjectionsPassed": [
+      "current_sequence",
+      "current_track",
+      "get_state",
+      "list_tracks",
+      "recovery_snapshot"
+    ],
+    "deviceReadCaptureP95Ms": 10.993
+  },
+  "device": {
+    "transport": "temporary native lab with production live policy",
+    "writeRowsPassed": 168,
+    "peerRowsPassed": 12,
+    "rows": [
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 8,
+        "selectionChanged": true,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_io/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_pan_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_sends/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_volume/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "plugin",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": true,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": true,
+        "value": false,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "mute",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model"
+        ],
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "solo",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 7,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "family": "drum",
+        "property": "arm",
+        "selected": false,
+        "value": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "track_mute/solo_1_arm_0"
+      }
+    ],
+    "peerRows": [
+      {
+        "property": "solo",
+        "single": true,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": false,
+        "secondAfter": true,
+        "observedChanges": 7,
+        "selectionChanged": true,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "property": "arm",
+        "single": false,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": true,
+        "secondAfter": true,
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "main/solo_0_arm_1"
+      },
+      {
+        "property": "solo",
+        "single": true,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": false,
+        "secondAfter": true,
+        "observedChanges": 7,
+        "selectionChanged": true,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "property": "arm",
+        "single": false,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": true,
+        "secondAfter": true,
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_0_arm_1"
+      },
+      {
+        "property": "solo",
+        "single": true,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": false,
+        "secondAfter": true,
+        "observedChanges": 7,
+        "selectionChanged": true,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "property": "arm",
+        "single": false,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": true,
+        "secondAfter": true,
+        "observedChanges": 2,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_0_arm_1"
+      },
+      {
+        "property": "solo",
+        "single": false,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": true,
+        "secondAfter": true,
+        "observedChanges": 3,
+        "selectionChanged": false,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "property": "arm",
+        "single": true,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": false,
+        "secondAfter": true,
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "main/solo_1_arm_0"
+      },
+      {
+        "property": "solo",
+        "single": false,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": true,
+        "secondAfter": true,
+        "observedChanges": 3,
+        "selectionChanged": false,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "property": "arm",
+        "single": true,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": false,
+        "secondAfter": true,
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "mixer_effects/solo_1_arm_0"
+      },
+      {
+        "property": "solo",
+        "single": false,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": true,
+        "secondAfter": true,
+        "observedChanges": 3,
+        "selectionChanged": false,
+        "contextId": "track_mute/solo_1_arm_0"
+      },
+      {
+        "property": "arm",
+        "single": true,
+        "firstStatus": "applied",
+        "secondStatus": "applied",
+        "firstAfter": false,
+        "secondAfter": true,
+        "observedChanges": 5,
+        "selectionChanged": true,
+        "contextId": "track_mute/solo_1_arm_0"
+      }
+    ],
+    "controllerEditRowsPassed": 9,
+    "discardedResponseRetryRowsPassed": 9,
+    "rejectedContexts": [
+      {
+        "screen": "menu",
+        "view": 8320,
+        "popup": 12544,
+        "operations": [
+          "set_mute",
+          "set_solo",
+          "set_record_armed"
+        ],
+        "nativeInvoked": false
+      },
+      {
+        "screen": "sounds",
+        "view": 8352,
+        "popup": 12416,
+        "operations": [
+          "set_mute",
+          "set_solo",
+          "set_record_armed"
+        ],
+        "nativeInvoked": false
+      },
+      {
+        "screen": "song",
+        "view": 8328,
+        "popup": 12416,
+        "operations": [
+          "set_mute",
+          "set_solo",
+          "set_record_armed"
+        ],
+        "nativeInvoked": false
+      },
+      {
+        "screen": "pad_mixer",
+        "view": 8322,
+        "popup": 12416,
+        "operations": [
+          "set_mute",
+          "set_solo",
+          "set_record_armed"
+        ],
+        "nativeInvoked": false
+      }
+    ],
+    "contexts": {
+      "main/solo_0_arm_1": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "mixer_effects/solo_0_arm_1": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "mixer_io/solo_0_arm_1": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "mixer_pan_volume/solo_0_arm_1": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "mixer_sends/solo_0_arm_1": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "mixer_volume/solo_0_arm_1": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "track_mute/solo_0_arm_1": {
+        "mode": 8333,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 1,
+        "soloMode": 0
+      },
+      "main/solo_1_arm_0": {
+        "mode": 8320,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 0,
+        "soloMode": 1
+      },
+      "mixer_effects/solo_1_arm_0": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 0,
+        "soloMode": 1
+      },
+      "mixer_io/solo_1_arm_0": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 0,
+        "soloMode": 1
+      },
+      "mixer_pan_volume/solo_1_arm_0": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 0,
+        "soloMode": 1
+      },
+      "mixer_sends/solo_1_arm_0": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 0,
+        "soloMode": 1
+      },
+      "mixer_volume/solo_1_arm_0": {
+        "mode": 8323,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 0,
+        "soloMode": 1
+      },
+      "track_mute/solo_1_arm_0": {
+        "mode": 8333,
+        "popup": 12416,
+        "playing": 0,
+        "perSequenceMute": 0,
+        "recordArmMode": 0,
+        "soloMode": 1
+      }
+    },
+    "rowInvariants": {
+      "status": "applied",
+      "nativeInvoked": true,
+      "independentReadMatched": true,
+      "retainedRetriesMatched": true,
+      "noOpSkippedNative": true,
+      "conflictSkippedNative": true,
+      "restored": true
+    }
+  },
+  "cleanup": {
+    "flagsRestored": true,
+    "snapshotRestored": true,
+    "inventoryRestored": true,
+    "contextRestored": true,
+    "settingsRestored": true,
+    "projectPathUnchanged": true,
+    "mpcPidUnchanged": true,
+    "temporaryTrackRemoved": true,
+    "labUnloaded": true,
+    "temporaryFilesRemoved": true,
+    "installedHostReady": true,
+    "settingsScope": "native command preferences and all Track Mute options",
+    "deferredRecentProjectPersistence": true,
+    "installedHostReadPassed": true
+  },
+  "deployment": {
+    "installedVersion": "0.2.0",
+    "upgraded": false,
+    "mpcRestarted": false,
+    "projectSaved": false
+  },
+  "limits": [
+    "stopped, automation Off, recognized native Single/Multi settings",
+    "mute requires global scope; no sequence target",
+    "plugin/drum targets only; other families remain unqualified",
+    "Mixer pages share one view ID; popup or different view invalidates the fence",
+    "race injection and post-setter context failures are qualified by isolated host/ARM fixtures"
+  ]
+}

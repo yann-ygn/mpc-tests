@@ -206,6 +206,7 @@ class MemorySession:
             raise SnapshotChanged("TrackPool virtual table does not match")
         all_tracks = self.vector(pool, poolo, "all")
         normal_tracks = self.vector(pool, poolo, "normal")
+        user_tracks = self.vector(pool, poolo, "user")
         if len(set(all_tracks)) != len(all_tracks) or not set(normal_tracks) <= set(all_tracks):
             raise SnapshotChanged("Track vectors are inconsistent")
 
@@ -265,10 +266,12 @@ class MemorySession:
         selected["index"] = (
             normal_tracks.index(current_track) if current_track in normal_tracks else None
         )
-        if selected["index"] is not None and selected["index"] != u32(p, po["selectedTrackIndex"]):
+        if current_track not in user_tracks or user_tracks.index(current_track) != u32(
+            p, po["selectedTrackIndex"]
+        ):
             raise SnapshotChanged("Selected track index and pointer disagree")
         after_p, after_pool, after_sequence = self.read_many(
-            [(project, 0xAA8), (pool_address, 0x50), (current_sequence, 0xC8)]
+            [(project, 0xAA8), (pool_address, 0x130), (current_sequence, 0xC8)]
         )
         checked = [
             po[k]
@@ -287,7 +290,7 @@ class MemorySession:
         if (
             not self.valid_project(after_p)
             or any(u32(p, off) != u32(after_p, off) for off in checked)
-            or pool[:0x50] != after_pool
+            or pool != after_pool
             or u32(sequence, so["name"]) != u32(after_sequence, so["name"])
             or sequence[so["bpm"] : so["bpm"] + 4] != after_sequence[so["bpm"] : so["bpm"] + 4]
         ):

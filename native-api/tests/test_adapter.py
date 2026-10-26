@@ -41,6 +41,11 @@ class ProfileTests(unittest.TestCase):
             "inventory_landmark": lambda s, c: c.update(
                 functions=[f for f in c["functions"] if f["name"] != "inventoryPartition"]
             ),
+            "screen_landmark": lambda s, c: c.update(
+                functions=[f for f in c["functions"] if f["name"] != "commandMixerModeName"]
+            ),
+            "screen_layout": lambda s, c: c["commandContext"].pop("trackMuteMode"),
+            "screen_alias": lambda s, c: c["commandContext"].update(mixerMode=8320),
             "qualification": lambda s, c: c.update(capabilityQualification="production"),
             "fingerprint_length": lambda s, c: c["functions"][0].update(prefixHex="abcd"),
             "duplicate_function": lambda s, c: c["functions"].append(

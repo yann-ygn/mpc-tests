@@ -186,7 +186,11 @@ char *api_respond(
         output);
       if (available) {
         fputs(i ? ",\"audio_copy\"]" : "]", output);
-        fputs(",\"conditions\":[\"main_mode\",\"no_popup\",\"stopped\",\"automation_off\"", output);
+        fputs(
+          ",\"screens\":[\"main\",\"mixer\",\"track_mute\"],"
+          "\"conditions\":[\"qualified_screen\",\"no_popup\",\"stopped\",\"automation_off\","
+          "\"recognized_solo_arm_settings\"",
+          output);
         if (!i)
           fputs(",\"global_mute\"", output);
         fputc(']', output);

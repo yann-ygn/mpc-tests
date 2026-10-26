@@ -35,6 +35,11 @@ wire_setter(void *data, uintptr_t function, uintptr_t property, bool value) {
   assert(ui);
   fixture.native.propagate_audio = !marker("lag-audio");
   enum mpc_native_error error = setter(data, function, property, value);
+  if (marker("policy-change-after-set"))
+    put32(
+      &fixture.native,
+      POLICY_MODE + native_command_context.modeValue,
+      native_command_context.trackMuteMode);
   if (marker("replace-after-set"))
     select_project(&fixture, PROJECT2);
   return error;
@@ -49,6 +54,8 @@ static int wire_read(void *data, uintptr_t address, void *output, size_t bytes) 
     const char *marker;
     unsigned value;
   } changes[] = {
+    {POLICY_MODE + p->modeValue, "policy-mixer", p->mixerMode},
+    {POLICY_MODE + p->modeValue, "policy-track-mute", p->trackMuteMode},
     {POLICY_MODE + p->modeValue, "policy-sounds", 0x20a0},
     {POLICY_MODE + p->modeValue, "policy-song", 0x2088},
     {POLICY_MODE + p->modeValue, "policy-clips", 0x209c},

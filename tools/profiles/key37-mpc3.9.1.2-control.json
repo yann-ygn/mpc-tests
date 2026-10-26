@@ -238,6 +238,21 @@
       "name": "inventoryTrackType",
       "rva": 40152528,
       "prefixHex": "4c0690e51eff2fe15e0e80e2126a9fed037ad0ed116adfed08d04de2c07af5ee"
+    },
+    {
+      "name": "commandMixerModeName",
+      "rva": 22514220,
+      "prefixHex": "14139fe501108fe0b9a1cfeb7afdffea08139fe501108fe0b5a1cfeb76fdffea"
+    },
+    {
+      "name": "commandTrackMuteModeName",
+      "rva": 22514012,
+      "prefixHex": "b0139fe501108fe0eda1cfebaefdffeaa4139fe501108fe0e9a1cfebaafdffea"
+    },
+    {
+      "name": "commandQualifiedModeCases",
+      "rva": 22511508,
+      "prefixHex": "940200ea2e0000ea8e0200eaa10200ea9c0200ea970200ea920200ea810200ea"
     }
   ],
   "bindings": [
@@ -348,6 +363,8 @@
     "armBehaviourVtable": 110313284,
     "armBehaviourProject": 80,
     "armBehaviourProperties": 84,
-    "armModeValue": 1260
+    "armModeValue": 1260,
+    "mixerMode": 8323,
+    "trackMuteMode": 8333
   }
 }

@@ -102,7 +102,8 @@ struct native_secondary {
 };
 
 struct native_command_context_layout {
-  uint32_t engineMode, modeVtable, modeValue, popupValue, mainMode, noPopup;
+  uint32_t engineMode, modeVtable, modeValue, popupValue, mainMode, mixerMode, trackMuteMode,
+    noPopup;
   uint32_t engineAudioThread, audioThreadVtable, audioThreadSequencer, sequencerVtable;
   uint32_t sequencerTimeline, timelineVtable, timelinePlaying;
   uint32_t sequencerRecorder, recorderVtable, recorderProperties;
@@ -111,9 +112,20 @@ struct native_command_context_layout {
   uint32_t engineMuteProperties, perSequenceMute, engineSoloBehaviour, soloBehaviourVtable;
   uint32_t soloProperty, soloValue, programAutomation;
 };
+/* Disposable UI-thread policy sample. Never part of a public ABI or receipt. */
+struct mpc_command_context {
+  uint32_t app, window, component, engine, mode, thread, sequencer, timeline, mute, solo,
+    solo_property, arm, recorder, record_properties;
+  uint32_t view, popup, arm_mode, solo_mode, automation;
+  unsigned char playing, sequence_mute;
+};
 enum mpc_command_operation;
 enum mpc_native_error mpc_native_qualify_command(
-  struct mpc_native_adapter *, const struct mpc_native_target *, enum mpc_command_operation);
+  struct mpc_native_adapter *,
+  const struct mpc_native_target *,
+  enum mpc_command_operation,
+  struct mpc_command_context *,
+  bool *);
 
 enum mpc_native_error mpc_native_open_backend(
   const struct mpc_native_io *, const struct mpc_native_hooks *, struct mpc_native_adapter **);

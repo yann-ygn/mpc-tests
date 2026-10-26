@@ -1,4 +1,4 @@
-#include "identity_fixture_backend.h"
+#include "policy_fixture_backend.h"
 #include "command_private.h"
 
 #include <stdatomic.h>
@@ -11,7 +11,10 @@ struct commands_fixture {
   struct mpc_commands *commands;
   struct mpc_identity_snapshot ids;
   enum mpc_native_error context_error;
-  bool single_solo, single_arm, block, entered, resume;
+  bool single_solo, single_arm, block, entered, resume, live_policy;
+  unsigned change_at_qualification;
+  uint32_t change_after_set, change_after_filter;
+  bool popup_after_set, broken_owner_after_set;
   unsigned qualifications;
   atomic_uint_fast64_t time_offset;
 };
@@ -27,6 +30,13 @@ static enum mpc_native_error qualify(void *data, enum mpc_command_operation oper
   struct commands_fixture *f = data;
   assert(ui && (unsigned)operation <= MPC_COMMAND_RECORD_ARMED);
   f->qualifications++;
+  if (f->change_at_qualification == f->qualifications)
+    put32(
+      &f->identity.native,
+      POLICY_MODE + native_command_context.modeValue,
+      native_command_context.trackMuteMode);
+  if (f->live_policy)
+    return mpc_executor_qualify_command(f->executor, operation);
   return f->context_error;
 }
 static uint32_t get32(struct fixture *native, uint32_t address) {
@@ -82,6 +92,12 @@ command_setter(void *data, uintptr_t function, uintptr_t property, bool value) {
       put_bool(native, owner + binding->requested, value);
       if (native->propagate_audio)
         put_bool(native, owner + binding->observed, value);
+      if (f->popup_after_set)
+        put32(native, POLICY_MODE + native_command_context.popupValue, 0x3081);
+      if (f->broken_owner_after_set)
+        put32(native, POLICY_MODE, 0);
+      if (f->change_after_set)
+        put32(native, POLICY_MODE + native_command_context.modeValue, f->change_after_set);
       if (native->invalidate_after_set)
         select_project(&f->identity, PROJECT2);
       return MPC_NATIVE_OK;
@@ -97,6 +113,11 @@ command_filter(void *data, uintptr_t storage, uintptr_t function, bool *value) {
   assert(
     storage == TRACK + native_bindings[2].filter_storage ||
     storage == TRACK2 + native_bindings[2].filter_storage);
+  if (f->change_after_filter)
+    put32(
+      &f->identity.native,
+      POLICY_MODE + native_command_context.modeValue,
+      f->change_after_filter);
   f->identity.native.filters++;
   *value = *value && f->identity.native.filter_allows;
   return MPC_NATIVE_OK;
@@ -104,6 +125,7 @@ command_filter(void *data, uintptr_t storage, uintptr_t function, bool *value) {
 static void setup(struct commands_fixture *f, unsigned pending, unsigned receipts, bool policy) {
   memset(f, 0, sizeof *f);
   state_init(&f->identity);
+  policy_init(&f->identity);
   atomic_init(&f->time_offset, 0);
   struct fixture *native = &f->identity.native;
   put32(native, TRACK2 + NATIVE_PROGRAM_OFFSET, PROGRAM2);
@@ -549,9 +571,117 @@ static void concurrent_retries_and_stale_handles(void) {
   cleanup(&f);
 }
 
+static void live_screens_and_transitions(void) {
+  const uint32_t screens[] = {
+    native_command_context.mainMode,
+    native_command_context.mixerMode,
+    native_command_context.trackMuteMode};
+  for (unsigned screen = 0; screen < 3; screen++) {
+    for (unsigned single = 0; single < 2; single++) {
+      struct commands_fixture f;
+      setup(&f, 8, 128, true);
+      f.live_policy = true;
+      f.single_arm = f.single_solo = single;
+      put32(&f.identity.native, POLICY_MODE + native_command_context.modeValue, screens[screen]);
+      put32(
+        &f.identity.native,
+        POLICY_RECORD_PROPERTIES + native_command_context.armModeValue,
+        !single);
+      put32(&f.identity.native, POLICY_SOLO_PROPERTY + native_command_context.soloValue, !single);
+      for (unsigned index = 0; index < 2; index++) {
+        for (unsigned selected = 0; selected < 2; selected++) {
+          for (unsigned property = 0; property < 3; property++) {
+            choose(&f, selected ? (index ? TRACK2 : TRACK) : (index ? TRACK : TRACK2));
+            uint32_t owner =
+              property == 2 ? (index ? TRACK2 : TRACK) : (index ? PROGRAM2 : PROGRAM);
+            bool original =
+              get32(&f.identity.native, owner + native_bindings[property].requested) & 1;
+            char id[80];
+            snprintf(id, sizeof id, "screen_%u_%u_%u_%u", screen, index, selected, property);
+            struct mpc_command_request input = request(&f, id, property, index, !original);
+            input.has_expected = true;
+            input.expected = original;
+            struct mpc_command_receipt receipt = send(&f, input);
+            assert(receipt.status == MPC_COMMAND_APPLIED && receipt.native_invoked);
+            assert(
+              get32(&f.identity.native, POLICY_MODE + native_command_context.modeValue) ==
+              screens[screen]);
+            unsigned setters = f.identity.native.setters, filters = f.identity.native.filters;
+            input.expected = !original;
+            snprintf(
+              input.request_id,
+              sizeof input.request_id,
+              "noop_%u_%u_%u",
+              index,
+              selected,
+              property);
+            receipt = send(&f, input);
+            assert(receipt.status == MPC_COMMAND_APPLIED && !receipt.native_invoked);
+            input.expected = original;
+            snprintf(
+              input.request_id,
+              sizeof input.request_id,
+              "conflict_%u_%u_%u",
+              index,
+              selected,
+              property);
+            receipt = send(&f, input);
+            assert(receipt.error == MPC_NATIVE_PRECONDITION_FAILED && !receipt.native_invoked);
+            assert(f.identity.native.setters == setters && f.identity.native.filters == filters);
+          }
+        }
+      }
+      cleanup(&f);
+    }
+  }
+  for (unsigned stage = 0; stage < 7; stage++) {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    f.live_policy = true;
+    struct mpc_command_request input =
+      request(&f, "transition", stage == 3 ? MPC_COMMAND_RECORD_ARMED : MPC_COMMAND_SOLO, 0, true);
+    struct mpc_command_receipt receipt;
+    if (stage == 1)
+      f.change_at_qualification = 2; /* After admission, before the setter. */
+    if (stage == 2)
+      f.change_after_set = native_command_context.mixerMode;
+    if (stage == 3)
+      f.change_after_filter = native_command_context.trackMuteMode;
+    if (stage == 4)
+      f.identity.native.propagate_audio = false;
+    f.popup_after_set = stage == 5;
+    f.broken_owner_after_set = stage == 6;
+    assert(mpc_commands_submit(f.commands, 7, &input, 0, &receipt) == MPC_NATIVE_OK);
+    while (!queued(&f))
+      tiny_pause();
+    if (!stage)
+      put32(&f.identity.native, POLICY_MODE + native_command_context.modeValue, 0x20a0);
+    pump(&f.identity);
+    if (stage == 4)
+      put32(
+        &f.identity.native,
+        POLICY_MODE + native_command_context.modeValue,
+        native_command_context.trackMuteMode);
+    receipt = drive(&f, input.request_id);
+    assert(receipt.status == (stage < 2 ? MPC_COMMAND_REJECTED : MPC_COMMAND_UNKNOWN));
+    assert(
+      receipt.error ==
+      (!stage || stage == 5 ? MPC_NATIVE_NOT_READY
+         : stage == 6       ? MPC_NATIVE_READ_FAILED
+                            : MPC_NATIVE_STATE_UNSTABLE));
+    assert(receipt.native_invoked == (stage >= 2));
+    assert(f.identity.native.setters == (stage == 2 || stage >= 4));
+    struct mpc_command_receipt replay;
+    assert(mpc_commands_submit(f.commands, 7, &input, 0, &replay) == MPC_NATIVE_OK);
+    assert(replay.status == receipt.status && replay.native_invoked == receipt.native_invoked);
+    cleanup(&f);
+  }
+}
+
 int main(void) {
   (void)validate_target;
   (void)get32;
+  live_screens_and_transitions();
   idempotence_and_preconditions();
   races_gates_and_constraints();
   effects_and_audio_verification();

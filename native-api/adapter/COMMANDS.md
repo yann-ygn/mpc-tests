@@ -11,7 +11,7 @@ Recompile trusted callers; configurations using the earlier ABIs are rejected.
 [US #32](../../findings/native-service.md) binds the public Unix setters and `get_command` in the persistent
 host. The socket authenticates callers by peer UID and validates strict schemas before enqueueing.
 This library opens no sockets. Its production `mpc_executor_qualify_command` callback checks live native
-Main/no-popup, stopped transport, recognized solo/arm settings, target automation Off and global mute scope.
+Main/Mixer/Track Mute with no popup, stopped transport, recognized solo/arm settings, target automation Off and global mute scope.
 The private lab can select this same policy with `LIVE_COMMAND_OPEN`; `LAB_COMMAND_OPEN` retains the older
 explicitly manual experimental policy.
 
@@ -23,7 +23,7 @@ new handles. The handler borrows its executor; close handlers before closing the
 while a handler authority is attached. Only authoritative executors can host these commands.
 
 A `mpc_command_policy.qualify` callback is mandatory for executing writes. It runs on the verified UI thread
-at initial dispatch and every later verification, before native access. The host must establish current mode/settings
+at dispatch, before native filter/setter access and readback, and around every verification snapshot. The host must establish current mode/settings
 from validated live sources, reject playback/automation/Clip/Song and unqualified contexts, and reject mute when
 per-sequence mute is enabled. A saved setting, session label or null callback cannot establish production
 qualification. Missing callbacks reject even no-ops with `NOT_READY`. The lab's manual policy is diagnostic only.
@@ -65,7 +65,10 @@ mpc_commands_submit(commands, authenticated_caller_id, &request, 500, &receipt);
 `qualify_live_context` can call `mpc_executor_qualify_command(executor, operation)` to use the exact-firmware
 production policy. Supply the executor as callback userdata and keep it borrowed through handler close.
 The helper resolves the active request, verifies its target/family, samples native owners/context twice and
-rejects unreadable, unsupported or changing values before any setter or no-op.
+rejects unreadable, unsupported or changing values before any setter or no-op. US #47 retains the initial
+context through delayed verification: a context transition before invocation rejects; after native invocation
+it yields retained uncertainty. The recursion guard allows policy reads to validate target lifetime without
+recursively invoking the host callback. No native addresses or context samples enter public receipts.
 An API return of `MPC_NATIVE_OK` means that a receipt was accepted/retrieved, not that its command applied.
 Inspect `receipt.status`, `receipt.execution`, and `receipt.error`. Pre-acceptance errors create no receipt.
 `mpc_commands_receipt_json` returns a heap string owned by the caller, matching the
