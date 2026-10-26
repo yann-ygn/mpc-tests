@@ -275,3 +275,16 @@ supplies public `collection`. Buses have no user `uiIndex` or writable reference
 
 See [inventory findings](../../findings/native-track-inventory.md) for the native map,
 UI evidence and validation. Listing a family does not qualify its flags or setters.
+
+## Explicit sequence mute (#48)
+
+Current trusted interfaces are executor ABI 6, command ABI 3 and snapshot ABI 3.
+The #46 inventory limits/layouts above are retained, with scope/generation context appended
+to snapshots. The private attachment protocol is now `STATE_V3` / `MPC_ADAPTER_STATE_V3`.
+Older attachments cannot enable state reads. Primitive ABI 1 and exports are unchanged.
+
+An optional executor sequence precondition now requires that exact live generation to
+be **active**, with both native selection properties agreeing. A live inactive sequence
+returns `SEQUENCE_NOT_ACTIVE`; a retired generation returns `STALE_SEQUENCE`. Managed mute
+jobs additionally match their explicit global/sequence scope to the live native preference.
+See [command integration](COMMANDS.md#sequence-scoped-mute-48) and [the wire contract](../README.md#sequence-scoped-mute).

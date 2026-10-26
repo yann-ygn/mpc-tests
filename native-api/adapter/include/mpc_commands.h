@@ -3,8 +3,9 @@
 
 #include "mpc_native.h"
 #include "mpc_identity.h"
+#include "mpc_state.h"
 
-#define MPC_COMMANDS_ABI 2u
+#define MPC_COMMANDS_ABI 3u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u
@@ -31,10 +32,18 @@ struct mpc_command_target {
   char instance_id[37];
   uint64_t project, track;
 };
+struct mpc_command_sequence {
+  char instance_id[37];
+  uint64_t project, sequence, generation;
+};
 struct mpc_command_request {
   char request_id[MPC_COMMAND_ID_BYTES];
   struct mpc_command_target target;
   enum mpc_command_operation operation;
+  /* Zero-initialized requests retain global semantics. Sequence scope is mute
+   * only and requires a complete, same-instance/project reference. */
+  enum mpc_mute_scope mute_scope;
+  struct mpc_command_sequence sequence;
   bool value, has_expected, expected;
   /* Observation revisions cannot be transaction preconditions. Reject before
    * acceptance rather than silently ignoring a caller's requested safeguard. */
@@ -45,7 +54,8 @@ struct mpc_command_request {
 /* A trusted host must check LIVE mode/settings on the UI thread at dispatch and
  * each verification. No callback means NOT_READY, including for no-op commands.
  * It must reject playback/automation/Clip/Song and unqualified families/modes.
- * Current contract has no sequence target: mute must reject per-sequence mode.
+ * Mute must match the request's scope and named active sequence. The production
+ * callback reads this context from the active executor request.
  * Callback userdata lives through successful commands_close. This callback is
  * host configuration, never an untrusted request field. */
 struct mpc_command_policy {
@@ -78,6 +88,8 @@ struct mpc_command_track {
 };
 struct mpc_command_observation {
   uint64_t project, generation, selected_track, selected_sequence, captured_ms;
+  uint64_t selected_sequence_generation;
+  uint32_t mute_scope;
   uint32_t track_count;
   struct mpc_command_track tracks[MPC_IDENTITY_MAX_TRACKS];
 };

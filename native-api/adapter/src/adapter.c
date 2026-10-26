@@ -374,6 +374,9 @@ const char *mpc_native_error_name(enum mpc_native_error error) {
     "REQUEST_ID_CONFLICT",
     "RETENTION_CAPACITY",
     "OUTCOME_UNAVAILABLE",
-    "VERIFICATION_TIMEOUT"};
+    "VERIFICATION_TIMEOUT",
+    "STALE_SEQUENCE",
+    "SEQUENCE_NOT_ACTIVE",
+    "MUTE_SCOPE_MISMATCH"};
   return (unsigned)error < sizeof names / sizeof *names ? names[error] : "INVALID_ERROR";
 }

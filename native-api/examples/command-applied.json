@@ -19,7 +19,11 @@
     ],
     "requestedValue": true,
     "audioSideValue": null,
-    "observedAt": "2026-10-25T16:22:18.063Z"
+    "observedAt": "2026-10-25T16:22:18.063Z",
+    "muteContext": {
+      "scope": "global",
+      "sequence": null
+    }
   },
   "observedChanges": [
     {
@@ -27,8 +31,14 @@
       "trackId": "2",
       "path": "tracks.2.requested.muted",
       "before": false,
-      "after": true
+      "after": true,
+      "muteContext": {
+        "scope": "global",
+        "sequence": null
+      }
     }
   ],
-  "error": null
+  "error": null,
+  "muteScope": "global",
+  "sequence": null
 }

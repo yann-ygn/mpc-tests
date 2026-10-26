@@ -8,7 +8,7 @@
 /* Trusted in-process interface, separate from the public command protocol. All
  * client calls are for non-realtime threads. Only the resolver runs on the UI
  * thread. The executor owns its adapter, scheduler and copied requests. */
-#define MPC_EXECUTOR_ABI 5u
+#define MPC_EXECUTOR_ABI 6u
 #define MPC_EXECUTOR_MAX_JOBS 128u
 #define MPC_EXECUTOR_MAX_WAIT_MS 30000u
 
@@ -20,7 +20,7 @@ struct mpc_executor_job;
 struct mpc_executor_identity {
   uint64_t project, project_generation, track, track_generation;
   char instance_id[37];
-  /* Optional sequence precondition; zero/zero leaves it unset. */
+  /* Optional active-sequence precondition; zero/zero leaves it unset. */
   uint64_t sequence, sequence_generation;
 };
 
@@ -59,6 +59,7 @@ struct mpc_executor_request {
   unsigned queue_timeout_ms;
   /* COMMAND_OBSERVE rechecks the qualification of the original operation. */
   unsigned command_property;
+  enum mpc_mute_scope mute_scope;
   /* Managed commands carry their original absolute monotonic deadline. This
    * prevents allocation/dispatch overhead from renewing the acceptance budget. */
   uint64_t command_deadline_ms;

@@ -4,7 +4,7 @@
   "instanceId": "run_0123456789abcdef0123456789abcdef",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -143,15 +143,26 @@
       "verification": [
         "model"
       ],
-      "screens": ["main", "mixer", "track_mute"],
+      "screens": [
+        "main",
+        "mixer",
+        "track_mute"
+      ],
       "conditions": [
         "qualified_screen",
         "recognized_solo_arm_settings",
         "no_popup",
         "stopped",
         "automation_off",
-        "global_mute"
-      ]
+        "matching_mute_scope",
+        "global_or_named_active_sequence"
+      ],
+      "muteScopes": [
+        "global",
+        "sequence"
+      ],
+      "inactiveSequence": "SEQUENCE_NOT_ACTIVE",
+      "muteReadCoverage": "active_sequence"
     },
     "set_solo": {
       "available": true,
@@ -164,7 +175,11 @@
         "model",
         "audio_copy"
       ],
-      "screens": ["main", "mixer", "track_mute"],
+      "screens": [
+        "main",
+        "mixer",
+        "track_mute"
+      ],
       "conditions": [
         "qualified_screen",
         "recognized_solo_arm_settings",
@@ -184,7 +199,11 @@
         "model",
         "audio_copy"
       ],
-      "screens": ["main", "mixer", "track_mute"],
+      "screens": [
+        "main",
+        "mixer",
+        "track_mute"
+      ],
       "conditions": [
         "qualified_screen",
         "recognized_solo_arm_settings",
@@ -219,6 +238,6 @@
     "maxMidiTracks": 128,
     "maxAudioTracks": 8,
     "maxBuses": 128,
-    "snapshotAbiVersion": 2
+    "snapshotAbiVersion": 3
   }
 }

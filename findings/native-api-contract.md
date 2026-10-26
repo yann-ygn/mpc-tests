@@ -203,9 +203,13 @@ native access; there is no best-effort fallback to nearby offsets.
 
 The [#31 stopped-mode matrix](native-flag-semantics.md) verifies global mute when
 per-sequence mute is disabled, and sequence-specific mute when enabled, on plugin/drum tracks.
-A track reference does not pin a sequence. Keep per-sequence writes unavailable until an explicit
-sequence target/precondition is defined and validated at dispatch. Clip/Song modes, playback and
-automation remain unqualified; reject unqualified modes rather than promising persistence.
+US #48 adds the explicit `muteScope: sequence` request and complete generation-bound sequence reference.
+The named sequence must remain active and the live per-sequence preference must match at dispatch,
+every native traversal and verification. Inactive editing returns `SEQUENCE_NOT_ACTIVE`; no command
+switches selection. Omitted scope retains global semantics. Authoritative state and receipt observations
+label the active mute scope; reads do not claim independent inactive/global copies.
+See [the implemented scope contract](../native-api/README.md#sequence-scoped-mute).
+Clip/Song modes, playback and automation remain unqualified.
 
 All examples use agreed API/schema version `0.1`, independently of MPC firmware.
 Additive optional fields/capabilities remain compatible; changing field meaning or

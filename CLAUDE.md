@@ -149,8 +149,19 @@ before running experiments.
   native/saved command settings, inventory, selection and Mixer Effects view were restored; temporary drum track,
   lab mappings and files removed. MPC was not restarted or saved; installed 0.2.0 resumed ready. Package 0.4.0 is
   built but not installed. See `findings/native-command-screens.md` and its sanitized proof.
+- Sequence-scoped mute (#48), branch `us-48-sequence-scoped-mute`: optional `muteScope` preserves global defaults;
+  sequence scope requires a complete same-instance/project sequence reference and generation. Dispatch and every
+  traversal require that generation to remain active, with a matching live per-sequence preference. Queued changes
+  reject before invocation; post-setter loss remains unknown with actual execution metadata. Reads and receipt
+  observations label mute scope; inactive editing returns `SEQUENCE_NOT_ACTIVE` without selecting anything.
+  Executor ABI 6 / command ABI 3 / snapshot ABI 3 and STATE_V3 replace older layouts; primitive ABI 1 is unchanged.
+  All 17 host entries, 11 ASan/UBSan entries and five isolated ARM fixtures pass. Twelve device rows cover
+  plugin/drum and selected/unselected targets on Main/Mixer Effects/Track Mute across two different sequence
+  patterns, with eight controller-edit/discarded-response rows. All five reads match independent state; p95 capture
+  is 11.032 ms. Original flags, sequence, selection, inventory, automation/settings and Mixer Effects viewport were
+  restored; the temporary drum, lab mappings and files were removed. Installed 0.2.0 resumed ready without restart
+  or save/load. Package 0.5.0 is built, not installed. See `findings/native-sequence-mute.md` and its sanitized proof.
 - Next: streaming (#33).
-  Per-sequence mute needs an explicit sequence target/precondition before public exposure.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
   the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through

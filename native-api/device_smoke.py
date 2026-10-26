@@ -151,6 +151,17 @@ def main():
                 snapshots = {op: call({"apiVersion": "0.1", "op": op}) for op in sorted(reads)}
                 state = snapshots["get_state"]
                 assert "error" not in state, state
+                from mpc_command_policy import capture as command_context
+
+                scope = "sequence" if command_context(with_session)["perSequenceMute"] else "global"
+                assert state["muteContext"]["scope"] == scope
+                for snapshot in snapshots.values():
+                    assert snapshot["muteContext"] == state["muteContext"]
+                if scope == "sequence":
+                    assert state["muteContext"]["sequence"] == state["selectedSequence"]["ref"]
+                else:
+                    assert state["muteContext"]["sequence"] is None
+                report["muteScopeMatched"] = scope
                 assert state["tracks"] == snapshots["list_tracks"]["tracks"]
                 assert state["tracks"] == snapshots["recovery_snapshot"]["tracks"]
                 assert state["selectedSequence"] == snapshots["current_sequence"]["sequence"]

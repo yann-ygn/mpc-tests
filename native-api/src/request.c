@@ -155,6 +155,37 @@ static int target(struct parser *p, struct mpc_command_target *out) {
   return seen != 7 || token(p, '}') ? -1 : 0;
 }
 
+static int sequence(struct parser *p, struct mpc_command_sequence *out) {
+  if (token(p, '{'))
+    return -1;
+  unsigned seen = 0;
+  for (unsigned i = 0; i < 4; i++) {
+    char key[32];
+    if ((i && token(p, ',')) || string(p, key, sizeof key) || token(p, ':'))
+      return -1;
+    unsigned bit;
+    int error;
+    if (!strcmp(key, "instanceId")) {
+      bit = 1;
+      error = instance(p, out->instance_id);
+    } else if (!strcmp(key, "projectId")) {
+      bit = 2;
+      error = handle(p, &out->project);
+    } else if (!strcmp(key, "sequenceId")) {
+      bit = 4;
+      error = handle(p, &out->sequence);
+    } else if (!strcmp(key, "generation")) {
+      bit = 8;
+      error = handle(p, &out->generation);
+    } else
+      return -1;
+    if (error || (seen & bit))
+      return -1;
+    seen |= bit;
+  }
+  return seen != 15 || token(p, '}') ? -1 : 0;
+}
+
 int api_parse(const char *input, size_t size, struct api_request_data *out) {
   memset(out, 0, sizeof *out);
   if (size > MAX_REQUEST_BYTES)
@@ -171,10 +202,12 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     EXPECTED = 32,
     START = 64,
     WAIT = 128,
-    INSTANCE = 256
+    INSTANCE = 256,
+    SCOPE = 512,
+    SEQUENCE = 1024
   };
   unsigned seen = 0;
-  for (unsigned i = 0; i < 9; i++) {
+  for (unsigned i = 0; i < 11; i++) {
     char key[32];
     if ((i && token(&p, ',')) || string(&p, key, sizeof key) || token(&p, ':'))
       return -1;
@@ -209,6 +242,21 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     } else if (!strcmp(key, "instanceId")) {
       bit = INSTANCE;
       error = instance(&p, out->instance_id);
+    } else if (!strcmp(key, "muteScope")) {
+      bit = SCOPE;
+      char scope[16];
+      error = string(&p, scope, sizeof scope);
+      if (!error) {
+        if (!strcmp(scope, "global"))
+          out->command.mute_scope = MPC_MUTE_GLOBAL;
+        else if (!strcmp(scope, "sequence"))
+          out->command.mute_scope = MPC_MUTE_SEQUENCE;
+        else
+          error = -1;
+      }
+    } else if (!strcmp(key, "sequence")) {
+      bit = SEQUENCE;
+      error = sequence(&p, &out->command.sequence);
     } else
       return -1;
     if (error || (seen & bit))
@@ -232,6 +280,17 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     out->command.operation = !strcmp(out->op, "set_mute") ? MPC_COMMAND_MUTE
       : !strcmp(out->op, "set_solo")                      ? MPC_COMMAND_SOLO
                                                           : MPC_COMMAND_RECORD_ARMED;
+    if (out->command.operation == MPC_COMMAND_MUTE) {
+      allowed |= SCOPE;
+      if (out->command.mute_scope == MPC_MUTE_SEQUENCE) {
+        required |= SEQUENCE;
+        allowed |= SEQUENCE;
+        if (
+          strcmp(out->command.sequence.instance_id, out->command.target.instance_id) ||
+          out->command.sequence.project != out->command.target.project)
+          return -1;
+      }
+    }
   } else if (!strcmp(out->op, "get_command")) {
     required |= ID | INSTANCE;
     allowed = required | WAIT;

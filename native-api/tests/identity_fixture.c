@@ -52,6 +52,15 @@ static void state_tests(void) {
   fixture.mutations = 0;
   assert(!state_read(&fixture, executor, MPC_NATIVE_STATE_UNSTABLE));
   assert(fixture.mutations == MPC_STATE_ATTEMPTS);
+  fixture.state_mutation = 4;
+  first = state_read(&fixture, executor, MPC_NATIVE_OK);
+  assert(first->attempts == 2 && first->mute_scope == MPC_MUTE_SEQUENCE);
+  assert(first->selected_sequence_generation == first->sequences[0].identity.generation);
+  free(first);
+  fixture.state_mutation = 5;
+  fixture.mutations = 0;
+  assert(!state_read(&fixture, executor, MPC_NATIVE_STATE_UNSTABLE));
+  assert(fixture.mutations == MPC_STATE_ATTEMPTS);
   fixture.state_mutation = 3;
   first = state_read(&fixture, executor, MPC_NATIVE_OK);
   assert(
@@ -115,6 +124,7 @@ int main(int argc, char **argv) {
   put32(native, POOL + NATIVE_USER_CAPACITY, VECTOR + 8);
   put32(native, OBJECTS + NATIVE_SELECTED_TRACK, TRACK2);
   put32(native, OBJECTS + NATIVE_SELECTED_SEQUENCE, SEQUENCE2);
+  put32(native, OBJECTS + NATIVE_SELECTED_SEQUENCE_MIRROR, SEQUENCE2);
   struct mpc_identity_snapshot two = snapshot(&fixture, executor);
   assert(two.tracks[0].id == original.track && two.selected_track == two.tracks[1].id);
   assert(two.selected_sequence == two.sequences[1].id && two.project == first.project);
@@ -139,14 +149,20 @@ int main(int argc, char **argv) {
 
   current.sequence = first.sequences[0].id;
   current.sequence_generation = first.sequences[0].generation;
+  finish(
+    &fixture,
+    submit(executor, MPC_EXECUTOR_VALIDATE_SEQUENCE, current),
+    MPC_NATIVE_SEQUENCE_NOT_ACTIVE);
+  put32(native, OBJECTS + NATIVE_SELECTED_SEQUENCE, SEQUENCE);
+  put32(native, OBJECTS + NATIVE_SELECTED_SEQUENCE_MIRROR, SEQUENCE);
   finish(&fixture, submit(executor, MPC_EXECUTOR_VALIDATE_SEQUENCE, current), MPC_NATIVE_OK);
   destroy_object(&fixture, SEQUENCE);
   finish(
     &fixture,
     submit(executor, MPC_EXECUTOR_VALIDATE_SEQUENCE, current),
-    MPC_NATIVE_STALE_TARGET);
+    MPC_NATIVE_STALE_SEQUENCE);
   stale =
-    finish(&fixture, submit(executor, MPC_EXECUTOR_SET_SOLO, current), MPC_NATIVE_STALE_TARGET);
+    finish(&fixture, submit(executor, MPC_EXECUTOR_SET_SOLO, current), MPC_NATIVE_STALE_SEQUENCE);
   assert(!stale.write.native_invoked && native->setters == 1);
   current.sequence = current.sequence_generation = 0;
 
@@ -164,7 +180,7 @@ int main(int argc, char **argv) {
   finish(
     &fixture,
     submit(executor, MPC_EXECUTOR_VALIDATE_SEQUENCE, clear_ref),
-    MPC_NATIVE_STALE_TARGET);
+    MPC_NATIVE_STALE_SEQUENCE);
   finish(&fixture, submit(executor, MPC_EXECUTOR_READ_TRACK, current), MPC_NATIVE_OK);
 
   /* The former root remains perfectly valid in memory. Only the authoritative

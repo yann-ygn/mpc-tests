@@ -14,6 +14,14 @@ static const char *installation, *runtime, *root;
 static bool commands_enabled;
 static bool native_policy;
 static unsigned policy_reads;
+static bool sequence_mutes[2];
+static bool scope_changed_after_set;
+
+static void select_sequence(unsigned index) {
+  put32(&fixture.native, OBJECTS + NATIVE_SELECTED_SEQUENCE, index ? SEQUENCE2 : SEQUENCE);
+  put32(&fixture.native, OBJECTS + NATIVE_SELECTED_SEQUENCE_MIRROR, index ? SEQUENCE2 : SEQUENCE);
+  put_bool(&fixture.native, PROGRAM + native_bindings[0].requested, sequence_mutes[index]);
+}
 
 static bool marker(const char *name) {
   char path[4096];
@@ -35,6 +43,13 @@ wire_setter(void *data, uintptr_t function, uintptr_t property, bool value) {
   assert(ui);
   fixture.native.propagate_audio = !marker("lag-audio");
   enum mpc_native_error error = setter(data, function, property, value);
+  if (function == IMAGE + native_bindings[0].setter) {
+    if (marker("scope-after-set"))
+      scope_changed_after_set = true;
+    sequence_mutes[marker("sequence-two")] = value;
+    if (marker("sequence-after-set"))
+      select_sequence(1);
+  }
   if (marker("policy-change-after-set"))
     put32(
       &fixture.native,
@@ -49,6 +64,12 @@ static int wire_read(void *data, uintptr_t address, void *output, size_t bytes) 
   if (ui && marker("manual-mute"))
     put_bool(&fixture.native, PROGRAM + native_bindings[0].requested, true);
   const struct native_command_context_layout *p = &native_command_context;
+  if (
+    ui && scope_changed_after_set && marker("scope-after-set") &&
+    address == POLICY_MUTE + p->perSequenceMute) {
+    memset(output, 0, bytes);
+    return 0;
+  }
   const struct {
     uint32_t address;
     const char *marker;
@@ -174,9 +195,16 @@ int main(int argc, char **argv) {
     pthread_mutex_lock(&fixture.mutex);
     bool queued = fixture.queued;
     pthread_mutex_unlock(&fixture.mutex);
-    if (queued && (stopping || access(pause_ui, F_OK)))
+    if (queued && (stopping || access(pause_ui, F_OK))) {
+      if (native_policy) {
+        select_sequence(marker("sequence-two"));
+        put_bool(
+          &fixture.native,
+          POLICY_MUTE + native_command_context.perSequenceMute,
+          marker("sequence-mute"));
+      }
       pump(&fixture);
-    else {
+    } else {
       struct timespec delay = {0, 1000000};
       nanosleep(&delay, NULL);
     }

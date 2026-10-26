@@ -62,7 +62,10 @@ static enum mpc_native_error check(struct mpc_commands *commands, unsigned wait_
 }
 static bool canonical(const struct mpc_command_request *a, const struct mpc_command_request *b) {
   return a->operation == b->operation && a->target.project == b->target.project &&
-    a->target.track == b->target.track &&
+    a->target.track == b->target.track && a->mute_scope == b->mute_scope &&
+    a->sequence.project == b->sequence.project && a->sequence.sequence == b->sequence.sequence &&
+    a->sequence.generation == b->sequence.generation &&
+    !memcmp(a->sequence.instance_id, b->sequence.instance_id, 37) &&
     !memcmp(a->target.instance_id, b->target.instance_id, 37) && a->value == b->value &&
     a->has_expected == b->has_expected && (!a->has_expected || a->expected == b->expected) &&
     a->start_within_ms == b->start_within_ms;
@@ -89,6 +92,13 @@ static const struct mpc_command_track *target_track(const struct mpc_command_rec
 static bool verified(const struct mpc_command_receipt *receipt) {
   const struct mpc_command_track *track = target_track(receipt);
   if (!track || track->known != 15)
+    return false;
+  if (
+    receipt->request.operation == MPC_COMMAND_MUTE &&
+    (receipt->after.mute_scope != (unsigned)receipt->request.mute_scope ||
+     (receipt->request.mute_scope == MPC_MUTE_SEQUENCE &&
+      (receipt->after.selected_sequence != receipt->request.sequence.sequence ||
+       receipt->after.selected_sequence_generation != receipt->request.sequence.generation))))
     return false;
   unsigned property = receipt->request.operation;
   bool value = property == MPC_COMMAND_MUTE ? track->muted
@@ -131,7 +141,11 @@ static void advance(struct mpc_commands *commands, struct record *record) {
         ? MPC_EXECUTOR_COMMAND_OBSERVE
         : (enum mpc_executor_operation)(MPC_EXECUTOR_COMMAND_MUTE + receipt->request.operation),
       .identity =
-        {.project = receipt->request.target.project, .track = receipt->request.target.track},
+        {.project = receipt->request.target.project,
+         .track = receipt->request.target.track,
+         .sequence = receipt->request.sequence.sequence,
+         .sequence_generation = receipt->request.sequence.generation},
+      .mute_scope = receipt->request.mute_scope,
       .desired = receipt->request.value,
       .has_expected = receipt->request.has_expected,
       .expected = receipt->request.expected,
@@ -356,6 +370,17 @@ enum mpc_native_error mpc_commands_submit(
     !input->target.project || !input->target.track ||
     (unsigned)input->operation > MPC_COMMAND_RECORD_ARMED ||
     input->start_within_ms > MPC_COMMAND_MAX_START_MS)
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  if (
+    (unsigned)input->mute_scope > MPC_MUTE_SEQUENCE ||
+    (input->mute_scope == MPC_MUTE_SEQUENCE &&
+     (input->operation != MPC_COMMAND_MUTE || !instance(input->sequence.instance_id) ||
+      memcmp(input->sequence.instance_id, input->target.instance_id, 37) ||
+      input->sequence.project != input->target.project || !input->sequence.sequence ||
+      !input->sequence.generation)) ||
+    (input->mute_scope == MPC_MUTE_GLOBAL &&
+     (input->sequence.instance_id[0] || input->sequence.project || input->sequence.sequence ||
+      input->sequence.generation)))
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (input->has_expected_revision)
     return MPC_NATIVE_UNSUPPORTED_PRECONDITION;

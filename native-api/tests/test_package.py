@@ -66,8 +66,16 @@ class PackageTests(unittest.TestCase):
         log = self.root / "systemctl.log"
         mounts = self.root / "mounts"
         mounts.write_text("/dev/root / ext4 rw,relatime 0 0\n")
+        # The shared installer calls sync. This scratch-tree fixture needs no
+        # disk durability and must not wait for unrelated host-wide writeback.
+        test_bin = self.root / "bin"
+        test_bin.mkdir()
+        sync = test_bin / "sync"
+        sync.write_text("#!/bin/sh\nexit 0\n")
+        sync.chmod(0o755)
         env = {
             **os.environ,
+            "PATH": str(test_bin) + os.pathsep + os.environ["PATH"],
             "ADDIN_INSTALL_TEST": "1",
             "SYSTEMD_ROOT": str(self.root / "system"),
             "ADDIN_TEST_LOG": str(log),

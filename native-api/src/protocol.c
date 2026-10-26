@@ -157,7 +157,7 @@ char *api_respond(
       ? "[\"track.uiIndex\",\"track.collection\",\"track.index\",\"track.name\",\"track.type\","
         "\"track.requested\",\"track.audioSide.soloed\",\"track."
         "audioSide.recordArmed\",\"track.silenced\",\"sequence.name\",\"sequence.used\",\"sequence."
-        "bpm\",\"selection\",\"buses.metadata\"]"
+        "bpm\",\"muteContext\",\"sequence.ref\",\"selection\",\"buses.metadata\"]"
       : "[]",
     output);
   fputs(",\"capabilities\":{\"describe\":{\"available\":true,\"reason\":null}", output);
@@ -192,8 +192,13 @@ char *api_respond(
           "\"recognized_solo_arm_settings\"",
           output);
         if (!i)
-          fputs(",\"global_mute\"", output);
+          fputs(",\"matching_mute_scope\",\"global_or_named_active_sequence\"", output);
         fputc(']', output);
+        if (!i)
+          fputs(
+            ",\"muteScopes\":[\"global\",\"sequence\"],\"inactiveSequence\":\"SEQUENCE_NOT_"
+            "ACTIVE\",\"muteReadCoverage\":\"active_sequence\"",
+            output);
       }
     }
     fputc('}', output);

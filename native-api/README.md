@@ -155,7 +155,7 @@ See [the native inventory map and device evidence](../findings/native-track-inve
 
 The combined API limit is 136 user tracks (128 MIDI-triggered and 8 audio), 128 master
 objects and 128 sequence slots. Discovery advertises these inventory limits and
-`snapshotAbiVersion: 2`. The private transfer requires `STATE_V2`; older attachments
+`snapshotAbiVersion: 3`. The private transfer requires `STATE_V3`; older attachments
 remain incompatible. No cached or partial list is published as a complete capture.
 
 Requested flags and separate audio-side copies are qualified only for plugin/drum normal tracks. Bus flags,
@@ -209,7 +209,7 @@ copy for solo/arm. Mute remains explicitly model-only. `unknown` preserves execu
 `get_command` takes `instanceId`, `requestId` and optional `waitMs`; it never executes a command.
 
 The native live policy permits **Main, Mixer or Track Mute, no popup, stopped, automation Off**, on qualified plugin/drum tracks.
-Mute additionally requires **Track Mute State Per Sequence disabled**. Single/Multi solo and arm settings are
+Mute requires the live **Track Mute State Per Sequence** preference to match the requested scope. Single/Multi solo and arm settings are
 read live and must be recognized. Native follow/filter effects are retained and reported in `observedChanges`.
 The policy re-resolves owners and samples its context twice at dispatch, before native invocation and readback,
 and around each owned verification snapshot. Its initial context is retained through delayed audio verification.
@@ -220,6 +220,47 @@ Mixer Volume, Pan & Volume, Sends, Effects and I/O pages address the same model 
 the UI. Pad Mixer, Song, Clip and other views/popups remain unqualified. See [screen qualification](../findings/native-command-screens.md).
 Use SHIFT+AUTOMATION in the UI to change the global automation Off setting. This API does not change settings.
 
+### Sequence-scoped mute
+
+Omitting `muteScope` preserves global mute semantics. Explicit `"muteScope":"global"`
+is canonically identical and requires per-sequence mute to be disabled. It cannot carry
+`sequence`. Only `set_mute` accepts these fields.
+
+For sequence mute, send `"muteScope":"sequence"` and copy a complete `sequence` reference
+from `selectedSequence.ref` (or `current_sequence.sequence.ref`). It contains `instanceId`,
+`projectId`, `sequenceId` and `generation`; the instance/project must match the track target.
+See [the request example](examples/sequence-mute-request.json). All handles and generations
+are decimal strings. A sequence reference is never a slot number or a sequence name.
+
+The named sequence must remain active, with per-sequence mute enabled, at dispatch,
+every native traversal and verification. A live but inactive reference returns
+`SEQUENCE_NOT_ACTIVE`; a retired/missing generation returns `STALE_SEQUENCE`; a wrong
+preference returns `MUTE_SCOPE_MISMATCH`. Malformed/inconsistent references return
+`INVALID_ARGUMENT`. No command selects a sequence or changes preferences. Inactive-sequence
+editing has no qualified direct native path. A sequence change while queued rejects before
+the setter; a change/lost scope after invocation retains `execution: completed`,
+`nativeInvoked: true`, and `status: unknown`. Retry the original request ID or use `get_command`
+to recover the retained result; neither operation follows the newly selected sequence.
+
+All authoritative read projections include `muteContext: {scope, sequence}`. The context
+labels `tracks[].requested.muted`, and `sequence` is the complete active sequence reference
+when scope is `sequence`, otherwise null. No active project gives a null scope. Reads cover
+only the active sequence's live Program mute; inactive-sequence and simultaneous independent
+global/sequence copies are unavailable. `silenced` remains separate effective suppression,
+including solo effects; `audioSide.muted` stays null. Sequence metadata still lists all slots.
+Read requests accept no sequence selector. This API does not claim audible completion.
+
+Mute receipts echo canonical `muteScope` and `sequence`, including while pending or rejected.
+`verification.muteContext` labels its requested-value observation; mute entries in
+`observedChanges` carry the same context. Mute changes across different scopes or sequence
+generations are not compared as if they were edits to one property. Expected-value checks
+and desired-state no-ops use the addressed live scope and still require full qualification.
+
+Trusted C callers must recompile: command ABI **3**, executor ABI **6**, snapshot ABI **3**
+and private `STATE_V3` / `MPC_ADAPTER_STATE_V3` replace the older layouts. Primitive adapter
+ABI 1 and the public JSON API version 0.1 stay unchanged. Package 0.5.0 contains this increment.
+See [sequence qualification and device restoration evidence](../findings/native-sequence-mute.md).
+
 Project and track IDs are decimal strings representing nonzero unsigned 64-bit values, at most
 18446744073709551615. Names, indices, addresses, numeric coercions, caller IDs and revision preconditions are rejected.
 `expected.value` is checked against the live native property immediately before the setter, before the no-op check.
@@ -227,7 +268,7 @@ Project and track IDs are decimal strings representing nonzero unsigned 64-bit v
 The authenticated caller is the Unix peer **UID**, obtained with `SO_PEERCRED`. Same-UID processes share a retry
 namespace across connections and PIDs. Caller identity cannot be supplied in JSON. Request IDs are scoped to that
 caller and service instance. A canonical retry returns the retained result; changing operation, reference, value,
-expectation or start budget gives `REQUEST_ID_CONFLICT`. Changing only `waitMs` does not re-enqueue or renew work.
+expectation, mute scope, sequence identity/generation or start budget gives `REQUEST_ID_CONFLICT`. Changing only `waitMs` does not re-enqueue or renew work.
 
 There are 16 pending slots and 128 retained receipts. Retention is at least 600,000 ms from acceptance, and pending
 commands remain retained. Pressure returns `QUEUE_FULL` or `RETENTION_CAPACITY` without evicting live receipts.

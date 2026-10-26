@@ -120,10 +120,12 @@ struct mpc_command_context {
   unsigned char playing, sequence_mute;
 };
 enum mpc_command_operation;
+enum mpc_native_error mpc_native_mute_scope(struct mpc_native_adapter *, uint32_t, uint32_t *);
 enum mpc_native_error mpc_native_qualify_command(
   struct mpc_native_adapter *,
   const struct mpc_native_target *,
   enum mpc_command_operation,
+  enum mpc_mute_scope,
   struct mpc_command_context *,
   bool *);
 

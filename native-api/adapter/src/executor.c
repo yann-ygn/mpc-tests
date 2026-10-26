@@ -39,6 +39,7 @@ struct mpc_executor {
   struct mpc_command_policy command_policy;
   struct mpc_command_native_result *command_context;
   enum mpc_command_operation command_property;
+  enum mpc_mute_scope mute_scope;
   bool qualifying;
 };
 
@@ -143,6 +144,8 @@ observation(const struct mpc_state_snapshot *state, struct mpc_command_observati
   out->generation = state->project_generation;
   out->selected_track = state->selected_track;
   out->selected_sequence = state->selected_sequence;
+  out->selected_sequence_generation = state->selected_sequence_generation;
+  out->mute_scope = state->mute_scope;
   out->captured_ms = state->finished_ms;
   out->track_count = state->track_count;
   for (unsigned i = 0; i < state->track_count; i++) {
@@ -179,6 +182,7 @@ static struct mpc_executor_result command_execute(
   executor->active = true;
   executor->command_context = out;
   executor->command_property = (enum mpc_command_operation)property;
+  executor->mute_scope = request.mute_scope;
   result.error = qualify_command(executor);
   executor->active = false;
   if (result.error)
@@ -609,6 +613,19 @@ enum mpc_native_error mpc_executor_command_submit(
     (request->operation == MPC_EXECUTOR_COMMAND_OBSERVE &&
      request->command_property > MPC_COMMAND_RECORD_ARMED))
     return MPC_NATIVE_INVALID_ARGUMENT;
+  if (request->operation >= MPC_EXECUTOR_COMMAND_MUTE) {
+    unsigned property = request->operation == MPC_EXECUTOR_COMMAND_OBSERVE
+      ? request->command_property
+      : (unsigned)(request->operation - MPC_EXECUTOR_COMMAND_MUTE);
+    if (
+      (unsigned)request->mute_scope > MPC_MUTE_SEQUENCE ||
+      (request->mute_scope == MPC_MUTE_SEQUENCE &&
+       (property != MPC_COMMAND_MUTE || !request->identity.sequence ||
+        !request->identity.sequence_generation)) ||
+      (request->mute_scope == MPC_MUTE_GLOBAL &&
+       (request->identity.sequence || request->identity.sequence_generation)))
+      return MPC_NATIVE_INVALID_ARGUMENT;
+  }
   pthread_mutex_lock(&executor->mutex);
   enum mpc_native_error error = MPC_NATIVE_OK;
   if (executor->state != MPC_EXECUTOR_READY)
@@ -802,6 +819,7 @@ mpc_executor_qualify_command(struct mpc_executor *executor, enum mpc_command_ope
     executor->adapter,
     &target,
     operation,
+    executor->mute_scope,
     &context->context,
     &context->context_known);
 }

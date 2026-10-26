@@ -15,6 +15,7 @@ class CommandContractTests(unittest.TestCase):
     def test_wire_examples_and_retained_lookup_schema(self):
         for name, schema in (
             ("command-request", "command-request"),
+            ("sequence-mute-request", "command-request"),
             ("get-command-request", "get-command-request"),
         ):
             request = json.loads((ROOT / f"native-api/examples/{name}.json").read_text())

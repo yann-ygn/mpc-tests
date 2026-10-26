@@ -239,6 +239,34 @@ static void command_request(FILE *stream, const char *line) {
   } else if (commands && !strncmp(line, "LAB_COMMAND_GET ", 16)) {
     if (sscanf(line, "LAB_COMMAND_GET %36s %80s %u %c", instance, id, &wait_ms, &extra) == 3)
       error = mpc_commands_get(commands, 0, instance, id, wait_ms, receipt);
+  } else if (commands && !strncmp(line, "LAB_COMMAND_SEQUENCE_SET ", 25)) {
+    struct mpc_command_request request = {
+      .operation = MPC_COMMAND_MUTE,
+      .mute_scope = MPC_MUTE_SEQUENCE};
+    int fields = sscanf(
+      line,
+      "LAB_COMMAND_SEQUENCE_SET %u %1s %36s %" SCNu64 " %" SCNu64 " %80s %u %u %" SCNu64 " %" SCNu64
+      " %c",
+      &value,
+      expected,
+      request.target.instance_id,
+      &request.target.project,
+      &request.target.track,
+      request.request_id,
+      &start_ms,
+      &wait_ms,
+      &request.sequence.sequence,
+      &request.sequence.generation,
+      &extra);
+    if (fields == 10 && value <= 1 && strchr("-01", expected[0])) {
+      memcpy(request.sequence.instance_id, request.target.instance_id, 37);
+      request.sequence.project = request.target.project;
+      request.value = value != 0;
+      request.has_expected = expected[0] != '-';
+      request.expected = expected[0] == '1';
+      request.start_within_ms = start_ms;
+      error = mpc_commands_submit(commands, 0, &request, wait_ms, receipt);
+    }
   } else if (commands && !strncmp(line, "LAB_COMMAND_SET ", 16)) {
     struct mpc_command_request request = {0};
     int fields = sscanf(
@@ -416,7 +444,7 @@ static void state_command(FILE *stream, const char *line) {
   struct mpc_executor_status status;
   struct mpc_executor_job *job = NULL;
   struct mpc_executor_result result = {0};
-  if (sscanf(line, "STATE_V2 %36s %c", instance, &extra) != 1)
+  if (sscanf(line, "STATE_V3 %36s %c", instance, &extra) != 1)
     error = MPC_NATIVE_INVALID_ARGUMENT;
   else if (authoritative) {
     error = mpc_executor_get_status(executor, &status);
@@ -482,7 +510,7 @@ static void *worker(void *unused) {
     if (fgets(line, sizeof line, f)) {
       if (!strncmp(line, "LAB_COMMAND_", 12) || !strncmp(line, "LIVE_COMMAND_", 13)) {
         command_request(f, line);
-      } else if (!strncmp(line, "STATE_V2 ", 9)) {
+      } else if (!strncmp(line, "STATE_V3 ", 9)) {
         state_command(f, line);
       } else if (!strcmp(line, "IDENTITIES\n") || !strncmp(line, "HANDLE_", 7)) {
         identity_command(f, line);
@@ -495,7 +523,7 @@ static void *worker(void *unused) {
           fprintf(
             f,
             "%s %s %s %s VERIFIED\n",
-            authoritative ? "MPC_ADAPTER_STATE_V2" : "MPC_ADAPTER_V1",
+            authoritative ? "MPC_ADAPTER_STATE_V3" : "MPC_ADAPTER_V1",
             status.adapter.instance_id,
             status.adapter.profile_id,
             status.adapter.build_id);

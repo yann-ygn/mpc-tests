@@ -12,7 +12,10 @@
         "trackTypes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
         "verification": {"type": "array", "uniqueItems": true, "items": {"enum": ["model", "audio_copy"]}},
         "screens": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-        "conditions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+        "conditions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "muteScopes": {"type":"array","uniqueItems":true,"items":{"enum":["global","sequence"]}},
+        "inactiveSequence": {"const":"SEQUENCE_NOT_ACTIVE"},
+        "muteReadCoverage": {"const":"active_sequence"}
       },
       "allOf": [
         {"if": {"properties": {"available": {"const": true}}},
@@ -101,7 +104,7 @@
             "maxMidiTracks": {"const":128},
             "maxAudioTracks": {"const":8},
             "maxBuses": {"const":128},
-            "snapshotAbiVersion": {"const":2}
+            "snapshotAbiVersion": {"const":3}
           }
         }
       }

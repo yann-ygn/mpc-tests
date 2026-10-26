@@ -129,12 +129,15 @@
             "null"
           ],
           "format": "date-time"
+        },
+        "muteContext": {
+          "$ref": "#/$defs/muteContext"
         }
       }
     },
     "observedChanges": {
       "type": "array",
-      "maxItems": 770,
+      "maxItems": 818,
       "items": {
         "type": "object",
         "required": [
@@ -168,6 +171,9 @@
               "string",
               "null"
             ]
+          },
+          "muteContext": {
+            "$ref": "#/$defs/muteContext"
           }
         }
       }
@@ -197,6 +203,22 @@
           ]
         }
       }
+    },
+    "muteScope": {
+      "enum": [
+        "global",
+        "sequence"
+      ]
+    },
+    "sequence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/sequenceRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "allOf": [
@@ -243,6 +265,130 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "set_mute"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "muteScope",
+          "sequence"
+        ],
+        "if": {
+          "properties": {
+            "muteScope": {
+              "const": "sequence"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "sequence": {
+              "$ref": "#/$defs/sequenceRef"
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "sequence": {
+              "type": "null"
+            }
+          }
+        }
+      }
     }
-  ]
+  ],
+  "$defs": {
+    "sequenceRef": {
+      "type": "object",
+      "required": [
+        "instanceId",
+        "projectId",
+        "sequenceId",
+        "generation"
+      ],
+      "properties": {
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "projectId": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Nonzero uint64, at most 18446744073709551615",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "sequenceId": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Nonzero uint64, at most 18446744073709551615",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "generation": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Nonzero uint64, at most 18446744073709551615",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "muteContext": {
+      "type": "object",
+      "required": [
+        "scope",
+        "sequence"
+      ],
+      "properties": {
+        "scope": {
+          "enum": [
+            "global",
+            "sequence",
+            null
+          ]
+        },
+        "sequence": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sequenceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "sequence"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "sequence": {
+                "$ref": "#/$defs/sequenceRef"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "sequence": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
 }

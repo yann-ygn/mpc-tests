@@ -26,7 +26,13 @@
     "name": "Sequence 01",
     "used": false,
     "bpm": 120,
-    "bpmSource": "sequence_property"
+    "bpmSource": "sequence_property",
+    "ref": {
+      "instanceId": "run_00000000000000000000000000000000",
+      "projectId": "1",
+      "sequenceId": "4",
+      "generation": "4"
+    }
   },
   "sequenceSlotCount": 128,
   "sequenceObjectCount": 1,
@@ -39,7 +45,13 @@
       "name": "Sequence 01",
       "used": false,
       "bpm": 120,
-      "bpmSource": "sequence_property"
+      "bpmSource": "sequence_property",
+      "ref": {
+        "instanceId": "run_00000000000000000000000000000000",
+        "projectId": "1",
+        "sequenceId": "4",
+        "generation": "4"
+      }
     }
   ],
   "transport": {
@@ -182,5 +194,9 @@
     "transport.tempoSource",
     "transport.playing",
     "transport.recording"
-  ]
+  ],
+  "muteContext": {
+    "scope": "global",
+    "sequence": null
+  }
 }

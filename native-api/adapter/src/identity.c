@@ -406,13 +406,21 @@ enum mpc_native_error mpc_identity_sequence(
   enum mpc_native_error error = check_project(registry, identity);
   if (error)
     return error;
-  return find(
-           registry->sequences,
-           MPC_IDENTITY_MAX_SEQUENCES,
-           identity->sequence,
-           identity->sequence_generation)
-    ? MPC_NATIVE_OK
-    : MPC_NATIVE_STALE_TARGET;
+  struct entry *entry = find(
+    registry->sequences,
+    MPC_IDENTITY_MAX_SEQUENCES,
+    identity->sequence,
+    identity->sequence_generation);
+  if (!entry)
+    return MPC_NATIVE_STALE_SEQUENCE;
+  uint32_t selected, mirror;
+  if (
+    read32(registry, registry->root + NATIVE_SELECTED_SEQUENCE, &selected) ||
+    read32(registry, registry->root + NATIVE_SELECTED_SEQUENCE_MIRROR, &mirror))
+    return MPC_NATIVE_READ_FAILED;
+  if (selected != mirror)
+    return MPC_NATIVE_STATE_UNSTABLE;
+  return selected == entry->address ? MPC_NATIVE_OK : MPC_NATIVE_SEQUENCE_NOT_ACTIVE;
 }
 
 enum mpc_native_error mpc_identity_resolve(
@@ -675,8 +683,12 @@ capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot 
   output->selected_track = before.selected_track;
   output->selected_sequence = before.selected_sequence;
   output->sequence_slots = before.sequence_slots;
+  output->mute_scope = MPC_MUTE_UNKNOWN;
   struct inventory inventory, verify;
   if (before.project) {
+    error = mpc_native_mute_scope(registry->adapter, registry->root, &output->mute_scope);
+    if (error)
+      return error;
     error = selection_check(registry, &before);
     if (error)
       return error;
@@ -727,6 +739,8 @@ capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot 
       sequence->identity.id = id->id;
       sequence->identity.generation = id->generation;
       sequence->identity.index = id->index;
+      if (id->id == before.selected_sequence)
+        output->selected_sequence_generation = id->generation;
       struct mpc_native_io *io = &registry->adapter->io;
       if (
         !entry || state_name(registry, entry->address + NATIVE_SEQUENCE_NAME, sequence->name) ||
@@ -748,6 +762,12 @@ capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot 
     return MPC_NATIVE_STATE_UNSTABLE;
   if (!before.project)
     return MPC_NATIVE_OK;
+  uint32_t scope;
+  error = mpc_native_mute_scope(registry->adapter, registry->root, &scope);
+  if (error)
+    return error;
+  if (scope != output->mute_scope)
+    return MPC_NATIVE_STATE_UNSTABLE;
   error = selection_check(registry, &after);
   if (error)
     return error;
@@ -798,6 +818,14 @@ mpc_identity_bind(struct mpc_identity_registry *registry, struct mpc_executor_id
     return MPC_NATIVE_NO_ACTIVE_PROJECT;
   if (identity->project != registry->project)
     return MPC_NATIVE_STALE_PROJECT;
+  if (identity->sequence || identity->sequence_generation) {
+    if (!find(
+          registry->sequences,
+          MPC_IDENTITY_MAX_SEQUENCES,
+          identity->sequence,
+          identity->sequence_generation))
+      return MPC_NATIVE_STALE_SEQUENCE;
+  }
   for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
     const struct entry *entry = &registry->tracks[i];
     if (entry->address && entry->id == identity->track && alive(&entry->lifetime)) {

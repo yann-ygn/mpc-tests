@@ -27,6 +27,38 @@ static const char *error_name(enum mpc_native_error error) {
     : error == MPC_NATIVE_STALE_TARGET              ? "TARGET_NOT_FOUND"
                                                     : mpc_native_error_name(error);
 }
+static void sequence_ref(
+  FILE *output, const char *instance, uint64_t project, uint64_t sequence, uint64_t generation) {
+  fprintf(
+    output,
+    "{\"instanceId\":\"%s\",\"projectId\":\"%" PRIu64 "\",\"sequenceId\":\"%" PRIu64
+    "\",\"generation\":\"%" PRIu64 "\"}",
+    instance,
+    project,
+    sequence,
+    generation);
+}
+static void mute_context(
+  FILE *output,
+  const struct mpc_command_receipt *receipt,
+  const struct mpc_command_observation *observation) {
+  fprintf(
+    output,
+    "{\"scope\":%s,\"sequence\":",
+    observation->mute_scope == MPC_MUTE_GLOBAL       ? "\"global\""
+      : observation->mute_scope == MPC_MUTE_SEQUENCE ? "\"sequence\""
+                                                     : "null");
+  if (observation->mute_scope == MPC_MUTE_SEQUENCE && observation->selected_sequence)
+    sequence_ref(
+      output,
+      receipt->request.target.instance_id,
+      observation->project,
+      observation->selected_sequence,
+      observation->selected_sequence_generation);
+  else
+    fputs("null", output);
+  fputc('}', output);
+}
 static void changes(FILE *output, const struct mpc_command_receipt *receipt) {
   fputc('[', output);
   if (
@@ -79,10 +111,18 @@ static void changes(FILE *output, const struct mpc_command_receipt *receipt) {
     for (unsigned field = 0; field < sizeof paths / sizeof *paths; field++) {
       if (before[field] == after[field])
         continue;
+      if (
+        !field &&
+        (receipt->before.mute_scope != receipt->after.mute_scope ||
+         (receipt->before.mute_scope == MPC_MUTE_SEQUENCE &&
+          (receipt->before.selected_sequence != receipt->after.selected_sequence ||
+           receipt->before.selected_sequence_generation !=
+             receipt->after.selected_sequence_generation))))
+        continue;
       fprintf(
         output,
         "%s{\"projectId\":\"%" PRIu64 "\",\"trackId\":\"%" PRIu64 "\",\"path\":\"tracks.%" PRIu64
-        ".%s\",\"before\":%s,\"after\":%s}",
+        ".%s\",\"before\":%s,\"after\":%s",
         comma ? "," : "",
         receipt->before.project,
         a->id,
@@ -90,6 +130,11 @@ static void changes(FILE *output, const struct mpc_command_receipt *receipt) {
         paths[field],
         boolean(before[field]),
         boolean(after[field]));
+      if (!field) {
+        fputs(",\"muteContext\":", output);
+        mute_context(output, receipt, &receipt->after);
+      }
+      fputc('}', output);
       comma = true;
     }
   }
@@ -101,6 +146,12 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     !receipt || (unsigned)receipt->status > MPC_COMMAND_UNKNOWN ||
     (unsigned)receipt->execution > MPC_COMMAND_COMPLETED ||
     (unsigned)receipt->request.operation > MPC_COMMAND_RECORD_ARMED ||
+    (unsigned)receipt->request.mute_scope > MPC_MUTE_SEQUENCE ||
+    (receipt->request.mute_scope == MPC_MUTE_SEQUENCE &&
+     (receipt->request.operation != MPC_COMMAND_MUTE ||
+      memcmp(receipt->request.sequence.instance_id, receipt->request.target.instance_id, 37) ||
+      receipt->request.sequence.project != receipt->request.target.project ||
+      !receipt->request.sequence.sequence || !receipt->request.sequence.generation)) ||
     receipt->before.track_count > MPC_IDENTITY_MAX_TRACKS ||
     receipt->after.track_count > MPC_IDENTITY_MAX_TRACKS ||
     strnlen(receipt->request.request_id, MPC_COMMAND_ID_BYTES) >= MPC_COMMAND_ID_BYTES ||
@@ -163,9 +214,26 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
       fprintf(output, "\"%s.%03uZ\"", date, (unsigned)(receipt->after.captured_ms % 1000));
     else
       fputs("null", output);
+    fputs(",\"muteContext\":", output);
+    mute_context(output, receipt, &receipt->after);
     fputc('}', output);
   } else
     fputs("null", output);
+  if (receipt->request.operation == MPC_COMMAND_MUTE) {
+    fprintf(
+      output,
+      ",\"muteScope\":\"%s\",\"sequence\":",
+      receipt->request.mute_scope == MPC_MUTE_SEQUENCE ? "sequence" : "global");
+    if (receipt->request.mute_scope == MPC_MUTE_SEQUENCE)
+      sequence_ref(
+        output,
+        receipt->request.sequence.instance_id,
+        receipt->request.sequence.project,
+        receipt->request.sequence.sequence,
+        receipt->request.sequence.generation);
+    else
+      fputs("null", output);
+  }
   fputs(",\"observedChanges\":", output);
   changes(output, receipt);
   fputs(",\"error\":", output);

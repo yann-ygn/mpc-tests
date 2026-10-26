@@ -19,6 +19,29 @@ static bool object(struct mpc_native_adapter *a, uint32_t address, uint32_t rva)
   return read_value(a, address, 0, &vtable, 4) && vtable == a->io.image + rva;
 }
 
+/* Read the live preference through the same verified owners as command policy.
+ * This deliberately does not claim an independent inactive-sequence value. */
+enum mpc_native_error
+mpc_native_mute_scope(struct mpc_native_adapter *a, uint32_t project, uint32_t *scope) {
+  uint32_t app, window, component, engine, current, mute;
+  unsigned char enabled;
+  if (
+    !pointer(a, (uint32_t)a->io.image, NATIVE_APPLICATION_SLOT, &app) ||
+    !object(a, app, NATIVE_APPLICATION_VTABLE) ||
+    !pointer(a, app, NATIVE_APPLICATION_WINDOW, &window) ||
+    !object(a, window, NATIVE_WINDOW_VTABLE) ||
+    !pointer(a, window, NATIVE_WINDOW_COMPONENT, &component) ||
+    !object(a, component, NATIVE_COMPONENT_VTABLE) ||
+    (engine = component + NATIVE_COMPONENT_ENGINE) < component ||
+    !object(a, engine, NATIVE_ENGINE_VTABLE) ||
+    !pointer(a, engine, NATIVE_ENGINE_PROJECT, &current) || current != project ||
+    !pointer(a, engine, native_command_context.engineMuteProperties, &mute) ||
+    !read_value(a, mute, native_command_context.perSequenceMute, &enabled, 1) || enabled > 1)
+    return MPC_NATIVE_READ_FAILED;
+  *scope = enabled ? MPC_MUTE_SEQUENCE : MPC_MUTE_GLOBAL;
+  return MPC_NATIVE_OK;
+}
+
 static bool capture(
   struct mpc_native_adapter *a,
   const struct mpc_native_target *target,
@@ -67,9 +90,10 @@ enum mpc_native_error mpc_native_qualify_command(
   struct mpc_native_adapter *a,
   const struct mpc_native_target *target,
   enum mpc_command_operation operation,
+  enum mpc_mute_scope scope,
   struct mpc_command_context *baseline,
   bool *known) {
-  if ((unsigned)operation > MPC_COMMAND_RECORD_ARMED)
+  if ((unsigned)operation > MPC_COMMAND_RECORD_ARMED || (unsigned)scope > MPC_MUTE_SEQUENCE)
     return MPC_NATIVE_INVALID_ARGUMENT;
   /* Verifies firmware, UI ownership, family and live target before using the
    * family's automation layout. Both captures are disposable native reads. */
@@ -87,9 +111,10 @@ enum mpc_native_error mpc_native_qualify_command(
     (before.view != p->mainMode && before.view != p->mixerMode &&
      before.view != p->trackMuteMode) ||
     before.popup != p->noPopup || before.playing || before.automation || before.arm_mode > 1 ||
-    before.solo_mode > 1 || before.sequence_mute > 1 ||
-    (operation == MPC_COMMAND_MUTE && before.sequence_mute))
+    before.solo_mode > 1 || before.sequence_mute > 1)
     return MPC_NATIVE_NOT_READY;
+  if (operation == MPC_COMMAND_MUTE && before.sequence_mute != (scope == MPC_MUTE_SEQUENCE))
+    return MPC_NATIVE_MUTE_SCOPE_MISMATCH;
   if (*known && memcmp(baseline, &before, sizeof before))
     return MPC_NATIVE_STATE_UNSTABLE;
   *baseline = before;

@@ -1,17 +1,18 @@
 # Native command handlers (#19)
 
 `libmpc_native.so` now provides the transport-independent command API in
-[`mpc_commands.h`](include/mpc_commands.h), ABI 2. It runs on executor ABI 5 and primitive adapter ABI 1.
+[`mpc_commands.h`](include/mpc_commands.h), ABI 3. It runs on executor ABI 6 and primitive adapter ABI 1.
 The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
 The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
-`mpc_executor_qualify_command`. US #46 expands observations to 136 user tracks and versions command ABI 2 / executor ABI 5.
+`mpc_executor_qualify_command`. US #46 expanded observations to 136 user tracks; US #48 adds
+explicit sequence targets/context and versions command ABI 3 / executor ABI 6.
 Recompile trusted callers; configurations using the earlier ABIs are rejected.
 
 [US #32](../../findings/native-service.md) binds the public Unix setters and `get_command` in the persistent
 host. The socket authenticates callers by peer UID and validates strict schemas before enqueueing.
 This library opens no sockets. Its production `mpc_executor_qualify_command` callback checks live native
-Main/Mixer/Track Mute with no popup, stopped transport, recognized solo/arm settings, target automation Off and global mute scope.
+Main/Mixer/Track Mute with no popup, stopped transport, recognized solo/arm settings, target automation Off and a matching explicit mute scope.
 The private lab can select this same policy with `LIVE_COMMAND_OPEN`; `LAB_COMMAND_OPEN` retains the older
 explicitly manual experimental policy.
 
@@ -25,7 +26,7 @@ while a handler authority is attached. Only authoritative executors can host the
 A `mpc_command_policy.qualify` callback is mandatory for executing writes. It runs on the verified UI thread
 at dispatch, before native filter/setter access and readback, and around every verification snapshot. The host must establish current mode/settings
 from validated live sources, reject playback/automation/Clip/Song and unqualified contexts, and reject mute when
-per-sequence mute is enabled. A saved setting, session label or null callback cannot establish production
+the live mute preference does not match the request scope. A saved setting, session label or null callback cannot establish production
 qualification. Missing callbacks reject even no-ops with `NOT_READY`. The lab's manual policy is diagnostic only.
 Family/ownership checks remain inside the guarded adapter regardless of host policy.
 
@@ -152,3 +153,25 @@ python3 tools/mpc_command_lab.py --context stopped-sequence-multi-arm-single-sol
 For mute, first disable per-sequence mute in the current UI, then pass `--properties mute --global-mute-confirmed`.
 Restore the setting afterward. The runner restores all observed flags/selection, closes handlers, drains/unloads
 the temporary attachment and preserves failure evidence under ignored `build/`. It performs no save/load/restart.
+
+## Sequence-scoped mute (#48)
+
+Zero-initialized `mpc_command_request.mute_scope` means `MPC_MUTE_GLOBAL`, preserving
+existing calls. `MPC_MUTE_SEQUENCE` requires `operation = MPC_COMMAND_MUTE` and a complete
+`sequence` with the service instance, same project, incarnation ID and generation.
+Changing any of these canonical fields conflicts with a retained request ID. Other
+operations cannot carry sequence scope. The command owner copies scope and sequence
+into every initial/verification job; retries never rebind a sequence generation.
+
+The authoritative resolver enforces both sequence lifetime and selection (including the
+native selected-sequence mirror) before every traversal. The production policy compares
+the request's scope with the live preference. Snapshot and narrow receipt observations
+carry scope and the active sequence's generation; verification must match both. A lost
+relationship after invocation remains unknown with actual invocation/execution metadata.
+There is no inactive-sequence setter and no implicit selection change.
+
+Use command ABI 3, executor ABI 6 and snapshot ABI 3 together. The layouts reject old
+trusted hosts at open/transfer; the primitive adapter ABI and export list stay unchanged.
+The [public service guide](../README.md#sequence-scoped-mute) defines wire shapes and errors.
+`tools/mpc_sequence_mute.py` runs the bounded device matrix using the production live policy;
+the operator owns lab attach/detach, existing sequences and automation/preference setup.

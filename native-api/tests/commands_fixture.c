@@ -15,10 +15,22 @@ struct commands_fixture {
   unsigned change_at_qualification;
   uint32_t change_after_set, change_after_filter;
   bool popup_after_set, broken_owner_after_set;
+  bool sequence_values[2][2], switch_sequence_after_set, scope_after_set, reset_after_set;
+  unsigned switch_sequence_at_qualification;
   unsigned qualifications;
   atomic_uint_fast64_t time_offset;
 };
 static const char service[] = "run_0123456789abcdef0123456789abcdef";
+static void choose_sequence(struct commands_fixture *f, unsigned index) {
+  struct fixture *n = &f->identity.native;
+  put32(n, OBJECTS + NATIVE_SELECTED_SEQUENCE, index ? SEQUENCE2 : SEQUENCE);
+  put32(n, OBJECTS + NATIVE_SELECTED_SEQUENCE_MIRROR, index ? SEQUENCE2 : SEQUENCE);
+  for (unsigned i = 0; i < 2; i++)
+    put_bool(
+      n,
+      (i ? PROGRAM2 : PROGRAM) + native_bindings[0].requested,
+      f->sequence_values[index][i]);
+}
 static uint64_t now(void *data) {
   struct commands_fixture *f = data;
   struct timespec time;
@@ -30,6 +42,8 @@ static enum mpc_native_error qualify(void *data, enum mpc_command_operation oper
   struct commands_fixture *f = data;
   assert(ui && (unsigned)operation <= MPC_COMMAND_RECORD_ARMED);
   f->qualifications++;
+  if (f->switch_sequence_at_qualification == f->qualifications)
+    choose_sequence(f, 1);
   if (f->change_at_qualification == f->qualifications)
     put32(
       &f->identity.native,
@@ -92,6 +106,20 @@ command_setter(void *data, uintptr_t function, uintptr_t property, bool value) {
       put_bool(native, owner + binding->requested, value);
       if (native->propagate_audio)
         put_bool(native, owner + binding->observed, value);
+      if (i == MPC_COMMAND_MUTE) {
+        unsigned sequence = get32(native, OBJECTS + NATIVE_SELECTED_SEQUENCE) == SEQUENCE2;
+        f->sequence_values[sequence][index] = value;
+        if (f->switch_sequence_after_set)
+          choose_sequence(f, 1);
+        if (f->scope_after_set)
+          put_bool(native, POLICY_MUTE + native_command_context.perSequenceMute, false);
+        if (f->reset_after_set)
+          for (unsigned w = 0; w < 128; w++)
+            if (
+              f->identity.sequence_watches[w] &&
+              f->identity.sequence_watches[w]->sequence == SEQUENCE)
+              f->identity.sequence_watches[w]->vtable[0](f->identity.sequence_watches[w], SEQUENCE);
+      }
       if (f->popup_after_set)
         put32(native, POLICY_MODE + native_command_context.popupValue, 0x3081);
       if (f->broken_owner_after_set)
@@ -678,9 +706,186 @@ static void live_screens_and_transitions(void) {
   }
 }
 
+static struct mpc_command_request sequence_request(
+  struct commands_fixture *f, const char *id, unsigned index, bool value, unsigned sequence) {
+  struct mpc_command_request out = request(f, id, MPC_COMMAND_MUTE, index, value);
+  out.mute_scope = MPC_MUTE_SEQUENCE;
+  memcpy(out.sequence.instance_id, service, 37);
+  out.sequence.project = f->ids.project;
+  out.sequence.sequence = f->ids.sequences[sequence].id;
+  out.sequence.generation = f->ids.sequences[sequence].generation;
+  return out;
+}
+static void sequence_scope_and_races(void) {
+  {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    struct mpc_command_request input = sequence_request(&f, "invalid_sequence", 0, true, 0);
+    struct mpc_command_receipt receipt;
+    for (unsigned field = 0; field < 7; field++) {
+      struct mpc_command_request invalid = input;
+      if (!field)
+        invalid.sequence.sequence = 0;
+      if (field == 1)
+        invalid.sequence.generation = 0;
+      if (field == 2)
+        invalid.sequence.project++;
+      if (field == 3)
+        invalid.sequence.instance_id[4] = 'f';
+      if (field == 4)
+        invalid.operation = MPC_COMMAND_SOLO;
+      if (field == 5)
+        invalid.mute_scope = MPC_MUTE_GLOBAL;
+      if (field == 6)
+        invalid.mute_scope = MPC_MUTE_UNKNOWN;
+      assert(
+        mpc_commands_submit(f.commands, 7, &invalid, 0, &receipt) == MPC_NATIVE_INVALID_ARGUMENT);
+    }
+    struct mpc_executor_request job_request = {
+      .operation = MPC_EXECUTOR_COMMAND_MUTE,
+      .mute_scope = MPC_MUTE_SEQUENCE};
+    struct mpc_executor_job *job;
+    assert(
+      mpc_executor_submit(f.executor, &job_request, &job) == MPC_NATIVE_INVALID_ARGUMENT && !job);
+    job_request.identity.sequence = input.sequence.sequence;
+    job_request.identity.sequence_generation = input.sequence.generation;
+    job_request.operation = MPC_EXECUTOR_COMMAND_SOLO;
+    assert(
+      mpc_executor_submit(f.executor, &job_request, &job) == MPC_NATIVE_INVALID_ARGUMENT && !job);
+    assert(!f.identity.native.setters);
+    cleanup(&f);
+  }
+  const uint32_t screens[] = {
+    native_command_context.mainMode,
+    native_command_context.mixerMode,
+    native_command_context.trackMuteMode};
+  for (unsigned screen = 0; screen < 3; screen++) {
+    struct commands_fixture f;
+    setup(&f, 8, 64, true);
+    f.live_policy = true;
+    put32(&f.identity.native, POLICY_MODE + native_command_context.modeValue, screens[screen]);
+    put_bool(&f.identity.native, POLICY_MUTE + native_command_context.perSequenceMute, true);
+    for (unsigned target = 0; target < 2; target++) {
+      for (unsigned selected = 0; selected < 2; selected++) {
+        choose(&f, selected ? (target ? TRACK2 : TRACK) : (target ? TRACK : TRACK2));
+        choose_sequence(&f, 0);
+        char id[80];
+        snprintf(id, sizeof id, "sequence_%u_%u_%u", screen, target, selected);
+        struct mpc_command_request input = sequence_request(&f, id, target, true, 0);
+        input.has_expected = true;
+        struct mpc_command_receipt receipt = send(&f, input);
+        assert(receipt.status == MPC_COMMAND_APPLIED && receipt.native_invoked);
+        assert(receipt.after.mute_scope == MPC_MUTE_SEQUENCE);
+        assert(receipt.after.selected_sequence == input.sequence.sequence);
+        emit(&receipt);
+        unsigned setters = f.identity.native.setters;
+        choose_sequence(&f, 1);
+        assert(!(
+          get32(&f.identity.native, (target ? PROGRAM2 : PROGRAM) + native_bindings[0].requested) &
+          1));
+        /* Retained results survive selection changes, including disconnect/retry. */
+        struct mpc_command_receipt replay;
+        assert(mpc_commands_submit(f.commands, 7, &input, 0, &replay) == MPC_NATIVE_OK);
+        assert(replay.status == MPC_COMMAND_APPLIED && f.identity.native.setters == setters);
+        struct mpc_command_request conflict = input;
+        conflict.sequence = sequence_request(&f, id, target, true, 1).sequence;
+        assert(
+          mpc_commands_submit(f.commands, 7, &conflict, 0, &replay) ==
+          MPC_NATIVE_REQUEST_ID_CONFLICT);
+        conflict = input;
+        conflict.sequence.generation++;
+        assert(
+          mpc_commands_submit(f.commands, 7, &conflict, 0, &replay) ==
+          MPC_NATIVE_REQUEST_ID_CONFLICT);
+        conflict = input;
+        conflict.mute_scope = MPC_MUTE_GLOBAL;
+        memset(&conflict.sequence, 0, sizeof conflict.sequence);
+        assert(
+          mpc_commands_submit(f.commands, 7, &conflict, 0, &replay) ==
+          MPC_NATIVE_REQUEST_ID_CONFLICT);
+        choose_sequence(&f, 0);
+        input.expected = true;
+        snprintf(
+          input.request_id,
+          sizeof input.request_id,
+          "sequence_noop_%u_%u",
+          target,
+          selected);
+        receipt = send(&f, input);
+        assert(
+          receipt.status == MPC_COMMAND_APPLIED && !receipt.native_invoked && !receipt.changed);
+        input.expected = false;
+        snprintf(
+          input.request_id,
+          sizeof input.request_id,
+          "sequence_expected_%u_%u",
+          target,
+          selected);
+        receipt = send(&f, input);
+        assert(receipt.error == MPC_NATIVE_PRECONDITION_FAILED && !receipt.native_invoked);
+        input.value = false;
+        input.expected = true;
+        snprintf(
+          input.request_id,
+          sizeof input.request_id,
+          "sequence_restore_%u_%u",
+          target,
+          selected);
+        receipt = send(&f, input);
+        assert(receipt.status == MPC_COMMAND_APPLIED);
+        assert(!f.sequence_values[0][target] && !f.sequence_values[1][target]);
+      }
+    }
+    cleanup(&f);
+  }
+  for (unsigned stage = 0; stage < 10; stage++) {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    f.live_policy = true;
+    put_bool(&f.identity.native, POLICY_MUTE + native_command_context.perSequenceMute, true);
+    struct mpc_command_request input = sequence_request(&f, "sequence_race", 0, true, 0);
+    struct mpc_command_receipt receipt;
+    f.switch_sequence_after_set = stage == 5;
+    f.scope_after_set = stage == 6;
+    f.reset_after_set = stage == 7;
+    f.switch_sequence_at_qualification = stage == 8 ? 2 : 0;
+    assert(mpc_commands_submit(f.commands, 7, &input, 0, &receipt) == MPC_NATIVE_OK);
+    while (!queued(&f))
+      tiny_pause();
+    if (!stage)
+      choose_sequence(&f, 1);
+    if (stage == 1)
+      put_bool(&f.identity.native, POLICY_MUTE + native_command_context.perSequenceMute, false);
+    if (stage == 2)
+      destroy_object(&f.identity, SEQUENCE);
+    if (stage == 3)
+      select_project(&f.identity, PROJECT2);
+    if (stage == 4) {
+      for (unsigned w = 0; w < 128; w++)
+        if (f.identity.sequence_watches[w] && f.identity.sequence_watches[w]->sequence == SEQUENCE)
+          f.identity.sequence_watches[w]->vtable[0](f.identity.sequence_watches[w], SEQUENCE);
+    }
+    if (stage == 9) {
+      f.identity.project_watch->vtable[0](f.identity.project_watch, OBJECTS);
+    }
+    receipt = drive(&f, input.request_id);
+    bool invoked = stage >= 5 && stage <= 7;
+    assert(receipt.status == (invoked ? MPC_COMMAND_UNKNOWN : MPC_COMMAND_REJECTED));
+    assert(receipt.native_invoked == invoked && f.identity.native.setters == invoked);
+    assert(receipt.execution == (invoked ? MPC_COMMAND_COMPLETED : MPC_COMMAND_NOT_STARTED));
+    assert(!f.sequence_values[1][0]);
+    emit(&receipt);
+    struct mpc_command_receipt replay;
+    assert(mpc_commands_submit(f.commands, 7, &input, 0, &replay) == MPC_NATIVE_OK);
+    assert(replay.status == receipt.status && replay.error == receipt.error);
+    cleanup(&f);
+  }
+}
+
 int main(void) {
   (void)validate_target;
   (void)get32;
+  sequence_scope_and_races();
   live_screens_and_transitions();
   idempotence_and_preconditions();
   races_gates_and_constraints();

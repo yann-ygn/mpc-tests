@@ -249,3 +249,44 @@ class WireCommandTests(HostHarness):
         escaped = encoded.replace('"op"', '"\\u006fp"').replace('"wire"', '"w\\u0069re"')
         self.receipt(self.call(escaped.encode() + b"\n", self.api), "applied")
         self.receipt(self.send(base), "applied")
+
+    def test_mute_scope_parser_requires_complete_consistent_sequence_references(self):
+        sequence = self.state["selectedSequence"]["ref"]
+        base = self.command(muteScope="sequence", sequence=sequence)
+        invalid = [{"muteScope": x} for x in (None, True, 1, {}, "active", "")] + [
+            {"op": "set_solo"},
+            {"op": "set_record_armed"},
+            {"muteScope": "global"},
+            {"sequence": None},
+            {"sequence": {}},
+            {"sequence": {**sequence, "projectId": "999"}},
+            {"sequence": {**sequence, "instanceId": "run_" + "f" * 32}},
+            {"sequence": {**sequence, "index": 0}},
+        ]
+        for key in sequence:
+            invalid.append({"sequence": {k: v for k, v in sequence.items() if k != key}})
+        for key in ("sequenceId", "generation", "projectId"):
+            for value in (0, "0", "01", "18446744073709551616", "-1", None, True):
+                invalid.append({"sequence": {**sequence, key: value}})
+        for fields in invalid:
+            with self.subTest(fields=fields):
+                self.assertEqual(self.send({**base, **fields})["error"]["code"], "INVALID_ARGUMENT")
+        for missing in ("sequence", "muteScope"):
+            self.assertEqual(
+                self.send({k: v for k, v in base.items() if k != missing})["error"]["code"],
+                "INVALID_ARGUMENT",
+            )
+        raw = json.dumps(base)
+        for encoded in (
+            raw.replace(
+                '"muteScope": "sequence"', '"muteScope": "sequence", "muteScope": "global"'
+            ),
+            raw.replace('"generation":', '"generation": "1", "generat\\u0069on":'),
+            raw.replace('"sequence":', '"sequence": ' + json.dumps(sequence) + ', "sequence":'),
+        ):
+            self.assertEqual(
+                self.call(encoded.encode() + b"\n", self.api)["error"]["code"], "INVALID_ARGUMENT"
+            )
+        request = self.command(value=False)
+        first = self.receipt(self.send(request), "applied")
+        self.assertEqual(first, self.send({**request, "muteScope": "global"}))

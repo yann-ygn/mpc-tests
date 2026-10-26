@@ -5,10 +5,12 @@
 
 /* Pointer-free snapshot, owned by its executor job until release. The private
  * attachment protocol checks this version and size before transferring it. */
-#define MPC_STATE_ABI 2u
+#define MPC_STATE_ABI 3u
 #define MPC_STATE_MAX_BUSES 128u
 #define MPC_STATE_NAME_BYTES 256u
 #define MPC_STATE_ATTEMPTS 3u
+
+enum mpc_mute_scope { MPC_MUTE_GLOBAL, MPC_MUTE_SEQUENCE, MPC_MUTE_UNKNOWN };
 
 enum mpc_state_known {
   MPC_STATE_REQUESTED = 1,
@@ -52,6 +54,10 @@ struct mpc_state_snapshot {
   /* Buses are metadata only. They have no writable user-track references. */
   struct mpc_state_track buses[MPC_STATE_MAX_BUSES];
   struct mpc_state_sequence sequences[MPC_IDENTITY_MAX_SEQUENCES];
+  /* requested.muted is the live Program value in this scope. Only the active
+   * sequence is read; no independent inactive/global copy is claimed. */
+  uint32_t mute_scope;
+  uint64_t selected_sequence_generation;
 };
 
 #endif

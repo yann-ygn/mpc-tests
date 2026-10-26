@@ -1,5 +1,11 @@
 """Run the production policy through the public transport and emulated live owners."""
 
+import json
+import socket
+import time
+
+import jsonschema
+
 import test_wire_commands as wire_tests
 from test_host import HostHarness
 
@@ -144,3 +150,139 @@ class LivePolicyTests(HostHarness):
             self.assertEqual(result["status"], "rejected", result)
             self.assertEqual(result["error"]["code"], code)
             self.assertFalse(result["nativeInvoked"])
+
+    def sequence_command(self, request_id="sequence", sequence=None, **extra):
+        state = self.public("get_state")
+        return self.command(
+            request_id,
+            muteScope="sequence",
+            sequence=sequence or state["selectedSequence"]["ref"],
+            **extra,
+        )
+
+    def test_sequence_patterns_active_only_reads_retries_and_expected_values(self):
+        (self.install / "sequence-mute").touch()
+        request = self.sequence_command(expected={"value": False})
+        first = self.send(request)
+        self.assertEqual(first["status"], "applied", first)
+        self.assertEqual(first["sequence"], request["sequence"])
+        self.assertEqual(
+            first["verification"]["muteContext"],
+            {"scope": "sequence", "sequence": request["sequence"]},
+        )
+        jsonschema.validate(
+            first,
+            json.loads(
+                (wire_tests.ROOT / "native-api/schema/command-receipt.schema.json").read_text()
+            ),
+        )
+        self.assertTrue(
+            any(
+                c.get("muteContext", {}).get("sequence") == request["sequence"]
+                for c in first["observedChanges"]
+            )
+        )
+        other = self.install / "sequence-two"
+        other.touch()
+        state = self.public("get_state")
+        self.assertFalse(state["tracks"][0]["requested"]["muted"])
+        self.assertNotEqual(state["muteContext"]["sequence"], request["sequence"])
+        self.assertEqual(self.send(request), first)
+        rejected = self.send({**request, "requestId": "inactive"})
+        self.assertEqual(rejected["error"]["code"], "SEQUENCE_NOT_ACTIVE")
+        self.assertFalse(rejected["nativeInvoked"])
+        self.assertEqual(self.public("get_state")["selectedSequence"], state["selectedSequence"])
+        self.assertEqual(
+            self.send({**request, "sequence": state["selectedSequence"]["ref"]})["error"]["code"],
+            "REQUEST_ID_CONFLICT",
+        )
+        self.assertEqual(
+            self.send(
+                {k: v for k, v in {**request, "muteScope": "global"}.items() if k != "sequence"}
+            )["error"]["code"],
+            "REQUEST_ID_CONFLICT",
+        )
+        other.unlink()
+        self.assertTrue(self.public("get_state")["tracks"][0]["requested"]["muted"])
+        noop = self.send({**request, "requestId": "sequence-noop", "expected": {"value": True}})
+        self.assertEqual(noop["status"], "applied", noop)
+        self.assertFalse(noop["nativeInvoked"])
+        conflict = self.send({**request, "requestId": "sequence-expected"})
+        self.assertEqual(conflict["error"]["code"], "PRECONDITION_FAILED")
+        self.assertFalse(conflict["nativeInvoked"])
+        for op in (
+            "get_state",
+            "list_tracks",
+            "current_track",
+            "current_sequence",
+            "recovery_snapshot",
+        ):
+            snapshot = self.public(op)
+            self.assertEqual(snapshot["muteContext"], first["verification"]["muteContext"])
+            jsonschema.validate(
+                snapshot,
+                json.loads(
+                    (wire_tests.ROOT / "native-api/schema/state-response.schema.json").read_text()
+                ),
+            )
+
+    def test_sequence_scope_setting_and_generation_are_preconditions_even_for_noops(self):
+        request = self.sequence_command(value=False)
+        result = self.send(request)
+        self.assertEqual(result["error"]["code"], "MUTE_SCOPE_MISMATCH")
+        self.assertFalse(result["nativeInvoked"])
+        (self.install / "sequence-mute").touch()
+        request["sequence"]["generation"] = "18446744073709551615"
+        result = self.send({**request, "requestId": "stale-generation"})
+        self.assertEqual(result["error"]["code"], "STALE_SEQUENCE")
+        self.assertFalse(result["nativeInvoked"])
+
+    def test_sequence_and_scope_changes_in_queue_and_after_setter(self):
+        for marker, error, invoked in (
+            ("sequence-two", "SEQUENCE_NOT_ACTIVE", False),
+            ("sequence-after-set", "SEQUENCE_NOT_ACTIVE", True),
+            ("scope-after-set", "MUTE_SCOPE_MISMATCH", True),
+        ):
+            with self.subTest(marker=marker):
+                (self.install / "sequence-mute").touch()
+                request = self.sequence_command(marker)
+                pause = self.install / "pause-ui"
+                pause.touch()
+                self.assertEqual(self.send({**request, "waitMs": 0})["status"], "accepted")
+                path = self.install / marker
+                path.touch()
+                pause.unlink()
+                result = self.get(marker)
+                self.assertEqual(result["error"]["code"], error, result)
+                self.assertEqual(result["nativeInvoked"], invoked)
+                self.assertEqual(result["execution"], "completed" if invoked else "not_started")
+                self.assertEqual(result["status"], "unknown" if invoked else "rejected")
+                self.assertEqual(self.send(request), result)
+                path.unlink()
+                # Return the first sequence's value to false for the next row.
+                self.send(self.sequence_command(marker + "-restore", value=False))
+        pause = self.install / "pause-ui"
+        request = self.sequence_command("setting-queued", value=False)
+        pause.touch()
+        self.assertEqual(self.send({**request, "waitMs": 0})["status"], "accepted")
+        (self.install / "sequence-mute").unlink()
+        pause.unlink()
+        result = self.get("setting-queued")
+        self.assertEqual(result["error"]["code"], "MUTE_SCOPE_MISMATCH")
+        self.assertFalse(result["nativeInvoked"])
+
+    def test_sequence_disconnect_keeps_address_and_retained_result(self):
+        (self.install / "sequence-mute").touch()
+        request = self.sequence_command("sequence-disconnect")
+        pause = self.install / "pause-ui"
+        pause.touch()
+        with socket.socket(socket.AF_UNIX) as client:
+            client.connect(str(self.api))
+            client.sendall(json.dumps(request).encode() + b"\n")
+            until = time.monotonic() + 1
+            while self.get("sequence-disconnect", waitMs=0).get("status") != "accepted":
+                self.assertLess(time.monotonic(), until)
+        pause.unlink()
+        result = self.get("sequence-disconnect")
+        self.assertEqual(result["status"], "applied", result)
+        self.assertEqual(self.send(request), result)

@@ -78,6 +78,12 @@ static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instan
       s->bus_count || s->sequence_count || s->sequence_slots)) ||
     (s->project && !s->project_generation))
     return 0;
+  if (
+    (s->project && s->mute_scope > MPC_MUTE_SEQUENCE) ||
+    (s->mute_scope == MPC_MUTE_SEQUENCE && !s->selected_sequence) ||
+    (!s->selected_sequence && s->selected_sequence_generation) ||
+    (!s->project && (s->mute_scope != MPC_MUTE_UNKNOWN || s->selected_sequence_generation)))
+    return 0;
   unsigned selected_track = !s->selected_track, selected_sequence = !s->selected_sequence;
   unsigned midi_count = 0, audio_count = 0;
   bool midi_indices[MPC_IDENTITY_MAX_MIDI_TRACKS] = {0};
@@ -148,9 +154,35 @@ static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instan
         q->identity.index == s->sequences[j].identity.index)
         return 0;
     selected_sequence += q->identity.id == s->selected_sequence;
+    if (
+      q->identity.id == s->selected_sequence &&
+      q->identity.generation != s->selected_sequence_generation)
+      return 0;
     used += q->used;
   }
   return selected_track == 1 && selected_sequence == 1 && used == s->used_sequences;
+}
+
+static void mute_context(FILE *f, const struct api *api, const struct mpc_state_snapshot *s) {
+  fputs("{\"scope\":", f);
+  api_quoted(
+    f,
+    s->mute_scope == MPC_MUTE_GLOBAL       ? "global"
+      : s->mute_scope == MPC_MUTE_SEQUENCE ? "sequence"
+                                           : NULL);
+  fputs(",\"sequence\":", f);
+  if (s->mute_scope == MPC_MUTE_SEQUENCE && s->selected_sequence)
+    fprintf(
+      f,
+      "{\"instanceId\":\"%s\",\"projectId\":\"%" PRIu64 "\",\"sequenceId\":\"%" PRIu64
+      "\",\"generation\":\"%" PRIu64 "\"}",
+      api->instance_id,
+      s->project,
+      s->selected_sequence,
+      s->selected_sequence_generation);
+  else
+    fputs("null", f);
+  fputc('}', f);
 }
 
 static void nullable_bool(FILE *f, unsigned known, unsigned value) {
@@ -219,7 +251,8 @@ static void track(
   fputc('}', f);
 }
 
-static void sequence(FILE *f, const struct mpc_state_sequence *q) {
+static void
+sequence(FILE *f, const struct api *api, uint64_t project, const struct mpc_state_sequence *q) {
   if (!q) {
     fputs("null", f);
     return;
@@ -233,9 +266,14 @@ static void sequence(FILE *f, const struct mpc_state_sequence *q) {
   api_quoted(f, q->name);
   fprintf(
     f,
-    ",\"used\":%s,\"bpm\":%.9g,\"bpmSource\":\"sequence_property\"}",
+    ",\"used\":%s,\"bpm\":%.9g,\"bpmSource\":\"sequence_property\",\"ref\":{\"instanceId\":\"%s\","
+    "\"projectId\":\"%" PRIu64 "\",\"sequenceId\":\"%" PRIu64 "\",\"generation\":\"%" PRIu64 "\"}}",
     q->used ? "true" : "false",
-    (double)q->bpm);
+    (double)q->bpm,
+    api->instance_id,
+    project,
+    q->identity.id,
+    q->identity.generation);
 }
 
 static void timestamp(FILE *f, uint64_t milliseconds) {
@@ -307,6 +345,8 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
     "selection_checked\",\"freshness\":\"fresh\",\"source\":\"native_ui_thread\"}",
     (double)s->duration_ns / 1000000,
     s->attempts);
+  fputs(",\"muteContext\":", f);
+  mute_context(f, api, s);
   const struct mpc_state_track *selected_track = NULL;
   const struct mpc_state_sequence *selected_sequence = NULL;
   for (unsigned i = 0; i < s->track_count; i++)
@@ -320,7 +360,7 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
     track(f, api, s->project, selected_track, 1);
   } else if (!strcmp(operation, "current_sequence")) {
     fputs(",\"sequence\":", f);
-    sequence(f, selected_sequence);
+    sequence(f, api, s->project, selected_sequence);
   } else {
     if (strcmp(operation, "list_tracks")) {
       fputs(",\"project\":", f);
@@ -331,7 +371,7 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
       else
         fputs("null", f);
       fputs(",\"selectedSequence\":", f);
-      sequence(f, selected_sequence);
+      sequence(f, api, s->project, selected_sequence);
       fprintf(
         f,
         ",\"sequenceSlotCount\":%u,\"sequenceObjectCount\":%u,\"usedSequenceCount\":%u,"
@@ -342,7 +382,7 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
       for (unsigned i = 0; i < s->sequence_count; i++) {
         if (i)
           fputc(',', f);
-        sequence(f, &s->sequences[i]);
+        sequence(f, api, s->project, &s->sequences[i]);
       }
       fputs(
         "],\"transport\":{\"effectiveBpm\":null,\"tempoSource\":null,\"playing\":null,"

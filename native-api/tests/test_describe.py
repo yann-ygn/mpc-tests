@@ -369,7 +369,7 @@ class DescribeTests(unittest.TestCase):
                                 or f"{state['tag']} {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
                             )
                             client.sendall(payload)
-                        elif data.startswith(b"STATE_V2 "):
+                        elif data.startswith(b"STATE_V3 "):
                             if state.get("stall_state"):
                                 state["state_idle"].clear()
                                 finished.wait(0.3)
@@ -380,12 +380,13 @@ class DescribeTests(unittest.TestCase):
                             if state.get("empty"):
                                 wire[48:80] = bytes(32)
                                 wire[108:128] = bytes(20)
+                                struct.pack_into("<I4xQ", wire, 127808, 2, 0)
                             if state.get("bad_instance"):
                                 wire[8] = ord("x")
                             if state.get("bad_count"):
                                 # Track count follows attempts in the fixed snapshot header.
                                 struct.pack_into("<I", wire, 108, 137)
-                            # ABI 2: fixed 128-byte header, 344-byte track rows.
+                            # ABI 3: retained 128-byte prefix and 344-byte track rows.
                             if state.get("bad_ui_index"):
                                 struct.pack_into("<I", wire, 128 + 16, 1)
                             if state.get("bad_collection"):
@@ -396,9 +397,16 @@ class DescribeTests(unittest.TestCase):
                                 struct.pack_into("<I", wire, 128 + 344 + 28, 0)
                             if state.get("bad_type"):
                                 wire[128 + 32 + 256] = ord("X")
+                            if state.get("bad_mute_scope"):
+                                struct.pack_into("<I", wire, 127808, 99)
+                            if state.get("bad_sequence_generation"):
+                                struct.pack_into("<Q", wire, 127816, 9999)
+                            if state.get("missing_active_sequence"):
+                                struct.pack_into("<Q", wire, 72, 0)
+                                struct.pack_into("<I4xQ", wire, 127808, 1, 0)
                             if state.get("bad_abi"):
                                 struct.pack_into("<I", wire, 0, 99)
-                            payload = struct.pack("<III", 2, len(wire), state.get("error", 0))
+                            payload = struct.pack("<III", 3, len(wire), state.get("error", 0))
                             if not state.get("error"):
                                 payload += wire
                             if state.get("truncate"):
@@ -431,7 +439,7 @@ class DescribeTests(unittest.TestCase):
         wire = subprocess.run(
             [str(fixture), "--snapshot-wire"], check=True, capture_output=True
         ).stdout
-        attachment.update(tag="MPC_ADAPTER_STATE_V2", wire=wire)
+        attachment.update(tag="MPC_ADAPTER_STATE_V3", wire=wire)
 
     def test_snapshot_operations_share_fresh_observations_and_handles(self):
         with self.attachment() as attachment:
@@ -536,6 +544,9 @@ class DescribeTests(unittest.TestCase):
                 "bad_instance",
                 "bad_count",
                 "bad_abi",
+                "bad_mute_scope",
+                "bad_sequence_generation",
+                "missing_active_sequence",
                 "bad_ui_index",
                 "bad_collection",
                 "bad_collection_index",

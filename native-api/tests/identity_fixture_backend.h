@@ -86,7 +86,7 @@ static inline int identity_read(void *data, uintptr_t address, void *output, siz
     fixture->before_read(fixture, address);
   if (address == TRACK + NATIVE_TRACK_NAME && fixture->state_mutation) {
     unsigned mutation = fixture->state_mutation;
-    if (mutation != 2)
+    if (mutation != 2 && mutation != 5)
       fixture->state_mutation = 0;
     fixture->mutations++;
     if (mutation == 3)
@@ -94,7 +94,11 @@ static inline int identity_read(void *data, uintptr_t address, void *output, siz
         &fixture->native,
         COMPONENT + NATIVE_COMPONENT_ENGINE + NATIVE_ENGINE_PROJECT,
         PROJECT2);
-    else {
+    else if (mutation == 4 || mutation == 5) {
+      uint32_t address = OBJECTS + 0x24000 + native_command_context.perSequenceMute;
+      unsigned char value = fixture->native.objects[address - OBJECTS];
+      put_bool(&fixture->native, address, !value);
+    } else {
       uint32_t current;
       memcpy(&current, fixture->native.objects + NATIVE_SELECTED_TRACK, 4);
       uint32_t selected = current == TRACK ? TRACK2 : TRACK;
@@ -337,6 +341,10 @@ static inline void close_executor(struct identity_fixture *fixture, struct mpc_e
 static inline void state_init(struct identity_fixture *fixture) {
   init(fixture);
   struct fixture *f = &fixture->native;
+  put32(
+    f,
+    COMPONENT + NATIVE_COMPONENT_ENGINE + native_command_context.engineMuteProperties,
+    OBJECTS + 0x24000);
   put32(f, POOL + NATIVE_ALL_BEGIN, VECTOR);
   put32(f, POOL + NATIVE_ALL_END, VECTOR + 8);
   put32(f, POOL + NATIVE_ALL_CAPACITY, VECTOR + 8);
