@@ -64,44 +64,10 @@ static void state_tests(void) {
   put32(f, TRACK + NATIVE_TRACK_NAME, 0);
   assert(!state_read(&fixture, executor, MPC_NATIVE_READ_FAILED));
   put32(f, TRACK + NATIVE_TRACK_NAME, OBJECTS + 0x15000);
-  /* Non-qualified families expose metadata, without invented flag values. */
-  put32(f, PROGRAM, IMAGE + native_program_types[0].vtable);
-  first = state_read(&fixture, executor, MPC_NATIVE_OK);
-  assert(!first->tracks[0].known && !strcmp(first->tracks[0].type, "audio"));
-  free(first);
-  /* A bus belongs only to all-tracks, and receives no writable identity. */
-  put32(f, POOL + NATIVE_VECTOR_END, VECTOR + 4);
-  first = state_read(&fixture, executor, MPC_NATIVE_OK);
-  assert(
-    first->track_count == 1 && first->bus_count == 1 && !first->buses[0].identity.id &&
-    !first->buses[0].known);
-  free(first);
   select_project(&fixture, 0);
   first = state_read(&fixture, executor, MPC_NATIVE_OK);
   assert(
     !first->project && !first->track_count && !first->selected_track && !first->sequence_slots);
-  free(first);
-  select_project(&fixture, OBJECTS);
-  put32(f, OBJECTS + NATIVE_SELECTED_TRACK, OBJECTS + 0x20000);
-  put32(f, OBJECTS + NATIVE_SELECTED_TRACK_MIRROR, OBJECTS + 0x20000);
-  put32(f, OBJECTS + NATIVE_SELECTED_TRACK_INDEX, 0);
-  put32(f, POOL + NATIVE_VECTOR_BEGIN, OBJECTS + 0x17000);
-  put32(f, POOL + NATIVE_VECTOR_END, OBJECTS + 0x17200);
-  put32(f, POOL + NATIVE_VECTOR_CAPACITY, OBJECTS + 0x17200);
-  put32(f, POOL + NATIVE_ALL_BEGIN, OBJECTS + 0x18000);
-  put32(f, POOL + NATIVE_ALL_END, OBJECTS + 0x18000 + 156 * 4);
-  put32(f, POOL + NATIVE_ALL_CAPACITY, OBJECTS + 0x18000 + 156 * 4);
-  for (unsigned i = 0; i < 156; i++) {
-    uint32_t address = OBJECTS + 0x20000 + i * 0x800;
-    memcpy(f->objects + address - OBJECTS, f->objects + TRACK - OBJECTS, 0x700);
-    put32(f, OBJECTS + 0x18000 + i * 4, address);
-    if (i < 128)
-      put32(f, OBJECTS + 0x17000 + i * 4, address);
-  }
-  put32(f, PROGRAM, IMAGE + NATIVE_PLUGIN_VTABLE);
-  first = state_read(&fixture, executor, MPC_NATIVE_OK);
-  assert(first->track_count == 128 && first->bus_count == 28);
-  assert(first->tracks[127].identity.index == 127 && first->tracks[127].known == 15);
   free(first);
   /* Cancelled/disconnected snapshot jobs still drain and release their buffers. */
   struct mpc_executor_job *job =
@@ -145,8 +111,8 @@ int main(int argc, char **argv) {
    * project properties. Neither can retarget a retained track handle. */
   put32(native, TRACK + 1128, 123);
   put32(native, VECTOR + 4, TRACK2);
-  put32(native, POOL + NATIVE_VECTOR_END, VECTOR + 8);
-  put32(native, POOL + NATIVE_VECTOR_CAPACITY, VECTOR + 8);
+  put32(native, POOL + NATIVE_USER_END, VECTOR + 8);
+  put32(native, POOL + NATIVE_USER_CAPACITY, VECTOR + 8);
   put32(native, OBJECTS + NATIVE_SELECTED_TRACK, TRACK2);
   put32(native, OBJECTS + NATIVE_SELECTED_SEQUENCE, SEQUENCE2);
   struct mpc_identity_snapshot two = snapshot(&fixture, executor);

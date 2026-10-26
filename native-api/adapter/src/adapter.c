@@ -183,13 +183,14 @@ static enum mpc_native_error target_check(
     get32(adapter, (uintptr_t)target->project + NATIVE_POOL_OFFSET, &pool) || !pool ||
     pool > UINT32_MAX - 0x10000u || get32(adapter, pool, &value) ||
     value != adapter->io.image + NATIVE_POOL_VTABLE ||
-    get32(adapter, (uintptr_t)pool + NATIVE_VECTOR_BEGIN, &begin) ||
-    get32(adapter, (uintptr_t)pool + NATIVE_VECTOR_END, &end) ||
-    get32(adapter, (uintptr_t)pool + NATIVE_VECTOR_CAPACITY, &capacity) || !begin || end < begin ||
-    capacity < end || (end - begin) % 4 || (capacity - begin) % 4 || capacity - begin > 128 * 4)
+    get32(adapter, (uintptr_t)pool + NATIVE_USER_BEGIN, &begin) ||
+    get32(adapter, (uintptr_t)pool + NATIVE_USER_END, &end) ||
+    get32(adapter, (uintptr_t)pool + NATIVE_USER_CAPACITY, &capacity) || !begin || end < begin ||
+    capacity < end || (end - begin) % 4 || (capacity - begin) % 4 ||
+    (end - begin) / 4 > MPC_IDENTITY_MAX_TRACKS || capacity - begin > 256 * 4)
     return MPC_NATIVE_STALE_TARGET;
   size_t count = (end - begin) / 4;
-  uint32_t tracks[128];
+  uint32_t tracks[MPC_IDENTITY_MAX_TRACKS];
   if (!count || adapter->io.read(adapter->io.userdata, begin, tracks, count * 4))
     return MPC_NATIVE_STALE_TARGET;
   unsigned found = 0;

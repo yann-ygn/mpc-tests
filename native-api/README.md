@@ -144,7 +144,19 @@ Then send the same two-field request with `op` set to `get_state`, `list_tracks`
 `current_sequence`, or `recovery_snapshot`. `get_state` and `recovery_snapshot` both return a full fresh snapshot.
 Each read has its own instance-scoped observation revision and capture interval; this is not an event cursor.
 `current_track` and `current_sequence` project a full capture onto its selection; null selections return null.
-`list_tracks` returns normal tracks and a separate bus metadata list.
+`list_tracks` returns every user track, including audio, in canonical Track List order,
+and a separate master-object metadata list in `buses` (submixes, returns and input/output objects).
+Each user track has a zero-based `uiIndex`. `index` preserves the existing MIDI-triggered
+collection index; audio indices are local to the audio collection. `collection` is
+`midi_triggered`, `audio`, or `master`, so an index alone is neither unique nor a target.
+Master entries have `uiIndex: null` and no writable reference. Rename/reorder preserves
+track IDs; deletion, address reuse and project reload invalidate the old incarnation.
+See [the native inventory map and device evidence](../findings/native-track-inventory.md).
+
+The combined API limit is 136 user tracks (128 MIDI-triggered and 8 audio), 128 master
+objects and 128 sequence slots. Discovery advertises these inventory limits and
+`snapshotAbiVersion: 2`. The private transfer requires `STATE_V2`; older attachments
+remain incompatible. No cached or partial list is published as a complete capture.
 
 Requested flags and separate audio-side copies are qualified only for plugin/drum normal tracks. Bus flags,
 other families' flags, project name, actual audio activity and effective transport tempo remain null.

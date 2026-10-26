@@ -3,7 +3,9 @@
 
 #include <stdint.h>
 
-#define MPC_IDENTITY_MAX_TRACKS 128u
+#define MPC_IDENTITY_MAX_MIDI_TRACKS 128u
+#define MPC_IDENTITY_MAX_AUDIO_TRACKS 8u
+#define MPC_IDENTITY_MAX_TRACKS 136u
 #define MPC_IDENTITY_MAX_SEQUENCES 128u
 
 /* No native address crosses this interface. IDs are never reused in an adapter

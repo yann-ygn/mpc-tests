@@ -6,6 +6,11 @@ addin. It supports MPC Key 37, MPC 3.9.1.2, exact GNU build ID
 Mute also requires global mute scope. Consult `describe` for command availability and limits, and the
 [service guide](README.md#send-flag-commands) for request and receipt semantics.
 
+Version 0.3.0 adds the complete user-track inventory and explicit Track List ordering
+(US #46). Audio flags/commands remain unqualified. The installed 0.2.0 host must
+be upgraded with an approved MPC restart to acquire this implementation; stop/start
+alone retains its loaded code.
+
 ## Build and inspect
 
 From the repository root, after `uv sync --locked`:
@@ -21,8 +26,8 @@ the same shared addin installer as privtap: set `MPC_VST_PLUGINS` to an
 No device is contacted. Outputs:
 
 ```text
-build/native-api/packages/mpc-native-api-0.2.0/
-build/native-api/packages/mpc-native-api-0.2.0.tar.gz
+build/native-api/packages/mpc-native-api-0.3.0/
+build/native-api/packages/mpc-native-api-0.3.0.tar.gz
 ```
 
 `PACKAGE.json` records the source revision and source-content SHA-256, dirty
@@ -47,7 +52,7 @@ MPC restart to retire its code. No reboot is normally necessary.
 Copy the directory to the device, verify the checksums there, then install:
 
 ```sh
-cd /tmp/mpc-native-api-0.2.0
+cd /tmp/mpc-native-api-0.3.0
 sha256sum -c SHA256SUMS
 sh install.sh -y
 ```

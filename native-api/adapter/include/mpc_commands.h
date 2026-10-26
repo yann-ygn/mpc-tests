@@ -4,7 +4,7 @@
 #include "mpc_native.h"
 #include "mpc_identity.h"
 
-#define MPC_COMMANDS_ABI 1u
+#define MPC_COMMANDS_ABI 2u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u

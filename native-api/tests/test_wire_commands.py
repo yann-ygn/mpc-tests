@@ -221,6 +221,10 @@ class WireCommandTests(HostHarness):
             + [{"startWithinMs": x} for x in (0, -1, 30001, False, "1000")]
             + [{"expected": x} for x in ({}, {"value": 1}, {"value": False, "revision": "1"})]
             + [
+                {"target": {"index": 0}},
+                {"target": {"uiIndex": 0}},
+                {"target": {"collection": "audio", "index": 0}},
+                {"target": {**self.target, "uiIndex": 0}},
                 {"caller": "admin"},
                 {"address": 123},
                 {"instanceId": base["target"]["instanceId"]},

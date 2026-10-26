@@ -4,7 +4,7 @@
   "instanceId": "run_0123456789abcdef0123456789abcdef",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -38,7 +38,10 @@
     "sequence.used",
     "sequence.bpm",
     "selection",
-    "buses.metadata"
+    "buses.metadata",
+    "track.index",
+    "track.collection",
+    "track.uiIndex"
   ],
   "capabilities": {
     "describe": {
@@ -50,7 +53,12 @@
       "reason": null,
       "trackTypes": [
         "plugin",
-        "drum"
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
       ],
       "verification": [
         "model",
@@ -62,7 +70,12 @@
       "reason": null,
       "trackTypes": [
         "plugin",
-        "drum"
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
       ],
       "verification": [
         "model",
@@ -74,7 +87,12 @@
       "reason": null,
       "trackTypes": [
         "plugin",
-        "drum"
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
       ],
       "verification": [
         "model",
@@ -86,7 +104,12 @@
       "reason": null,
       "trackTypes": [
         "plugin",
-        "drum"
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
       ],
       "verification": [
         "model",
@@ -98,7 +121,12 @@
       "reason": null,
       "trackTypes": [
         "plugin",
-        "drum"
+        "drum",
+        "keygroup",
+        "clip",
+        "midi",
+        "cv",
+        "audio"
       ],
       "verification": [
         "model",
@@ -180,6 +208,11 @@
     "maxStartWithinMs": 30000,
     "maxWaitMs": 30000,
     "verificationTimeoutMs": 500,
-    "adapterProbeTimeoutMs": 50
+    "adapterProbeTimeoutMs": 50,
+    "maxTracks": 136,
+    "maxMidiTracks": 128,
+    "maxAudioTracks": 8,
+    "maxBuses": 128,
+    "snapshotAbiVersion": 2
   }
 }

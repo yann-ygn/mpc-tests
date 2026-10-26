@@ -1,0 +1,171 @@
+{
+  "story": 46,
+  "capturedAt": "2026-10-26T12:48:45.181936+00:00",
+  "firmware": {
+    "model": "Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "implementation": {
+    "packageVersion": "0.3.0",
+    "primitiveAbi": 1,
+    "executorAbi": 5,
+    "commandAbi": 2,
+    "snapshotAbi": 2,
+    "snapshotBytes": 127808,
+    "transfer": "STATE_V2",
+    "maxMidiTracks": 128,
+    "maxAudioTracks": 8,
+    "maxUserTracks": 136,
+    "maxMasters": 128,
+    "maxSequenceSlots": 128
+  },
+  "validation": {
+    "hostMesonEntriesPassed": 17,
+    "asanUbsanNativeEntriesPassed": 12,
+    "finalInventorySanitizerCheckPassed": true,
+    "armBuildAndElfGuardsPassed": true,
+    "isolatedArmFixturesPassed": [
+      "native_fixture",
+      "executor_fixture",
+      "identity_fixture",
+      "inventory_fixture",
+      "commands_fixture"
+    ],
+    "isolatedArmHostLifecyclePassed": true,
+    "fixtureCoverage": [
+      "all seven user families and unknown Program metadata",
+      "all five master types",
+      "explicit collection partitions and differing vector orders",
+      "audio selection and interleaved reorder",
+      "rename and Program replacement preserve Track references",
+      "audio deletion/recreation and lifetime ABA reject stale writes",
+      "in-place project reload retires audio references",
+      "single and repeated order/Program capture races",
+      "136 users, 128 masters and 128 sequences / 265 lifetime watches",
+      "empty inventory and each capacity overflow",
+      "all projections, old attachment rejection and transfer validation",
+      "indices and uiIndex rejected as write targets"
+    ]
+  },
+  "device": {
+    "userTrackCount": 8,
+    "masterCount": 28,
+    "sequenceSlotCount": 128,
+    "uiIndices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "collectionIndices": [
+      0,
+      1,
+      2,
+      3,
+      0,
+      1,
+      4,
+      5
+    ],
+    "collections": [
+      "midi_triggered",
+      "midi_triggered",
+      "midi_triggered",
+      "midi_triggered",
+      "audio",
+      "audio",
+      "midi_triggered",
+      "midi_triggered"
+    ],
+    "types": [
+      "plugin",
+      "plugin",
+      "plugin",
+      "plugin",
+      "audio",
+      "audio",
+      "plugin",
+      "plugin"
+    ],
+    "canonicalTrackListVisuallyMatched": true,
+    "mixerEffectsUserOrderVisuallyMatched": true,
+    "independentMetadataMatched": true,
+    "audioFlagsExplicitlyNull": true,
+    "selectionCheckpoints": [
+      {
+        "case": "selected-audio-0",
+        "selectedType": "audio",
+        "index": 0,
+        "uiIndex": 4,
+        "allFiveReadsMatched": true,
+        "trackReferencesStable": true,
+        "independentReadMatched": true
+      },
+      {
+        "case": "selected-audio-1",
+        "selectedType": "audio",
+        "index": 1,
+        "uiIndex": 5,
+        "allFiveReadsMatched": true,
+        "trackReferencesStable": true,
+        "independentReadMatched": true
+      },
+      {
+        "case": "selected-midi-after-audio",
+        "selectedType": "plugin",
+        "index": 4,
+        "uiIndex": 6,
+        "allFiveReadsMatched": true,
+        "trackReferencesStable": true,
+        "independentReadMatched": true
+      },
+      {
+        "case": "restored-selection",
+        "selectedType": "plugin",
+        "index": 2,
+        "uiIndex": 2,
+        "allFiveReadsMatched": true,
+        "trackReferencesStable": true,
+        "independentReadMatched": true
+      }
+    ],
+    "timingSamplesPerRun": 20,
+    "nativeCaptureP95Ms": [
+      11.152,
+      10.85
+    ],
+    "restoration": {
+      "mpcPidUnchanged": true,
+      "hostVersion": "0.2.0",
+      "installedHostReady": true,
+      "nativeError": "OK",
+      "labUnloaded": true,
+      "labFilesRemoved": true,
+      "observedStateRestored": true,
+      "independentInventoryRestored": true,
+      "mixerEffectsViewRestored": true,
+      "projectSaved": false,
+      "mpcRestarted": false,
+      "addinInstalled": false,
+      "nativeFlagSetterInvoked": false
+    }
+  },
+  "limitsOfEvidence": [
+    "Live inventory contained plugin and audio families; other family metadata was covered by static firmware mapping and synthetic host/ARM fixtures.",
+    "Live edits changed selection and view only; reorder, deletion, forced address reuse and capacity checks were isolated fixtures.",
+    "No live flag setter, project load/save, addin installation or MPC restart was performed.",
+    "The installed 0.2.0 host was resumed; 0.3.0 deployment remains a separate owner-approved upgrade."
+  ],
+  "sanitization": {
+    "hardwareSerialsIncluded": false,
+    "deviceIdentifiersIncluded": false,
+    "nativeAddressesIncluded": false,
+    "projectAndTrackNamesIncluded": false,
+    "privateReports": "ignored build/us46/"
+  }
+}

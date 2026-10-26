@@ -1,7 +1,8 @@
 # MPC Key 37 API
 
 Native state/control research and a local service for the Akai MPC Key 37.
-The API implements discovery, authoritative live state reads and guarded Unix mute/solo/arm commands.
+The API implements discovery, authoritative live state reads for every user track (including audio) in Track List order,
+and guarded Unix mute/solo/arm commands.
 The [managed flag handlers](native-api/adapter/COMMANDS.md) retain verified command results across retries and disconnects;
 a native live policy restricts writes to qualified Main/stopped/automation-Off contexts. Streaming follows separately. See [the service](native-api/README.md), [the native adapter](native-api/adapter/README.md)
 and [privtap](privtap/README.md) for their interfaces and limitations.
@@ -71,6 +72,7 @@ The service's Python integration tests run in the host build only.
 | Persistent host (adapter and service, no exports) | `native-api/mpc_native_host.so` |
 | Native fixture | `native-api/tests/native_fixture` |
 | Executor fixture | `native-api/tests/executor_fixture` |
+| Mixed inventory fixture | `native-api/tests/inventory_fixture` |
 | Identity/lifecycle fixture | `native-api/tests/identity_fixture` |
 | Command/receipt fixture | `native-api/tests/commands_fixture` |
 | Persistent host lifecycle fixture | `native-api/tests/host_fixture` |

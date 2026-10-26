@@ -281,9 +281,15 @@ static void races_gates_and_constraints(void) {
     !receipt.native_invoked);
   f.context_error = MPC_NATIVE_OK;
   put32(&f.identity.native, PROGRAM2, IMAGE + native_program_types[0].vtable);
+  put32(&f.identity.native, POOL + NATIVE_MIDI_END, VECTOR + 4);
+  put32(&f.identity.native, POOL + NATIVE_AUDIO_BEGIN, VECTOR + 4);
+  put32(&f.identity.native, POOL + NATIVE_AUDIO_END, VECTOR + 8);
+  put32(&f.identity.native, POOL + NATIVE_AUDIO_CAPACITY, VECTOR + 8);
   receipt = send(&f, request(&f, "family_gate", MPC_COMMAND_SOLO, 1, true));
   assert(receipt.error == MPC_NATIVE_UNSUPPORTED_TRACK_TYPE && !receipt.native_invoked);
   put32(&f.identity.native, PROGRAM2, IMAGE + NATIVE_DRUM_VTABLE);
+  put32(&f.identity.native, POOL + NATIVE_MIDI_END, VECTOR + 8);
+  put32(&f.identity.native, POOL + NATIVE_AUDIO_END, VECTOR + 4);
   f.identity.native.filter_allows = false;
   receipt = send(&f, request(&f, "filter_reject", MPC_COMMAND_RECORD_ARMED, 1, true));
   assert(

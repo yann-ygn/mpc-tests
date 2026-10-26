@@ -171,11 +171,12 @@ static enum mpc_native_error topology(
   if (
     read32(registry, root + NATIVE_POOL_OFFSET, &pool) ||
     !has_vtable(registry, pool, NATIVE_POOL_VTABLE) ||
-    read32(registry, pool + NATIVE_VECTOR_BEGIN, &begin) ||
-    read32(registry, pool + NATIVE_VECTOR_END, &end) ||
-    read32(registry, pool + NATIVE_VECTOR_CAPACITY, &capacity) || begin % 4 || end < begin ||
+    read32(registry, pool + NATIVE_USER_BEGIN, &begin) ||
+    read32(registry, pool + NATIVE_USER_END, &end) ||
+    read32(registry, pool + NATIVE_USER_CAPACITY, &capacity) || begin % 4 || end < begin ||
     capacity < end || (end - begin) % 4 || (capacity - begin) % 4 ||
-    capacity - begin > 4 * MPC_IDENTITY_MAX_TRACKS || (!begin && (end || capacity)))
+    (end - begin) / 4 > MPC_IDENTITY_MAX_TRACKS || capacity - begin > 4 * 256 ||
+    (!begin && (end || capacity)))
     return MPC_NATIVE_READ_FAILED;
   *track_count = (end - begin) / 4;
   struct mpc_native_io *io = &registry->adapter->io;
@@ -359,7 +360,7 @@ mpc_identity_capture(struct mpc_identity_registry *registry, struct mpc_identity
   snapshot.project = registry->project;
   snapshot.project_generation = registry->generation;
   /* Emit current index order, independently of registry slot reuse. */
-  for (unsigned index = 0; index < MPC_IDENTITY_MAX_SEQUENCES; index++) {
+  for (unsigned index = 0; index < MPC_IDENTITY_MAX_TRACKS; index++) {
     for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
       const struct entry *entry = &registry->tracks[i];
       if (entry->address && entry->index == index)
@@ -469,17 +470,33 @@ static int state_name(struct mpc_identity_registry *registry, uint32_t field, ch
 }
 
 #define ALL_TRACKS (MPC_IDENTITY_MAX_TRACKS + MPC_STATE_MAX_BUSES)
-static enum mpc_native_error all_tracks(
-  struct mpc_identity_registry *registry, uint32_t addresses[ALL_TRACKS], unsigned *count) {
-  uint32_t pool, begin, end, capacity;
+struct inventory {
+  uint32_t all[ALL_TRACKS], users[MPC_IDENTITY_MAX_TRACKS];
+  uint32_t midi[MPC_IDENTITY_MAX_MIDI_TRACKS], audio[MPC_IDENTITY_MAX_AUDIO_TRACKS];
+  uint32_t masters[MPC_STATE_MAX_BUSES], programs[ALL_TRACKS], vtables[ALL_TRACKS];
+  unsigned all_count, user_count, midi_count, audio_count, master_count;
+};
+
+static int position(const uint32_t *addresses, unsigned count, uint32_t address) {
+  for (unsigned i = 0; i < count; i++)
+    if (addresses[i] == address)
+      return (int)i;
+  return -1;
+}
+
+static enum mpc_native_error inventory_vector(
+  struct mpc_identity_registry *registry,
+  uint32_t pool,
+  unsigned offset,
+  uint32_t *addresses,
+  unsigned maximum,
+  unsigned *count) {
+  uint32_t begin, end, capacity;
   if (
-    read32(registry, registry->root + NATIVE_POOL_OFFSET, &pool) ||
-    !has_vtable(registry, pool, NATIVE_POOL_VTABLE) ||
-    read32(registry, pool + NATIVE_ALL_BEGIN, &begin) ||
-    read32(registry, pool + NATIVE_ALL_END, &end) ||
-    read32(registry, pool + NATIVE_ALL_CAPACITY, &capacity) || begin % 4 || end < begin ||
-    capacity < end || (end - begin) % 4 || (capacity - begin) % 4 ||
-    capacity - begin > ALL_TRACKS * 4 || (!begin && (end || capacity)))
+    read32(registry, pool + offset, &begin) || read32(registry, pool + offset + 4, &end) ||
+    read32(registry, pool + offset + 8, &capacity) || begin % 4 || end < begin || capacity < end ||
+    (end - begin) % 4 || (capacity - begin) % 4 || (end - begin) / 4 > maximum ||
+    capacity - begin > 512 * 4 || (!begin && (end || capacity)))
     return MPC_NATIVE_READ_FAILED;
   *count = (end - begin) / 4;
   struct mpc_native_io *io = &registry->adapter->io;
@@ -488,11 +505,87 @@ static enum mpc_native_error all_tracks(
   for (unsigned i = 0; i < *count; i++) {
     if (!has_vtable(registry, addresses[i], NATIVE_TRACK_VTABLE))
       return MPC_NATIVE_READ_FAILED;
-    for (unsigned j = 0; j < i; j++)
-      if (addresses[i] == addresses[j])
-        return MPC_NATIVE_READ_FAILED;
+    if (position(addresses, i, addresses[i]) >= 0)
+      return MPC_NATIVE_READ_FAILED;
   }
   return MPC_NATIVE_OK;
+}
+
+static const char *program_type(struct mpc_identity_registry *registry, uint32_t vtable) {
+  for (unsigned i = 0; i < sizeof native_program_types / sizeof *native_program_types; i++)
+    if (vtable == registry->adapter->io.image + native_program_types[i].vtable)
+      return native_program_types[i].name;
+  return "unknown";
+}
+
+static bool master_type(const char *type) {
+  return !strcmp(type, "input") || !strcmp(type, "output") || !strcmp(type, "master-output") ||
+    !strcmp(type, "return") || !strcmp(type, "submix");
+}
+
+/* The explicit normal/master collections partition all tracks. MIDI-triggered
+ * and audio partition normal. Never infer a bus from absence in MIDI. */
+static enum mpc_native_error
+inventory_read(struct mpc_identity_registry *registry, struct inventory *inventory) {
+  memset(inventory, 0, sizeof *inventory);
+  uint32_t pool;
+  if (
+    read32(registry, registry->root + NATIVE_POOL_OFFSET, &pool) ||
+    !has_vtable(registry, pool, NATIVE_POOL_VTABLE))
+    return MPC_NATIVE_READ_FAILED;
+  struct {
+    unsigned offset, maximum;
+    uint32_t *addresses;
+    unsigned *count;
+  } vectors[] = {
+    {NATIVE_ALL_BEGIN, ALL_TRACKS, inventory->all, &inventory->all_count},
+    {NATIVE_USER_BEGIN, MPC_IDENTITY_MAX_TRACKS, inventory->users, &inventory->user_count},
+    {NATIVE_MIDI_BEGIN, MPC_IDENTITY_MAX_MIDI_TRACKS, inventory->midi, &inventory->midi_count},
+    {NATIVE_AUDIO_BEGIN, MPC_IDENTITY_MAX_AUDIO_TRACKS, inventory->audio, &inventory->audio_count},
+    {NATIVE_MASTER_BEGIN, MPC_STATE_MAX_BUSES, inventory->masters, &inventory->master_count}};
+  for (unsigned i = 0; i < sizeof vectors / sizeof *vectors; i++) {
+    enum mpc_native_error error = inventory_vector(
+      registry,
+      pool,
+      vectors[i].offset,
+      vectors[i].addresses,
+      vectors[i].maximum,
+      vectors[i].count);
+    if (error)
+      return error;
+  }
+  if (
+    inventory->all_count != inventory->user_count + inventory->master_count ||
+    inventory->user_count != inventory->midi_count + inventory->audio_count)
+    return MPC_NATIVE_READ_FAILED;
+  for (unsigned i = 0; i < inventory->all_count; i++) {
+    uint32_t address = inventory->all[i];
+    bool user = position(inventory->users, inventory->user_count, address) >= 0;
+    bool master = position(inventory->masters, inventory->master_count, address) >= 0;
+    bool midi = position(inventory->midi, inventory->midi_count, address) >= 0;
+    bool audio = position(inventory->audio, inventory->audio_count, address) >= 0;
+    if (
+      user == master || (user && midi == audio) || (master && (midi || audio)) ||
+      read32(registry, address + NATIVE_PROGRAM_OFFSET, &inventory->programs[i]) ||
+      read32(registry, inventory->programs[i], &inventory->vtables[i]))
+      return MPC_NATIVE_READ_FAILED;
+    const char *type = program_type(registry, inventory->vtables[i]);
+    if (strcmp(type, "unknown") && (master != master_type(type) || audio != !strcmp(type, "audio")))
+      return MPC_NATIVE_READ_FAILED;
+  }
+  return MPC_NATIVE_OK;
+}
+
+static bool same_inventory(const struct inventory *a, const struct inventory *b) {
+  return a->all_count == b->all_count && a->user_count == b->user_count &&
+    a->midi_count == b->midi_count && a->audio_count == b->audio_count &&
+    a->master_count == b->master_count && !memcmp(a->all, b->all, a->all_count * 4) &&
+    !memcmp(a->users, b->users, a->user_count * 4) &&
+    !memcmp(a->midi, b->midi, a->midi_count * 4) &&
+    !memcmp(a->audio, b->audio, a->audio_count * 4) &&
+    !memcmp(a->masters, b->masters, a->master_count * 4) &&
+    !memcmp(a->programs, b->programs, a->all_count * 4) &&
+    !memcmp(a->vtables, b->vtables, a->all_count * 4);
 }
 
 static enum mpc_native_error selection_check(
@@ -582,39 +675,50 @@ capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot 
   output->selected_track = before.selected_track;
   output->selected_sequence = before.selected_sequence;
   output->sequence_slots = before.sequence_slots;
-  uint32_t addresses[ALL_TRACKS], programs[ALL_TRACKS], verify[ALL_TRACKS];
-  unsigned count = 0, verify_count = 0;
+  struct inventory inventory, verify;
   if (before.project) {
     error = selection_check(registry, &before);
     if (error)
       return error;
-    error = all_tracks(registry, addresses, &count);
+    error = inventory_read(registry, &inventory);
     if (error)
       return error;
-    for (unsigned i = 0; i < count; i++) {
-      struct entry *normal = NULL;
-      for (unsigned j = 0; j < MPC_IDENTITY_MAX_TRACKS; j++)
-        if (registry->tracks[j].address == addresses[i])
-          normal = &registry->tracks[j];
+    if (inventory.user_count != before.track_count)
+      return MPC_NATIVE_STATE_UNSTABLE;
+    for (unsigned i = 0; i < inventory.all_count; i++) {
+      uint32_t address = inventory.all[i];
+      int ui_index = position(inventory.users, inventory.user_count, address);
       struct mpc_state_track *track;
-      if (normal) {
-        track = &output->tracks[normal->index];
-        track->identity.id = normal->id;
-        track->identity.generation = normal->generation;
-        track->identity.index = normal->index;
+      if (ui_index >= 0) {
+        struct entry *entry = NULL;
+        for (unsigned j = 0; j < MPC_IDENTITY_MAX_TRACKS; j++)
+          if (registry->tracks[j].address == address)
+            entry = &registry->tracks[j];
+        if (!entry || entry->index != (unsigned)ui_index)
+          return MPC_NATIVE_STATE_UNSTABLE;
+        track = &output->tracks[ui_index];
+        track->identity = (struct mpc_identity_object){entry->id, entry->generation, entry->index};
+        int midi_index = position(inventory.midi, inventory.midi_count, address);
+        track->collection = midi_index >= 0 ? MPC_STATE_MIDI_TRIGGERED : MPC_STATE_AUDIO;
+        track->collection_index =
+          midi_index >= 0 ? midi_index : position(inventory.audio, inventory.audio_count, address);
         output->track_count++;
       } else {
-        if (output->bus_count == MPC_STATE_MAX_BUSES)
-          return MPC_NATIVE_READ_FAILED;
-        track = &output->buses[output->bus_count];
-        track->identity.index = output->bus_count++;
+        unsigned index = position(inventory.masters, inventory.master_count, address);
+        track = &output->buses[index];
+        track->identity.index = track->collection_index = index;
+        track->collection = MPC_STATE_MASTER;
+        output->bus_count++;
       }
-      error = state_track(registry, addresses[i], &programs[i], normal != NULL, track);
+      uint32_t program;
+      error = state_track(registry, address, &program, ui_index >= 0, track);
       if (error)
         return error;
+      if (
+        program != inventory.programs[i] ||
+        strcmp(track->type, program_type(registry, inventory.vtables[i])))
+        return MPC_NATIVE_STATE_UNSTABLE;
     }
-    if (output->track_count != before.track_count)
-      return MPC_NATIVE_READ_FAILED;
     for (unsigned i = 0; i < before.sequence_count; i++) {
       const struct mpc_identity_object *id = &before.sequences[i];
       struct entry *entry =
@@ -647,18 +751,11 @@ capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot 
   error = selection_check(registry, &after);
   if (error)
     return error;
-  error = all_tracks(registry, verify, &verify_count);
+  error = inventory_read(registry, &verify);
   if (error)
     return error;
-  if (count != verify_count || memcmp(addresses, verify, count * 4))
+  if (!same_inventory(&inventory, &verify))
     return MPC_NATIVE_STATE_UNSTABLE;
-  for (unsigned i = 0; i < count; i++) {
-    uint32_t program;
-    if (read32(registry, addresses[i] + NATIVE_PROGRAM_OFFSET, &program))
-      return MPC_NATIVE_READ_FAILED;
-    if (program != programs[i])
-      return MPC_NATIVE_STATE_UNSTABLE;
-  }
   return MPC_NATIVE_OK;
 }
 

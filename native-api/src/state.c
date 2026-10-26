@@ -44,6 +44,27 @@ static int valid_text(const char *text, size_t capacity) {
   return 1;
 }
 
+static int known_track_type(const char *type) {
+  static const char *types[] = {
+    "plugin",
+    "drum",
+    "keygroup",
+    "clip",
+    "midi",
+    "cv",
+    "audio",
+    "input",
+    "output",
+    "master-output",
+    "return",
+    "submix",
+    "unknown"};
+  for (unsigned i = 0; i < sizeof types / sizeof *types; i++)
+    if (!strcmp(type, types[i]))
+      return 1;
+  return 0;
+}
+
 static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instance) {
   if (
     s->abi_version != MPC_STATE_ABI || s->struct_bytes != sizeof *s ||
@@ -58,26 +79,61 @@ static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instan
     (s->project && !s->project_generation))
     return 0;
   unsigned selected_track = !s->selected_track, selected_sequence = !s->selected_sequence;
+  unsigned midi_count = 0, audio_count = 0;
+  bool midi_indices[MPC_IDENTITY_MAX_MIDI_TRACKS] = {0};
+  bool audio_indices[MPC_IDENTITY_MAX_AUDIO_TRACKS] = {0};
   for (unsigned i = 0; i < s->track_count + s->bus_count; i++) {
     int normal = i < s->track_count;
     const struct mpc_state_track *t = normal ? &s->tracks[i] : &s->buses[i - s->track_count];
     if (
       !valid_text(t->name, sizeof t->name) || !valid_text(t->type, sizeof t->type) ||
-      (t->known && t->known != 15u) || !t->type[0] || t->muted > 1 || t->soloed > 1 ||
-      t->record_armed > 1 || t->audio_soloed > 1 || t->audio_record_armed > 1 || t->silenced > 1 ||
-      t->identity.index != (normal ? i : i - s->track_count) ||
+      !known_track_type(t->type) || (t->known && t->known != 15u) || !t->type[0] || t->muted > 1 ||
+      t->soloed > 1 || t->record_armed > 1 || t->audio_soloed > 1 || t->audio_record_armed > 1 ||
+      t->silenced > 1 || t->identity.index != (normal ? i : i - s->track_count) ||
       (normal && (!t->identity.id || !t->identity.generation)) ||
       (normal && (!strcmp(t->type, "plugin") || !strcmp(t->type, "drum")) && t->known != 15u) ||
       (!normal && (t->known || t->identity.id || t->identity.generation)) ||
       (t->known && strcmp(t->type, "plugin") && strcmp(t->type, "drum")))
       return 0;
     if (normal) {
+      if (t->collection == MPC_STATE_MIDI_TRIGGERED) {
+        if (
+          t->collection_index >= MPC_IDENTITY_MAX_MIDI_TRACKS ||
+          midi_indices[t->collection_index] || !strcmp(t->type, "audio"))
+          return 0;
+        midi_indices[t->collection_index] = true;
+        midi_count++;
+      } else if (t->collection == MPC_STATE_AUDIO) {
+        if (
+          t->collection_index >= MPC_IDENTITY_MAX_AUDIO_TRACKS ||
+          audio_indices[t->collection_index] ||
+          (strcmp(t->type, "audio") && strcmp(t->type, "unknown")) || t->known)
+          return 0;
+        audio_indices[t->collection_index] = true;
+        audio_count++;
+      } else
+        return 0;
+      if (
+        !strcmp(t->type, "input") || !strcmp(t->type, "output") ||
+        !strcmp(t->type, "master-output") || !strcmp(t->type, "return") ||
+        !strcmp(t->type, "submix"))
+        return 0;
       selected_track += t->identity.id == s->selected_track;
       for (unsigned j = 0; j < i; j++)
         if (t->identity.id == s->tracks[j].identity.id)
           return 0;
-    }
+    } else if (
+      t->collection != MPC_STATE_MASTER || t->collection_index != i - s->track_count ||
+      (strcmp(t->type, "input") && strcmp(t->type, "output") && strcmp(t->type, "master-output") &&
+       strcmp(t->type, "return") && strcmp(t->type, "submix") && strcmp(t->type, "unknown")))
+      return 0;
   }
+  for (unsigned i = 0; i < midi_count; i++)
+    if (!midi_indices[i])
+      return 0;
+  for (unsigned i = 0; i < audio_count; i++)
+    if (!audio_indices[i])
+      return 0;
   unsigned used = 0;
   for (unsigned i = 0; i < s->sequence_count; i++) {
     const struct mpc_state_sequence *q = &s->sequences[i];
@@ -126,8 +182,19 @@ static void track(
     f,
     ",\"kind\":\"%s\",\"index\":%u,\"name\":",
     normal ? "track" : "bus",
-    t->identity.index);
+    t->collection_index);
   api_quoted(f, t->name);
+  fputs(",\"collection\":", f);
+  api_quoted(
+    f,
+    t->collection == MPC_STATE_MIDI_TRIGGERED ? "midi_triggered"
+      : t->collection == MPC_STATE_AUDIO      ? "audio"
+                                              : "master");
+  fputs(",\"uiIndex\":", f);
+  if (normal)
+    fprintf(f, "%u", t->identity.index);
+  else
+    fputs("null", f);
   fputs(",\"type\":", f);
   api_quoted(f, strcmp(t->type, "unknown") ? t->type : NULL);
   fputs(",\"requested\":{\"muted\":", f);

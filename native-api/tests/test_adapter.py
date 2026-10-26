@@ -32,6 +32,15 @@ class ProfileTests(unittest.TestCase):
             "family": lambda s, c: c["supportedProgramFamilies"].append("midi"),
             "program_type": lambda s, c: s["programTypes"].update({"4": "unqualified"}),
             "program_vtable": lambda s, c: s["programTypes"].update({"1": "audio"}),
+            "inventory_alignment": lambda s, c: s["offsets"]["trackPool"].update(userBegin=117),
+            "inventory_missing": lambda s, c: s["offsets"]["trackPool"].pop("audioEnd"),
+            "inventory_alias": lambda s, c: s["offsets"]["trackPool"].update(
+                userBegin=68, userEnd=72, userCapacity=76
+            ),
+            "inventory_limit": lambda s, c: s["trackCollections"].update(maxUserTracks=128),
+            "inventory_landmark": lambda s, c: c.update(
+                functions=[f for f in c["functions"] if f["name"] != "inventoryPartition"]
+            ),
             "qualification": lambda s, c: c.update(capabilityQualification="production"),
             "fingerprint_length": lambda s, c: c["functions"][0].update(prefixHex="abcd"),
             "duplicate_function": lambda s, c: c["functions"].append(

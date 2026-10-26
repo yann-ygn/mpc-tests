@@ -82,7 +82,7 @@
         },
         "limits": {
           "type": "object",
-          "required": ["maxRequestBytes", "maxResponseBytes", "maxConnections", "connectionTimeoutMs", "queueCapacity", "requestRetentionMs", "defaultStartWithinMs", "maxStartWithinMs", "verificationTimeoutMs"],
+          "required": ["maxRequestBytes", "maxResponseBytes", "maxConnections", "connectionTimeoutMs", "queueCapacity", "requestRetentionMs", "defaultStartWithinMs", "maxStartWithinMs", "verificationTimeoutMs", "maxTracks", "maxMidiTracks", "maxAudioTracks", "maxBuses", "snapshotAbiVersion"],
           "properties": {
             "maxRequestBytes": {"type": "integer", "minimum": 1},
             "maxResponseBytes": {"type": "integer", "minimum": 1},
@@ -95,7 +95,12 @@
             "maxStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
             "maxWaitMs": {"$ref": "#/$defs/nullableMilliseconds"},
             "verificationTimeoutMs": {"$ref": "#/$defs/nullableMilliseconds"},
-            "adapterProbeTimeoutMs": {"type":"integer","minimum":1}
+            "adapterProbeTimeoutMs": {"type":"integer","minimum":1},
+            "maxTracks": {"const":136},
+            "maxMidiTracks": {"const":128},
+            "maxAudioTracks": {"const":8},
+            "maxBuses": {"const":128},
+            "snapshotAbiVersion": {"const":2}
           }
         }
       }

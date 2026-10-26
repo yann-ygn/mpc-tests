@@ -8,7 +8,7 @@
 /* Trusted in-process interface, separate from the public command protocol. All
  * client calls are for non-realtime threads. Only the resolver runs on the UI
  * thread. The executor owns its adapter, scheduler and copied requests. */
-#define MPC_EXECUTOR_ABI 4u
+#define MPC_EXECUTOR_ABI 5u
 #define MPC_EXECUTOR_MAX_JOBS 128u
 #define MPC_EXECUTOR_MAX_WAIT_MS 30000u
 

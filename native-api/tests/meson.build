@@ -39,6 +39,15 @@ identity_fixture = executable(
 elf_checks += [{'binary': identity_fixture}]
 test('identity-fixture', identity_fixture, suite: 'native-api', timeout: 30)
 
+inventory_fixture = executable(
+  'inventory_fixture', 'inventory_fixture.c', adapter_sources, profiles[1],
+  include_directories: [root_inc, api_inc, adapter_inc],
+  c_args: native_args, override_options: native_options + ['optimization=1'],
+  dependencies: [dl_dep, threads_dep], link_with: elf_id,
+)
+elf_checks += [{'binary': inventory_fixture}]
+test('inventory-fixture', inventory_fixture, suite: 'native-api', timeout: 30)
+
 commands_fixture = executable(
   'commands_fixture', 'commands_fixture.c', adapter_sources, profiles[1],
   include_directories: [root_inc, api_inc, adapter_inc],
@@ -63,6 +72,7 @@ if not meson.is_cross_build()
   native_test_env.set('MPC_NATIVE_TEST_FIXTURE', native_fixture.full_path())
   native_test_env.set('MPC_COMMANDS_TEST_FIXTURE', commands_fixture.full_path())
   native_test_env.set('MPC_NATIVE_IDENTITY_FIXTURE', identity_fixture.full_path())
+  native_test_env.set('MPC_NATIVE_INVENTORY_FIXTURE', inventory_fixture.full_path())
   native_test_env.set('MPC_READELF', readelf.full_path())
   native_test_env.set('MPC_HOST_TEST_FIXTURE', host_fixture.full_path())
   native_test_env.set('MPC_HOST_TEST_LIBRARY', native_host.full_path())
@@ -73,7 +83,7 @@ if not meson.is_cross_build()
       args: ['-m', 'unittest', module, '-v'],
       workdir: meson.current_source_dir(),
       env: native_test_env,
-      depends: [api, adapter, native_fixture, identity_fixture, commands_fixture, host_fixture, native_host],
+      depends: [api, adapter, native_fixture, identity_fixture, inventory_fixture, commands_fixture, host_fixture, native_host],
       suite: 'native-api',
     )
   endforeach

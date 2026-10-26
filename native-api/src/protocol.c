@@ -154,7 +154,8 @@ char *api_respond(
   fputs("},\"readableFields\":", output);
   fputs(
     discovery.state_ready
-      ? "[\"track.name\",\"track.type\",\"track.requested\",\"track.audioSide.soloed\",\"track."
+      ? "[\"track.uiIndex\",\"track.collection\",\"track.index\",\"track.name\",\"track.type\","
+        "\"track.requested\",\"track.audioSide.soloed\",\"track."
         "audioSide.recordArmed\",\"track.silenced\",\"sequence.name\",\"sequence.used\",\"sequence."
         "bpm\",\"selection\",\"buses.metadata\"]"
       : "[]",
@@ -166,7 +167,8 @@ char *api_respond(
     fprintf(output, ":{\"available\":%s,\"reason\":", discovery.state_ready ? "true" : "false");
     api_quoted(output, discovery.state_ready ? NULL : discovery.unavailable_reason);
     fputs(
-      ",\"trackTypes\":[\"plugin\",\"drum\"],\"verification\":[\"model\",\"audio_copy\"]}",
+      ",\"trackTypes\":[\"plugin\",\"drum\",\"keygroup\",\"clip\",\"midi\",\"cv\",\"audio\"],"
+      "\"verification\":[\"model\",\"audio_copy\"]}",
       output);
   }
   static const char *operations[] =
@@ -197,7 +199,8 @@ char *api_respond(
     "},\"limits\":{\"maxRequestBytes\":%d,\"maxResponseBytes\":%d,\"maxConnections\":%d,"
     "\"connectionTimeoutMs\":%d,\"queueCapacity\":%d,\"receiptCapacity\":%d,"
     "\"requestRetentionMs\":%d,\"defaultStartWithinMs\":%s,\"maxStartWithinMs\":%s,"
-    "\"maxWaitMs\":%s,\"verificationTimeoutMs\":%s,\"adapterProbeTimeoutMs\":%d}}\n",
+    "\"maxWaitMs\":%s,\"verificationTimeoutMs\":%s,\"adapterProbeTimeoutMs\":%d,\"maxTracks\":%u,"
+    "\"maxMidiTracks\":%u,\"maxAudioTracks\":%u,\"maxBuses\":%u,\"snapshotAbiVersion\":%u}}\n",
     MAX_REQUEST_BYTES,
     MAX_RESPONSE_BYTES,
     MAX_CONNECTIONS,
@@ -209,7 +212,12 @@ char *api_respond(
     discovery.commands_ready ? "30000" : "null",
     discovery.commands_ready ? "30000" : "null",
     discovery.commands_ready ? "500" : "null",
-    ADAPTER_PROBE_TIMEOUT_MS);
+    ADAPTER_PROBE_TIMEOUT_MS,
+    MPC_IDENTITY_MAX_TRACKS,
+    MPC_IDENTITY_MAX_MIDI_TRACKS,
+    MPC_IDENTITY_MAX_AUDIO_TRACKS,
+    MPC_STATE_MAX_BUSES,
+    MPC_STATE_ABI);
   if (fclose(output)) {
     free(buffer);
     return NULL;

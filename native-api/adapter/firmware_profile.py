@@ -97,6 +97,27 @@ def validate(state, control):
     for group in ("project", "track", "trackPool", "program", "sequence"):
         for key, value in state["offsets"][group].items():
             integer(value, group + "." + key, 0x10000)
+    pool = state["offsets"]["trackPool"]
+    starts = []
+    for name in ("all", "normal", "user", "master", "audio"):
+        start = pool.get(name + "Begin")
+        if (
+            type(start) is not int
+            or start <= 0
+            or start % 4
+            or any(
+                pool.get(name + suffix) != start + delta
+                for suffix, delta in (("End", 4), ("Capacity", 8))
+            )
+        ):
+            raise ValueError("Invalid inventory collection layout")
+        starts.append(start)
+    if len(set(starts)) != len(starts):
+        raise ValueError("Aliased inventory collections")
+    for name, limit in (("Midi", 128), ("Audio", 8), ("User", 136), ("Master", 128)):
+        value = state.get("trackCollections", {}).get("max" + name + "Tracks")
+        if type(value) is not int or value != limit:
+            raise ValueError("Inventory capacity disagrees with native ABI")
     lifetime = state["identity"]
     for key in (
         "applicationSlot",
@@ -157,6 +178,18 @@ def validate(state, control):
             raise ValueError("Expected a 32-byte code fingerprint")
         fingerprints[rva] = code
         names.add(function["name"])
+    if (
+        not {
+            "inventoryCollectionGetters",
+            "inventoryUserCollection",
+            "inventoryMasterCollection",
+            "inventoryTypeCollection",
+            "inventoryPartition",
+            "inventoryTrackType",
+        }
+        <= names
+    ):
+        raise ValueError("Missing inventory landmarks")
     bindings = control["bindings"]
     if [b["name"] for b in bindings] != ["SetMute", "SetSolo", "SetTrackRecordArmed"]:
         raise ValueError("Unexpected typed operation bindings")
@@ -274,12 +307,21 @@ def generate(out, state_path=STATE, control_path=CONTROL):
             f["rva"] for f in control["functions"] if f["name"] == "juce::MessageManager::callAsync"
         ),
         "POOL_OFFSET": state["offsets"]["project"]["trackPool"],
-        "VECTOR_BEGIN": state["offsets"]["trackPool"]["normalBegin"],
-        "VECTOR_END": state["offsets"]["trackPool"]["normalEnd"],
-        "VECTOR_CAPACITY": state["offsets"]["trackPool"]["normalCapacity"],
+        "MIDI_BEGIN": state["offsets"]["trackPool"]["normalBegin"],
+        "MIDI_END": state["offsets"]["trackPool"]["normalEnd"],
+        "MIDI_CAPACITY": state["offsets"]["trackPool"]["normalCapacity"],
         "ALL_BEGIN": state["offsets"]["trackPool"]["allBegin"],
         "ALL_END": state["offsets"]["trackPool"]["allEnd"],
         "ALL_CAPACITY": state["offsets"]["trackPool"]["allCapacity"],
+        "USER_BEGIN": state["offsets"]["trackPool"]["userBegin"],
+        "USER_END": state["offsets"]["trackPool"]["userEnd"],
+        "USER_CAPACITY": state["offsets"]["trackPool"]["userCapacity"],
+        "MASTER_BEGIN": state["offsets"]["trackPool"]["masterBegin"],
+        "MASTER_END": state["offsets"]["trackPool"]["masterEnd"],
+        "MASTER_CAPACITY": state["offsets"]["trackPool"]["masterCapacity"],
+        "AUDIO_BEGIN": state["offsets"]["trackPool"]["audioBegin"],
+        "AUDIO_END": state["offsets"]["trackPool"]["audioEnd"],
+        "AUDIO_CAPACITY": state["offsets"]["trackPool"]["audioCapacity"],
         "TRACK_NAME": state["offsets"]["track"]["name"],
         "SEQUENCE_NAME": state["offsets"]["sequence"]["name"],
         "SEQUENCE_BPM": state["offsets"]["sequence"]["bpm"],

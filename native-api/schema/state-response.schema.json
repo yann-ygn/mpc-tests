@@ -86,7 +86,7 @@
     },
     "tracks": {
       "type": "array",
-      "maxItems": 128,
+      "maxItems": 136,
       "items": {
         "$ref": "#/$defs/track"
       }
@@ -166,7 +166,9 @@
         "requested",
         "audioSide",
         "silenced",
-        "unsupportedFields"
+        "unsupportedFields",
+        "uiIndex",
+        "collection"
       ],
       "properties": {
         "ref": {
@@ -287,8 +289,69 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "uiIndex": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 135
+        },
+        "collection": {
+          "enum": [
+            "midi_triggered",
+            "audio",
+            "master"
+          ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "track"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "uiIndex": {
+                "type": "integer"
+              },
+              "collection": {
+                "enum": [
+                  "midi_triggered",
+                  "audio"
+                ]
+              },
+              "ref": {
+                "type": "object"
+              },
+              "generation": {
+                "type": "string"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "uiIndex": {
+                "type": "null"
+              },
+              "collection": {
+                "const": "master"
+              },
+              "ref": {
+                "type": "null"
+              },
+              "generation": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
     },
     "sequence": {
       "type": [

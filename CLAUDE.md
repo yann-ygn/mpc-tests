@@ -130,6 +130,16 @@ before running experiments.
   mute/solo/arm writes on a selected plugin in an owner-loaded project, independent readback, retries/no-ops/conflicts
   and fifteen policy no-op checks. All captured track/bus flags, selection, sequence state, settings and Mixer Effects
   view were restored without save/restart. See `findings/native-service-live-20261026.json`.
+- Complete track inventory (#46), branch `us-46-complete-track-inventory`: identities and snapshots now use
+  the real normal/user vector (`TrackPool +0x74`), including audio. The historical `normal*` profile offsets
+  (`+0x44`) identify MIDI-triggered tracks. `uiIndex` is canonical Track List order; `index` stays collection-relative,
+  with explicit `collection`. Master objects come from `+0x84`; audio from `+0x94`. Bounds are 128 MIDI + 8 audio
+  and 128 masters. Snapshot ABI 2 / STATE_V2, executor ABI 5 and command ABI 2 replace older layouts; recompile C
+  hosts. Package 0.3.0 includes the change; the installed 0.2.0 remains unchanged. Mixed-family host/ARM fixtures,
+  full host checks, ASan/UBSan and live eight-track inventory/audio-selection verification pass. The original
+  flags, sequence state, selection and Mixer Effects view were restored; lab mappings/files removed and installed
+  host resumed without MPC restart. See `findings/native-track-inventory.md` and sanitized proof. Additional
+  family flags/setters remain US #49.
 - Next: streaming (#33).
   Per-sequence mute needs an explicit sequence target/precondition before public exposure.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with

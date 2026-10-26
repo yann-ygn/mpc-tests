@@ -208,6 +208,36 @@
       "name": "commandArmBehaviourBinding",
       "rva": 39297124,
       "prefixHex": "507084e5548084e5d51db0eb503094e5940a93e5b21100eb043090e5081090e5"
+    },
+    {
+      "name": "inventoryCollectionGetters",
+      "rva": 39315272,
+      "prefixHex": "300080e21eff2fe1400080e21eff2fe1500080e21eff2fe1600080e21eff2fe1"
+    },
+    {
+      "name": "inventoryUserCollection",
+      "rva": 39315304,
+      "prefixHex": "700080e21eff2fe1800080e21eff2fe1900080e21eff2fe1b00080e21eff2fe1"
+    },
+    {
+      "name": "inventoryMasterCollection",
+      "rva": 39315312,
+      "prefixHex": "800080e21eff2fe1900080e21eff2fe1b00080e21eff2fe1c00080e21eff2fe1"
+    },
+    {
+      "name": "inventoryTypeCollection",
+      "rva": 39315392,
+      "prefixHex": "090051e301f18f901d0000ea0a0000ea0b0000ea0c0000ea0d0000ea0e0000ea"
+    },
+    {
+      "name": "inventoryPartition",
+      "rva": 39319480,
+      "prefixHex": "f4426de10040a0e1f860cde1f081cde1f8a1cde120e08de50100a0e104d04de2"
+    },
+    {
+      "name": "inventoryTrackType",
+      "rva": 40152528,
+      "prefixHex": "4c0690e51eff2fe15e0e80e2126a9fed037ad0ed116adfed08d04de2c07af5ee"
     }
   ],
   "bindings": [

@@ -1,4 +1,4 @@
-# Firmware adapter ABI 1 and UI executor ABI 4
+# Firmware adapter ABI 1 and UI executor ABI 5
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -8,7 +8,7 @@ handles; executor requests carry opaque identities and generations.
 ## Guards and interface
 
 The runtime backend checks 32-bit ARM hard-float/little-endian ABI, the device-tree model and the executable's
-GNU build ID. It verifies 24 code fingerprints before opening an adapter and again before target access
+GNU build ID. It verifies the profiled code fingerprints before opening an adapter and again before target access
 or native calls. These cover setters, dispatch, destruction, the application owner and sequence lifecycle
 notifications. A code/read failure latches it unavailable until closed and reopened.
 
@@ -42,7 +42,7 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) uses ABI 4; ABI 1/2/3 configurations are rejected at open.
+The [executor header](include/mpc_executor.h) uses ABI 5; ABI 1/2/3/4 configurations are rejected at open.
 The primitive ABI remains 1. Requests support track reads/flags, identity snapshots and sequence-reference
 validation and full live state snapshots. The authoritative mode owns the resolver; the original
 host-resolver mode remains available for trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
@@ -142,7 +142,7 @@ the real JUCE read-only smoke test. This does not establish authoritative projec
 ## Active projects and handles (#20)
 
 `mpc_executor_open_authoritative(capacity, &executor)` opens a managed authority. Submit
-`MPC_EXECUTOR_IDENTITIES` to capture the current project, normal tracks, sequence slots and selection on the
+`MPC_EXECUTOR_IDENTITIES` to capture the current project, all user tracks, sequence slots and selection on the
 verified UI thread. The [snapshot header](include/mpc_identity.h) contains IDs/generations and mutable indices,
 with no pointers. Copy its `instance_id`, project identity and chosen object's ID/generation into a request.
 An optional sequence identity is a precondition on a track request; `MPC_EXECUTOR_VALIDATE_SEQUENCE` validates
@@ -252,3 +252,26 @@ and preserves accepted/unknown outcomes across disconnects. See [integration and
 A required UI-thread host policy gates unqualified contexts; the private lab policy is manually qualified.
 US #32 now supplies [public Unix write/receipt binding and production live qualification](../../findings/native-service.md).
 The production policy is exposed by the additive UI-only `mpc_executor_qualify_command` helper.
+
+## Mixed track inventory (#46)
+
+Executor ABI 5 expands identity snapshots to 136 user tracks. Snapshot ABI 2 adds
+collection metadata and preserves the distinction between the legacy MIDI-triggered
+index and canonical user order. Command ABI 2 expands receipt observations to the
+same capacity; recompile trusted hosts against these headers. Old executor/command
+configurations are rejected at open. Primitive adapter ABI 1 and its eight layouts
+remain unchanged. The private transfer and attachment tag are `STATE_V2` and
+`MPC_ADAPTER_STATE_V2`; an older snapshot attachment cannot enable state reads.
+
+The registry uses the native normal/user collection at TrackPool `+0x74`, including
+all audio tracks. The profile's historical `normal*` offsets at `+0x44` describe
+MIDI-triggered tracks. Master objects come from `+0x84`, audio from `+0x94`.
+Snapshots validate these partitions against all tracks, then fence collection order,
+selection, Program pointers and Program types. The 128 MIDI-triggered / 8 audio /
+128 master limits bound the API; vector storage may have spare capacity beyond its
+current element count. `mpc_identity_object.index` is canonical user order internally;
+`mpc_state_track.collection_index` supplies public `index` and the collection enum
+supplies public `collection`. Buses have no user `uiIndex` or writable reference.
+
+See [inventory findings](../../findings/native-track-inventory.md) for the native map,
+UI evidence and validation. Listing a family does not qualify its flags or setters.

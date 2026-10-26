@@ -1,11 +1,12 @@
 # Native command handlers (#19)
 
 `libmpc_native.so` now provides the transport-independent command API in
-[`mpc_commands.h`](include/mpc_commands.h), ABI 1. It runs on executor ABI 4 and primitive adapter ABI 1.
+[`mpc_commands.h`](include/mpc_commands.h), ABI 2. It runs on executor ABI 5 and primitive adapter ABI 1.
 The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
 The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
-`mpc_executor_qualify_command`. These additions preserve command ABI 1 and executor ABI 4 structure layouts.
+`mpc_executor_qualify_command`. US #46 expands observations to 136 user tracks and versions command ABI 2 / executor ABI 5.
+Recompile trusted callers; configurations using the earlier ABIs are rejected.
 
 [US #32](../../findings/native-service.md) binds the public Unix setters and `get_command` in the persistent
 host. The socket authenticates callers by peer UID and validates strict schemas before enqueueing.

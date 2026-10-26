@@ -73,6 +73,7 @@ def main():
                         "native_fixture",
                         "executor_fixture",
                         "identity_fixture",
+                        "inventory_fixture",
                         "commands_fixture",
                     )
                 },

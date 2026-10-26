@@ -19,7 +19,7 @@ enum {
   PROGRAM = OBJECTS + 0x6000
 };
 struct fixture {
-  unsigned char objects[0x70000];
+  unsigned char objects[0x110000];
   bool ui, authorized, filter_allows, propagate_audio, invalidate_after_set;
   int corrupt, unreadable;
   unsigned code_reads, object_reads, validations, setters, filters, sequence, filter_order,
@@ -46,9 +46,15 @@ static void reset(struct fixture *f) {
     put32(f, OBJECTS + native_secondary[i].offset, IMAGE + native_secondary[i].vtable);
   put32(f, OBJECTS + NATIVE_POOL_OFFSET, POOL);
   put32(f, POOL, IMAGE + NATIVE_POOL_VTABLE);
-  put32(f, POOL + NATIVE_VECTOR_BEGIN, VECTOR);
-  put32(f, POOL + NATIVE_VECTOR_END, VECTOR + 4);
-  put32(f, POOL + NATIVE_VECTOR_CAPACITY, VECTOR + 4);
+  put32(f, POOL + NATIVE_USER_BEGIN, VECTOR);
+  put32(f, POOL + NATIVE_USER_END, VECTOR + 4);
+  put32(f, POOL + NATIVE_USER_CAPACITY, VECTOR + 4);
+  put32(f, POOL + NATIVE_ALL_BEGIN, VECTOR);
+  put32(f, POOL + NATIVE_ALL_END, VECTOR + 4);
+  put32(f, POOL + NATIVE_ALL_CAPACITY, VECTOR + 4);
+  put32(f, POOL + NATIVE_MIDI_BEGIN, VECTOR);
+  put32(f, POOL + NATIVE_MIDI_END, VECTOR + 4);
+  put32(f, POOL + NATIVE_MIDI_CAPACITY, VECTOR + 4);
   put32(f, VECTOR, TRACK);
   put32(f, TRACK, IMAGE + NATIVE_TRACK_VTABLE);
   put32(f, TRACK + NATIVE_PROGRAM_OFFSET, PROGRAM);

@@ -6,6 +6,11 @@ now exposes `get_state`, `list_tracks`, `current_track`, `current_sequence`, and
 `recovery_snapshot` when an authoritative attachment is present. The recovery operation is a full fresh
 snapshot; it carries no event replay or snapshot-to-subscription guarantee (#33).
 
+US #46 extends these original findings to all user tracks, including audio, and
+replaces the private transfer with snapshot ABI 2 / `STATE_V2`. The original
+"normal" scope below was the MIDI-triggered collection; see the current
+[inventory map, limits and evidence](native-track-inventory.md).
+
 ## Authority and sampling
 
 Executor ABI 3 adds `GET_STATE` to the existing typed queue. Only authoritative executors accept it.

@@ -26,12 +26,13 @@ struct identity_fixture {
   struct mpc_native_function pending;
   bool queued;
   bool reject_post, drop_post, retain_sequence;
-  uint32_t subjects[260];
-  struct mpc_native_lifetime *watches[260];
+  uint32_t subjects[MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1];
+  struct mpc_native_lifetime *watches[MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1];
   struct mpc_native_sequence_watch *sequence_watches[128];
   struct mpc_native_project_watch *project_watch;
   unsigned registered, removed, expired;
   unsigned state_mutation, mutations;
+  void (*before_read)(struct identity_fixture *, uintptr_t);
 };
 static _Thread_local bool ui;
 
@@ -81,6 +82,8 @@ static inline void pump(struct identity_fixture *fixture) {
 
 static inline int identity_read(void *data, uintptr_t address, void *output, size_t length) {
   struct identity_fixture *fixture = data;
+  if (fixture->before_read)
+    fixture->before_read(fixture, address);
   if (address == TRACK + NATIVE_TRACK_NAME && fixture->state_mutation) {
     unsigned mutation = fixture->state_mutation;
     if (mutation != 2)
@@ -117,7 +120,7 @@ static inline enum mpc_native_error
 watch(void *data, uint32_t subject, struct mpc_native_lifetime *lifetime) {
   struct identity_fixture *fixture = data;
   assert(ui);
-  for (unsigned i = 0; i < 260; i++) {
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1; i++) {
     if (fixture->watches[i])
       continue;
     fixture->subjects[i] = subject;
@@ -133,7 +136,7 @@ watch(void *data, uint32_t subject, struct mpc_native_lifetime *lifetime) {
 static inline void unwatch(void *data, struct mpc_native_lifetime *lifetime) {
   struct identity_fixture *fixture = data;
   assert(ui);
-  for (unsigned i = 0; i < 260; i++)
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1; i++)
     if (fixture->watches[i] == lifetime) {
       fixture->watches[i] = NULL;
       fixture->removed++;
@@ -144,7 +147,7 @@ static inline void unwatch(void *data, struct mpc_native_lifetime *lifetime) {
 static inline void destroy_object(struct identity_fixture *fixture, uint32_t object) {
   /* Destruction and recreation happen between UI samples; no pointer scan can
    * distinguish them. The native destruction observer must remember the event. */
-  for (unsigned i = 0; i < 260; i++)
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1; i++)
     if (fixture->watches[i] && fixture->subjects[i] == object + 4) {
       fixture->watches[i]->vtable[2](fixture->watches[i]);
       fixture->expired++;
@@ -337,8 +340,10 @@ static inline void state_init(struct identity_fixture *fixture) {
   put32(f, POOL + NATIVE_ALL_BEGIN, VECTOR);
   put32(f, POOL + NATIVE_ALL_END, VECTOR + 8);
   put32(f, POOL + NATIVE_ALL_CAPACITY, VECTOR + 8);
-  put32(f, POOL + NATIVE_VECTOR_END, VECTOR + 8);
-  put32(f, POOL + NATIVE_VECTOR_CAPACITY, VECTOR + 8);
+  put32(f, POOL + NATIVE_USER_END, VECTOR + 8);
+  put32(f, POOL + NATIVE_USER_CAPACITY, VECTOR + 8);
+  put32(f, POOL + NATIVE_MIDI_END, VECTOR + 8);
+  put32(f, POOL + NATIVE_MIDI_CAPACITY, VECTOR + 8);
   put32(f, VECTOR + 4, TRACK2);
   put32(f, OBJECTS + NATIVE_SELECTED_TRACK_MIRROR, TRACK);
   put32(f, OBJECTS + NATIVE_SELECTED_SEQUENCE_MIRROR, SEQUENCE);

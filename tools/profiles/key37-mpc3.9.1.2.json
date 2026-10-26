@@ -57,7 +57,16 @@
       "allCapacity": 60,
       "normalBegin": 68,
       "normalEnd": 72,
-      "normalCapacity": 76
+      "normalCapacity": 76,
+      "userBegin": 116,
+      "userEnd": 120,
+      "userCapacity": 124,
+      "masterBegin": 132,
+      "masterEnd": 136,
+      "masterCapacity": 140,
+      "audioBegin": 148,
+      "audioEnd": 152,
+      "audioCapacity": 156
     },
     "track": {
       "name": 1128,
@@ -89,5 +98,15 @@
     "sequenceUsed": 600,
     "projectNotifier": 1096,
     "projectListenerVtable": 109983972
+  },
+  "trackCollections": {
+    "legacyNormal": "MIDI-triggered tracks (plugin, drum, keygroup, clip, MIDI, CV), not all user tracks",
+    "user": "canonical normal-track order, including audio",
+    "master": "explicit non-user tracks: input, output, master-output, return, submix",
+    "audio": "audio tracks; index is local to this collection",
+    "maxMidiTracks": 128,
+    "maxAudioTracks": 8,
+    "maxUserTracks": 136,
+    "maxMasterTracks": 128
   }
 }

@@ -12,8 +12,13 @@
 #include <time.h>
 #include <unistd.h>
 
-/* Private, discovery-only handshake with the retained lab host. No native
+/* Private attachment handshake with the retained lab host. No native
  * address or target is accepted. PID/UID verification binds it to this MPC. */
+/* Deliberately identical on the host and ARM. Any layout change needs a new
+ * transfer version, including changes to padding, capacities or identity rows. */
+_Static_assert(sizeof(struct mpc_state_track) == 344, "snapshot ABI 2 track layout");
+_Static_assert(sizeof(struct mpc_state_snapshot) == 127808, "snapshot ABI 2 transfer layout");
+
 static long long monotonic_ms(void) {
   struct timespec time;
   if (clock_gettime(CLOCK_MONOTONIC, &time))
@@ -107,13 +112,13 @@ int adapter_probe(const char *root, long pid, char instance_id[37], int *state_r
       build,
       verification,
       &extra) != 5 ||
-    (strcmp(tag, "MPC_ADAPTER_V1") && strcmp(tag, "MPC_ADAPTER_STATE_V1")) ||
+    (strcmp(tag, "MPC_ADAPTER_V1") && strcmp(tag, "MPC_ADAPTER_STATE_V2")) ||
     strcmp(profile, PROFILE_ID) || strcmp(build, PROFILE_BUILD_ID) ||
     strcmp(verification, "VERIFIED") || strlen(epoch) != 36 || strncmp(epoch, "adp_", 4) ||
     strspn(epoch + 4, "0123456789abcdef") != 32)
     goto done;
   strcpy(instance_id, epoch);
-  *state_ready = !strcmp(tag, "MPC_ADAPTER_STATE_V1");
+  *state_ready = !strcmp(tag, "MPC_ADAPTER_STATE_V2");
   valid = 1;
 done:
   close(fd);
@@ -153,7 +158,7 @@ int adapter_state(
     peer.uid != geteuid())
     goto done;
   char request[64];
-  length = snprintf(request, sizeof request, "STATE_V1 %s\n", instance);
+  length = snprintf(request, sizeof request, "STATE_V2 %s\n", instance);
   size_t sent = 0;
   while (sent < (size_t)length) {
     if (ready(fd, POLLOUT, deadline))

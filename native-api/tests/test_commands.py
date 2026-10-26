@@ -24,7 +24,8 @@ class CommandContractTests(unittest.TestCase):
             validator.validate(request)
             self.assertFalse(validator.is_valid({**request, "caller": "admin"}))
         self.assertFalse(validator.is_valid({**request, "waitMs": 30001}))
-        self.assertFalse(validator.is_valid({**request, "target": {"index": 0}}))
+        for target in ({"index": 0}, {"uiIndex": 0}, {"collection": "audio", "index": 0}):
+            self.assertFalse(validator.is_valid({**request, "target": target}))
 
     def test_receipts_and_native_verification_match_the_contract(self):
         fixture = os.environ.get(
@@ -81,7 +82,8 @@ class CommandContractTests(unittest.TestCase):
         for value in (1, "true", None):
             self.assertFalse(validator.is_valid({**request, "value": value}))
         self.assertFalse(validator.is_valid({**request, "expected": {"revision": "1"}}))
-        self.assertFalse(validator.is_valid({**request, "target": {"index": 0}}))
+        for target in ({"index": 0}, {"uiIndex": 0}, {"collection": "audio", "index": 0}):
+            self.assertFalse(validator.is_valid({**request, "target": target}))
         self.assertFalse(validator.is_valid({**request, "startWithinMs": 30001}))
         self.assertFalse(validator.is_valid({**request, "op": "toggle_solo"}))
 

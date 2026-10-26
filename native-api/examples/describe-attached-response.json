@@ -4,7 +4,7 @@
   "instanceId": "run_00000000000000000000000000000000",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.1.0"
+    "version": "0.3.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -78,6 +78,11 @@
     "defaultStartWithinMs": null,
     "maxStartWithinMs": null,
     "verificationTimeoutMs": null,
-    "adapterProbeTimeoutMs": 50
+    "adapterProbeTimeoutMs": 50,
+    "maxTracks": 136,
+    "maxMidiTracks": 128,
+    "maxAudioTracks": 8,
+    "maxBuses": 128,
+    "snapshotAbiVersion": 2
   }
 }

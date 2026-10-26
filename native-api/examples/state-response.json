@@ -74,7 +74,44 @@
       "unsupportedFields": [
         "audioSide.muted",
         "audioActivity"
-      ]
+      ],
+      "uiIndex": 0,
+      "collection": "midi_triggered"
+    },
+    {
+      "ref": {
+        "instanceId": "run_00000000000000000000000000000000",
+        "projectId": "1",
+        "trackId": "200"
+      },
+      "generation": "200",
+      "kind": "track",
+      "index": 0,
+      "name": "Audio 001",
+      "type": "audio",
+      "requested": {
+        "muted": null,
+        "soloed": null,
+        "recordArmed": null
+      },
+      "audioSide": {
+        "muted": null,
+        "soloed": null,
+        "recordArmed": null
+      },
+      "silenced": null,
+      "unsupportedFields": [
+        "requested.muted",
+        "requested.soloed",
+        "requested.recordArmed",
+        "audioSide.muted",
+        "audioSide.soloed",
+        "audioSide.recordArmed",
+        "silenced",
+        "audioActivity"
+      ],
+      "uiIndex": 1,
+      "collection": "audio"
     },
     {
       "ref": {
@@ -101,7 +138,9 @@
       "unsupportedFields": [
         "audioSide.muted",
         "audioActivity"
-      ]
+      ],
+      "uiIndex": 2,
+      "collection": "midi_triggered"
     }
   ],
   "buses": [
@@ -132,7 +171,9 @@
         "audioSide.recordArmed",
         "silenced",
         "audioActivity"
-      ]
+      ],
+      "uiIndex": null,
+      "collection": "master"
     }
   ],
   "unsupportedFields": [

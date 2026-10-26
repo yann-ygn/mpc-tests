@@ -141,11 +141,13 @@ def main():
 
             sys.path.insert(0, str(ROOT / "tools"))
             from mpc_live_state import MemorySession
+            from mpc_track_inventory import capture as track_inventory
 
             profile = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2.json").read_text())
             with_session = MemorySession(args.host, ROOT / "builddir/arm/tools/mem_probe", profile)
             try:
                 independent = with_session.snapshot(with_session.active_project())
+                inventory = track_inventory(with_session)
                 snapshots = {op: call({"apiVersion": "0.1", "op": op}) for op in sorted(reads)}
                 state = snapshots["get_state"]
                 assert "error" not in state, state
@@ -156,14 +158,20 @@ def main():
                     snapshots["current_track"]["track"]["ref"]["trackId"]
                     == state["selectedTrackId"]
                 )
-                for actual, expected in zip(state["tracks"], independent["tracks"], strict=True):
-                    assert actual["index"] == expected["index"]
-                    assert actual["name"] == expected["name"]
-                    assert actual["type"] == expected["type"]
-                    for key in ("muted", "soloed", "recordArmed"):
-                        assert actual["requested"][key] == expected[key]
-                    assert actual["silenced"] == expected["silenced"]
-                assert len(state["buses"]) == len(independent["buses"])
+                for actual, expected in zip(state["tracks"], inventory["tracks"], strict=True):
+                    for key in ("index", "uiIndex", "collection", "name", "type"):
+                        assert actual[key] == expected[key], (key, actual, expected)
+                    if actual["type"] in ("plugin", "drum"):
+                        flags = independent["tracks"][actual["index"]]
+                        for key in ("muted", "soloed", "recordArmed"):
+                            assert actual["requested"][key] == flags[key]
+                        assert actual["silenced"] == flags["silenced"]
+                    else:
+                        assert all(value is None for value in actual["requested"].values())
+                assert len(state["buses"]) == len(inventory["buses"])
+                after_inventory = track_inventory(with_session)
+                for key in ("tracks", "buses", "selectedTrack", "counts"):
+                    assert after_inventory[key] == inventory[key]
                 assert state["sequenceSlotCount"] == independent["sequenceSlots"]
                 after_state = with_session.snapshot(with_session.active_project())
                 for key in (
@@ -183,6 +191,7 @@ def main():
                     snapshots=snapshots,
                     sampleCount=len(samples),
                     captureP95Ms=durations[18],
+                    independentInventory=inventory,
                     independentReadMatched=True,
                 )
             finally:
@@ -199,7 +208,7 @@ def main():
             call({"apiVersion": "0.1", "op": "raw_call"})["error"]["code"]
             == "UNSUPPORTED_OPERATION"
         )
-        assert call({"apiVersion": "0.1", "op": "set_mute"})["error"]["code"] == "NOT_READY"
+        assert call({"apiVersion": "0.1", "op": "set_mute"})["error"]["code"] == "INVALID_ARGUMENT"
         assert command("stat -c %a " + shlex.quote(socket_path)).strip() == b"600"
         assert command("pidof MPC").decode().strip() == before
         report.update(

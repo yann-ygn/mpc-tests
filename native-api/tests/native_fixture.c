@@ -140,8 +140,8 @@ int main(void) {
   reset(&f);
   a = open_fixture(&f, true);
   put32(&f, VECTOR + 4, TRACK);
-  put32(&f, POOL + NATIVE_VECTOR_END, VECTOR + 8);
-  put32(&f, POOL + NATIVE_VECTOR_CAPACITY, VECTOR + 8);
+  put32(&f, POOL + NATIVE_USER_END, VECTOR + 8);
+  put32(&f, POOL + NATIVE_USER_CAPACITY, VECTOR + 8);
   assert(mpc_native_read_track(a, &target, &state) == MPC_NATIVE_STALE_TARGET);
   mpc_native_close(a);
   cases++;

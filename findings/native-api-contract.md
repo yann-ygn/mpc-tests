@@ -37,14 +37,15 @@ the user selects another one. There is no delayed, selection-relative write and 
 | Operation | Result |
 |---|---|
 | `describe()` | API version, device/service identity, firmware, qualified capabilities and limits |
-| `get_state()` | Fresh live project, selected track/sequence and normal-track state |
+| `get_state()` | Fresh live project, selected track/sequence and all user-track state |
 | `current_track()` | The selected track and its reference, or `null` when none is selected |
 | `set_mute(track, value)` | Command receipt for explicit mute |
 | `set_solo(track, value)` | Command receipt for explicit solo |
 | `set_record_armed(track, value)` | Command receipt for track record arm |
 | `get_command(instance_id, request_id)` | Latest retained receipt for an earlier submission |
 
-The SDK methods on a track call the corresponding service operation. The initial track list covers normal tracks;
+The SDK methods on a track call the corresponding service operation. The track list covers every user track
+in canonical Track List order (US #46), including audio;
 buses need their own qualified entity and capability later. Playback, tempo writes, selection writes, track
 creation/deletion, volume, plugins and event editing remain expansion work. Catalog names alone expose nothing.
 Each setter accepts only a boolean. Track record arm does not mean global transport recording.
@@ -69,6 +70,29 @@ content/length notifications as well as clear/recreation. Reacquire them after t
 in-use sequence alone preserves its reference. Same-file project loading creates a new project generation even
 when the firmware retains its Project object.
 
+## Track inventory and ordering (US #46)
+
+Every user track appears once in `tracks`, including plugin, drum, keygroup, clip,
+MIDI, CV and audio. `uiIndex` is its zero-based canonical Track List position, read
+from the native normal/user collection; array order follows `uiIndex`. `index`
+retains the previously exposed MIDI-triggered collection index. New audio entries
+use their audio-collection index. `collection` (`midi_triggered` or `audio`) makes
+that scope explicit; the two indices can differ. For example, a plugin after two
+audio tracks can have `index: 4, uiIndex: 6`. Use `ref`, never either index, for writes.
+
+The separate `buses` list contains explicit native master-collection objects,
+including typed submix, return, input, output and master-output objects. It has
+`collection: "master"`, master-relative `index`, `uiIndex: null`, and no writable
+reference. Unknown Program types remain null. Listing a family does not enable
+its flags or setters; US #49 owns additional per-family qualification.
+
+The API bounds inventory at 128 MIDI-triggered plus 8 audio tracks and 128 master
+objects. Capture fences inventory, ordering, Program association and selection.
+The public 0.1 extension preserves existing MIDI indices and adds the two ordering
+fields. Private snapshot ABI 2, executor ABI 5 and command ABI 2 replace their
+older layouts; trusted C consumers must recompile and older attachments fail
+negotiation. See [the firmware map](native-track-inventory.md).
+
 ## Reads and state meaning
 
 Read requests use `apiVersion` and an operation name:
@@ -77,7 +101,7 @@ Read requests use `apiVersion` and an operation name:
 {"apiVersion":"0.1","op":"get_state"}
 ```
 
-Example response with one normal track, shortened in scope rather than containing an incomplete track record:
+Example response with one user track, shortened in scope rather than containing an incomplete track record:
 
 ```json
 {
@@ -101,6 +125,8 @@ Example response with one normal track, shortened in scope rather than containin
     {
       "ref": {"instanceId":"run_a","projectId":"prj_b","trackId":"trk_c"},
       "index": 0,
+      "uiIndex": 0,
+      "collection": "midi_triggered",
       "name": "Plugin 001",
       "type": "plugin",
       "requested": {"muted":false,"soloed":false,"recordArmed":true},

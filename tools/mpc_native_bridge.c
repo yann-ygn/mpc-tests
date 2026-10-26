@@ -416,7 +416,7 @@ static void state_command(FILE *stream, const char *line) {
   struct mpc_executor_status status;
   struct mpc_executor_job *job = NULL;
   struct mpc_executor_result result = {0};
-  if (sscanf(line, "STATE_V1 %36s %c", instance, &extra) != 1)
+  if (sscanf(line, "STATE_V2 %36s %c", instance, &extra) != 1)
     error = MPC_NATIVE_INVALID_ARGUMENT;
   else if (authoritative) {
     error = mpc_executor_get_status(executor, &status);
@@ -482,7 +482,7 @@ static void *worker(void *unused) {
     if (fgets(line, sizeof line, f)) {
       if (!strncmp(line, "LAB_COMMAND_", 12) || !strncmp(line, "LIVE_COMMAND_", 13)) {
         command_request(f, line);
-      } else if (!strncmp(line, "STATE_V1 ", 9)) {
+      } else if (!strncmp(line, "STATE_V2 ", 9)) {
         state_command(f, line);
       } else if (!strcmp(line, "IDENTITIES\n") || !strncmp(line, "HANDLE_", 7)) {
         identity_command(f, line);
@@ -495,7 +495,7 @@ static void *worker(void *unused) {
           fprintf(
             f,
             "%s %s %s %s VERIFIED\n",
-            authoritative ? "MPC_ADAPTER_STATE_V1" : "MPC_ADAPTER_V1",
+            authoritative ? "MPC_ADAPTER_STATE_V2" : "MPC_ADAPTER_V1",
             status.adapter.instance_id,
             status.adapter.profile_id,
             status.adapter.build_id);

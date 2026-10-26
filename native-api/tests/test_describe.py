@@ -15,6 +15,7 @@ import time
 import threading
 import unittest
 
+
 ROOT = Path(__file__).resolve().parents[2]
 BINARY = ROOT / "builddir/host/native-api/mpc-api"
 PROFILE = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2.json").read_text())
@@ -368,7 +369,7 @@ class DescribeTests(unittest.TestCase):
                                 or f"{state['tag']} {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
                             )
                             client.sendall(payload)
-                        elif data.startswith(b"STATE_V1 "):
+                        elif data.startswith(b"STATE_V2 "):
                             if state.get("stall_state"):
                                 state["state_idle"].clear()
                                 finished.wait(0.3)
@@ -383,10 +384,21 @@ class DescribeTests(unittest.TestCase):
                                 wire[8] = ord("x")
                             if state.get("bad_count"):
                                 # Track count follows attempts in the fixed snapshot header.
-                                struct.pack_into("<I", wire, 108, 129)
+                                struct.pack_into("<I", wire, 108, 137)
+                            # ABI 2: fixed 128-byte header, 344-byte track rows.
+                            if state.get("bad_ui_index"):
+                                struct.pack_into("<I", wire, 128 + 16, 1)
+                            if state.get("bad_collection"):
+                                struct.pack_into("<I", wire, 128 + 24, 3)
+                            if state.get("bad_collection_index"):
+                                struct.pack_into("<I", wire, 128 + 28, 128)
+                            if state.get("duplicate_collection_index"):
+                                struct.pack_into("<I", wire, 128 + 344 + 28, 0)
+                            if state.get("bad_type"):
+                                wire[128 + 32 + 256] = ord("X")
                             if state.get("bad_abi"):
                                 struct.pack_into("<I", wire, 0, 99)
-                            payload = struct.pack("<III", 1, len(wire), state.get("error", 0))
+                            payload = struct.pack("<III", 2, len(wire), state.get("error", 0))
                             if not state.get("error"):
                                 payload += wire
                             if state.get("truncate"):
@@ -407,17 +419,19 @@ class DescribeTests(unittest.TestCase):
             server.close()
             path.unlink()
 
-    def snapshot_attachment(self, attachment):
+    def snapshot_attachment(self, attachment, mixed=False):
         fixture = Path(
             os.environ.get(
-                "MPC_NATIVE_IDENTITY_FIXTURE",
-                ROOT / "builddir/host/native-api/tests/identity_fixture",
+                "MPC_NATIVE_INVENTORY_FIXTURE" if mixed else "MPC_NATIVE_IDENTITY_FIXTURE",
+                ROOT
+                / "builddir/host/native-api/tests"
+                / ("inventory_fixture" if mixed else "identity_fixture"),
             )
         )
         wire = subprocess.run(
             [str(fixture), "--snapshot-wire"], check=True, capture_output=True
         ).stdout
-        attachment.update(tag="MPC_ADAPTER_STATE_V1", wire=wire)
+        attachment.update(tag="MPC_ADAPTER_STATE_V2", wire=wire)
 
     def test_snapshot_operations_share_fresh_observations_and_handles(self):
         with self.attachment() as attachment:
@@ -456,6 +470,43 @@ class DescribeTests(unittest.TestCase):
             self.assertIsNone(full["transport"]["effectiveBpm"])
             self.assertIn('"é"\n', full["tracks"][0]["name"])
 
+    def test_mixed_inventory_audio_selection_and_collection_indices(self):
+        with self.attachment() as attachment:
+            self.snapshot_attachment(attachment, mixed=True)
+            results = {}
+            for op in ("get_state", "list_tracks", "recovery_snapshot", "current_track"):
+                results[op] = self.call(
+                    json.dumps({"apiVersion": "0.1", "op": op}).encode() + b"\n"
+                )
+                if self.validator:
+                    self.state_validator.validate(results[op])
+            tracks = results["get_state"]["tracks"]
+            self.assertEqual([t["uiIndex"] for t in tracks], list(range(8)))
+            self.assertEqual(
+                [t["type"] for t in tracks],
+                ["plugin", "drum", "keygroup", "clip", "midi", "cv", None, "audio"],
+            )
+            self.assertEqual([t["index"] for t in tracks], [0, 1, 2, 3, 4, 5, 6, 0])
+            self.assertEqual(tracks[-1]["collection"], "audio")
+            self.assertEqual(results["current_track"]["track"], tracks[-1])
+            for op in ("list_tracks", "recovery_snapshot"):
+                self.assertEqual(results[op]["tracks"], tracks)
+            self.assertEqual(len({t["ref"]["trackId"] for t in tracks}), 8)
+            self.assertIsNone(tracks[-1]["requested"]["muted"])
+            self.assertIn("requested.muted", tracks[-1]["unsupportedFields"])
+            self.assertEqual(len(results["get_state"]["buses"]), 5)
+            for bus in results["get_state"]["buses"]:
+                self.assertEqual(bus["collection"], "master")
+                self.assertIsNone(bus["ref"])
+                self.assertIsNone(bus["uiIndex"])
+
+    def test_old_snapshot_attachment_is_not_compatible(self):
+        with self.attachment() as attachment:
+            attachment["tag"] = "MPC_ADAPTER_STATE_V1"
+            self.assertEqual(self.call()["readiness"]["nativeAdapter"], "not_attached")
+            result = self.call(b'{"apiVersion":"0.1","op":"get_state"}\n')
+            self.assertEqual(result["error"]["code"], "NOT_READY")
+
     def test_no_active_project_is_an_empty_fresh_snapshot(self):
         with self.attachment() as attachment:
             self.snapshot_attachment(attachment)
@@ -480,7 +531,18 @@ class DescribeTests(unittest.TestCase):
         with self.attachment() as attachment:
             self.snapshot_attachment(attachment)
             self.assertIn("revision", self.call(request))
-            for mode in ("truncate", "bad_instance", "bad_count", "bad_abi", "stall_state"):
+            for mode in (
+                "truncate",
+                "bad_instance",
+                "bad_count",
+                "bad_abi",
+                "bad_ui_index",
+                "bad_collection",
+                "bad_collection_index",
+                "duplicate_collection_index",
+                "bad_type",
+                "stall_state",
+            ):
                 with self.subTest(mode=mode):
                     attachment[mode] = True
                     self.assertEqual(self.call(request)["error"]["code"], "READ_FAILED")
