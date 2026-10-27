@@ -268,11 +268,12 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     SEQUENCE = 1024,
     MIXER = 2048,
     SEND = 4096,
-    SLOT = 8192
+    SLOT = 8192,
+    CURSOR = 16384
   };
   unsigned seen = 0;
   bool value_numeric = false, expected_numeric = false;
-  for (unsigned i = 0; i < 14; i++) {
+  for (unsigned i = 0; i < 15; i++) {
     char key[32];
     if ((i && token(&p, ',')) || string(&p, key, sizeof key) || token(&p, ':'))
       return -1;
@@ -284,6 +285,27 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     } else if (!strcmp(key, "op")) {
       bit = OP;
       error = string(&p, out->op, sizeof out->op);
+    } else if (!strcmp(key, "cursor")) {
+      bit = CURSOR;
+      char cursor[64];
+      error = string(&p, cursor, sizeof cursor);
+      if (!error) {
+        char *colon = strchr(cursor, ':');
+        error = !colon || colon - cursor != 36;
+        if (!error) {
+          *colon++ = 0;
+          strcpy(out->cursor_instance, cursor);
+          error = strncmp(cursor, "run_", 4) || strspn(cursor + 4, "0123456789abcdef") != 32 ||
+            *colon < '1' || *colon > '9';
+          for (; !error && *colon; colon++) {
+            unsigned digit = (unsigned)(*colon - '0');
+            if (digit > 9 || out->cursor_revision > (UINT64_MAX - digit) / 10)
+              error = -1;
+            else
+              out->cursor_revision = out->cursor_revision * 10 + digit;
+          }
+        }
+      }
     } else if (!strcmp(key, "requestId")) {
       bit = ID;
       error = identifier(&p, out->command.request_id);
@@ -385,6 +407,8 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
       required |= SLOT;
       allowed |= SLOT;
     }
+  } else if (!strcmp(out->op, "watch")) {
+    allowed |= CURSOR;
   } else if (!strcmp(out->op, "get_command")) {
     required |= ID | INSTANCE;
     allowed = required | WAIT;

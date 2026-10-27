@@ -18,6 +18,7 @@ service_sources = files(
   'src/discovery.c',
   'src/attachment.c',
   'src/state.c',
+  'src/watch.c',
 )
 api = executable(
   'mpc-api',

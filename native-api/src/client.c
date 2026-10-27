@@ -9,7 +9,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-static int request(const char *path, const char *input, size_t used) {
+static int request(const char *path, const char *input, size_t used, int streaming) {
   int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
   if (fd < 0) {
     perror("socket");
@@ -56,10 +56,25 @@ static int request(const char *path, const char *input, size_t used) {
     if (!n)
       break;
     used += (size_t)n;
+    if (streaming) {
+      char *newline;
+      while ((newline = memchr(output, '\n', used))) {
+        size_t length = (size_t)(newline - output) + 1;
+        if (fwrite(output, 1, length, stdout) != length || fflush(stdout)) {
+          close(fd);
+          return 1;
+        }
+        used -= length;
+        memmove(output, output + length, used);
+      }
+      continue;
+    }
     if (memchr(output, '\n', used))
       break;
   }
   close(fd);
+  if (streaming && !used)
+    return 0;
   if (!used || used == MAX_RESPONSE_BYTES || output[used - 1] != '\n') {
     fputs("Incomplete response\n", stderr);
     return 1;
@@ -68,7 +83,24 @@ static int request(const char *path, const char *input, size_t used) {
 }
 
 int api_control(const char *path, const char *input) {
-  return request(path, input, strlen(input));
+  return request(path, input, strlen(input), 0);
+}
+
+int api_follow(const char *path, const char *cursor) {
+  char input[MAX_REQUEST_BYTES + 1];
+  int n = cursor
+    ? snprintf(
+        input,
+        sizeof input,
+        "{\"apiVersion\":\"" API_VERSION "\",\"op\":\"watch\",\"cursor\":\"%s\"}\n",
+        cursor)
+    : snprintf(input, sizeof input, "{\"apiVersion\":\"" API_VERSION "\",\"op\":\"watch\"}\n");
+  struct api_request_data parsed;
+  if (n < 0 || (size_t)n >= sizeof input || api_parse(input, (size_t)n, &parsed)) {
+    fputs("Invalid watch cursor\n", stderr);
+    return 2;
+  }
+  return request(path, input, (size_t)n, 1);
 }
 
 int api_request(const char *path) {
@@ -82,5 +114,5 @@ int api_request(const char *path) {
   }
   if (input[used - 1] != '\n')
     input[used++] = '\n';
-  return request(path, input, used);
+  return request(path, input, used, 0);
 }

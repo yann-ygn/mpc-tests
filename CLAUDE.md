@@ -19,7 +19,8 @@ before running experiments.
   target through follow-solo behaviour; restore selection after unselected-track experiments.
 - `native-api/`: C discovery/live-state service, JSON schemas and a guarded shared native adapter. `describe` reports
   live metadata and verified attachment status. Authoritative attachments enable snapshots; the embedded host also
-  provides authenticated flag commands under native live qualification. Watch remains unavailable. See
+  provides authenticated flag commands under native live qualification. Experimental Unix watch/replay
+  is implemented; discovery stays unavailable pending device qualification. See `native-api/WATCH.md` and
   `native-api/README.md` and `native-api/adapter/README.md` for tests, builds and lifecycle limits.
 - `build/` is gitignored: local copies of the log, project saves and the settings backup.
 - `builddir/{host,arm}/` is gitignored: canonical Meson build directories. See `README.md` for all targets.
@@ -77,6 +78,14 @@ before running experiments.
 - Git: github.com/yann-ygn/mpc-tests, `main` (default) and `privtap`.
 - Taiga: project "MPC Key 37 API" (id 24). Move a story's status when its work starts or ends.
 - Native API roadmap: `findings/native-api-roadmap.md` (Taiga epic #4, capability expansion epic #27).
+- Local watch (#33), branch `us-33-local-watch`: C Unix streaming, strict framed schemas,
+  retained snapshot baselines, bounded replay/reconnect and a single US #52 controls producer
+  are implemented locally. Eight subscribers share 100 ms/16-track sampling; full metadata
+  audits run every 5 seconds with background topology reconciliation capped at 1 Hz.
+  Host integration/replay fixtures and sanitizer checks cover recovery, pressure and lifecycle.
+  No device changes were made. ARM execution and actual MPC delivery/readback/load/playback
+  measurements remain pending, so describe.watch stays false (`DEVICE_QUALIFICATION_PENDING`).
+  Explicit watch requests acknowledge `qualified: false`. HTTP/MCP/SDKs remain separate stories.
 - Accepted public API contract: `findings/native-api-contract.md` (#28). Initial `describe` implementation is in
   `native-api/` under local-service story #32 (implemented: state, authenticated commands/receipts and native live policy; watch remains #33).
 - Firmware adapter (#29) implemented: eight C exports, profile schema v1, exact build/model/ABI plus seven code

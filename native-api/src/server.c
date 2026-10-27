@@ -1,5 +1,6 @@
 #include "api.h"
 #include "transport.h"
+#include "watch.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -57,14 +58,16 @@ struct client {
   int fd;
   uint64_t caller;
   struct api_delivery delivery;
-  int waiting;
+  struct api_subscription subscription;
+  int waiting, unwatch;
   char input[MAX_REQUEST_BYTES + 1];
   size_t used, sent, length;
   char *output;
-  int64_t deadline;
+  int64_t deadline, input_deadline;
 };
 
 static void client_close(struct client *client) {
+  api_watch_close(&client->subscription);
   close(client->fd);
   free(client->output);
   memset(client, 0, sizeof *client);
@@ -102,8 +105,15 @@ static void write_response(struct client *client) {
     client->sent += (size_t)n;
   else if (n < 0 && errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
     client_close(client);
-  if (client->fd >= 0 && client->sent == client->length)
-    client_close(client);
+  if (client->fd >= 0 && client->sent == client->length) {
+    if (!client->subscription.publisher || client->subscription.terminal)
+      client_close(client);
+    else {
+      free(client->output);
+      client->output = NULL;
+      client->sent = client->length = 0;
+    }
+  }
 }
 
 static void read_request(struct client *client, struct api *api) {
@@ -113,6 +123,22 @@ static void read_request(struct client *client, struct api *api) {
     client->used += (size_t)n;
     char *newline = memchr(client->input, '\n', client->used);
     if (newline) {
+      struct api_request_data parsed;
+      if (
+        !api_parse(client->input, (size_t)(newline - client->input), &parsed) &&
+        !strcmp(parsed.version, API_VERSION) && !strcmp(parsed.op, "watch")) {
+        if ((size_t)(newline - client->input) + 1 != client->used) {
+          client_reply(
+            client,
+            api_error("INVALID_ARGUMENT", "Watch setup accepts one request line"));
+          return;
+        }
+        char *error = api_watch_open(api, &parsed, &client->subscription);
+        client->used = 0;
+        if (error)
+          client_reply(client, error);
+        return;
+      }
       client_reply(
         client,
         api_respond(
@@ -139,6 +165,53 @@ static void process_client(struct client *client, short events, struct api *api)
   }
   if (events & (POLLERR | POLLNVAL)) {
     client_close(client);
+    return;
+  }
+  if (client->subscription.publisher) {
+    if (events & POLLHUP) {
+      client_close(client);
+      return;
+    }
+    if (events & POLLIN) {
+      ssize_t n =
+        recv(client->fd, client->input + client->used, sizeof client->input - client->used, 0);
+      if (!n || (n < 0 && errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)) {
+        client_close(client);
+        return;
+      }
+      if (n > 0) {
+        if (!client->used)
+          client->input_deadline = now_ms() + CONNECTION_TIMEOUT_MS;
+        client->used += (size_t)n;
+        char *newline = memchr(client->input, '\n', client->used);
+        if (newline) {
+          struct api_request_data request;
+          int valid = !api_parse(client->input, (size_t)(newline - client->input), &request) &&
+            !strcmp(request.version, API_VERSION) && !strcmp(request.op, "unwatch") &&
+            (size_t)(newline - client->input) + 1 == client->used;
+          client->unwatch = valid ? 1 : 2;
+          client->used = 0;
+        } else if (client->used > MAX_REQUEST_BYTES) {
+          client_close(client);
+          return;
+        }
+      }
+    }
+    if (!client->output) {
+      char *next = client->unwatch ? api_watch_end(
+                                       &client->subscription,
+                                       client->unwatch == 1 ? "UNSUBSCRIBED" : "INVALID_REQUEST")
+                                   : api_watch_next(&client->subscription);
+      if (next)
+        client_reply(client, next);
+    }
+    if (client->fd >= 0 && client->output && (events & POLLOUT))
+      write_response(client);
+    if (
+      client->fd >= 0 &&
+      ((now_ms() >= client->deadline && (client->output || !client->subscription.stage)) ||
+       (client->used && now_ms() >= client->input_deadline)))
+      client_close(client);
     return;
   }
   if (!client->output && now_ms() >= client->deadline) {
@@ -230,9 +303,11 @@ static int serve(
     return 1;
   }
   api.backend = backend;
+  api.watch = api_watch_create(&api);
   int listener = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
   if (listener < 0) {
     perror("socket");
+    api_watch_destroy(api.watch);
     return 1;
   }
   struct sockaddr_un address = {.sun_family = AF_UNIX};
@@ -241,12 +316,14 @@ static int serve(
   if (bind(listener, (struct sockaddr *)&address, sizeof address)) {
     perror("bind");
     close(listener);
+    api_watch_destroy(api.watch);
     return 1;
   }
   struct stat owned;
   if (lstat(path, &owned)) {
     perror("lstat socket");
     close(listener);
+    api_watch_destroy(api.watch);
     return 1;
   }
   if (backend)
@@ -268,11 +345,13 @@ static int serve(
     fds[0] = (struct pollfd){listener, POLLIN, 0};
     for (size_t i = 0; i < MAX_CONNECTIONS; i++) {
       fds[i + 1] = (struct pollfd){clients[i].fd,
-                                   clients[i].waiting    ? 0
-                                     : clients[i].output ? POLLOUT
-                                                         : POLLIN,
+                                   clients[i].subscription.publisher
+                                     ? POLLIN | (clients[i].output ? POLLOUT : 0)
+                                     : clients[i].waiting ? 0
+                                     : clients[i].output  ? POLLOUT
+                                                          : POLLIN,
                                    0};
-      if (clients[i].waiting)
+      if (clients[i].waiting || clients[i].subscription.publisher)
         poll_ms = 10;
     }
     int ready = poll(fds, MAX_CONNECTIONS + 1, poll_ms);
@@ -293,8 +372,17 @@ static int serve(
   }
 cleanup:
   for (size_t i = 0; i < MAX_CONNECTIONS; i++)
-    if (clients[i].fd >= 0)
+    if (clients[i].fd >= 0) {
+      if (clients[i].subscription.publisher && !clients[i].output) {
+        char *end = api_watch_end(&clients[i].subscription, "SERVICE_STOPPING");
+        if (end) {
+          (void)send(clients[i].fd, end, strlen(end), MSG_NOSIGNAL);
+          free(end);
+        }
+      }
       client_close(&clients[i]);
+    }
+  api_watch_destroy(api.watch);
   close(listener);
   struct stat current;
   if (!lstat(path, &current) && current.st_dev == owned.st_dev && current.st_ino == owned.st_ino)

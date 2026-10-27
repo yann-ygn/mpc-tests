@@ -14,9 +14,12 @@ with recording/overdub Off. Automation Read supports native mute, solo and volum
 plus verified no-ops and native record-arm writes. Later native automation may supersede manual values.
 See [Read write qualification](findings/native-automation-read-writes.md). [Playback qualification](findings/native-playback-flags.md)
 reports timing and tested limits. Command observations use a [lightweight flag sampler](findings/native-ui-cost.md);
-authoritative full reads retain their coverage. Streaming follows separately. See [the service](native-api/README.md),
+authoritative full reads retain their coverage. See [the service](native-api/README.md),
 [the native adapter](native-api/adapter/README.md)
 and [privtap](privtap/README.md) for their interfaces and limitations.
+US #33 implements experimental [Unix watch/replay](native-api/WATCH.md) with a shared
+controls producer and retained snapshot cursors. Discovery remains gated pending
+device delivery/load qualification; HTTP and SDKs are separate stories.
 US #21 adds the [persistent addin package](native-api/INSTALL.md), including startup,
 health, stop/start and recovery. Build it with `uv run --no-sync python native-api/package.py`;
 installation requires saved work and approval for an MPC restart.
@@ -88,6 +91,7 @@ The service's Python integration tests run in the host build only.
 | Identity/lifecycle fixture | `native-api/tests/identity_fixture` |
 | Command/receipt fixture | `native-api/tests/commands_fixture` |
 | Persistent host lifecycle fixture | `native-api/tests/host_fixture` |
+| Watch publisher/replay fixture | `native-api/tests/watch_fixture` |
 | Interposition addin | `privtap/privtap.so` |
 | privtap fixtures | `privtap/tests/{test_protocol,test_privtap,libfakeasound.so}` |
 | Memory/web helpers | `tools/{mem_probe,ipc_bridge}` |

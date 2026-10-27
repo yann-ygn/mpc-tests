@@ -1,4 +1,5 @@
 #include "api.h"
+#include "watch.h"
 #include "mpc_native.h"
 #include "mpc_mixer_wire.h"
 #include "mpc_family_profile.h"
@@ -88,7 +89,7 @@ static int valid_mixer(const struct mpc_mixer_state *m, int normal) {
   return 1;
 }
 
-static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instance) {
+int api_valid_snapshot(const struct mpc_state_snapshot *s, const char *instance) {
   if (
     s->abi_version != MPC_STATE_ABI || s->struct_bytes != sizeof *s ||
     memcmp(s->instance_id, instance, sizeof s->instance_id) ||
@@ -185,7 +186,7 @@ static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instan
   return selected_track == 1 && selected_sequence == 1 && used == s->used_sequences;
 }
 
-static void mute_context(FILE *f, const struct api *api, const struct mpc_state_snapshot *s) {
+void api_mute_context(FILE *f, const struct api *api, const struct mpc_state_snapshot *s) {
   fputs("{\"scope\":", f);
   api_quoted(
     f,
@@ -211,7 +212,7 @@ static void nullable_bool(FILE *f, unsigned known, unsigned value) {
   fputs(known ? (value ? "true" : "false") : "null", f);
 }
 
-static void track(
+void api_track_json(
   FILE *f, const struct api *api, uint64_t project, const struct mpc_state_track *t, int normal) {
   if (!t) {
     fputs("null", f);
@@ -326,12 +327,14 @@ static void timestamp(FILE *f, uint64_t milliseconds) {
 }
 
 char *api_state(struct api *api, const struct discovery *discovery, const char *operation) {
+  if (api->watch)
+    return api_watch_read(api->watch, operation);
   struct mpc_state_snapshot *s = calloc(1, sizeof *s);
   if (!s)
     return api_error("NOT_READY", "Snapshot allocation failed");
   int error = api->backend ? api->backend->state(api->backend->userdata, discovery->adapter_id, s)
                            : adapter_state(api->root, discovery->pid, discovery->adapter_id, s);
-  if (error || !valid_snapshot(s, discovery->adapter_id)) {
+  if (error || !api_valid_snapshot(s, discovery->adapter_id)) {
     free(s);
     return api_error(
       error == MPC_NATIVE_STATE_UNSTABLE ? "STATE_UNSTABLE"
@@ -354,11 +357,21 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
     free(s);
     return api_error("NOT_READY", "Observation revision exhausted");
   }
+  char *response = api_state_json(api, s, operation, ++api->revision);
+  free(s);
+  return response ? response
+                  : api_error("READ_FAILED", "Snapshot serialization exceeds limits or failed");
+}
+
+char *api_state_json(
+  const struct api *api,
+  const struct mpc_state_snapshot *s,
+  const char *operation,
+  uint64_t revision) {
   char *buffer = NULL;
   size_t bytes = 0;
   FILE *f = open_memstream(&buffer, &bytes);
   if (!f) {
-    free(s);
     return NULL;
   }
   fprintf(f, "{\"apiVersion\":\"" API_VERSION "\",\"deviceId\":");
@@ -373,7 +386,7 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
     fprintf(f, "\"%" PRIu64 "\"", s->project_generation);
   else
     fputs("null", f);
-  fprintf(f, ",\"revision\":\"%" PRIu64 "\",\"sample\":{\"startedAt\":", ++api->revision);
+  fprintf(f, ",\"revision\":\"%" PRIu64 "\",\"sample\":{\"startedAt\":", revision);
   timestamp(f, s->started_ms);
   fputs(",\"finishedAt\":", f);
   timestamp(f, s->finished_ms);
@@ -384,7 +397,7 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
     (double)s->duration_ns / 1000000,
     s->attempts);
   fputs(",\"muteContext\":", f);
-  mute_context(f, api, s);
+  api_mute_context(f, api, s);
   const struct mpc_state_track *selected_track = NULL;
   const struct mpc_state_sequence *selected_sequence = NULL;
   for (unsigned i = 0; i < s->track_count; i++)
@@ -395,7 +408,7 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
       selected_sequence = &s->sequences[i];
   if (!strcmp(operation, "current_track")) {
     fputs(",\"track\":", f);
-    track(f, api, s->project, selected_track, 1);
+    api_track_json(f, api, s->project, selected_track, 1);
   } else if (!strcmp(operation, "current_sequence")) {
     fputs(",\"sequence\":", f);
     sequence(f, api, s->project, selected_sequence);
@@ -431,13 +444,13 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
     for (unsigned i = 0; i < s->track_count; i++) {
       if (i)
         fputc(',', f);
-      track(f, api, s->project, &s->tracks[i], 1);
+      api_track_json(f, api, s->project, &s->tracks[i], 1);
     }
     fputs("],\"buses\":[", f);
     for (unsigned i = 0; i < s->bus_count; i++) {
       if (i)
         fputc(',', f);
-      track(f, api, s->project, &s->buses[i], 0);
+      api_track_json(f, api, s->project, &s->buses[i], 0);
     }
     fputc(']', f);
   }
@@ -445,10 +458,9 @@ char *api_state(struct api *api, const struct discovery *discovery, const char *
     ",\"unsupportedFields\":[\"project.name\",\"transport.effectiveBpm\",\"transport.tempoSource\","
     "\"transport.playing\",\"transport.recording\"]}\n",
     f);
-  free(s);
   if (fclose(f) || bytes > MAX_RESPONSE_BYTES) {
     free(buffer);
-    return api_error("READ_FAILED", "Snapshot response exceeds limits");
+    return NULL;
   }
   return buffer;
 }

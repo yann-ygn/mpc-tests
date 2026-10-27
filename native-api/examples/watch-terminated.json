@@ -1,0 +1,8 @@
+{
+  "apiVersion": "0.1",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "projectId": null,
+  "projectGeneration": null,
+  "type": "terminated",
+  "reason": "UNSUBSCRIBED"
+}

@@ -5,12 +5,14 @@ The implementation of the [accepted 0.1 contract](../findings/native-api-contrac
 authoritative attachment, state queries capture current native objects through the UI executor.
 The [persistent addin](INSTALL.md) also binds `set_mute`, `set_solo`, `set_record_armed` and `get_command`
 to the retained [flag handlers](adapter/COMMANDS.md), with Unix peer authentication and a native live
-mode/settings policy. Streaming remains unavailable. The standalone binary can discover and read through
+mode/settings policy. [Local watch/replay](WATCH.md) is implemented experimentally;
+discovery keeps it unavailable pending device qualification. The standalone binary can discover and read through
 a temporary lab attachment; it cannot forward commands to the lab's diagnostic socket.
 See [state qualification](../findings/native-state.md) and [command service qualification](../findings/native-service.md).
 
 The local transport is a restricted Unix stream socket. Each connection carries **one compact JSON request plus
 a newline**, then one JSON response plus a newline. Read through the response newline and close the connection.
+`watch` instead keeps the connection open for newline-delimited frames and accepts `unwatch` to close it.
 HTTP and MCP adapters follow in their own stories; this service has no TCP listener.
 
 ## Source layout
@@ -22,6 +24,7 @@ HTTP and MCP adapters follow in their own stories; this service has no TCP liste
   `src/discovery.c` reads process metadata and binds the command authority to the current service instance.
 - `src/state.c`: validated snapshot serialization/projections; `src/attachment.c` checks the MPC peer and
   performs bounded metadata/state transfers.
+- `src/watch.c`: shared observation worker, retained snapshot revisions, bounded replay and subscription recovery.
 - `src/host.c` and `src/addin.c`: persistent in-process attachment, startup gate, lifecycle and management socket.
   `package.py` builds the checked ARM package with the shared addin installer; [installation guide](INSTALL.md).
 
@@ -142,7 +145,10 @@ python3 tools/mpc_native_lab.py --identities --keep --output build/native-api/st
 
 Then send the same two-field request with `op` set to `get_state`, `list_tracks`, `current_track`,
 `current_sequence`, or `recovery_snapshot`. `get_state` and `recovery_snapshot` both return a full fresh snapshot.
-Each read has its own instance-scoped observation revision and capture interval; this is not an event cursor.
+In the embedded host each read publishes a retained full baseline through the shared
+publisher. Its `instanceId:revision` cursor can initialize [watch](WATCH.md) without
+silently losing observations during setup. Standalone lab reads retain per-read
+revisions without watch support. Capture intervals describe observations, not a native event log.
 `current_track` and `current_sequence` project a full capture onto its selection; null selections return null.
 `list_tracks` returns every user track, including audio, in canonical Track List order,
 and a separate master-object metadata list in `buses` (submixes, returns and input/output objects).

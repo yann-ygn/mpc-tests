@@ -1,0 +1,256 @@
+{
+  "apiVersion": "0.1",
+  "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
+  "projectId": "1",
+  "projectGeneration": "1",
+  "revision": "1",
+  "cursor": "run_f74634ddf5c68a8e1220ca2decaccd44:1",
+  "type": "snapshot",
+  "previousRevision": null,
+  "state": {
+    "apiVersion": "0.1",
+    "deviceId": "dev_fixture",
+    "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
+    "projectId": "1",
+    "projectGeneration": "1",
+    "revision": "1",
+    "sample": {
+      "startedAt": "2026-10-26T21:42:46.066Z",
+      "finishedAt": "2026-10-26T21:42:46.066Z",
+      "durationMs": 0.141,
+      "attempts": 1,
+      "atomic": false,
+      "consistency": "identity_topology_selection_checked",
+      "freshness": "fresh",
+      "source": "native_ui_thread"
+    },
+    "muteContext": {
+      "scope": "global",
+      "sequence": null
+    },
+    "project": {
+      "name": null
+    },
+    "selectedTrackId": "2",
+    "selectedSequence": {
+      "id": "10",
+      "generation": "10",
+      "index": 0,
+      "name": "Live \"é\"\n",
+      "used": true,
+      "bpm": 123.5,
+      "bpmSource": "sequence_property",
+      "ref": {
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
+        "projectId": "1",
+        "sequenceId": "10",
+        "generation": "10"
+      }
+    },
+    "sequenceSlotCount": 2,
+    "sequenceObjectCount": 1,
+    "usedSequenceCount": 1,
+    "sequences": [
+      {
+        "id": "10",
+        "generation": "10",
+        "index": 0,
+        "name": "Live \"é\"\n",
+        "used": true,
+        "bpm": 123.5,
+        "bpmSource": "sequence_property",
+        "ref": {
+          "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
+          "projectId": "1",
+          "sequenceId": "10",
+          "generation": "10"
+        }
+      }
+    ],
+    "transport": {
+      "effectiveBpm": null,
+      "tempoSource": null,
+      "playing": null,
+      "recording": null
+    },
+    "tracks": [
+      {
+        "ref": {
+          "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
+          "projectId": "1",
+          "trackId": "2"
+        },
+        "generation": "2",
+        "kind": "track",
+        "index": 0,
+        "name": "Live \"é\"\n",
+        "collection": "midi_triggered",
+        "uiIndex": 0,
+        "type": "plugin",
+        "requested": {
+          "muted": false,
+          "soloed": false,
+          "recordArmed": true
+        },
+        "audioSide": {
+          "muted": null,
+          "soloed": false,
+          "recordArmed": false
+        },
+        "silenced": false,
+        "unsupportedFields": [
+          "audioSide.muted",
+          "audioActivity"
+        ],
+        "flagSupport": {
+          "family": "plugin",
+          "readableFields": [
+            "requested.muted",
+            "requested.soloed",
+            "requested.recordArmed",
+            "audioSide.soloed",
+            "audioSide.recordArmed",
+            "silenced"
+          ],
+          "unsupportedReasons": {
+            "audioSide.muted": "UNQUALIFIED_OBSERVATION",
+            "audioActivity": "NOT_MEASURED"
+          },
+          "operations": {
+            "set_mute": {
+              "available": true,
+              "reason": null,
+              "verification": [
+                "model"
+              ],
+              "conditions": [
+                "qualified_screen",
+                "no_popup",
+                "stopped_or_sequence_playback",
+                "recording_off",
+                "automation_off_or_qualified_read",
+                "recognized_solo_arm_settings",
+                "matching_mute_scope",
+                "global_or_named_active_sequence"
+              ],
+              "automation": {
+                "off": "qualified_writes",
+                "read": "qualified_writes",
+                "write": "unsupported",
+                "unknown": "unsupported"
+              }
+            },
+            "set_solo": {
+              "available": true,
+              "reason": null,
+              "verification": [
+                "model",
+                "audio_copy"
+              ],
+              "conditions": [
+                "qualified_screen",
+                "no_popup",
+                "stopped_or_sequence_playback",
+                "recording_off",
+                "automation_off_or_qualified_read",
+                "recognized_solo_arm_settings"
+              ],
+              "automation": {
+                "off": "qualified_writes",
+                "read": "qualified_writes",
+                "write": "unsupported",
+                "unknown": "unsupported"
+              }
+            },
+            "set_record_armed": {
+              "available": true,
+              "reason": null,
+              "verification": [
+                "model",
+                "audio_copy"
+              ],
+              "conditions": [
+                "qualified_screen",
+                "no_popup",
+                "stopped_or_sequence_playback",
+                "recording_off",
+                "automation_off_or_qualified_read",
+                "recognized_solo_arm_settings"
+              ],
+              "automation": {
+                "off": "qualified_writes",
+                "read": "qualified_writes",
+                "write": "unsupported",
+                "unknown": "unsupported"
+              }
+            }
+          },
+          "outputVerified": false
+        },
+        "mixer": {
+          "generation": null,
+          "known": 0,
+          "scope": "global",
+          "unit": "normalized",
+          "volume": null,
+          "pan": null,
+          "sends": [
+            {
+              "index": 0,
+              "destination": "return_A",
+              "value": null
+            },
+            {
+              "index": 1,
+              "destination": "return_B",
+              "value": null
+            },
+            {
+              "index": 2,
+              "destination": "return_C",
+              "value": null
+            },
+            {
+              "index": 3,
+              "destination": "return_D",
+              "value": null
+            }
+          ],
+          "insertRackEnabled": null,
+          "inserts": [
+            {
+              "index": 0,
+              "occupied": null,
+              "enabled": null
+            },
+            {
+              "index": 1,
+              "occupied": null,
+              "enabled": null
+            },
+            {
+              "index": 2,
+              "occupied": null,
+              "enabled": null
+            },
+            {
+              "index": 3,
+              "occupied": null,
+              "enabled": null
+            }
+          ],
+          "verification": [],
+          "audioCompletionKnown": false
+        }
+      }
+    ],
+    "buses": [],
+    "unsupportedFields": [
+      "project.name",
+      "transport.effectiveBpm",
+      "transport.tempoSource",
+      "transport.playing",
+      "transport.recording"
+    ]
+  }
+}

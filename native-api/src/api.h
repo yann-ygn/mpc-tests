@@ -20,6 +20,8 @@ struct api_request_data {
   char version[80], op[80], instance_id[37];
   struct mpc_command_request command;
   unsigned wait_ms;
+  uint64_t cursor_revision;
+  char cursor_instance[37];
 };
 
 /* A delivery wait owns no native job. Disconnecting only drops this lookup. */
@@ -37,6 +39,7 @@ struct api_backend {
   int (*state)(void *, const char *, struct mpc_state_snapshot *);
   int (*bind_commands)(void *, const char *);
   char *(*command)(void *, const char *, uint64_t, const struct api_request_data *, int *);
+  int (*sample)(void *, const char *, unsigned, uint64_t, struct mpc_command_observation *);
 };
 
 struct api {
@@ -46,6 +49,7 @@ struct api {
   char backend_signature[1024];
   uint64_t revision;
   const struct api_backend *backend;
+  struct api_watch *watch;
 };
 
 struct discovery {
@@ -74,5 +78,9 @@ char *api_state(struct api *, const struct discovery *, const char *operation);
 int adapter_state(const char *, long, const char *, struct mpc_state_snapshot *);
 void api_quoted(FILE *, const char *);
 void api_flag_support(FILE *, const char *, unsigned, int);
+int api_valid_snapshot(const struct mpc_state_snapshot *, const char *);
+char *api_state_json(const struct api *, const struct mpc_state_snapshot *, const char *, uint64_t);
+void api_track_json(FILE *, const struct api *, uint64_t, const struct mpc_state_track *, int);
+void api_mute_context(FILE *, const struct api *, const struct mpc_state_snapshot *);
 
 #endif

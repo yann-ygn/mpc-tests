@@ -18,5 +18,6 @@ struct stat;
 void api_socket_remember(unsigned slot, const char *path, const struct stat *);
 void api_sockets_cleanup(void);
 int api_request(const char *path);
+int api_follow(const char *path, const char *cursor);
 
 #endif

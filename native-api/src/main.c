@@ -7,7 +7,7 @@
 #include <sys/un.h>
 
 int main(int argc, char **argv) {
-  const char *path = NULL, *device_id = NULL, *root = "";
+  const char *path = NULL, *device_id = NULL, *root = "", *cursor = NULL;
   if (argc >= 2 && !strcmp(argv[1], "host-cleanup")) {
     path = MPC_HOST_DIRECTORY;
     if (argc == 4 && !strcmp(argv[2], "--directory"))
@@ -39,7 +39,9 @@ int main(int argc, char **argv) {
         : !strcmp(argv[1], "host-start") ? "START\n"
                                          : "STOP\n");
   }
-  if (argc < 2 || (strcmp(argv[1], "serve") && strcmp(argv[1], "request")))
+  if (
+    argc < 2 ||
+    (strcmp(argv[1], "serve") && strcmp(argv[1], "request") && strcmp(argv[1], "watch")))
     goto usage;
   for (int i = 2; i < argc; i += 2) {
     if (i + 1 == argc)
@@ -50,6 +52,8 @@ int main(int argc, char **argv) {
       device_id = argv[i + 1];
     else if (!strcmp(argv[i], "--root") && !*root)
       root = argv[i + 1];
+    else if (!strcmp(argv[i], "--cursor") && !cursor && !strcmp(argv[1], "watch"))
+      cursor = argv[i + 1];
     else
       goto usage;
   }
@@ -62,6 +66,11 @@ int main(int argc, char **argv) {
       goto usage;
     return api_request(path);
   }
+  if (!strcmp(argv[1], "watch")) {
+    if (device_id || *root)
+      goto usage;
+    return api_follow(path, cursor);
+  }
   if (!device_id || !*device_id || strlen(device_id) > 80)
     goto usage;
   for (const char *p = device_id; *p; p++)
@@ -73,6 +82,7 @@ usage:
   fputs(
     "Usage: mpc-api serve --socket PATH --device-id ID [--root FIXTURE_ROOT]\n"
     "       mpc-api request --socket PATH < request.json\n"
+    "       mpc-api watch --socket PATH [--cursor CURSOR]\n"
     "       mpc-api host-status|host-start|host-stop [--socket PATH]\n"
     "       mpc-api host-cleanup [--directory PATH]\n",
     stderr);

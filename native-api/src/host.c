@@ -59,13 +59,47 @@ static int state(void *data, const char *instance, struct mpc_state_snapshot *ou
       .queue_timeout_ms = 150};
     error = mpc_executor_submit(h->executor, &request, &job);
   }
+  pthread_mutex_unlock(&h->mutex);
   if (!error)
     error = mpc_executor_wait(job, 150, &result);
   if (!error)
     *out = *result.snapshot;
   if (job)
     mpc_executor_release(job);
+  return error;
+}
+
+static int sample(
+  void *data,
+  const char *instance,
+  unsigned offset,
+  uint64_t topology,
+  struct mpc_command_observation *out) {
+  struct host *h = data;
+  struct mpc_executor_status status;
+  struct mpc_executor_job *job = NULL;
+  struct mpc_executor_result result;
+  pthread_mutex_lock(&h->mutex);
+  enum mpc_native_error error =
+    h->executor ? mpc_executor_get_status(h->executor, &status) : MPC_NATIVE_NOT_READY;
+  if (!error && strcmp(instance, status.adapter.instance_id))
+    error = MPC_NATIVE_STALE_TARGET;
+  if (!error) {
+    struct mpc_executor_request request = {
+      .operation = MPC_EXECUTOR_SAMPLE_FLAGS,
+      .queue_timeout_ms = 50,
+      .sample_offset = offset,
+      .sample_count = MPC_EXECUTOR_SAMPLE_TRACKS,
+      .sample_topology = topology};
+    error = mpc_executor_submit(h->executor, &request, &job);
+  }
   pthread_mutex_unlock(&h->mutex);
+  if (!error)
+    error = mpc_executor_wait(job, 50, &result);
+  if (!error)
+    *out = *result.flags;
+  if (job)
+    mpc_executor_release(job);
   return error;
 }
 
@@ -386,7 +420,7 @@ int mpc_host_run(const char *installation, const char *runtime, const struct mpc
   int listener = -1, result = 1;
   struct host h = {.ops = ops, .phase = "stopped"};
   pthread_mutex_init(&h.mutex, NULL);
-  h.backend = (struct api_backend){&h, probe, state, bind_commands, command};
+  h.backend = (struct api_backend){&h, probe, state, bind_commands, command, sample};
   if (lock < 0 || device_id(install, h.device_id))
     goto done;
   struct sockaddr_un address = {.sun_family = AF_UNIX};

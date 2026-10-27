@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Local watch and unsubscribe requests",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "op"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "op": {
+          "const": "watch"
+        },
+        "cursor": {
+          "type": "string",
+          "maxLength": 57,
+          "pattern": "^run_[0-9a-f]{32}:[1-9][0-9]{0,19}$"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "op"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "op": {
+          "const": "unwatch"
+        }
+      }
+    }
+  ]
+}

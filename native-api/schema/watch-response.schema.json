@@ -1,0 +1,447 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Local watch newline-delimited frames",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "instanceId",
+        "projectId",
+        "projectGeneration",
+        "revision",
+        "cursor",
+        "type",
+        "resumed",
+        "qualified"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "projectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectGeneration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "cursor": {
+          "type": "string",
+          "maxLength": 57,
+          "pattern": "^run_[0-9a-f]{32}:[1-9][0-9]{0,19}$"
+        },
+        "type": {
+          "const": "ack"
+        },
+        "resumed": {
+          "type": "boolean"
+        },
+        "qualified": {
+          "const": false
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "instanceId",
+        "projectId",
+        "projectGeneration",
+        "revision",
+        "cursor",
+        "type",
+        "previousRevision",
+        "state"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "projectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectGeneration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "cursor": {
+          "type": "string",
+          "maxLength": 57,
+          "pattern": "^run_[0-9a-f]{32}:[1-9][0-9]{0,19}$"
+        },
+        "type": {
+          "const": "snapshot"
+        },
+        "previousRevision": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "$ref": "state-response.schema.json",
+          "required": [
+            "project",
+            "tracks",
+            "buses",
+            "sequences",
+            "selectedSequence",
+            "selectedTrackId"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "instanceId",
+        "projectId",
+        "projectGeneration",
+        "revision",
+        "cursor",
+        "type",
+        "previousRevision",
+        "coverage",
+        "selectedTrackId",
+        "muteContext",
+        "tracks"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "projectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectGeneration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "cursor": {
+          "type": "string",
+          "maxLength": 57,
+          "pattern": "^run_[0-9a-f]{32}:[1-9][0-9]{0,19}$"
+        },
+        "type": {
+          "const": "change"
+        },
+        "previousRevision": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "offset",
+            "count",
+            "totalTracks",
+            "topologyEpoch",
+            "capturedMs",
+            "durationNs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "controls"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 136
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "totalTracks": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 136
+            },
+            "topologyEpoch": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "capturedMs": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "durationNs": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        },
+        "selectedTrackId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "muteContext": {
+          "$ref": "state-response.schema.json#/$defs/muteContext"
+        },
+        "tracks": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "state-response.schema.json#/$defs/track"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "instanceId",
+        "projectId",
+        "projectGeneration",
+        "revision",
+        "cursor",
+        "type"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "projectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectGeneration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "cursor": {
+          "type": "string",
+          "maxLength": 57,
+          "pattern": "^run_[0-9a-f]{32}:[1-9][0-9]{0,19}$"
+        },
+        "type": {
+          "const": "heartbeat"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "type",
+        "reason",
+        "instanceId",
+        "projectId",
+        "projectGeneration"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "type": {
+          "const": "terminated"
+        },
+        "reason": {
+          "enum": [
+            "UNSUBSCRIBED",
+            "INVALID_REQUEST",
+            "SERVICE_STOPPING"
+          ]
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "projectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectGeneration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "apiVersion",
+        "type",
+        "reason",
+        "recovery",
+        "instanceId",
+        "projectId",
+        "projectGeneration"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "type": {
+          "const": "resync_required"
+        },
+        "reason": {
+          "enum": [
+            "CONTINUITY_LOST",
+            "REPLAY_GAP"
+          ]
+        },
+        "recovery": {
+          "const": "recovery_snapshot"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "projectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectGeneration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "description": "Observations, not a lossless native event log. Only snapshot/change frames advance an applied cursor. On resync_required discard the cursor and fetch recovery_snapshot or start watch without a cursor. EOF or partial frames require reconnect recovery; terminal delivery is best effort."
+}

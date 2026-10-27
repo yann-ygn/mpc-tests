@@ -83,6 +83,17 @@ host_fixture = executable(
 )
 elf_checks += [{'binary': host_fixture}]
 
+watch_fixture = executable(
+  'watch_fixture', 'watch_fixture.c',
+  '../src/protocol.c', '../src/request.c', '../src/state.c',
+  '../src/discovery.c', '../src/attachment.c', profiles[0],
+  include_directories: [root_inc, api_inc, adapter_inc],
+  c_args: native_args, override_options: native_options,
+  dependencies: threads_dep, link_with: elf_id,
+)
+elf_checks += [{'binary': watch_fixture}]
+test('watch-fixture', watch_fixture, suite: 'native-api', timeout: 30)
+
 if not meson.is_cross_build()
   native_test_env = environment()
   native_test_env.set('MPC_API_TEST_BINARY', api.full_path())
@@ -94,7 +105,7 @@ if not meson.is_cross_build()
   native_test_env.set('MPC_READELF', readelf.full_path())
   native_test_env.set('MPC_HOST_TEST_FIXTURE', host_fixture.full_path())
   native_test_env.set('MPC_HOST_TEST_LIBRARY', native_host.full_path())
-  foreach module : ['test_describe', 'test_adapter', 'test_semantics', 'test_commands', 'test_host', 'test_wire_commands', 'test_live_policy', 'test_mixer', 'test_package']
+  foreach module : ['test_describe', 'test_adapter', 'test_semantics', 'test_commands', 'test_host', 'test_wire_commands', 'test_live_policy', 'test_mixer', 'test_package', 'test_watch']
     test(
       module,
       python,

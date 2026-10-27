@@ -218,6 +218,23 @@ int main(int argc, char **argv) {
     bool queued = fixture.queued;
     pthread_mutex_unlock(&fixture.mutex);
     if (queued && (stopping || access(pause_ui, F_OK))) {
+      if (marker("watch-replace"))
+        select_project(&fixture, PROJECT2);
+      if (marker("watch-rename"))
+        memcpy(fixture.native.objects + 0x15000, "Renamed", 8);
+      if (marker("watch-reorder")) {
+        put32(&fixture.native, VECTOR, TRACK2);
+        put32(&fixture.native, VECTOR + 4, TRACK);
+        put32(&fixture.native, OBJECTS + NATIVE_SELECTED_TRACK_INDEX, 1);
+      }
+      if (marker("watch-select")) {
+        put32(&fixture.native, OBJECTS + NATIVE_SELECTED_TRACK, TRACK2);
+        put32(&fixture.native, OBJECTS + NATIVE_SELECTED_TRACK_MIRROR, TRACK2);
+        put32(
+          &fixture.native,
+          OBJECTS + NATIVE_SELECTED_TRACK_INDEX,
+          marker("watch-reorder") ? 0 : 1);
+      }
       if (native_policy) {
         select_sequence(marker("sequence-two"));
         put_bool(

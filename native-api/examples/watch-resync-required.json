@@ -1,0 +1,9 @@
+{
+  "apiVersion": "0.1",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "projectId": null,
+  "projectGeneration": null,
+  "type": "resync_required",
+  "reason": "CONTINUITY_LOST",
+  "recovery": "recovery_snapshot"
+}

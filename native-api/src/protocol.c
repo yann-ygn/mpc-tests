@@ -1,4 +1,5 @@
 #include "api.h"
+#include "watch.h"
 #include "host.h"
 #include "profile.h"
 #include "mpc_family_profile.h"
@@ -166,6 +167,7 @@ char *api_respond(
   struct discovery discovery;
   if (discovery_read(api, &discovery))
     return api_error("NOT_READY", "Could not establish a fresh instance identity");
+  api_watch_sync(api, &discovery);
   static const char *reads[] =
     {"get_state", "list_tracks", "current_track", "current_sequence", "recovery_snapshot"};
   for (size_t i = 0; i < sizeof reads / sizeof *reads; i++)
@@ -186,7 +188,7 @@ char *api_respond(
     return command_reply(api, caller, &parsed, delivery);
   }
   if (!strcmp(op, "watch"))
-    return api_error("NOT_READY", "Streaming is not implemented; consult describe");
+    return api_error("NOT_READY", "Watch requires the persistent Unix transport");
   if (strcmp(op, "describe"))
     return api_error("UNSUPPORTED_OPERATION", "Unknown operation");
   char *buffer = NULL;
@@ -266,7 +268,11 @@ char *api_respond(
     api_quoted(output, operations[i]);
     int available = i < 4 && discovery.commands_ready;
     fprintf(output, ":{\"available\":%s,\"reason\":", available ? "true" : "false");
-    api_quoted(output, available ? NULL : discovery.unavailable_reason);
+    api_quoted(
+      output,
+      available                                         ? NULL
+        : i == 4 && api->watch && discovery.state_ready ? "DEVICE_QUALIFICATION_PENDING"
+                                                        : discovery.unavailable_reason);
     if (i <= 2) {
       fputs(",\"trackTypes\":[", output);
       bool comma = false;
