@@ -82,6 +82,9 @@ struct mpc_native_adapter {
   struct mpc_native_io io;
   struct mpc_native_hooks hooks;
   int fault;
+  /* UI-thread only. Distinguishes observation/no-op qualification from the
+   * boundary immediately before a notifying filter or setter. */
+  bool invoking_flag;
   struct mpc_ui_profile *profile;
   char instance_id[37];
 };
@@ -149,7 +152,8 @@ enum mpc_native_error mpc_native_qualify_command(
   enum mpc_command_operation,
   enum mpc_mute_scope,
   struct mpc_command_context *,
-  bool *);
+  bool *,
+  struct mpc_native_track_state *);
 
 enum mpc_native_error mpc_native_open_backend(
   const struct mpc_native_io *, const struct mpc_native_hooks *, struct mpc_native_adapter **);

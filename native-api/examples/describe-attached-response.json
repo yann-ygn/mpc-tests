@@ -52,7 +52,7 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
             "global_or_named_active_sequence"
@@ -67,7 +67,7 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
           ]
         },
@@ -80,7 +80,7 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
           ]
         }
@@ -113,11 +113,17 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
             "global_or_named_active_sequence"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_solo": {
           "available": true,
@@ -131,9 +137,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_record_armed": {
           "available": true,
@@ -147,9 +159,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "qualified_writes",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         }
       },
       "outputVerified": false
@@ -180,11 +198,17 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
             "global_or_named_active_sequence"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_solo": {
           "available": true,
@@ -198,9 +222,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_record_armed": {
           "available": true,
@@ -214,9 +244,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "qualified_writes",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         }
       },
       "outputVerified": false
@@ -247,11 +283,17 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
             "global_or_named_active_sequence"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_solo": {
           "available": true,
@@ -265,9 +307,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_record_armed": {
           "available": true,
@@ -281,9 +329,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "qualified_writes",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         }
       },
       "outputVerified": false
@@ -314,11 +368,17 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
             "global_or_named_active_sequence"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_solo": {
           "available": true,
@@ -331,9 +391,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_record_armed": {
           "available": true,
@@ -346,9 +412,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "qualified_writes",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         }
       },
       "outputVerified": false
@@ -379,11 +451,17 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
             "global_or_named_active_sequence"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_solo": {
           "available": true,
@@ -396,9 +474,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_record_armed": {
           "available": true,
@@ -411,9 +495,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "qualified_writes",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         }
       },
       "outputVerified": false
@@ -444,11 +534,17 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
             "global_or_named_active_sequence"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_solo": {
           "available": true,
@@ -462,9 +558,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "verified_noop_only",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         },
         "set_record_armed": {
           "available": true,
@@ -478,9 +580,15 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
-          ]
+          ],
+          "automation": {
+            "off": "qualified_writes",
+            "read": "qualified_writes",
+            "write": "unsupported",
+            "unknown": "unsupported"
+          }
         }
       },
       "outputVerified": false
@@ -508,7 +616,7 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
             "global_or_named_active_sequence"
@@ -523,7 +631,7 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
           ]
         },
@@ -536,7 +644,7 @@
             "no_popup",
             "stopped_or_sequence_playback",
             "recording_off",
-            "automation_off",
+            "automation_off_or_qualified_read",
             "recognized_solo_arm_settings"
           ]
         }

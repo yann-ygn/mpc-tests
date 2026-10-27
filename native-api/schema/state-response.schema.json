@@ -569,6 +569,9 @@
                     "type": "string",
                     "minLength": 1
                   }
+                },
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
                 }
               },
               "allOf": [
@@ -634,6 +637,9 @@
                     "type": "string",
                     "minLength": 1
                   }
+                },
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
                 }
               },
               "allOf": [
@@ -699,6 +705,9 @@
                     "type": "string",
                     "minLength": 1
                   }
+                },
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
                 }
               },
               "allOf": [
@@ -732,6 +741,33 @@
         },
         "outputVerified": {
           "const": false
+        }
+      }
+    },
+    "automationQualification": {
+      "type": "object",
+      "required": [
+        "off",
+        "read",
+        "write",
+        "unknown"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "off": {
+          "const": "qualified_writes"
+        },
+        "read": {
+          "enum": [
+            "qualified_writes",
+            "verified_noop_only"
+          ]
+        },
+        "write": {
+          "const": "unsupported"
+        },
+        "unknown": {
+          "const": "unsupported"
         }
       }
     }

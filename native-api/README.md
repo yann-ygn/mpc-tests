@@ -221,19 +221,19 @@ qualified engine copies for solo/arm. Mute and MIDI/CV commands verify the model
 `unknown` preserves execution uncertainty.
 `get_command` takes `instanceId`, `requestId` and optional `waitMs`; it never executes a command.
 
-The native live policy permits **Main, Mixer or Track Mute, no popup, stopped or normal sequence playback, recording/overdub Off, automation Off**, on qualified plugin, drum, keygroup, MIDI, CV and audio tracks.
+The native live policy permits **Main, Mixer or Track Mute, no popup, stopped or normal sequence playback, recording/overdub Off, automation Off or qualified Read**, on qualified plugin, drum, keygroup, MIDI, CV and audio tracks.
 Mute requires the live **Track Mute State Per Sequence** preference to match the requested scope. Single/Multi solo and arm settings are
 read live and must be recognized. Native follow/filter effects are retained and reported in `observedChanges`.
 The policy re-resolves owners and samples its context twice at dispatch, before native invocation and readback,
 and around each owned verification snapshot. Its initial context is retained through delayed audio verification.
 Unsupported or unreadable contexts reject even no-ops. A context change before native invocation rejects; after
 a filter/setter it retains `unknown`. A queued command cannot reuse earlier eligibility.
-Playback requests use immediate requested-model changes at UI dispatch; mute is not beat/bar quantized. Receipts distinguish acceptance, dispatch and verification with retained monotonic durations. Recording/overdub (including pending), automation Read/Write, Clip and Song remain unavailable. See [playback qualification and limits](../findings/native-playback-flags.md).
+Playback requests use immediate requested-model changes at UI dispatch; mute is not beat/bar quantized. Receipts distinguish acceptance, dispatch and verification with retained monotonic durations. Recording/overdub (including pending), automation Write/unknown, Clip and Song remain unavailable. See [playback qualification and limits](../findings/native-playback-flags.md).
 
 `describe` lists the qualified `screens` and the separate transport/recording/automation/settings/mute-scope `conditions`.
 Mixer Volume, Pan & Volume, Sends, Effects and I/O pages address the same model tracks; commands do not navigate
 the UI. Pad Mixer, Song, Clip and other views/popups remain unqualified. See [screen qualification](../findings/native-command-screens.md).
-Use SHIFT+AUTOMATION in the UI to change the global automation Off setting. This API does not change settings.
+Under Automation Read, matching desired-state requests can complete without invoking a native setter or arm filter. Expected values are checked first, and completion still requires the operation's live model/engine evidence. Record-arm writes are independently qualified under Read. Mute/solo writes return `AUTOMATION_READ_NOOP_ONLY`, including when a visible lane is empty. Write and unknown modes return `AUTOMATION_UNQUALIFIED`. `applied` records verification at completion; later automation may change the value. Commands never change automation settings/data or navigate to obtain permission. See [the Read qualification](../findings/native-automation-read.md).
 
 ### Sequence-scoped mute
 
@@ -311,6 +311,6 @@ Receipts add `observationCoverage` and retained `timing.maxUiCallbackUs` /
 `timing.stagesUs`. Coverage is explicitly flags-only, with sampled intervals,
 topology epoch and duration; missing rows/unknown fields cannot establish
 unchanged state. Completion still uses the required live family fields and
-context fence. Read/no-op automation eligibility has not expanded.
+context fence. US #51 subsequently qualifies Read as described above.
 See [native integration](adapter/COMMANDS.md#lightweight-command-observations-us-52)
 and [device measurements and limits](../findings/native-ui-cost.md).

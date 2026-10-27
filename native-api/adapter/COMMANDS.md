@@ -10,10 +10,15 @@ explicit sequence targets/context. US #49 adds per-family observations and versi
 command ABI 4 / executor ABI 7 / primitive ABI 2. US #50 adds retained timing in command ABI 5.
 Recompile trusted callers; configurations using the earlier ABIs are rejected.
 
+US #51 retains primitive ABI 2, executor ABI 8, command ABI 6, observation ABI 1
+and snapshot ABI 4 / STATE_V4: its invocation boundary and context remain private.
+The additive error `AUTOMATION_READ_NOOP_ONLY` distinguishes Read mute/solo writes
+from Write/unknown-mode rejection (`AUTOMATION_UNQUALIFIED`).
+
 [US #32](../../findings/native-service.md) binds the public Unix setters and `get_command` in the persistent
 host. The socket authenticates callers by peer UID and validates strict schemas before enqueueing.
 This library opens no sockets. Its production `mpc_executor_qualify_command` callback checks live native
-Main/Mixer/Track Mute with no popup, stopped or normal sequence playback, recording/overdub Off, recognized solo/arm settings, target automation Off and a matching explicit mute scope.
+Main/Mixer/Track Mute with no popup, stopped or normal sequence playback, recording/overdub Off, recognized solo/arm settings, target automation Off or qualified Read and a matching explicit mute scope.
 The private lab can select this same policy with `LIVE_COMMAND_OPEN`; `LAB_COMMAND_OPEN` retains the older
 explicitly manual experimental policy.
 
@@ -26,7 +31,7 @@ while a handler authority is attached. Only authoritative executors can host the
 
 A `mpc_command_policy.qualify` callback is mandatory for executing writes. It runs on the verified UI thread
 at dispatch, before native filter/setter access and readback, and around every verification snapshot. The host must establish current mode/settings
-from validated live sources, reject recording/overdub, automation Read/Write, Clip/Song and unqualified contexts, and reject mute when
+from validated live sources, reject recording/overdub, automation Write/unknown, Clip/Song and unqualified contexts, and reject mute when
 the live mute preference does not match the request scope. A saved setting, session label or null callback cannot establish production
 qualification. Missing callbacks reject even no-ops with `NOT_READY`. The lab's manual policy is diagnostic only.
 Family/ownership checks remain inside the guarded adapter regardless of host policy.
@@ -108,6 +113,8 @@ A lagging audio copy causes bounded read-only verification, never another setter
 the identity at each UI dispatch. Read failure, lost identity, or verification timeout after a native call cannot
 be promoted to success. Verification does not prove audible output, an audio buffer boundary or persistence.
 A verified no-op does not rerun filters/listeners. Successful setters leave the desired state in place.
+`applied` verifies the required observation at completion. Later automation can
+change that flag; the receipt does not promise a persistent or isolated value.
 
 Before/after compact native observations report best-effort selection, peer requested/audio flags and suppression
 changes, with project/track IDs and field paths. Single follow-solo can select a target and clear its peer;
@@ -118,7 +125,9 @@ observations are not a complete causal history, isolation guarantee or promise t
 
 Normal sequence playback and stopped sequence mode use the same desired-state
 requests. Recording and overdub, including pending modes, return
-`RECORDING_UNQUALIFIED`; automation Read/Write returns `AUTOMATION_UNQUALIFIED`.
+`RECORDING_UNQUALIFIED`; automation Write/unknown returns `AUTOMATION_UNQUALIFIED`.
+Read permits verified no-ops and native arm writes; mute/solo writes return
+`AUTOMATION_READ_NOOP_ONLY`.
 Native Clip/other sequencer contexts or an active Song source return
 `PLAYBACK_CONTEXT_UNQUALIFIED`. An unsupported screen/popup returns `NOT_READY`.
 All checks also apply to no-ops and expected-value conflicts.
@@ -234,7 +243,37 @@ Single solo/arm and follow-selection effects can span families. Names, bus
 metadata, sequence names/BPM/usage are excluded. No-op, expected values, filters,
 FIFO, lifetime/Program/context fences, retained retries and uncertainty rules
 remain in force. Automation Off still qualifies commands; reads are independent
-of command eligibility (US #51 remains separate).
+of command eligibility. US #51 adds the qualified Read subset below.
+
+## Automation Read (US #51)
+
+Read permits matching desired-state requests for every qualified family and mute
+scope. All identity, Program/family, screen, transport, scope and required
+model/engine checks still apply. `expected.value` is checked before deciding a
+no-op. Such requests report `nativeInvoked: false`, `changed: false`; even the
+record-arm filter is skipped. A lagging required engine copy keeps the existing
+bounded read-only verification and uncertainty rules.
+The final native policy read must also agree with the completion snapshot's
+required fields. A disagreement schedules read-only verification instead of
+acknowledging the earlier snapshot.
+
+Native record-arm writes qualify independently under Read. The Track-owned
+RecordArmable/filter/Single-Multi path is outside Program automation parameters.
+Read mute/solo writes remain `AUTOMATION_READ_NOOP_ONLY`, including without a
+visible lane or with an empty cached event list. Their complete event/native
+source ownership has not been qualified. No absence heuristic grants permission.
+
+The adapter marks the boundary before a native filter and again before its
+notifying setter. Production policy rechecks live context at each boundary and
+after listener/filter work, as well as delayed verification. A mode/owner/scope
+change rejects before native invocation or retains uncertainty afterward. The
+policy never changes settings, event data or screen to gain permission.
+
+Discovery and per-track/family support add `automation`: Off is
+`qualified_writes`; Read is `verified_noop_only` for mute/solo and
+`qualified_writes` for arm; Write/unknown are `unsupported`. This metadata is
+conditional qualification, not a cached permission for a specific request.
+See [native sources and device evidence](../../findings/native-automation-read.md).
 
 `observationCoverage.before` / `.after` are null for absent samples, otherwise
 `{kind: "user_track_flags", offset, count, totalTracks, topologyEpoch, durationUs}`.

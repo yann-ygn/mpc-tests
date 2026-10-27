@@ -5,7 +5,7 @@
 #include "mpc_commands.h"
 
 #define MPC_HOST_DIRECTORY "/tmp/mpc-native-api"
-#define MPC_HOST_VERSION "0.8.0"
+#define MPC_HOST_VERSION "0.9.0"
 
 /* Internal dependency boundary, also used by the isolated lifecycle fixture. */
 struct mpc_host_ops {

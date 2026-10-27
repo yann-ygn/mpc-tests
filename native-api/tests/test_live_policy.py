@@ -36,12 +36,86 @@ class LivePolicyTests(HostHarness):
                 self.assertTrue(result["nativeInvoked"])
                 self.assertEqual(result["verification"]["requestedValue"], value)
 
+    def test_read_noops_conflicts_and_operation_specific_writes(self):
+        (self.install / "policy-automation-read").touch()
+        for playing in (False, True):
+            marker = self.install / "policy-playing"
+            if playing:
+                marker.touch()
+            for op in ("set_mute", "set_solo", "set_record_armed"):
+                label = op + str(playing)
+                current = self.public("get_state")["tracks"][0]["requested"]
+                value = current[
+                    {"set_mute": "muted", "set_solo": "soloed", "set_record_armed": "recordArmed"}[
+                        op
+                    ]
+                ]
+                request = self.command(label, op=op, value=value, expected={"value": value})
+                noop = self.send(request)
+                self.assertEqual(noop["status"], "applied", noop)
+                self.assertFalse(noop["nativeInvoked"])
+                self.assertFalse(noop["changed"])
+                self.assertEqual(self.send(request), noop)
+                conflict = self.send(
+                    self.command(
+                        label + "conflict", op=op, value=value, expected={"value": not value}
+                    )
+                )
+                self.assertEqual(conflict["error"]["code"], "PRECONDITION_FAILED")
+                self.assertFalse(conflict["nativeInvoked"])
+                write = self.send(self.command(label + "write", op=op, value=not value))
+                if op == "set_record_armed":
+                    self.assertEqual(write["status"], "applied", write)
+                    self.assertTrue(write["nativeInvoked"])
+                else:
+                    self.assertEqual(write["status"], "rejected", write)
+                    self.assertEqual(write["error"]["code"], "AUTOMATION_READ_NOOP_ONLY")
+                    self.assertFalse(write["nativeInvoked"])
+            if playing:
+                marker.unlink()
+
+    def test_read_eligibility_is_live_at_dispatch_and_survives_disconnect(self):
+        paused = self.install / "pause-ui"
+        paused.touch()
+        request = self.command("queued-read", value=True, waitMs=0)
+        self.assertEqual(self.send(request)["status"], "accepted")
+        read = self.install / "policy-automation-read"
+        read.touch()
+        paused.unlink()
+        rejected = self.get(request["requestId"])
+        self.assertEqual(rejected["error"]["code"], "AUTOMATION_READ_NOOP_ONLY")
+        self.assertFalse(rejected["nativeInvoked"])
+        read.unlink()
+        self.assertEqual(self.send(request), rejected)
+        read.touch()
+        request = self.command("read-disconnect", value=False, waitMs=30000)
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.connect(str(self.api))
+            client.sendall((json.dumps(request) + "\n").encode())
+        receipt = self.get(request["requestId"])
+        # Independent connections can be serviced in either order. Wait for
+        # admission rather than assuming the disconnected request ran first.
+        deadline = time.monotonic() + 2
+        while (receipt.get("error") or {}).get("code") == "OUTCOME_UNAVAILABLE":
+            if time.monotonic() >= deadline:
+                break
+            time.sleep(0.01)
+            receipt = self.get(request["requestId"])
+        self.assertEqual(receipt["status"], "applied", receipt)
+        self.assertFalse(receipt["nativeInvoked"])
+        self.assertEqual(self.send(request), receipt)
+
     def test_qualified_screens_and_discovery(self):
         caps = self.public("describe")["capabilities"]
         for op in ("set_mute", "set_solo", "set_record_armed"):
             self.assertEqual(caps[op]["screens"], ["main", "mixer", "track_mute"])
             self.assertEqual(caps[op]["transportStates"], ["stopped", "sequence_playback"])
             self.assertIn("recording_off", caps[op]["conditions"])
+            self.assertEqual(
+                caps[op]["automation"]["read"],
+                "qualified_writes" if op == "set_record_armed" else "verified_noop_only",
+            )
+            self.assertEqual(caps[op]["automation"]["write"], "unsupported")
             self.assertFalse(caps[op]["sampleAccurate"])
             self.assertFalse(caps[op]["quantizedScheduling"])
         for marker in ("policy-mixer", "policy-track-mute"):
@@ -166,7 +240,6 @@ class LivePolicyTests(HostHarness):
             "policy-arm-mode",
             "policy-solo-mode",
             "policy-invalid-bool",
-            "policy-automation-read",
             "policy-automation-write",
             "policy-broken-owner",
             "policy-instance-mismatch",

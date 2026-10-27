@@ -291,6 +291,17 @@ enum mpc_native_error mpc_native_read_track(
   return state_read(adapter, target, output);
 }
 
+static enum mpc_native_error invocation_check(
+  struct mpc_native_adapter *adapter,
+  const struct mpc_native_target *target,
+  enum mpc_native_family expected) {
+  enum mpc_native_family family;
+  adapter->invoking_flag = true;
+  enum mpc_native_error error = target_check(adapter, target, &family);
+  adapter->invoking_flag = false;
+  return error ? error : family == expected ? MPC_NATIVE_OK : MPC_NATIVE_STALE_TARGET;
+}
+
 static enum mpc_native_error set_flag(
   struct mpc_native_adapter *adapter,
   const struct mpc_native_target *target,
@@ -317,6 +328,11 @@ static enum mpc_native_error set_flag(
     return MPC_NATIVE_PRECONDITION_FAILED;
   if (current == desired)
     return MPC_NATIVE_OK;
+  /* Desired-state no-ops never enter the native arm filter. Read permission
+   * for an observation does not grant permission for a notifying call. */
+  error = invocation_check(adapter, target, before.family);
+  if (error)
+    return error;
   const struct native_binding *binding = &native_bindings[property];
   uintptr_t owner = binding->owner_is_track ? target->track : target->program;
   bool filtered = desired;
@@ -338,12 +354,9 @@ static enum mpc_native_error set_flag(
   }
   /* A native arm filter can call listeners; revalidate context and lifetime
    * after it returns, before entering the notifying property setter. */
-  enum mpc_native_family family;
-  error = target_check(adapter, target, &family);
+  error = invocation_check(adapter, target, before.family);
   if (error)
     return error;
-  if (family != before.family)
-    return MPC_NATIVE_STALE_TARGET;
   output->native_invoked = true;
   output->changed_known = false;
   unsigned stage = mpc_ui_enter(adapter, MPC_UI_FILTER_SETTER);
@@ -432,6 +445,7 @@ const char *mpc_native_error_name(enum mpc_native_error error) {
     "MUTE_SCOPE_MISMATCH",
     "RECORDING_UNQUALIFIED",
     "PLAYBACK_CONTEXT_UNQUALIFIED",
-    "AUTOMATION_UNQUALIFIED"};
+    "AUTOMATION_UNQUALIFIED",
+    "AUTOMATION_READ_NOOP_ONLY"};
   return (unsigned)error < sizeof names / sizeof *names ? names[error] : "INVALID_ERROR";
 }

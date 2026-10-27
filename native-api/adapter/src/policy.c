@@ -101,7 +101,8 @@ enum mpc_native_error mpc_native_qualify_command(
   enum mpc_command_operation operation,
   enum mpc_mute_scope scope,
   struct mpc_command_context *baseline,
-  bool *known) {
+  bool *known,
+  struct mpc_native_track_state *readback) {
   if ((unsigned)operation > MPC_COMMAND_RECORD_ARMED || (unsigned)scope > MPC_MUTE_SEQUENCE)
     return MPC_NATIVE_INVALID_ARGUMENT;
   /* Verifies firmware, UI ownership, family and live target before using the
@@ -132,13 +133,22 @@ enum mpc_native_error mpc_native_qualify_command(
     return MPC_NATIVE_RECORDING_UNQUALIFIED;
   if (before.playback_mode != p->normalSequenceMode || before.song_source)
     return MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED;
-  if (before.automation)
+  if (before.automation > 1)
     return MPC_NATIVE_AUTOMATION_UNQUALIFIED;
   if (operation == MPC_COMMAND_MUTE && before.sequence_mute != (scope == MPC_MUTE_SEQUENCE))
     return MPC_NATIVE_MUTE_SCOPE_MISMATCH;
   if (*known && memcmp(baseline, &before, sizeof before))
     return MPC_NATIVE_STATE_UNSTABLE;
+  /* Read permits verified desired-state observations for every qualified flag.
+   * Mute/solo have automation and per-sequence/native peer sources whose absence
+   * is not established by this sample. Never infer write permission from an
+   * empty visible lane. RecordArmable is a separate Track property, outside the
+   * automation parameter path; its native Single/Multi filter is still required.
+   * This boundary is checked before BOTH that filter and the property setter. */
+  if (before.automation == 1 && a->invoking_flag && operation != MPC_COMMAND_RECORD_ARMED)
+    return MPC_NATIVE_AUTOMATION_READ_NOOP_ONLY;
   *baseline = before;
   *known = true;
+  *readback = state;
   return MPC_NATIVE_OK;
 }

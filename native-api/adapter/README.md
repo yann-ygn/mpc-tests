@@ -322,6 +322,14 @@ source are checked independently of the playing flag and visible screen. Command
 ABI 5 adds retained stage durations. One executor job runs per UI message under
 load. See [playback policy, timing and device evidence](../../findings/native-playback-flags.md).
 
+US #51 independently qualifies Read no-ops for all supported flags and native
+record-arm writes. Read mute/solo writes return `AUTOMATION_READ_NOOP_ONLY`;
+Write/unknown modes remain `AUTOMATION_UNQUALIFIED`. The adapter distinguishes
+observation from native invocation, checks expected values first and requalifies
+before both the arm filter and notifying setter. Existing ABIs and transfer
+layouts remain unchanged. See [command semantics](COMMANDS.md#automation-read-us-51)
+and [qualification evidence](../../findings/native-automation-read.md).
+
 ## Shared flag sampling (US #52)
 
 Executor ABI 8 adds `MPC_EXECUTOR_SAMPLE_FLAGS`. Submit it on a non-UI thread;

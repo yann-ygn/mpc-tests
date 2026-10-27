@@ -428,3 +428,20 @@ Acceptance does not reserve a musical position; model completion and engine-copy
 readback do not establish audibility or sample timing. See the
 [qualified subset and performance limits](native-playback-flags.md) and
 [handler semantics](../native-api/adapter/COMMANDS.md#playback-and-timing-us-50).
+
+## Automation Read qualification (#51)
+
+Read now qualifies verified desired-state no-ops for every supported flag/family
+and both mute scopes, plus native record-arm writes. Expected values precede
+no-op detection. No-op completion invokes neither setter nor arm filter and
+reports `nativeInvoked: false`, `changed: false`. Read mute/solo writes remain
+`AUTOMATION_READ_NOOP_ONLY`; Write/unknown modes remain
+`AUTOMATION_UNQUALIFIED`. Empty lanes or cached event absence grant no permission.
+
+All required model/engine evidence, identity/family/scope/context fences and
+bounded verification remain in force. The final live policy read must agree
+with the completion snapshot's required fields. `applied` verifies observation
+at completion; subsequent automation can change the value. Discovery and family/
+track support expose per-operation `automation` qualification. The private
+invocation/consistency changes retain the current C ABI and transfer layouts.
+See [native sources and evidence](native-automation-read.md).

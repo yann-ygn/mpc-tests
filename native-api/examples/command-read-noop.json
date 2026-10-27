@@ -1,0 +1,40 @@
+{
+  "apiVersion": "0.1",
+  "requestId": "read_noop",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "status": "applied",
+  "execution": "completed",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "op": "set_mute",
+  "value": true,
+  "changed": false,
+  "nativeInvoked": false,
+  "verification": {
+    "by": [
+      "model"
+    ],
+    "requestedValue": true,
+    "audioSideValue": null,
+    "observedAt": "2026-10-26T21:28:20.375Z",
+    "muteContext": {
+      "scope": "global",
+      "sequence": null
+    }
+  },
+  "muteScope": "global",
+  "sequence": null,
+  "observedChanges": [],
+  "timing": {
+    "queueMs": 1,
+    "dispatchMs": 0,
+    "verificationMs": 0,
+    "totalMs": 1,
+    "uiWorkUs": 128,
+    "verificationPasses": 0
+  },
+  "error": null
+}

@@ -150,3 +150,13 @@ read/recovery projections remain authoritative. Matrix median UI work falls
 explicit limits. Automation Read (#51), watch transport (#33) and maximum-density
 release qualification (#38) remain separate work. Package 0.8.0 is prepared
 locally; installed 0.7.0 is restored without MPC restart.
+
+Automation Read (#51, 2026-10-27): [operation-specific qualification](native-automation-read.md)
+allows verified no-ops for all six qualified families and both mute scopes, plus
+native record-arm writes. Read mute/solo writes remain no-op-only; Write/unknown
+modes remain rejected. Native invocation boundaries and completion readback
+consistency preserve expected values, filters, lifetime/context fencing and
+retained receipts. Host, sanitizer, isolated ARM and live plugin/audio evidence
+cover the subset. Package 0.9.0 is prepared locally; installed 0.7.0 resumes
+without a project save/load or MPC restart. Event-free Read mute/solo writes
+remain unqualified, and event editing stays #43. Watch transport remains #33.

@@ -211,7 +211,19 @@ before running experiments.
   watch transport and Automation Read remain #33/#51. Original flags, buses, selection, sequence, automation,
   live context, zero playhead and Mixer Effects are restored; the lab is unloaded and installed 0.7.0 resumed.
   Package 0.8.0 is built locally, not installed. See `findings/native-ui-cost.md` and its sanitized proof.
-- Next: Automation Read (#51) and streaming (#33).
+- Automation Read (#51), branch `us-51-automation-read`: Read now qualifies verified desired-state
+  no-ops for all six supported families and both mute scopes, plus native record-arm writes.
+  Read mute/solo writes remain `AUTOMATION_READ_NOOP_ONLY`; Write/unknown modes remain
+  `AUTOMATION_UNQUALIFIED`. Expected values precede no-op detection; no-op arm skips the native
+  filter too. Private invocation boundaries recheck before filter/setter; final policy readbacks must
+  agree with the completion snapshot or continue bounded read-only verification. Existing ABIs/layouts
+  remain unchanged. All 19 host entries, 14 ASan/UBSan entries, six isolated ARM fixtures and ARM guards
+  pass, with additional Read cross-family Single/Multi peer cases. Live plugin/audio matrices cover
+  selected/unselected, stopped/playing, three screens, both mute scopes and a populated per-sequence
+  mute-source rejection/control case. Flags/buses, selection, sequence, automation, settings, zero
+  playhead and Mixer Effects are restored; temporary lab unloaded and installed 0.7.0 resumed.
+  Package 0.9.0 is prepared locally. See `findings/native-automation-read.md` and its sanitized proof.
+- Next: streaming (#33). Event-free Read mute/solo writes remain unqualified; event editing stays #43.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
   the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through

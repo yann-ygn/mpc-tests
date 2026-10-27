@@ -61,6 +61,7 @@
                     "null"
                   ]
                 },
+                "automation": {"$ref":"#/$defs/automationQualification"},
                 "verification": {
                   "type": "array",
                   "uniqueItems": true,
@@ -126,6 +127,7 @@
                     "null"
                   ]
                 },
+                "automation": {"$ref":"#/$defs/automationQualification"},
                 "verification": {
                   "type": "array",
                   "uniqueItems": true,
@@ -191,6 +193,7 @@
                     "null"
                   ]
                 },
+                "automation": {"$ref":"#/$defs/automationQualification"},
                 "verification": {
                   "type": "array",
                   "uniqueItems": true,
@@ -254,11 +257,12 @@
         "verification": {"type": "array", "uniqueItems": true, "items": {"enum": ["model", "audio_copy"]}},
         "screens": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
         "conditions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "automation": {"$ref":"#/$defs/automationQualification"},
         "muteScopes": {"type":"array","uniqueItems":true,"items":{"enum":["global","sequence"]}},
         "inactiveSequence": {"const":"SEQUENCE_NOT_ACTIVE"},
         "muteReadCoverage": {"const":"active_sequence"},
         "transportStates": {"type":"array","uniqueItems":true,"items":{"enum":["stopped","sequence_playback"]}},
-        "excludedContexts": {"type":"object","properties":{"recording":{"const":"RECORDING_UNQUALIFIED"},"overdub":{"const":"RECORDING_UNQUALIFIED"},"automationReadWrite":{"const":"AUTOMATION_UNQUALIFIED"},"clipSong":{"const":"PLAYBACK_CONTEXT_UNQUALIFIED"}},"additionalProperties":false},
+        "excludedContexts": {"type":"object","properties":{"recording":{"const":"RECORDING_UNQUALIFIED"},"overdub":{"const":"RECORDING_UNQUALIFIED"},"automationWriteUnknown":{"const":"AUTOMATION_UNQUALIFIED"},"clipSong":{"const":"PLAYBACK_CONTEXT_UNQUALIFIED"}},"additionalProperties":false},
         "timingSemantics": {"const":"immediate_model_at_ui_dispatch"},
         "sampleAccurate": {"const":false},
         "quantizedScheduling": {"const":false}
@@ -269,6 +273,7 @@
          "else": {"properties": {"reason": {"type": "string", "minLength": 1}}}}
       ]
     },
+    "automationQualification": {"type":"object","required":["off","read","write","unknown"],"additionalProperties":false,"properties":{"off":{"const":"qualified_writes"},"read":{"enum":["qualified_writes","verified_noop_only"]},"write":{"const":"unsupported"},"unknown":{"const":"unsupported"}}},
     "nullableMilliseconds": {"type": ["integer", "null"], "minimum": 0},
     "description": {
       "type": "object",

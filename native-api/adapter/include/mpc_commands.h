@@ -54,7 +54,7 @@ struct mpc_command_request {
 
 /* A trusted host must check LIVE mode/settings on the UI thread at dispatch and
  * each verification. No callback means NOT_READY, including for no-op commands.
- * It must reject recording/overdub, automation Read/Write, Clip/Song and
+ * It must reject recording/overdub, automation Write/unknown, Clip/Song and
  * unqualified playback combinations. Ordinary sequence playback is qualified.
  * Mute must match the request's scope and named active sequence. The production
  * callback reads this context from the active executor request.
@@ -68,8 +68,10 @@ struct mpc_command_policy {
 /* Production live policy for the exact profiled firmware. UI-thread only,
  * called from qualify while a managed command is active on this executor.
  * Checks qualified Main/Mixer/Track Mute, no popup, sequence transport, recording Off, settings and
- * target automation. Samples a command-local context fence; never invokes a setter or accepts saved
- * settings. */
+ * target automation. Read qualifies verified no-ops for all flags and native
+ * record-arm writes; Read mute/solo writes remain unqualified. Samples a
+ * command-local context fence, including at native invocation boundaries; never
+ * invokes a setter or accepts saved settings. */
 MPC_NATIVE_API enum mpc_native_error
 mpc_executor_qualify_command(struct mpc_executor *, enum mpc_command_operation);
 

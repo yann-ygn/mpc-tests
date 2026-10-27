@@ -12,6 +12,8 @@ struct mpc_command_native_result {
   struct mpc_ui_profile profile;
   bool before_known, after_known;
   bool context_known;
+  bool last_readback_known, readbacks_consistent;
+  struct mpc_native_track_state last_readback;
   struct mpc_command_context context;
   struct mpc_command_observation before, after;
 };

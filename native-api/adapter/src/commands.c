@@ -240,6 +240,7 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     receipt->execution = result.write.native_invoked || !result.error ? MPC_COMMAND_COMPLETED
                                                                       : MPC_COMMAND_NOT_STARTED;
   }
+  bool readbacks_consistent = !result.command || result.command->readbacks_consistent;
   mpc_executor_release(record->job);
   record->job = NULL;
   if (result.error) {
@@ -254,7 +255,7 @@ static void advance(struct mpc_commands *commands, struct record *record) {
       fail_before_execution(commands, record, result.error);
     return;
   }
-  if (verified(receipt)) {
+  if (readbacks_consistent && verified(receipt)) {
     receipt->execution = MPC_COMMAND_COMPLETED; /* Includes verified native no-ops. */
     finish(commands, record, MPC_COMMAND_APPLIED, MPC_NATIVE_OK);
     return;

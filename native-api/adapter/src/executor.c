@@ -152,6 +152,7 @@ static struct mpc_executor_result command_execute(
   const struct mpc_executor_request *input,
   struct mpc_command_native_result *out) {
   struct mpc_executor_result result = {.state = MPC_EXECUTOR_COMPLETED, .command = out};
+  out->readbacks_consistent = true;
   struct timespec dispatched;
   clock_gettime(CLOCK_MONOTONIC, &dispatched);
   out->dispatched_ms = (uint64_t)dispatched.tv_sec * 1000 + (uint64_t)dispatched.tv_nsec / 1000000;
@@ -227,6 +228,32 @@ static struct mpc_executor_result command_execute(
     !captured && out->after.project == request.identity.project &&
     out->after.generation == request.identity.project_generation) {
     out->after_known = true;
+    /* The final live policy sample must agree with the completion observation
+     * for the addressed operation. A Read automation/model or engine change
+     * between these reads needs bounded verification, never another setter. */
+    if (out->last_readback_known) {
+      const struct mpc_native_track_state *live = &out->last_readback;
+      unsigned required = mpc_family_by_id(live->family)->required[property];
+      out->readbacks_consistent = false;
+      for (unsigned i = 0; i < out->after.track_count; i++) {
+        const struct mpc_command_track *sample = &out->after.tracks[i];
+        if (sample->id != request.identity.track)
+          continue;
+        bool model = property == MPC_COMMAND_MUTE ? live->muted
+          : property == MPC_COMMAND_SOLO          ? live->soloed
+                                                  : live->record_armed;
+        bool observed = property == MPC_COMMAND_MUTE ? sample->muted
+          : property == MPC_COMMAND_SOLO             ? sample->soloed
+                                                     : sample->record_armed;
+        out->readbacks_consistent = required && live->family == sample->family &&
+          (live->known & required) == required && (sample->known & required) == required &&
+          model == observed &&
+          (!(required & MPC_NATIVE_SOLO_COPY) || live->audio_soloed == !!sample->audio_soloed) &&
+          (!(required & MPC_NATIVE_ARM_COPY) ||
+           live->audio_record_armed == !!sample->audio_record_armed);
+        break;
+      }
+    }
   } else if (!result.error)
     result.error = captured ? captured : MPC_NATIVE_STALE_TARGET;
 done: {
@@ -901,13 +928,16 @@ mpc_executor_qualify_command(struct mpc_executor *executor, enum mpc_command_ope
   struct mpc_command_native_result *context = executor->command_context;
   if (!context || !executor->qualifying)
     return MPC_NATIVE_NOT_READY;
-  return mpc_native_qualify_command(
+  error = mpc_native_qualify_command(
     executor->adapter,
     &target,
     operation,
     executor->mute_scope,
     &context->context,
-    &context->context_known);
+    &context->context_known,
+    &context->last_readback);
+  context->last_readback_known = !error;
+  return error;
 }
 
 enum mpc_native_error mpc_executor_commands_attach(

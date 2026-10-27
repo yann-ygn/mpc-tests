@@ -36,7 +36,12 @@ class CommandContractTests(unittest.TestCase):
         schema = json.loads((ROOT / "native-api/schema/command-receipt.schema.json").read_text())
         jsonschema.Draft202012Validator.check_schema(schema)
         validator = jsonschema.Draft202012Validator(schema)
-        for name in ("command-applied", "command-unknown"):
+        for name in (
+            "command-applied",
+            "command-unknown",
+            "command-read-noop",
+            "command-read-write-rejected",
+        ):
             validator.validate(json.loads((ROOT / f"native-api/examples/{name}.json").read_text()))
         receipts = [json.loads(line) for line in result.stdout.splitlines()]
         self.assertGreaterEqual(len(receipts), 25)

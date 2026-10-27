@@ -1,0 +1,728 @@
+{
+  "story": 51,
+  "capturedAt": "2026-10-27T11:17:16.907298+00:00",
+  "firmware": {
+    "model": "MPC Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "implementation": {
+    "packageVersion": "0.9.0",
+    "primitiveAbi": 2,
+    "executorAbi": 8,
+    "commandAbi": 6,
+    "observationAbi": 1,
+    "snapshotAbi": 4,
+    "stateTransfer": "STATE_V4",
+    "publicJsonApi": "0.1",
+    "exportAndTransferLayoutsUnchanged": true,
+    "fingerprintCount": 71,
+    "readMuteSolo": "verified_noop_only",
+    "readRecordArm": "qualified_writes",
+    "writeAndUnknownModes": "AUTOMATION_UNQUALIFIED",
+    "finalRequiredReadbackAgreement": true,
+    "payloadSha256": {
+      "libmpc_native.so": "7b4f274f36a46fc67675b0df1bc1a0d0925d4620a776062ee0d0982c692e5015",
+      "mpc_native_host.so": "a739d8a1054914ea75f1131c1b035d87556fe125615ef2c00b7c7f02b46a34a7",
+      "mpc-api": "dd20b1a3d965a8c29d18a5f8deef27e05999441c0cccd4f163d5839132a9cd48"
+    }
+  },
+  "validation": {
+    "hostMesonEntriesPassed": 19,
+    "asanUbsanEntriesPassed": 14,
+    "latestHostPeerFixtureAndContractPassed": 2,
+    "latestSanitizedPeerFixturePassed": 1,
+    "isolatedArmFixtures": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 327
+      }
+    ],
+    "armBuildAndElfGuardsPassed": true,
+    "formatCheckPassed": true,
+    "coverage": [
+      "six qualified families; global/active-sequence scopes; selected/unselected; stopped/playing",
+      "Read matching/nonmatching requests; expected conflicts; no-op arm skips filters",
+      "Read cross-family Single/Multi arm peers",
+      "Write/unknown rejection; mode/context/recorder changes at dispatch, filter, setter and verification",
+      "required engine lag and final-policy/snapshot drift; bounded read-only convergence/timeout",
+      "full stale identity/sequence, Program replacement, scope, retry, disconnect and lifecycle regressions"
+    ]
+  },
+  "device": {
+    "preliminaryMatrixRowsPassed": 120,
+    "finalBuildMatrixRowsPassed": 36,
+    "totalMatrixRowsPassed": 156,
+    "matrices": [
+      {
+        "screen": "mixer_effects",
+        "muteScope": "sequence",
+        "rowsPassed": 24,
+        "families": [
+          "audio",
+          "plugin"
+        ],
+        "selectedAndUnselected": true,
+        "stoppedAndPlaying": true,
+        "outcomesByFlag": {
+          "mute": {
+            "matchingNoops": 8,
+            "expectedConflicts": 8,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 8,
+            "restoredWrites": 0
+          },
+          "solo": {
+            "matchingNoops": 8,
+            "expectedConflicts": 8,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 8,
+            "restoredWrites": 0
+          },
+          "arm": {
+            "matchingNoops": 8,
+            "expectedConflicts": 8,
+            "appliedWrites": 8,
+            "rejectedReadWrites": 0,
+            "restoredWrites": 8
+          }
+        },
+        "independentReadbacksMatched": true,
+        "retainedNoopAndWriteReplaysChecked": true,
+        "stateAndLiveContextRestored": true,
+        "finalConsistencyBuild": false,
+        "zeroPlayheadRestorationMeasured": false
+      },
+      {
+        "screen": "main",
+        "muteScope": "sequence",
+        "rowsPassed": 24,
+        "families": [
+          "audio",
+          "plugin"
+        ],
+        "selectedAndUnselected": true,
+        "stoppedAndPlaying": true,
+        "outcomesByFlag": {
+          "mute": {
+            "matchingNoops": 8,
+            "expectedConflicts": 8,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 8,
+            "restoredWrites": 0
+          },
+          "solo": {
+            "matchingNoops": 8,
+            "expectedConflicts": 8,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 8,
+            "restoredWrites": 0
+          },
+          "arm": {
+            "matchingNoops": 8,
+            "expectedConflicts": 8,
+            "appliedWrites": 8,
+            "rejectedReadWrites": 0,
+            "restoredWrites": 8
+          }
+        },
+        "independentReadbacksMatched": true,
+        "retainedNoopAndWriteReplaysChecked": true,
+        "stateAndLiveContextRestored": true,
+        "finalConsistencyBuild": false,
+        "zeroPlayheadRestorationMeasured": false
+      },
+      {
+        "screen": "track_mute",
+        "muteScope": "sequence",
+        "rowsPassed": 36,
+        "families": [
+          "audio",
+          "plugin"
+        ],
+        "selectedAndUnselected": true,
+        "stoppedAndPlaying": true,
+        "outcomesByFlag": {
+          "mute": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 12,
+            "restoredWrites": 0
+          },
+          "solo": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 12,
+            "restoredWrites": 0
+          },
+          "arm": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 12,
+            "rejectedReadWrites": 0,
+            "restoredWrites": 12
+          }
+        },
+        "independentReadbacksMatched": true,
+        "retainedNoopAndWriteReplaysChecked": true,
+        "stateAndLiveContextRestored": true,
+        "finalConsistencyBuild": false,
+        "zeroPlayheadRestorationMeasured": false
+      },
+      {
+        "screen": "main",
+        "muteScope": "global",
+        "rowsPassed": 36,
+        "families": [
+          "audio",
+          "plugin"
+        ],
+        "selectedAndUnselected": true,
+        "stoppedAndPlaying": true,
+        "outcomesByFlag": {
+          "mute": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 12,
+            "restoredWrites": 0
+          },
+          "solo": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 12,
+            "restoredWrites": 0
+          },
+          "arm": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 12,
+            "rejectedReadWrites": 0,
+            "restoredWrites": 12
+          }
+        },
+        "independentReadbacksMatched": true,
+        "retainedNoopAndWriteReplaysChecked": true,
+        "stateAndLiveContextRestored": true,
+        "finalConsistencyBuild": false,
+        "zeroPlayheadRestorationMeasured": false
+      },
+      {
+        "screen": "mixer_effects",
+        "muteScope": "sequence",
+        "rowsPassed": 36,
+        "families": [
+          "audio",
+          "plugin"
+        ],
+        "selectedAndUnselected": true,
+        "stoppedAndPlaying": true,
+        "outcomesByFlag": {
+          "mute": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 12,
+            "restoredWrites": 0
+          },
+          "solo": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 0,
+            "rejectedReadWrites": 12,
+            "restoredWrites": 0
+          },
+          "arm": {
+            "matchingNoops": 12,
+            "expectedConflicts": 12,
+            "appliedWrites": 12,
+            "rejectedReadWrites": 0,
+            "restoredWrites": 12
+          }
+        },
+        "independentReadbacksMatched": true,
+        "retainedNoopAndWriteReplaysChecked": true,
+        "stateAndLiveContextRestored": true,
+        "finalConsistencyBuild": true,
+        "zeroPlayheadRestorationMeasured": true
+      }
+    ],
+    "finalBuildArmPeerRowsPassed": 4,
+    "armPeerRows": [
+      {
+        "mode": "single",
+        "playing": false,
+        "firstArm": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "secondArm": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "peerAndSelectionReadbacksMatched": true,
+        "stateRestored": true
+      },
+      {
+        "mode": "multi",
+        "playing": false,
+        "firstArm": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "secondArm": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "peerAndSelectionReadbacksMatched": true,
+        "stateRestored": true
+      },
+      {
+        "mode": "single",
+        "playing": true,
+        "firstArm": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "secondArm": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "peerAndSelectionReadbacksMatched": true,
+        "stateRestored": true
+      },
+      {
+        "mode": "multi",
+        "playing": true,
+        "firstArm": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "secondArm": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "peerAndSelectionReadbacksMatched": true,
+        "stateRestored": true
+      }
+    ],
+    "positiveNativeMuteSourceControlRows": [
+      {
+        "flag": "mute",
+        "selected": true,
+        "playing": false,
+        "knownNativeMuteSourceValue": 1.0,
+        "matchingRequest": {
+          "status": "applied",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": null,
+          "verificationBy": [
+            "model"
+          ]
+        },
+        "nonmatchingRequest": {
+          "status": "rejected",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": "AUTOMATION_READ_NOOP_ONLY",
+          "verificationBy": [
+            "model"
+          ]
+        },
+        "automationReadPreserved": true,
+        "independentRestoreChecked": true
+      },
+      {
+        "flag": "arm",
+        "selected": true,
+        "playing": false,
+        "knownNativeMuteSourceValue": 1.0,
+        "matchingRequest": {
+          "status": "applied",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "nonmatchingRequest": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "automationReadPreserved": true,
+        "independentRestoreChecked": true
+      },
+      {
+        "flag": "mute",
+        "selected": false,
+        "playing": false,
+        "knownNativeMuteSourceValue": 1.0,
+        "matchingRequest": {
+          "status": "applied",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": null,
+          "verificationBy": [
+            "model"
+          ]
+        },
+        "nonmatchingRequest": {
+          "status": "rejected",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": "AUTOMATION_READ_NOOP_ONLY",
+          "verificationBy": [
+            "model"
+          ]
+        },
+        "automationReadPreserved": true,
+        "independentRestoreChecked": true
+      },
+      {
+        "flag": "arm",
+        "selected": false,
+        "playing": false,
+        "knownNativeMuteSourceValue": 1.0,
+        "matchingRequest": {
+          "status": "applied",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "nonmatchingRequest": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "automationReadPreserved": true,
+        "independentRestoreChecked": true
+      },
+      {
+        "flag": "mute",
+        "selected": true,
+        "playing": true,
+        "knownNativeMuteSourceValue": 1.0,
+        "matchingRequest": {
+          "status": "applied",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": null,
+          "verificationBy": [
+            "model"
+          ]
+        },
+        "nonmatchingRequest": {
+          "status": "rejected",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": "AUTOMATION_READ_NOOP_ONLY",
+          "verificationBy": [
+            "model"
+          ]
+        },
+        "automationReadPreserved": true,
+        "independentRestoreChecked": true
+      },
+      {
+        "flag": "arm",
+        "selected": true,
+        "playing": true,
+        "knownNativeMuteSourceValue": 1.0,
+        "matchingRequest": {
+          "status": "applied",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "nonmatchingRequest": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "automationReadPreserved": true,
+        "independentRestoreChecked": true
+      },
+      {
+        "flag": "mute",
+        "selected": false,
+        "playing": true,
+        "knownNativeMuteSourceValue": 1.0,
+        "matchingRequest": {
+          "status": "applied",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": null,
+          "verificationBy": [
+            "model"
+          ]
+        },
+        "nonmatchingRequest": {
+          "status": "rejected",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": "AUTOMATION_READ_NOOP_ONLY",
+          "verificationBy": [
+            "model"
+          ]
+        },
+        "automationReadPreserved": true,
+        "independentRestoreChecked": true
+      },
+      {
+        "flag": "arm",
+        "selected": false,
+        "playing": true,
+        "knownNativeMuteSourceValue": 1.0,
+        "matchingRequest": {
+          "status": "applied",
+          "nativeInvoked": false,
+          "changed": false,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "nonmatchingRequest": {
+          "status": "applied",
+          "nativeInvoked": true,
+          "changed": true,
+          "error": null,
+          "verificationBy": [
+            "model",
+            "audio_copy"
+          ]
+        },
+        "automationReadPreserved": true,
+        "independentRestoreChecked": true
+      }
+    ],
+    "auditedNativeSources": [
+      {
+        "target": 1,
+        "maps": [
+          {
+            "binding": "SetMute",
+            "parameters": [
+              {
+                "key": [
+                  256,
+                  256
+                ],
+                "value": 0.0
+              },
+              {
+                "key": [
+                  256,
+                  257
+                ],
+                "value": 0.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "target": 2,
+        "maps": [
+          {
+            "binding": "SetMute",
+            "parameters": [
+              {
+                "key": [
+                  256,
+                  256
+                ],
+                "value": 0.0
+              },
+              {
+                "key": [
+                  256,
+                  257
+                ],
+                "value": 0.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "target": 3,
+        "maps": [
+          {
+            "binding": "SetMute",
+            "parameters": [
+              {
+                "key": [
+                  256,
+                  256
+                ],
+                "value": 0.0
+              },
+              {
+                "key": [
+                  256,
+                  257
+                ],
+                "value": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "auditedNativeParameterValuesUnchanged": true,
+    "commandTotalP95Ms": 37,
+    "commandTimingScope": "successful no-op and actual/rejected write observations across the device matrices; no saturation/audio claim"
+  },
+  "restoration": {
+    "originalStateMatched": {
+      "selectedTrack": true,
+      "selectedSequence": true,
+      "tracks": true,
+      "buses": true,
+      "sequenceSlots": true
+    },
+    "independentFlagsRestored": true,
+    "nativeContextRestored": true,
+    "allOriginalTracksRemainRead": true,
+    "transport": {
+      "playing": 0,
+      "recordMode": 0,
+      "playbackMode": 0,
+      "songSourceActive": false
+    },
+    "zeroPlayheadRestored": true,
+    "pidUnchanged": true,
+    "userTracks": 8,
+    "buses": 28,
+    "handlersClosed": true,
+    "nativeParameterMapsPreserved": true,
+    "labDsosUnloaded": true,
+    "temporaryLabFilesRemoved": true,
+    "installedFiveReadProjectionsMatchedIndependent": true,
+    "originalMixerEffectsViewRestored": true
+  },
+  "deployment": {
+    "installedVersion": "0.7.0",
+    "installedHostReady": true,
+    "localPackageVersion": "0.9.0",
+    "upgraded": false,
+    "mpcRestarted": false,
+    "projectSavedOrLoaded": false
+  },
+  "harnessNotes": [
+    "Initial peer preparation selected the wrong Preferences category. It performed no peer rows, restored its baseline, and the corrected coordinate subsequently passed all four peer rows.",
+    "STOP alone retained a residual position. Final device runs require zero initial playhead and verify ordinary Locate-keypad restoration. Early matrix reports do not establish exact playhead restoration."
+  ],
+  "limits": [
+    "Read mute/solo writes remain no-op-only regardless of visible lanes or cached absence. Event-free mute/solo writes and exhaustive event ownership remain unqualified.",
+    "The positive automation control is a populated native per-sequence mute parameter source; no timeline event editing or continuous-overwrite qualification was performed.",
+    "Live Read evidence here covers plugin/audio. All six families have new host/ARM coverage and retain the independently traced US #49 owners/filter paths.",
+    "No physical MIDI/CV output or acoustic/audible/sample-timing claim. Sampling does not establish a transaction or complete ABA detection."
+  ]
+}

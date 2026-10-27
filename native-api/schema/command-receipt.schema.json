@@ -553,5 +553,6 @@
         }
       ]
     }
-  }
+  },
+  "description": "Applied verifies required live observations at completion; later automation may change the flag. Read mute/solo writes use AUTOMATION_READ_NOOP_ONLY. Write/unknown modes use AUTOMATION_UNQUALIFIED."
 }

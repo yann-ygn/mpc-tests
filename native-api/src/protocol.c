@@ -87,12 +87,19 @@ void api_flag_support(FILE *f, const char *type, unsigned known, int normal) {
     }
     fputs(
       "],\"conditions\":[\"qualified_screen\",\"no_popup\",\"stopped_or_sequence_playback\","
-      "\"recording_off\",\"automation_off\","
+      "\"recording_off\",\"automation_off_or_qualified_read\","
       "\"recognized_solo_arm_settings\"",
       f);
     if (!i)
       fputs(",\"matching_mute_scope\",\"global_or_named_active_sequence\"", f);
-    fputs("]}", f);
+    fputc(']', f);
+    if (available)
+      fprintf(
+        f,
+        ",\"automation\":{\"off\":\"qualified_writes\",\"read\":\"%s\","
+        "\"write\":\"unsupported\",\"unknown\":\"unsupported\"}",
+        i == 2 ? "qualified_writes" : "verified_noop_only");
+    fputc('}', f);
   }
   fputs("},\"outputVerified\":false}", f);
 }
@@ -277,16 +284,21 @@ char *api_respond(
         fputs(
           ",\"screens\":[\"main\",\"mixer\",\"track_mute\"],"
           "\"conditions\":[\"qualified_screen\",\"no_popup\",\"stopped_or_sequence_playback\","
-          "\"recording_off\",\"automation_off\","
+          "\"recording_off\",\"automation_off_or_qualified_read\","
           "\"recognized_solo_arm_settings\"",
           output);
         if (!i)
           fputs(",\"matching_mute_scope\",\"global_or_named_active_sequence\"", output);
         fputc(']', output);
+        fprintf(
+          output,
+          ",\"automation\":{\"off\":\"qualified_writes\",\"read\":\"%s\","
+          "\"write\":\"unsupported\",\"unknown\":\"unsupported\"}",
+          i == 2 ? "qualified_writes" : "verified_noop_only");
         fputs(
           ",\"transportStates\":[\"stopped\",\"sequence_playback\"],"
           "\"excludedContexts\":{\"recording\":\"RECORDING_UNQUALIFIED\","
-          "\"overdub\":\"RECORDING_UNQUALIFIED\",\"automationReadWrite\":\"AUTOMATION_"
+          "\"overdub\":\"RECORDING_UNQUALIFIED\",\"automationWriteUnknown\":\"AUTOMATION_"
           "UNQUALIFIED\","
           "\"clipSong\":\"PLAYBACK_CONTEXT_UNQUALIFIED\"},"
           "\"timingSemantics\":\"immediate_model_at_ui_dispatch\",\"sampleAccurate\":false,"

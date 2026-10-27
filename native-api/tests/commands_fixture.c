@@ -22,6 +22,7 @@ struct commands_fixture {
   bool sequence_values[2][2], switch_sequence_after_set, scope_after_set, reset_after_set;
   unsigned switch_sequence_at_qualification;
   unsigned qualifications;
+  uint32_t readback_drift_address;
   atomic_uint_fast64_t time_offset;
 };
 static const char service[] = "run_0123456789abcdef0123456789abcdef";
@@ -46,6 +47,8 @@ static enum mpc_native_error qualify(void *data, enum mpc_command_operation oper
   struct commands_fixture *f = data;
   assert(ui && (unsigned)operation <= MPC_COMMAND_RECORD_ARMED);
   f->qualifications++;
+  if (f->qualifications == 4 && f->readback_drift_address)
+    put_bool(&f->identity.native, f->readback_drift_address, true);
   if (f->playback_change_stage == 1 && f->qualifications == 2)
     put32(&f->identity.native, f->playback_change_address, f->playback_change_value);
   if (f->switch_sequence_at_qualification == f->qualifications)
@@ -1050,56 +1053,69 @@ static void playback_transitions(void) {
     {POLICY_RECORD_PROPERTIES + p->recordModeValue, 2, MPC_NATIVE_RECORDING_UNQUALIFIED},
     {POLICY_RECORD_PROPERTIES + p->recordModeValue, 3, MPC_NATIVE_RECORDING_UNQUALIFIED},
     {POLICY_RECORD_PROPERTIES + p->recordModeValue, 4, MPC_NATIVE_RECORDING_UNQUALIFIED},
-    {PROGRAM + p->programAutomation, 1, MPC_NATIVE_AUTOMATION_UNQUALIFIED},
+    {PROGRAM + p->programAutomation, 0, MPC_NATIVE_STATE_UNSTABLE},
+    {PROGRAM + p->programAutomation, 1, MPC_NATIVE_STATE_UNSTABLE},
     {PROGRAM + p->programAutomation, 2, MPC_NATIVE_AUTOMATION_UNQUALIFIED},
     {POLICY_SEQUENCER + p->sequencerMode, 1, MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED},
     {POLICY_SEQUENCER + p->sequencerMode, 3, MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED},
     {POLICY_SEQUENCER + p->sequencerSongSource, 4, MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED},
   };
-  for (unsigned change = 0; change < sizeof changes / sizeof *changes; change++)
-    for (unsigned stage = 0; stage < 5; stage++) {
-      struct commands_fixture f;
-      setup(&f, 8, 16, true);
-      f.live_policy = true;
-      put_bool(
-        &f.identity.native,
-        POLICY_TIMELINE + p->timelinePlaying,
-        !(changes[change].address == POLICY_TIMELINE + p->timelinePlaying &&
-          changes[change].value));
-      f.playback_change_address = changes[change].address;
-      f.playback_change_value = changes[change].value;
-      f.playback_change_stage = stage;
-      /* Stage 2 transitions inside the native arm filter: invoked=true but the
-       * setter must not run. Stage 4 loses context during delayed readback. */
-      f.identity.native.propagate_audio = stage != 4;
-      struct mpc_command_request input =
-        request(&f, "playback_transition", MPC_COMMAND_RECORD_ARMED, 0, true);
-      struct mpc_command_receipt receipt;
-      assert(mpc_commands_submit(f.commands, 7, &input, 0, &receipt) == MPC_NATIVE_OK);
-      while (!queued(&f))
-        tiny_pause();
-      if (!stage)
-        put32(&f.identity.native, changes[change].address, changes[change].value);
-      pump(&f.identity);
-      if (stage == 4)
-        put32(&f.identity.native, changes[change].address, changes[change].value);
-      receipt = drive(&f, input.request_id);
-      /* An accepted command samples its first baseline at dispatch. A stable
-       * start/stop before dispatch is allowed; subsequent transitions fence. */
-      if (changes[change].address == POLICY_TIMELINE + p->timelinePlaying && !stage) {
-        assert(receipt.status == MPC_COMMAND_APPLIED);
-      } else {
-        assert(receipt.status == (stage < 2 ? MPC_COMMAND_REJECTED : MPC_COMMAND_UNKNOWN));
-        assert(receipt.error == changes[change].error);
-        assert(receipt.native_invoked == (stage >= 2));
-        assert(f.identity.native.setters == (stage >= 3));
+  for (unsigned automation = 0; automation < 2; automation++)
+    for (unsigned change = 0; change < sizeof changes / sizeof *changes; change++)
+      for (unsigned stage = 0; stage < 5; stage++) {
+        struct commands_fixture f;
+        setup(&f, 8, 16, true);
+        f.live_policy = true;
+        if (
+          changes[change].address == PROGRAM + p->programAutomation &&
+          changes[change].value == automation) {
+          cleanup(&f);
+          continue;
+        }
+        put32(&f.identity.native, PROGRAM + p->programAutomation, automation);
+        put_bool(
+          &f.identity.native,
+          POLICY_TIMELINE + p->timelinePlaying,
+          !(changes[change].address == POLICY_TIMELINE + p->timelinePlaying &&
+            changes[change].value));
+        f.playback_change_address = changes[change].address;
+        f.playback_change_value = changes[change].value;
+        f.playback_change_stage = stage;
+        /* Stage 2 transitions inside the native arm filter: invoked=true but the
+         * setter must not run. Stage 4 loses context during delayed readback. */
+        f.identity.native.propagate_audio = stage != 4;
+        struct mpc_command_request input =
+          request(&f, "playback_transition", MPC_COMMAND_RECORD_ARMED, 0, true);
+        struct mpc_command_receipt receipt;
+        assert(mpc_commands_submit(f.commands, 7, &input, 0, &receipt) == MPC_NATIVE_OK);
+        while (!queued(&f))
+          tiny_pause();
+        if (!stage)
+          put32(&f.identity.native, changes[change].address, changes[change].value);
+        pump(&f.identity);
+        if (stage == 4)
+          put32(&f.identity.native, changes[change].address, changes[change].value);
+        receipt = drive(&f, input.request_id);
+        /* An accepted command samples its first baseline at dispatch. A stable
+         * start/stop before dispatch is allowed; subsequent transitions fence. */
+        if (
+          !stage &&
+          (changes[change].address == POLICY_TIMELINE + p->timelinePlaying ||
+           (changes[change].address == PROGRAM + p->programAutomation &&
+            changes[change].value <= 1))) {
+          assert(receipt.status == MPC_COMMAND_APPLIED);
+        } else {
+          assert(receipt.status == (stage < 2 ? MPC_COMMAND_REJECTED : MPC_COMMAND_UNKNOWN));
+          assert(receipt.error == changes[change].error);
+          assert(receipt.native_invoked == (stage >= 2));
+          assert(f.identity.native.setters == (stage >= 3));
+        }
+        struct mpc_command_receipt replay;
+        assert(mpc_commands_submit(f.commands, 7, &input, 0, &replay) == MPC_NATIVE_OK);
+        assert(!memcmp(&replay, &receipt, sizeof receipt));
+        emit(&receipt);
+        cleanup(&f);
       }
-      struct mpc_command_receipt replay;
-      assert(mpc_commands_submit(f.commands, 7, &input, 0, &replay) == MPC_NATIVE_OK);
-      assert(!memcmp(&replay, &receipt, sizeof receipt));
-      emit(&receipt);
-      cleanup(&f);
-    }
   for (unsigned target = 0; target < 2; target++) {
     struct commands_fixture f;
     setup(&f, 8, 16, true);
@@ -1110,6 +1126,208 @@ static void playback_transitions(void) {
       send(&f, request(&f, "playback_filter", MPC_COMMAND_RECORD_ARMED, target, true));
     assert(receipt.status == MPC_COMMAND_REJECTED && receipt.error == MPC_NATIVE_VALUE_REJECTED);
     assert(receipt.native_invoked && f.identity.native.filters == 1);
+    emit(&receipt);
+    cleanup(&f);
+  }
+}
+
+/* Read is an observation permission first. Every supported family, scope,
+ * selected/unselected target and stopped/playing context retains expected-value
+ * ordering, never invokes a no-op filter, and rejects unqualified native writes. */
+static void automation_read_matrix(void) {
+  const uint32_t families[] = {
+    NATIVE_PLUGIN_VTABLE,
+    NATIVE_DRUM_VTABLE,
+    NATIVE_KEYGROUP_VTABLE,
+    NATIVE_MIDI_VTABLE,
+    NATIVE_CV_VTABLE,
+    NATIVE_AUDIO_VTABLE};
+  const struct native_command_context_layout *p = &native_command_context;
+  for (unsigned family = 0; family < 6; family++)
+    for (unsigned playing = 0; playing < 2; playing++)
+      for (unsigned scope = 0; scope < 2; scope++) {
+        struct commands_fixture f;
+        setup(&f, 8, 128, true);
+        f.live_policy = true;
+        family_pair(&f, families[family], families[(family + 1) % 6]);
+        put32(&f.identity.native, PROGRAM + p->programAutomation, 1);
+        put32(&f.identity.native, PROGRAM2 + p->programAutomation, 1);
+        put_bool(&f.identity.native, POLICY_TIMELINE + p->timelinePlaying, playing);
+        put_bool(&f.identity.native, POLICY_MUTE + p->perSequenceMute, scope);
+        for (unsigned target = 0; target < 2; target++)
+          for (unsigned selected = 0; selected < 2; selected++)
+            for (unsigned property = 0; property < 3; property++) {
+              choose(&f, (target == selected) ? TRACK2 : TRACK);
+              uint32_t owner =
+                property == 2 ? (target ? TRACK2 : TRACK) : (target ? PROGRAM2 : PROGRAM);
+              bool original =
+                get32(&f.identity.native, owner + native_bindings[property].requested) & 1;
+              char id[80];
+              snprintf(
+                id,
+                sizeof id,
+                "read_%u_%u_%u_%u_%u_%u",
+                family,
+                playing,
+                scope,
+                target,
+                selected,
+                property);
+              struct mpc_command_request input = request(&f, id, property, target, original);
+              if (property == 0 && scope) {
+                input.mute_scope = MPC_MUTE_SEQUENCE;
+                memcpy(input.sequence.instance_id, service, 37);
+                input.sequence.project = f.ids.project;
+                input.sequence.sequence = f.ids.selected_sequence;
+                input.sequence.generation = f.ids.sequences[0].generation;
+              }
+              input.has_expected = true;
+              input.expected = original;
+              unsigned setters = f.identity.native.setters, filters = f.identity.native.filters;
+              struct mpc_command_receipt receipt = send(&f, input), replay;
+              assert(
+                receipt.status == MPC_COMMAND_APPLIED && !receipt.native_invoked &&
+                receipt.changed_known && !receipt.changed);
+              assert(!mpc_commands_submit(f.commands, 7, &input, 0, &replay));
+              assert(!memcmp(&receipt, &replay, sizeof receipt));
+              input.request_id[0] = 'c';
+              input.expected = !original;
+              receipt = send(&f, input);
+              assert(receipt.error == MPC_NATIVE_PRECONDITION_FAILED && !receipt.native_invoked);
+              assert(f.identity.native.setters == setters && f.identity.native.filters == filters);
+              input.request_id[0] = 'w';
+              input.expected = original;
+              input.value = !original;
+              receipt = send(&f, input);
+              if (property == MPC_COMMAND_RECORD_ARMED)
+                assert(
+                  receipt.status == MPC_COMMAND_APPLIED && receipt.native_invoked &&
+                  f.identity.native.setters == setters + 1 &&
+                  f.identity.native.filters == filters + 1);
+              else
+                assert(
+                  receipt.status == MPC_COMMAND_REJECTED &&
+                  receipt.error == MPC_NATIVE_AUTOMATION_READ_NOOP_ONLY &&
+                  !receipt.native_invoked && f.identity.native.setters == setters &&
+                  f.identity.native.filters == filters);
+            }
+        cleanup(&f);
+      }
+  /* The Read subset retains native cross-family Single/Multi arm effects. */
+  for (unsigned family = 0; family < 6; family++)
+    for (unsigned single = 0; single < 2; single++)
+      for (unsigned playing = 0; playing < 2; playing++) {
+        struct commands_fixture f;
+        setup(&f, 8, 16, true);
+        f.live_policy = true;
+        f.single_arm = single;
+        family_pair(&f, families[family], families[(family + 1) % 6]);
+        put32(&f.identity.native, PROGRAM + p->programAutomation, 1);
+        put32(&f.identity.native, PROGRAM2 + p->programAutomation, 1);
+        put32(&f.identity.native, POLICY_RECORD_PROPERTIES + p->armModeValue, !single);
+        put_bool(&f.identity.native, POLICY_TIMELINE + p->timelinePlaying, playing);
+        arm(&f.identity.native, TRACK, false);
+        arm(&f.identity.native, TRACK2, false);
+        struct mpc_command_receipt first =
+          send(&f, request(&f, "read_arm_first", MPC_COMMAND_RECORD_ARMED, 0, true));
+        struct mpc_command_request input =
+          request(&f, "read_arm_second", MPC_COMMAND_RECORD_ARMED, 1, true);
+        struct mpc_command_receipt second = send(&f, input);
+        assert(first.status == MPC_COMMAND_APPLIED && second.status == MPC_COMMAND_APPLIED);
+        assert(second.after.tracks[0].record_armed == !single);
+        assert(second.after.tracks[1].record_armed);
+        assert(f.identity.native.setters == 2 && f.identity.native.filters == 2);
+        strcpy(input.request_id, "read_arm_peer_noop");
+        struct mpc_command_receipt noop = send(&f, input);
+        assert(noop.status == MPC_COMMAND_APPLIED && !noop.native_invoked && !noop.changed);
+        assert(f.identity.native.setters == 2 && f.identity.native.filters == 2);
+        cleanup(&f);
+      }
+  /* A matching model with a lagging engine copy must wait without a setter.
+   * Read automation may also move the model during this read-only verification. */
+  for (unsigned stage = 0; stage < 4; stage++) {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    f.live_policy = true;
+    put32(&f.identity.native, PROGRAM + p->programAutomation, 1);
+    put_bool(&f.identity.native, PROGRAM + native_bindings[1].observed, true);
+    struct mpc_command_request input = request(&f, "read_lag", MPC_COMMAND_SOLO, 0, false);
+    struct mpc_command_receipt receipt;
+    assert(!mpc_commands_submit(f.commands, 7, &input, 0, &receipt));
+    while (!queued(&f))
+      tiny_pause();
+    pump(&f.identity);
+    while (!queued(&f))
+      tiny_pause();
+    if (!stage)
+      put_bool(&f.identity.native, PROGRAM + native_bindings[1].observed, false);
+    else if (stage == 1) {
+      put_bool(&f.identity.native, PROGRAM + native_bindings[1].requested, true);
+      atomic_fetch_add(&f.time_offset, MPC_COMMAND_VERIFICATION_MS + 1);
+    } else if (stage == 2)
+      put32(&f.identity.native, PROGRAM + p->programAutomation, 2);
+    else
+      put32(&f.identity.native, PROGRAM + p->programAutomation, 0);
+    receipt = drive(&f, input.request_id);
+    assert(receipt.status == (stage ? MPC_COMMAND_UNKNOWN : MPC_COMMAND_APPLIED));
+    assert(!receipt.native_invoked && !f.identity.native.setters && !f.identity.native.filters);
+    if (stage == 1)
+      assert(receipt.error == MPC_NATIVE_VERIFICATION_TIMEOUT);
+    if (stage == 2)
+      assert(receipt.error == MPC_NATIVE_AUTOMATION_UNQUALIFIED);
+    if (stage == 3)
+      assert(receipt.error == MPC_NATIVE_STATE_UNSTABLE);
+    emit(&receipt);
+    cleanup(&f);
+  }
+  for (unsigned mode = 2; mode < 4; mode++) {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    f.live_policy = true;
+    put32(&f.identity.native, PROGRAM + p->programAutomation, mode == 2 ? 2 : UINT32_MAX);
+    for (unsigned property = 0; property < 3; property++) {
+      struct mpc_command_receipt receipt = send(
+        &f,
+        request(
+          &f,
+          property == 0     ? "read_write_mute"
+            : property == 1 ? "read_write_solo"
+                            : "read_write_arm",
+          property,
+          0,
+          false));
+      assert(receipt.error == MPC_NATIVE_AUTOMATION_UNQUALIFIED && !receipt.native_invoked);
+    }
+    assert(!f.identity.native.setters && !f.identity.native.filters);
+    cleanup(&f);
+  }
+  /* The snapshot can match while the final native policy read already sees
+   * different required evidence. Do not acknowledge that stale snapshot. */
+  for (unsigned stage = 0; stage < 3; stage++) {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    f.live_policy = true;
+    put32(&f.identity.native, PROGRAM + p->programAutomation, 1);
+    f.readback_drift_address =
+      PROGRAM + (stage == 2 ? native_bindings[1].observed : native_bindings[1].requested);
+    struct mpc_command_request input = request(&f, "read_final_drift", MPC_COMMAND_SOLO, 0, false);
+    struct mpc_command_receipt receipt;
+    assert(!mpc_commands_submit(f.commands, 7, &input, 0, &receipt));
+    while (!queued(&f))
+      tiny_pause();
+    pump(&f.identity);
+    while (!queued(&f))
+      tiny_pause();
+    assert(!mpc_commands_get(f.commands, 7, service, input.request_id, 0, &receipt));
+    assert(receipt.status == MPC_COMMAND_ACCEPTED);
+    if (!stage)
+      put_bool(&f.identity.native, f.readback_drift_address, false);
+    else
+      atomic_fetch_add(&f.time_offset, MPC_COMMAND_VERIFICATION_MS + 1);
+    receipt = drive(&f, input.request_id);
+    assert(receipt.status == (stage ? MPC_COMMAND_UNKNOWN : MPC_COMMAND_APPLIED));
+    assert(!receipt.native_invoked && !f.identity.native.setters && !f.identity.native.filters);
+    assert(!stage || receipt.error == MPC_NATIVE_VERIFICATION_TIMEOUT);
     emit(&receipt);
     cleanup(&f);
   }
@@ -1155,6 +1373,7 @@ int main(void) {
     .abi_version = MPC_COMMANDS_ABI - 1,
     .struct_bytes = sizeof incompatible};
   assert(!mpc_commands_receipt_json(&incompatible));
+  automation_read_matrix();
   command_observer_sharing();
   qualified_family_matrix();
   playback_transitions();

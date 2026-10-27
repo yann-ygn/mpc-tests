@@ -96,7 +96,7 @@ class PlaybackMatrix(FamilyMatrix):
                 self.select(armed[0])
         self.ui("/button", name="MENU")
         self.ui("/tap", x=1090, y=720)
-        self.ui("/tap", x=150, y=485)
+        self.ui("/tap", x=150, y=642)
         context = capture(self.session)
         for key, desired, y in (("recordArmMode", arm, 500), ("soloMode", solo, 360)):
             if context[key] != desired:
