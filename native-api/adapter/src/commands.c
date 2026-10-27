@@ -211,6 +211,12 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     } else
       receipt->verification_passes++;
     receipt->ui_work_us += result.command->ui_work_us;
+    if (record->verifying)
+      receipt->verification_ui_us += result.command->ui_work_us;
+    if (receipt->max_ui_callback_us < result.command->ui_work_us)
+      receipt->max_ui_callback_us = result.command->ui_work_us;
+    for (unsigned i = 0; i < MPC_UI_STAGES; i++)
+      receipt->stages_us[i] += result.command->profile.ns[i] / 1000;
     if (result.command->context_known) {
       record->context_known = true;
       record->context = result.command->context;

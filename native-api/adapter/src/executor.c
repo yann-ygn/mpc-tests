@@ -17,6 +17,7 @@ struct mpc_executor_job {
   struct mpc_executor_result result;
   struct mpc_state_snapshot *snapshot;
   struct mpc_command_native_result *command;
+  struct mpc_command_observation *flags;
   struct timespec execution_deadline;
   bool client_owned, has_deadline;
 };
@@ -73,6 +74,8 @@ static void remove_queued(struct mpc_executor *executor, struct mpc_executor_job
 static void free_slot(struct mpc_executor_job *job) {
   free(job->snapshot);
   job->snapshot = NULL;
+  free(job->flags);
+  job->flags = NULL;
   free(job->command);
   job->command = NULL;
   job->result.state = 0;
@@ -104,14 +107,19 @@ static enum mpc_native_error resolve_target(
   struct mpc_executor *executor,
   const struct mpc_executor_identity *identity,
   struct mpc_native_target *target) {
-  if (executor->registry)
-    return mpc_identity_resolve(executor->registry, identity, target);
+  if (executor->registry) {
+    unsigned stage = mpc_ui_enter(executor->adapter, MPC_UI_IDENTITY);
+    enum mpc_native_error error = mpc_identity_resolve(executor->registry, identity, target);
+    mpc_ui_leave(executor->adapter, stage);
+    return error;
+  }
   return executor->config.resolve
     ? executor->config.resolve(executor->config.userdata, identity, target)
     : MPC_NATIVE_NOT_READY;
 }
 
 static enum mpc_native_error qualify_command(struct mpc_executor *executor) {
+  unsigned stage = mpc_ui_enter(executor->adapter, MPC_UI_POLICY);
   executor->qualifying = true;
   enum mpc_native_error error = executor->command_policy.qualify
     ? executor->command_policy.qualify(
@@ -119,6 +127,7 @@ static enum mpc_native_error qualify_command(struct mpc_executor *executor) {
         executor->command_property)
     : MPC_NATIVE_NOT_READY;
   executor->qualifying = false;
+  mpc_ui_leave(executor->adapter, stage);
   return error;
 }
 
@@ -138,36 +147,9 @@ static enum mpc_native_error revalidate(void *data, const struct mpc_native_targ
                                                             : MPC_NATIVE_OK;
 }
 
-static void
-observation(const struct mpc_state_snapshot *state, struct mpc_command_observation *out) {
-  memset(out, 0, sizeof *out);
-  out->project = state->project;
-  out->generation = state->project_generation;
-  out->selected_track = state->selected_track;
-  out->selected_sequence = state->selected_sequence;
-  out->selected_sequence_generation = state->selected_sequence_generation;
-  out->mute_scope = state->mute_scope;
-  out->captured_ms = state->finished_ms;
-  out->track_count = state->track_count;
-  for (unsigned i = 0; i < state->track_count; i++) {
-    const struct mpc_state_track *t = &state->tracks[i];
-    out->tracks[i] = (struct mpc_command_track){t->identity.id,
-                                                t->identity.generation,
-                                                t->known,
-                                                t->muted,
-                                                t->soloed,
-                                                t->record_armed,
-                                                t->audio_soloed,
-                                                t->audio_record_armed,
-                                                t->silenced,
-                                                mpc_family_by_type(t->type)->family};
-  }
-}
-
 static struct mpc_executor_result command_execute(
   struct mpc_executor *executor,
   const struct mpc_executor_request *input,
-  struct mpc_state_snapshot *scratch,
   struct mpc_command_native_result *out) {
   struct mpc_executor_result result = {.state = MPC_EXECUTOR_COMPLETED, .command = out};
   struct timespec dispatched;
@@ -177,7 +159,10 @@ static struct mpc_executor_result command_execute(
   unsigned property = input->operation == MPC_EXECUTOR_COMMAND_OBSERVE
     ? input->command_property
     : (unsigned)(input->operation - MPC_EXECUTOR_COMMAND_MUTE);
+  executor->adapter->profile = &out->profile;
+  unsigned stage = mpc_ui_enter(executor->adapter, MPC_UI_IDENTITY);
   result.error = mpc_identity_bind(executor->registry, &request.identity);
+  mpc_ui_leave(executor->adapter, stage);
   if (result.error)
     goto done;
   executor->identity = request.identity;
@@ -191,10 +176,12 @@ static struct mpc_executor_result command_execute(
     goto done;
   bool writing = input->operation != MPC_EXECUTOR_COMMAND_OBSERVE;
   if (writing) {
-    result.error = mpc_identity_state(executor->registry, scratch);
+    stage = mpc_ui_enter(executor->adapter, MPC_UI_BEFORE);
+    result.error =
+      mpc_identity_flags(executor->registry, 0, MPC_IDENTITY_MAX_TRACKS, 0, &out->before);
+    mpc_ui_leave(executor->adapter, stage);
     if (result.error)
       goto done;
-    observation(scratch, &out->before);
     out->before_known = true;
   }
   executor->active = true;
@@ -225,8 +212,11 @@ static struct mpc_executor_result command_execute(
   executor->active = true;
   enum mpc_native_error captured = qualify_command(executor);
   executor->active = false;
-  if (!captured)
-    captured = mpc_identity_state(executor->registry, scratch);
+  if (!captured) {
+    stage = mpc_ui_enter(executor->adapter, MPC_UI_AFTER);
+    captured = mpc_identity_flags(executor->registry, 0, MPC_IDENTITY_MAX_TRACKS, 0, &out->after);
+    mpc_ui_leave(executor->adapter, stage);
+  }
   executor->active = true;
   if (!captured)
     captured = qualify_command(executor);
@@ -234,13 +224,14 @@ static struct mpc_executor_result command_execute(
   if (!result.error && captured)
     result.error = captured;
   if (
-    !captured && scratch->project == request.identity.project &&
-    scratch->project_generation == request.identity.project_generation) {
-    observation(scratch, &out->after);
+    !captured && out->after.project == request.identity.project &&
+    out->after.generation == request.identity.project_generation) {
     out->after_known = true;
   } else if (!result.error)
     result.error = captured ? captured : MPC_NATIVE_STALE_TARGET;
 done: {
+  mpc_ui_leave(executor->adapter, MPC_UI_OTHER);
+  executor->adapter->profile = NULL;
   struct timespec finished;
   clock_gettime(CLOCK_MONOTONIC, &finished);
   out->finished_ms = (uint64_t)finished.tv_sec * 1000 + (uint64_t)finished.tv_nsec / 1000000;
@@ -257,10 +248,22 @@ static struct mpc_executor_result execute(
   struct mpc_executor *executor,
   const struct mpc_executor_request *request,
   struct mpc_state_snapshot *snapshot,
-  struct mpc_command_native_result *command) {
+  struct mpc_command_native_result *command,
+  struct mpc_command_observation *flags) {
   if (request->operation >= MPC_EXECUTOR_COMMAND_MUTE)
-    return command_execute(executor, request, snapshot, command);
+    return command_execute(executor, request, command);
   struct mpc_executor_result result = {.state = MPC_EXECUTOR_COMPLETED};
+  if (request->operation == MPC_EXECUTOR_SAMPLE_FLAGS) {
+    result.error = mpc_identity_flags(
+      executor->registry,
+      request->sample_offset,
+      request->sample_count ? request->sample_count : MPC_EXECUTOR_SAMPLE_TRACKS,
+      request->sample_topology,
+      flags);
+    if (!result.error)
+      result.flags = flags;
+    return result;
+  }
   if (request->operation == MPC_EXECUTOR_GET_STATE) {
     result.error = mpc_identity_state(executor->registry, snapshot);
     if (!result.error)
@@ -304,6 +307,7 @@ static struct mpc_executor_result execute(
     case MPC_EXECUTOR_IDENTITIES:
     case MPC_EXECUTOR_VALIDATE_SEQUENCE:
     case MPC_EXECUTOR_GET_STATE:
+    case MPC_EXECUTOR_SAMPLE_FLAGS:
     case MPC_EXECUTOR_COMMAND_MUTE:
     case MPC_EXECUTOR_COMMAND_SOLO:
     case MPC_EXECUTOR_COMMAND_ARM:
@@ -317,7 +321,54 @@ static struct mpc_executor_result execute(
   return result;
 }
 
+/* Share one fresh UI sample with consecutive waiting observers. Never cross a
+ * command in FIFO order or reuse a sample across UI callbacks. Copying and all
+ * result ownership remain bounded by FANOUT and the fixed job capacity. */
+static void
+share_flags(struct mpc_executor *executor, const struct mpc_command_observation *source) {
+  for (unsigned n = 0; source && n < MPC_EXECUTOR_SAMPLE_FANOUT; n++) {
+    struct mpc_executor_job *job = executor->head;
+    if (!job || job->request.operation != MPC_EXECUTOR_SAMPLE_FLAGS)
+      break;
+    unsigned offset = job->request.sample_offset;
+    unsigned limit =
+      job->request.sample_count ? job->request.sample_count : MPC_EXECUTOR_SAMPLE_TRACKS;
+    unsigned count = offset <= source->total_tracks ? source->total_tracks - offset : 0;
+    if (count > limit)
+      count = limit;
+    if (
+      offset < source->offset || offset > source->total_tracks ||
+      offset + count > source->offset + source->track_count)
+      break;
+    remove_queued(executor, job);
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    job->result.state = MPC_EXECUTOR_COMPLETED;
+    if (job->has_deadline && !time_before(&now, &job->execution_deadline)) {
+      job->result.state = MPC_EXECUTOR_CANCELLED;
+      job->result.error = MPC_NATIVE_CANCELLED;
+    } else if (
+      job->request.sample_topology && job->request.sample_topology != source->topology_epoch)
+      job->result.error = MPC_NATIVE_STATE_UNSTABLE;
+    else {
+      memcpy(job->flags, source, offsetof(struct mpc_command_observation, tracks));
+      memcpy(
+        job->flags->tracks,
+        source->tracks + offset - source->offset,
+        count * sizeof *source->tracks);
+      job->flags->offset = offset;
+      job->flags->track_count = count;
+      job->result.flags = job->flags;
+      job->result.flags_shared = true;
+    }
+    if (!job->client_owned)
+      free_slot(job);
+  }
+}
+
 static void invoke(const void *capture) {
+  struct timespec callback_start;
+  clock_gettime(CLOCK_MONOTONIC, &callback_start);
   struct mpc_executor *executor = ((const struct mpc_native_function *)capture)->data[0];
   pthread_mutex_lock(&executor->mutex);
   executor->callback_invoked = true;
@@ -365,9 +416,27 @@ static void invoke(const void *capture) {
       job->result.state = MPC_EXECUTOR_RUNNING;
       pthread_mutex_unlock(&executor->mutex);
       struct mpc_executor_result result =
-        execute(executor, &job->request, job->snapshot, job->command);
+        execute(executor, &job->request, job->snapshot, job->command, job->flags);
       pthread_mutex_lock(&executor->mutex);
       job->result = result;
+      if (!result.error)
+        share_flags(
+          executor,
+          result.flags                                      ? result.flags
+            : result.command && result.command->after_known ? &result.command->after
+                                                            : NULL);
+      {
+        struct timespec callback_end;
+        clock_gettime(CLOCK_MONOTONIC, &callback_end);
+        uint64_t elapsed = ((uint64_t)(callback_end.tv_sec - callback_start.tv_sec) * 1000000000 +
+                            callback_end.tv_nsec - callback_start.tv_nsec) /
+          1000;
+        job->result.ui_callback_us = elapsed;
+        if (job->command && elapsed > job->command->ui_work_us) {
+          job->command->profile.ns[MPC_UI_OTHER] += (elapsed - job->command->ui_work_us) * 1000;
+          job->command->ui_work_us = elapsed;
+        }
+      }
       if (!job->client_owned)
         free_slot(job);
       pthread_cond_broadcast(&executor->changed);
@@ -619,6 +688,9 @@ enum mpc_native_error mpc_executor_command_submit(
   if (
     !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_COMMAND_OBSERVE ||
     request->queue_timeout_ms > MPC_EXECUTOR_MAX_WAIT_MS ||
+    (request->operation == MPC_EXECUTOR_SAMPLE_FLAGS &&
+     (request->sample_count > MPC_EXECUTOR_SAMPLE_TRACKS ||
+      request->sample_offset > MPC_IDENTITY_MAX_TRACKS)) ||
     (request->operation == MPC_EXECUTOR_COMMAND_OBSERVE &&
      request->command_property > MPC_COMMAND_RECORD_ARMED))
     return MPC_NATIVE_INVALID_ARGUMENT;
@@ -654,11 +726,16 @@ enum mpc_native_error mpc_executor_command_submit(
       struct mpc_executor_job *job = &executor->jobs[i];
       if (job->result.state)
         continue;
-      if (
-        request->operation == MPC_EXECUTOR_GET_STATE ||
-        request->operation >= MPC_EXECUTOR_COMMAND_MUTE) {
+      if (request->operation == MPC_EXECUTOR_GET_STATE) {
         job->snapshot = calloc(1, sizeof *job->snapshot);
         if (!job->snapshot) {
+          error = MPC_NATIVE_NOT_READY;
+          break;
+        }
+      }
+      if (request->operation == MPC_EXECUTOR_SAMPLE_FLAGS) {
+        job->flags = calloc(1, sizeof *job->flags);
+        if (!job->flags) {
           error = MPC_NATIVE_NOT_READY;
           break;
         }

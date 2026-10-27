@@ -297,3 +297,20 @@ or a new authority returns `OUTCOME_UNAVAILABLE`. Retention is in memory and doe
 Shutdown first stops and joins socket callers, then cancels/drains command handlers, then detaches/drains the
 executor. A stalled native callback retains its authority and reports draining; a timeout cannot free it.
 See [implementation evidence](../findings/native-service.md) for fixture, sanitizer, ARM and live-device coverage.
+
+## UI work and incremental observations (US #52)
+
+Package 0.8.0 replaces full-project command observations with live user-track
+flag samples. `get_state`, `list_tracks`, `current_track`, `current_sequence` and
+`recovery_snapshot` remain authoritative full reads. Public watch is still
+unavailable; its shared native sampling primitive now exists in executor ABI 8.
+Trusted C callers must rebuild for executor ABI 8 / command ABI 6; primitive ABI 2,
+snapshot ABI 4 and STATE_V4 remain unchanged.
+
+Receipts add `observationCoverage` and retained `timing.maxUiCallbackUs` /
+`timing.stagesUs`. Coverage is explicitly flags-only, with sampled intervals,
+topology epoch and duration; missing rows/unknown fields cannot establish
+unchanged state. Completion still uses the required live family fields and
+context fence. Read/no-op automation eligibility has not expanded.
+See [native integration](adapter/COMMANDS.md#lightweight-command-observations-us-52)
+and [device measurements and limits](../findings/native-ui-cost.md).

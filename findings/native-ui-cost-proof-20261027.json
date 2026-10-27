@@ -1,0 +1,678 @@
+{
+  "story": 52,
+  "date": "2026-10-27",
+  "firmwareBuildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "baseline": "0.7.0 path at 8d96ee7 with exclusive stage timing instrumentation",
+  "implementation": "0.8.0 executor ABI 8 / commands ABI 6 / observation ABI 1",
+  "workload": {
+    "userTracks": 8,
+    "families": {
+      "plugin": 6,
+      "audio": 2
+    },
+    "buses": 28,
+    "sequenceSlots": 128,
+    "bpm": 70,
+    "bars": 4,
+    "screen": "Mixer Effects",
+    "muteScope": "sequence",
+    "recording": "Off",
+    "automationDuringCommands": "Off",
+    "phaseAligned": false,
+    "burstClients": 8,
+    "burstSize": 32,
+    "bursts": 3,
+    "observationHz": 10
+  },
+  "matrix": {
+    "baseline": {
+      "writes": 12,
+      "noopChecks": 12,
+      "conflictChecks": 12,
+      "timing": {
+        "queueMs": {
+          "n": 12,
+          "p50": 1,
+          "p95": 14,
+          "p99": 14,
+          "max": 14
+        },
+        "dispatchMs": {
+          "n": 12,
+          "p50": 52,
+          "p95": 62,
+          "p99": 62,
+          "max": 62
+        },
+        "verificationMs": {
+          "n": 12,
+          "p50": 2,
+          "p95": 5,
+          "p99": 5,
+          "max": 5
+        },
+        "totalMs": {
+          "n": 12,
+          "p50": 57,
+          "p95": 70,
+          "p99": 70,
+          "max": 70
+        },
+        "uiWorkUs": {
+          "n": 12,
+          "p50": 52021,
+          "p95": 61106,
+          "p99": 61106,
+          "max": 61106
+        },
+        "maxUiCallbackUs": {
+          "n": 12,
+          "p50": 52021,
+          "p95": 61106,
+          "p99": 61106,
+          "max": 61106
+        }
+      },
+      "exclusiveStagesUs": {
+        "identity": {
+          "n": 12,
+          "p50": 15788,
+          "p95": 29777,
+          "p99": 29777,
+          "max": 29777
+        },
+        "policy": {
+          "n": 12,
+          "p50": 1647,
+          "p95": 1979,
+          "p99": 1979,
+          "max": 1979
+        },
+        "filterSetter": {
+          "n": 12,
+          "p50": 123,
+          "p95": 21069,
+          "p99": 21069,
+          "max": 21069
+        },
+        "targetReadback": {
+          "n": 12,
+          "p50": 2502,
+          "p95": 2793,
+          "p99": 2793,
+          "max": 2793
+        },
+        "beforeObservation": {
+          "n": 12,
+          "p50": 9811,
+          "p95": 10020,
+          "p99": 10020,
+          "max": 10020
+        },
+        "afterObservation": {
+          "n": 12,
+          "p50": 9921,
+          "p95": 10098,
+          "p99": 10098,
+          "max": 10098
+        },
+        "other": {
+          "n": 12,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "max": 0
+        }
+      },
+      "verificationPasses": 0,
+      "restored": true,
+      "automationRestored": true,
+      "firstObservedPulse": 0,
+      "resources": {
+        "wholeProcessCpuPercentOneCore": 61.5,
+        "rssKiB": [
+          1019288,
+          1009004
+        ],
+        "elapsedSeconds": 56.053,
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false
+      }
+    },
+    "optimized": {
+      "writes": 12,
+      "noopChecks": 12,
+      "conflictChecks": 12,
+      "timing": {
+        "queueMs": {
+          "n": 12,
+          "p50": 2,
+          "p95": 10,
+          "p99": 10,
+          "max": 10
+        },
+        "dispatchMs": {
+          "n": 12,
+          "p50": 13,
+          "p95": 34,
+          "p99": 34,
+          "max": 34
+        },
+        "verificationMs": {
+          "n": 12,
+          "p50": 2,
+          "p95": 5,
+          "p99": 5,
+          "max": 5
+        },
+        "totalMs": {
+          "n": 12,
+          "p50": 21,
+          "p95": 43,
+          "p99": 43,
+          "max": 43
+        },
+        "uiWorkUs": {
+          "n": 12,
+          "p50": 12669,
+          "p95": 33838,
+          "p99": 33838,
+          "max": 33838
+        },
+        "maxUiCallbackUs": {
+          "n": 12,
+          "p50": 12669,
+          "p95": 33838,
+          "p99": 33838,
+          "max": 33838
+        }
+      },
+      "exclusiveStagesUs": {
+        "identity": {
+          "n": 12,
+          "p50": 6081,
+          "p95": 6436,
+          "p99": 6436,
+          "max": 6436
+        },
+        "policy": {
+          "n": 12,
+          "p50": 1627,
+          "p95": 2191,
+          "p99": 2191,
+          "max": 2191
+        },
+        "filterSetter": {
+          "n": 12,
+          "p50": 113,
+          "p95": 20809,
+          "p99": 20809,
+          "max": 20809
+        },
+        "targetReadback": {
+          "n": 12,
+          "p50": 2525,
+          "p95": 3118,
+          "p99": 3118,
+          "max": 3118
+        },
+        "beforeObservation": {
+          "n": 12,
+          "p50": 1019,
+          "p95": 1403,
+          "p99": 1403,
+          "max": 1403
+        },
+        "afterObservation": {
+          "n": 12,
+          "p50": 1077,
+          "p95": 1336,
+          "p99": 1336,
+          "max": 1336
+        },
+        "other": {
+          "n": 12,
+          "p50": 10,
+          "p95": 10,
+          "p99": 10,
+          "max": 10
+        }
+      },
+      "verificationPasses": 0,
+      "restored": true,
+      "automationRestored": true,
+      "firstObservedPulse": 13620,
+      "resources": {
+        "wholeProcessCpuPercentOneCore": 59.79,
+        "rssKiB": [
+          1009016,
+          1009016
+        ],
+        "elapsedSeconds": 54.491,
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false
+      }
+    }
+  },
+  "bursts": {
+    "baseline": {
+      "requests": 96,
+      "outcomes": {
+        "applied": 44,
+        "cancelled": 12,
+        "QUEUE_FULL": 40
+      },
+      "actualChanges": 31,
+      "appliedTiming": {
+        "queueMs": {
+          "n": 44,
+          "p50": 591,
+          "p95": 947,
+          "p99": 981,
+          "max": 981
+        },
+        "dispatchMs": {
+          "n": 44,
+          "p50": 66,
+          "p95": 122,
+          "p99": 138,
+          "max": 138
+        },
+        "verificationMs": {
+          "n": 44,
+          "p50": 3,
+          "p95": 5,
+          "p99": 5,
+          "max": 5
+        },
+        "totalMs": {
+          "n": 44,
+          "p50": 660,
+          "p95": 1007,
+          "p99": 1049,
+          "max": 1049
+        },
+        "uiWorkUs": {
+          "n": 44,
+          "p50": 66284,
+          "p95": 121634,
+          "p99": 138121,
+          "max": 138121
+        },
+        "maxUiCallbackUs": {
+          "n": 44,
+          "p50": 66284,
+          "p95": 121634,
+          "p99": 138121,
+          "max": 138121
+        }
+      },
+      "exclusiveStagesUs": {
+        "identity": {
+          "n": 44,
+          "p50": 36524,
+          "p95": 67297,
+          "p99": 90649,
+          "max": 90649
+        },
+        "policy": {
+          "n": 44,
+          "p50": 1746,
+          "p95": 5933,
+          "p99": 8612,
+          "max": 8612
+        },
+        "filterSetter": {
+          "n": 44,
+          "p50": 94,
+          "p95": 379,
+          "p99": 785,
+          "max": 785
+        },
+        "targetReadback": {
+          "n": 44,
+          "p50": 2836,
+          "p95": 3983,
+          "p99": 10312,
+          "max": 10312
+        },
+        "beforeObservation": {
+          "n": 44,
+          "p50": 11716,
+          "p95": 13937,
+          "p99": 55216,
+          "max": 55216
+        },
+        "afterObservation": {
+          "n": 44,
+          "p50": 11912,
+          "p95": 22949,
+          "p99": 30957,
+          "max": 30957
+        },
+        "other": {
+          "n": 44,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "max": 0
+        }
+      },
+      "observationNativeUs": {
+        "n": 255,
+        "p50": 11831.611,
+        "p95": 13551.757,
+        "p99": 14178.51,
+        "max": 15630.046
+      },
+      "observationCallbackUs": null,
+      "coalescedSamples": 0,
+      "observationRoundTripMs": {
+        "n": 255,
+        "p50": 55.887,
+        "p95": 95.766,
+        "p99": 164.48,
+        "max": 360.11
+      },
+      "observationErrors": [],
+      "equivalentToFull": null,
+      "equivalentToIndependent": null,
+      "restored": true,
+      "automationRestored": true,
+      "firstObservedPulse": 13753,
+      "resources": {
+        "wholeProcessCpuPercentOneCore": 77.75,
+        "rssKiB": [
+          1009004,
+          1005004
+        ],
+        "elapsedSeconds": 26.134,
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false
+      },
+      "cumulativeCommandUiUs": 3026526,
+      "cumulativeIndependentObservationUiUs": 2983334.331,
+      "cumulativeMeasuredUiUs": 6009860.331,
+      "longestCallbackStagesUs": {
+        "identity": 90649,
+        "policy": 5431,
+        "filterSetter": 83,
+        "targetReadback": 3773,
+        "beforeObservation": 28086,
+        "afterObservation": 10094,
+        "other": 0
+      }
+    },
+    "optimized": {
+      "requests": 96,
+      "outcomes": {
+        "applied": 58,
+        "QUEUE_FULL": 38
+      },
+      "actualChanges": 40,
+      "appliedTiming": {
+        "queueMs": {
+          "n": 58,
+          "p50": 325,
+          "p95": 486,
+          "p99": 496,
+          "max": 496
+        },
+        "dispatchMs": {
+          "n": 58,
+          "p50": 16,
+          "p95": 68,
+          "p99": 91,
+          "max": 91
+        },
+        "verificationMs": {
+          "n": 58,
+          "p50": 2,
+          "p95": 5,
+          "p99": 5,
+          "max": 5
+        },
+        "totalMs": {
+          "n": 58,
+          "p50": 348,
+          "p95": 498,
+          "p99": 514,
+          "max": 514
+        },
+        "uiWorkUs": {
+          "n": 58,
+          "p50": 15621,
+          "p95": 68438,
+          "p99": 91367,
+          "max": 91367
+        },
+        "maxUiCallbackUs": {
+          "n": 58,
+          "p50": 15621,
+          "p95": 68438,
+          "p99": 91367,
+          "max": 91367
+        }
+      },
+      "exclusiveStagesUs": {
+        "identity": {
+          "n": 58,
+          "p50": 7472,
+          "p95": 33494,
+          "p99": 44995,
+          "max": 44995
+        },
+        "policy": {
+          "n": 58,
+          "p50": 1823,
+          "p95": 6771,
+          "p99": 14800,
+          "max": 14800
+        },
+        "filterSetter": {
+          "n": 58,
+          "p50": 86,
+          "p95": 531,
+          "p99": 936,
+          "max": 936
+        },
+        "targetReadback": {
+          "n": 58,
+          "p50": 3139,
+          "p95": 9941,
+          "p99": 21398,
+          "max": 21398
+        },
+        "beforeObservation": {
+          "n": 58,
+          "p50": 1522,
+          "p95": 12274,
+          "p99": 15902,
+          "max": 15902
+        },
+        "afterObservation": {
+          "n": 58,
+          "p50": 1404,
+          "p95": 6246,
+          "p99": 7474,
+          "max": 7474
+        },
+        "other": {
+          "n": 58,
+          "p50": 12,
+          "p95": 15,
+          "p99": 17,
+          "max": 17
+        }
+      },
+      "observationNativeUs": {
+        "n": 218,
+        "p50": 1399,
+        "p95": 2382,
+        "p99": 3167,
+        "max": 7470
+      },
+      "observationCallbackUs": {
+        "n": 199,
+        "p50": 1410,
+        "p95": 2427,
+        "p99": 3050,
+        "max": 3181
+      },
+      "coalescedSamples": 19,
+      "observationRoundTripMs": {
+        "n": 218,
+        "p50": 25.611,
+        "p95": 41.846,
+        "p99": 98.29,
+        "max": 105.0
+      },
+      "observationErrors": [],
+      "equivalentToFull": true,
+      "equivalentToIndependent": true,
+      "restored": true,
+      "automationRestored": true,
+      "firstObservedPulse": 14569,
+      "resources": {
+        "wholeProcessCpuPercentOneCore": 64.31,
+        "rssKiB": [
+          1009016,
+          1005016
+        ],
+        "elapsedSeconds": 21.864,
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false
+      },
+      "cumulativeCommandUiUs": 1223014,
+      "cumulativeIndependentObservationUiUs": 300813,
+      "cumulativeMeasuredUiUs": 1523827,
+      "longestCallbackStagesUs": {
+        "identity": 41268,
+        "policy": 6771,
+        "filterSetter": 936,
+        "targetReadback": 21398,
+        "beforeObservation": 13654,
+        "afterObservation": 7321,
+        "other": 15
+      }
+    }
+  },
+  "checks": {
+    "hostMeson": 19,
+    "asanUbsanNative": 14,
+    "isolatedArm": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 265
+      }
+    ],
+    "armElfGuards": true,
+    "authoritativeReads": {
+      "independentReadMatched": true,
+      "sampleCount": 20,
+      "captureP95Ms": 8.691,
+      "mpcPidUnchanged": true
+    }
+  },
+  "artifactSha256": {
+    "instrumentedBaselineAdapter": "f5314b53bc9a20465fc2f1d2b6962c375866e403b1da8efe75969065a6ab23ec",
+    "optimizedAdapter": "d39ef6933a8d0635c91678acfcd7a96bdd1fa2d02ff8c7efacfa5fb608b83322",
+    "optimizedBridge": "7b6349c7fd26b0b87fa825cad8a38f830b150c20030e6b53e9d635a4c0478b5d"
+  },
+  "limits": {
+    "audioUnderrunsExcluded": false,
+    "acousticOutputMeasured": false,
+    "physicalMidiCvOutputMeasured": false,
+    "maximumDensityDeviceQualified": false,
+    "watchTransportImplemented": false,
+    "automationReadQualified": false
+  },
+  "budgetResults": {
+    "commandUiP95TargetUs": 25000,
+    "commandUiMaxTargetUs": 40000,
+    "unpressuredReceiptP95TargetMs": 50,
+    "observationCallbackP95TargetUs": 3000,
+    "observationCallbackMaxTargetUs": 10000,
+    "matrixUiP95Met": false,
+    "matrixUiMaxMet": true,
+    "matrixReceiptP95Met": true,
+    "burstUiP95Met": false,
+    "burstUiMaxMet": false,
+    "observationP95Met": true,
+    "observationMaxMet": true
+  },
+  "limitations": {
+    "commandCallbackBudgetFullyMet": false,
+    "matrixTailNativeListenerMs": 20.809,
+    "burstMaxCallbackMs": 91.367,
+    "notes": [
+      "Monotonic callback occupancy includes OS scheduling and native waits; phase timings do not establish CPU attribution.",
+      "The command p95 target was missed, and pressure also exceeded the 40 ms maximum target. All measured callback distributions improved relative to the same baseline workloads.",
+      "The eight-client bursts produce different accepted/applied/cancelled counts as queue pressure changes; they are not equal-completion-count throughput trials."
+    ]
+  },
+  "restoration": {
+    "originalStateMatched": {
+      "selectedTrack": true,
+      "selectedSequence": true,
+      "tracks": true,
+      "buses": true,
+      "sequenceSlots": true
+    },
+    "contextMatched": true,
+    "zeroPlayheadRestored": true,
+    "pidUnchanged": true,
+    "handlersClosed": true,
+    "installedHost": {
+      "installedHostReady": true,
+      "installedVersion": "0.7.0",
+      "allFiveReadsPassed": true,
+      "independentReadMatched": true,
+      "userTracks": 8,
+      "buses": 28,
+      "labUnloaded": true,
+      "labFilesRemoved": true,
+      "pidUnchanged": true,
+      "projectSavedLoadedOrRestarted": false
+    },
+    "method": "Observed baseline flags/selection/sequence/automation/context restored; original zero pulse restored through native Locate UI. No project load/save or MPC restart."
+  }
+}

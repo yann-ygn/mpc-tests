@@ -467,6 +467,73 @@ static void state_command(FILE *stream, const char *line) {
   if (job)
     mpc_executor_release(job);
 }
+/* Private flags-only sampling diagnostic. Serialization stays on this worker. */
+static void flags_command(FILE *stream, const char *line) {
+  unsigned offset, count;
+  uint64_t topology;
+  char extra;
+  struct mpc_executor_job *job = NULL;
+  struct mpc_executor_result result = {0};
+  enum mpc_native_error error = MPC_NATIVE_INVALID_ARGUMENT;
+  if (sscanf(line, "FLAGS %u %u %" SCNu64 " %c", &offset, &count, &topology, &extra) == 3) {
+    struct mpc_executor_request request = {
+      .operation = MPC_EXECUTOR_SAMPLE_FLAGS,
+      .sample_offset = offset,
+      .sample_count = count,
+      .sample_topology = topology,
+      .queue_timeout_ms = 150};
+    error = mpc_executor_submit(executor, &request, &job);
+    if (!error)
+      error = mpc_executor_wait(job, 150, &result);
+  }
+  fprintf(
+    stream,
+    "{\"ok\":%s,\"error\":\"%s\"",
+    error ? "false" : "true",
+    mpc_native_error_name(error));
+  if (!error) {
+    const struct mpc_command_observation *s = result.flags;
+    fprintf(
+      stream,
+      ",\"coverage\":\"user_track_flags\",\"offset\":%u,\"totalTracks\":%u,"
+      "\"topologyEpoch\":\"%" PRIu64 "\",\"durationUs\":%" PRIu64 ",\"capturedMs\":%" PRIu64
+      ",\"projectId\":\"%" PRIu64 "\",\"selectedTrackId\":\"%" PRIu64 "\",\"tracks\":[",
+      s->offset,
+      s->total_tracks,
+      s->topology_epoch,
+      s->duration_ns / 1000,
+      s->captured_ms,
+      s->project,
+      s->selected_track);
+    for (unsigned i = 0; i < s->track_count; i++) {
+      const struct mpc_command_track *t = &s->tracks[i];
+      fprintf(
+        stream,
+        "%s{\"id\":\"%" PRIu64 "\",\"known\":%u,\"family\":%u,\"mute\":%u,"
+        "\"solo\":%u,\"arm\":%u,\"audioSolo\":%u,\"audioArm\":%u,\"silenced\":%u}",
+        i ? "," : "",
+        t->id,
+        t->known,
+        t->family,
+        t->muted,
+        t->soloed,
+        t->record_armed,
+        t->audio_soloed,
+        t->audio_record_armed,
+        t->silenced);
+    }
+    fprintf(
+      stream,
+      "],\"callbackUs\":%" PRIu64 ",\"shared\":%s",
+      result.ui_callback_us,
+      result.flags_shared ? "true" : "false");
+  }
+  fputs("}\n", stream);
+  fflush(stream);
+  if (job)
+    mpc_executor_release(job);
+}
+
 static void *worker(void *unused) {
   (void)unused;
   pthread_setname_np(pthread_self(), "mpc native lab");
@@ -510,6 +577,8 @@ static void *worker(void *unused) {
     if (fgets(line, sizeof line, f)) {
       if (!strncmp(line, "LAB_COMMAND_", 12) || !strncmp(line, "LIVE_COMMAND_", 13)) {
         command_request(f, line);
+      } else if (!strncmp(line, "FLAGS ", 6)) {
+        flags_command(f, line);
       } else if (!strncmp(line, "STATE_V4 ", 9)) {
         state_command(f, line);
       } else if (!strcmp(line, "IDENTITIES\n") || !strncmp(line, "HANDLE_", 7)) {

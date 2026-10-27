@@ -1,4 +1,5 @@
 #include "private.h"
+#include "command_private.h"
 #include "mpc_adapter_profile.h"
 #include "mpc_family_profile.h"
 
@@ -20,6 +21,10 @@ struct mpc_identity_registry {
   enum mpc_native_error fault;
   uint64_t next, project, generation;
   uint32_t root;
+  uint32_t cached_tracks[MPC_IDENTITY_MAX_TRACKS], cached_sequences[MPC_IDENTITY_MAX_SEQUENCES];
+  unsigned cached_track_count, cached_sequence_count;
+  uint64_t topology_epoch;
+  bool topology_known;
   struct mpc_native_lifetime lifetime;
   struct entry tracks[MPC_IDENTITY_MAX_TRACKS];
   struct entry sequences[MPC_IDENTITY_MAX_SEQUENCES];
@@ -121,6 +126,7 @@ enum mpc_native_error mpc_identity_detach(struct mpc_identity_registry *registry
   }
   unwatch(registry, &registry->lifetime);
   registry->root = 0;
+  registry->topology_known = false;
   registry->project = registry->generation = 0;
   return MPC_NATIVE_OK;
 }
@@ -191,6 +197,25 @@ static enum mpc_native_error topology(
     (count && io->read(io->userdata, begin, sequences, count * 4)))
     return MPC_NATIVE_READ_FAILED;
   *sequence_count = count;
+  bool unchanged = registry->topology_known && *track_count == registry->cached_track_count &&
+    *sequence_count == registry->cached_sequence_count &&
+    !memcmp(tracks, registry->cached_tracks, *track_count * 4) &&
+    !memcmp(sequences, registry->cached_sequences, *sequence_count * 4);
+  if (unchanged) {
+    for (unsigned kind = 0; kind < 2; kind++) {
+      struct entry *entries = kind ? registry->sequences : registry->tracks;
+      unsigned maximum = kind ? MPC_IDENTITY_MAX_SEQUENCES : MPC_IDENTITY_MAX_TRACKS;
+      for (unsigned i = 0; i < maximum; i++)
+        if (
+          entries[i].address &&
+          (!alive(&entries[i].lifetime) ||
+           (kind && __atomic_load_n(&entries[i].sequence.changed, __ATOMIC_ACQUIRE))))
+          unchanged = false;
+    }
+  }
+  if (unchanged)
+    return MPC_NATIVE_OK;
+  registry->topology_known = false;
   for (unsigned kind = 0; kind < 2; kind++) {
     uint32_t *addresses = kind ? sequences : tracks;
     unsigned length = kind ? *sequence_count : *track_count;
@@ -309,6 +334,8 @@ static enum mpc_native_error refresh(struct mpc_identity_registry *registry) {
   uint32_t tracks[MPC_IDENTITY_MAX_TRACKS], sequences[MPC_IDENTITY_MAX_SEQUENCES];
   unsigned track_count, sequence_count;
   error = topology(registry, tracks, &track_count, sequences, &sequence_count);
+  if (!error && registry->topology_known)
+    return MPC_NATIVE_OK;
   if (!error)
     error =
       reconcile(registry, registry->tracks, MPC_IDENTITY_MAX_TRACKS, tracks, track_count, false);
@@ -320,8 +347,17 @@ static enum mpc_native_error refresh(struct mpc_identity_registry *registry) {
       sequences,
       sequence_count,
       true);
-  if (!error)
+  if (!error) {
+    if (registry->topology_epoch == UINT64_MAX)
+      return MPC_NATIVE_NOT_READY;
+    registry->topology_epoch++;
+    memcpy(registry->cached_tracks, tracks, track_count * 4);
+    memcpy(registry->cached_sequences, sequences, sequence_count * 4);
+    registry->cached_track_count = track_count;
+    registry->cached_sequence_count = sequence_count;
+    registry->topology_known = true;
     return MPC_NATIVE_OK;
+  }
 invalid: {
   enum mpc_native_error detached = mpc_identity_detach(registry);
   return detached ? detached : error;
@@ -360,21 +396,25 @@ mpc_identity_capture(struct mpc_identity_registry *registry, struct mpc_identity
   strcpy(snapshot.instance_id, registry->adapter->instance_id);
   snapshot.project = registry->project;
   snapshot.project_generation = registry->generation;
-  /* Emit current index order, independently of registry slot reuse. */
-  for (unsigned index = 0; index < MPC_IDENTITY_MAX_TRACKS; index++) {
-    for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
-      const struct entry *entry = &registry->tracks[i];
-      if (entry->address && entry->index == index)
-        snapshot.tracks[snapshot.track_count++] =
-          (struct mpc_identity_object){entry->id, entry->generation, entry->index};
-    }
-    for (unsigned i = 0; i < MPC_IDENTITY_MAX_SEQUENCES; i++) {
-      const struct entry *entry = &registry->sequences[i];
-      if (entry->address && entry->index == index)
-        snapshot.sequences[snapshot.sequence_count++] =
-          (struct mpc_identity_object){entry->id, entry->generation, entry->index};
+  /* Registry slot reuse does not determine public user order. */
+  const struct entry *ordered[MPC_IDENTITY_MAX_SEQUENCES] = {0};
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
+    const struct entry *entry = &registry->tracks[i];
+    if (entry->address) {
+      snapshot.tracks[entry->index] =
+        (struct mpc_identity_object){entry->id, entry->generation, entry->index};
+      snapshot.track_count++;
     }
   }
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_SEQUENCES; i++)
+    if (registry->sequences[i].address)
+      ordered[registry->sequences[i].index] = &registry->sequences[i];
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_SEQUENCES; i++)
+    if (ordered[i]) {
+      const struct entry *entry = ordered[i];
+      snapshot.sequences[snapshot.sequence_count++] =
+        (struct mpc_identity_object){entry->id, entry->generation, entry->index};
+    }
   *output = snapshot;
   return MPC_NATIVE_OK;
 }
@@ -402,11 +442,8 @@ static struct entry *find(struct entry *entries, unsigned count, uint64_t id, ui
   return NULL;
 }
 
-enum mpc_native_error mpc_identity_sequence(
+static enum mpc_native_error check_sequence(
   struct mpc_identity_registry *registry, const struct mpc_executor_identity *identity) {
-  enum mpc_native_error error = check_project(registry, identity);
-  if (error)
-    return error;
   struct entry *entry = find(
     registry->sequences,
     MPC_IDENTITY_MAX_SEQUENCES,
@@ -424,6 +461,12 @@ enum mpc_native_error mpc_identity_sequence(
   return selected == entry->address ? MPC_NATIVE_OK : MPC_NATIVE_SEQUENCE_NOT_ACTIVE;
 }
 
+enum mpc_native_error mpc_identity_sequence(
+  struct mpc_identity_registry *registry, const struct mpc_executor_identity *identity) {
+  enum mpc_native_error error = check_project(registry, identity);
+  return error ? error : check_sequence(registry, identity);
+}
+
 enum mpc_native_error mpc_identity_resolve(
   struct mpc_identity_registry *registry,
   const struct mpc_executor_identity *identity,
@@ -433,7 +476,7 @@ enum mpc_native_error mpc_identity_resolve(
   if (error)
     return error;
   if (identity->sequence || identity->sequence_generation) {
-    error = mpc_identity_sequence(registry, identity);
+    error = check_sequence(registry, identity);
     if (error)
       return error;
   }
@@ -615,6 +658,35 @@ static enum mpc_native_error selection_check(
   return MPC_NATIVE_OK;
 }
 
+static enum mpc_native_error flag_track(
+  struct mpc_identity_registry *registry,
+  uint32_t address,
+  uint32_t program,
+  bool normal,
+  struct mpc_state_track *output) {
+  const struct mpc_family_support *support = mpc_family_by_type(output->type);
+  if (!normal || !support->fields)
+    return MPC_NATIVE_OK;
+  output->known = support->fields;
+  uint32_t *requested[] = {&output->muted, &output->soloed, &output->record_armed};
+  uint32_t *audio[] = {NULL, &output->audio_soloed, &output->audio_record_armed};
+  for (unsigned i = 0; i < 3; i++) {
+    const struct native_binding *binding = &native_bindings[i];
+    uint32_t owner = binding->owner_is_track ? address : program;
+    if (
+      ((output->known & (1u << i)) &&
+       state_bool(registry, owner + binding->requested, requested[i])) ||
+      (audio[i] && (output->known & (1u << (i + 2))) &&
+       state_bool(registry, owner + binding->observed, audio[i])))
+      return MPC_NATIVE_READ_FAILED;
+  }
+  if (
+    (output->known & MPC_STATE_SILENCED) &&
+    state_bool(registry, program + NATIVE_SILENCED_OFFSET, &output->silenced))
+    return MPC_NATIVE_READ_FAILED;
+  return MPC_NATIVE_OK;
+}
+
 static enum mpc_native_error state_track(
   struct mpc_identity_registry *registry,
   uint32_t address,
@@ -631,27 +703,7 @@ static enum mpc_native_error state_track(
   for (unsigned i = 0; i < sizeof native_program_types / sizeof *native_program_types; i++)
     if (vtable == registry->adapter->io.image + native_program_types[i].vtable)
       strcpy(output->type, native_program_types[i].name);
-  const struct mpc_family_support *support = mpc_family_by_type(output->type);
-  if (!normal || !support->fields)
-    return MPC_NATIVE_OK;
-  output->known = support->fields;
-  uint32_t *requested[] = {&output->muted, &output->soloed, &output->record_armed};
-  uint32_t *audio[] = {NULL, &output->audio_soloed, &output->audio_record_armed};
-  for (unsigned i = 0; i < 3; i++) {
-    const struct native_binding *binding = &native_bindings[i];
-    uint32_t owner = binding->owner_is_track ? address : *program;
-    if (
-      ((output->known & (1u << i)) &&
-       state_bool(registry, owner + binding->requested, requested[i])) ||
-      (audio[i] && (output->known & (1u << (i + 2))) &&
-       state_bool(registry, owner + binding->observed, audio[i])))
-      return MPC_NATIVE_READ_FAILED;
-  }
-  if (
-    (output->known & MPC_STATE_SILENCED) &&
-    state_bool(registry, *program + NATIVE_SILENCED_OFFSET, &output->silenced))
-    return MPC_NATIVE_READ_FAILED;
-  return MPC_NATIVE_OK;
+  return flag_track(registry, address, *program, normal, output);
 }
 
 static bool
@@ -808,6 +860,108 @@ mpc_identity_state(struct mpc_identity_registry *registry, struct mpc_state_snap
   }
   memset(output, 0, sizeof *output);
   return error;
+}
+
+/* Flag-only sample. Each row is read live; the only retained native data are
+ * destruction-observed identity entries and a freshly compared topology vector.
+ * A single attempt bounds callback cost. Unstable samples require caller resync. */
+enum mpc_native_error mpc_identity_flags(
+  struct mpc_identity_registry *registry,
+  unsigned offset,
+  unsigned limit,
+  uint64_t expected_topology,
+  struct mpc_command_observation *output) {
+  memset(output, 0, sizeof *output);
+  uint64_t start = nanoseconds(CLOCK_MONOTONIC);
+  struct mpc_identity_snapshot before, after;
+  uint32_t programs[MPC_IDENTITY_MAX_TRACKS], vtables[MPC_IDENTITY_MAX_TRACKS];
+  enum mpc_native_error error = mpc_identity_capture(registry, &before);
+  if (error)
+    return error;
+  uint64_t epoch = registry->topology_epoch;
+  if ((expected_topology && epoch != expected_topology) || offset > before.track_count)
+    return MPC_NATIVE_STATE_UNSTABLE;
+  output->project = before.project;
+  output->generation = before.project_generation;
+  output->selected_track = before.selected_track;
+  output->selected_sequence = before.selected_sequence;
+  output->topology_epoch = epoch;
+  output->offset = offset;
+  output->total_tracks = before.track_count;
+  output->mute_scope = MPC_MUTE_UNKNOWN;
+  if (before.project) {
+    error = selection_check(registry, &before);
+    if (!error)
+      error = mpc_native_mute_scope(registry->adapter, registry->root, &output->mute_scope);
+    if (error)
+      return error;
+    for (unsigned i = 0; i < before.sequence_count; i++)
+      if (before.sequences[i].id == before.selected_sequence)
+        output->selected_sequence_generation = before.sequences[i].generation;
+    for (unsigned i = offset; i < before.track_count && i - offset < limit; i++) {
+      const struct mpc_identity_object *id = &before.tracks[i];
+      struct entry *entry = find(registry->tracks, MPC_IDENTITY_MAX_TRACKS, id->id, id->generation);
+      uint32_t program, vtable, verified_program, verified_vtable;
+      if (
+        !entry || !has_vtable(registry, entry->address, NATIVE_TRACK_VTABLE) ||
+        read32(registry, entry->address + NATIVE_PROGRAM_OFFSET, &program) || !program ||
+        read32(registry, program, &vtable))
+        return MPC_NATIVE_READ_FAILED;
+      struct mpc_state_track t = {0};
+      strcpy(t.type, program_type(registry, vtable));
+      error = flag_track(registry, entry->address, program, true, &t);
+      if (error)
+        return error;
+      if (
+        read32(registry, entry->address + NATIVE_PROGRAM_OFFSET, &verified_program) ||
+        read32(registry, program, &verified_vtable))
+        return MPC_NATIVE_READ_FAILED;
+      if (program != verified_program || vtable != verified_vtable || !alive(&entry->lifetime))
+        return MPC_NATIVE_STATE_UNSTABLE;
+      programs[output->track_count] = program;
+      vtables[output->track_count] = vtable;
+      output->tracks[output->track_count++] =
+        (struct mpc_command_track){id->id,
+                                   id->generation,
+                                   t.known,
+                                   t.muted,
+                                   t.soloed,
+                                   t.record_armed,
+                                   t.audio_soloed,
+                                   t.audio_record_armed,
+                                   t.silenced,
+                                   mpc_family_by_type(t.type)->family};
+    }
+  }
+  error = mpc_identity_capture(registry, &after);
+  if (error)
+    return error;
+  if (epoch != registry->topology_epoch || !same_identities(&before, &after))
+    return MPC_NATIVE_STATE_UNSTABLE;
+  if (before.project) {
+    uint32_t scope;
+    error = selection_check(registry, &after);
+    if (!error)
+      error = mpc_native_mute_scope(registry->adapter, registry->root, &scope);
+    if (error)
+      return error;
+    if (scope != output->mute_scope)
+      return MPC_NATIVE_STATE_UNSTABLE;
+  }
+  for (unsigned i = 0; i < output->track_count; i++) {
+    const struct mpc_command_track *t = &output->tracks[i];
+    struct entry *entry = find(registry->tracks, MPC_IDENTITY_MAX_TRACKS, t->id, t->generation);
+    uint32_t program, vtable;
+    if (
+      !entry || read32(registry, entry->address + NATIVE_PROGRAM_OFFSET, &program) ||
+      read32(registry, programs[i], &vtable))
+      return MPC_NATIVE_READ_FAILED;
+    if (program != programs[i] || vtable != vtables[i])
+      return MPC_NATIVE_STATE_UNSTABLE;
+  }
+  output->captured_ms = nanoseconds(CLOCK_REALTIME) / 1000000;
+  output->duration_ns = nanoseconds(CLOCK_MONOTONIC) - start;
+  return MPC_NATIVE_OK;
 }
 
 /* Bind public incarnation IDs to their current generations on the UI thread.

@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def experiment(args):
     state_profile = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2.json").read_text())
     control = json.loads((ROOT / "tools/profiles/key37-mpc3.9.1.2-control.json").read_text())
-    directory = ROOT / "builddir/arm/tools"
+    directory = getattr(args, "tools_directory", None) or ROOT / "builddir/arm/tools"
     names = ["hotload", "native_client", "native_bridge.so", "libmpc_native.so", "test_payload.so"]
     for name in names:
         if not (directory / name).is_file():
@@ -330,6 +330,7 @@ def detach(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default=os.environ.get("MPC_HOST", "mpc-key-37.lan.arpa"))
+    parser.add_argument("--tools-directory", type=Path, help="Use a retained benchmark tool bundle")
     parser.add_argument("--pulse", choices=("mute", "solo", "arm"))
     parser.add_argument("--hold-ms", type=int, default=6000)
     parser.add_argument("--output", type=Path)

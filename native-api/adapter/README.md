@@ -1,4 +1,4 @@
-# Firmware adapter ABI 2 and UI executor ABI 7
+# Firmware adapter ABI 2 and UI executor ABI 8
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -42,7 +42,7 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) uses ABI 7; older configurations are rejected at open.
+The [executor header](include/mpc_executor.h) uses ABI 8; older configurations are rejected at open.
 The primitive adapter uses ABI 2. Requests support track reads/flags, identity snapshots and sequence-reference
 validation and full live state snapshots. The authoritative mode owns the resolver; the original
 host-resolver mode remains available for trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
@@ -293,7 +293,7 @@ See [command integration](COMMANDS.md#sequence-scoped-mute-48) and [the wire con
 
 ## Family flag qualification (#49)
 
-Current interfaces are **primitive ABI 2, executor ABI 7, command ABI 5 and snapshot
+Current interfaces are **primitive ABI 2, executor ABI 8, command ABI 6 and snapshot
 ABI 4**. Recompile every trusted C caller. The snapshot transfer remains 127824 bytes,
 with 344-byte track rows, but the independent six-bit `known` mask replaces the grouped
 requested bit. `STATE_V4` / `MPC_ADAPTER_STATE_V4` reject older transfers; the primitive
@@ -321,3 +321,47 @@ automation Off. The native recorder enum, clip/sequence selector and separate So
 source are checked independently of the playing flag and visible screen. Command
 ABI 5 adds retained stage durations. One executor job runs per UI message under
 load. See [playback policy, timing and device evidence](../../findings/native-playback-flags.md).
+
+## Shared flag sampling (US #52)
+
+Executor ABI 8 adds `MPC_EXECUTOR_SAMPLE_FLAGS`. Submit it on a non-UI thread;
+`sample_offset` selects canonical user order and `sample_count` is at most 16
+(zero defaults to 16). `result.flags` is borrowed until job release and is valid
+only for successful completion. See [mpc_observation.h](include/mpc_observation.h).
+The first page can use topology zero; subsequent pages pass the returned epoch.
+An epoch/selection/Program/scope change during capture returns STATE_UNSTABLE
+without exposing partial data. Each page reports its actual interval, total,
+known-field masks, wall-clock completion time and monotonic duration. It does not
+inherit command automation restrictions or authorize a write.
+
+The sampler reads live values and checks destruction-observed identity entries,
+active root, complete topology vectors, selection mirrors, active sequence
+incarnation, mute scope and Program associations. Stable topology vectors with
+live destruction observers reuse identity reconciliation; lifetimes and native
+Project/Sequence reset signals retire those entries. No flag values are cached
+between UI callbacks. Native callbacks remain the existing small lifecycle
+notifications; no new unqualified flag-change hook is installed.
+
+One sampling job reads at most 16 tracks. Consecutive queued sampling requests
+whose intervals are covered by that sample share it, up to 16 additional jobs.
+A command's fresh after-observation can supply the same reads to consecutive
+observers. Sharing never crosses a queued command, reorders FIFO work or renews
+a deadline. Fixed executor slots bound owned buffers; cancellation, disconnect
+and shutdown retain the existing drain rules. Slow consumers retain their own
+slot and cannot cause unbounded copies or block the UI on I/O. Parsing, JSON,
+network/subscriber delivery and fanout scheduling belong on non-UI threads.
+`result.ui_callback_us` measures the executed callback through bounded fanout;
+`flags_shared` marks coalesced deliveries, which execute no independent native
+job and report zero separate UI work. The sample duration still describes its
+originating capture. Discovery's one-job limit counts native execution, not
+coalesced deliveries.
+
+There is no autonomous polling or automatic full-snapshot fallback: implicit
+fallback frequency is zero. US #33 should initialize/resync with GET_STATE,
+reconcile metadata on topology changes, and run a single shared producer rather
+than one producer per subscriber. The qualified device workload uses one 10 Hz
+producer and eight tracks. At the 136-track structural bound, nine 16-track pages
+would require nine captures; that refresh rate/density is not device-qualified.
+Watch replay, reconnect, delivery backpressure and subscriber scheduling remain
+US #33. Authoritative GET_STATE/recovery snapshots retain their full coverage.
+See [measurements and budgets](../../findings/native-ui-cost.md).

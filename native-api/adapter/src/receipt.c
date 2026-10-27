@@ -149,6 +149,22 @@ static void changes(FILE *output, const struct mpc_command_receipt *receipt) {
   fputc(']', output);
 }
 
+static void coverage(FILE *output, const struct mpc_command_observation *sample, bool known) {
+  if (!known) {
+    fputs("null", output);
+    return;
+  }
+  fprintf(
+    output,
+    "{\"kind\":\"user_track_flags\",\"offset\":%u,\"count\":%u,"
+    "\"totalTracks\":%u,\"topologyEpoch\":\"%" PRIu64 "\",\"durationUs\":%" PRIu64 "}",
+    sample->offset,
+    sample->track_count,
+    sample->total_tracks,
+    sample->topology_epoch,
+    sample->duration_ns / 1000);
+}
+
 char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
   if (
     !receipt || receipt->abi_version != MPC_COMMANDS_ABI ||
@@ -246,6 +262,11 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     else
       fputs("null", output);
   }
+  fputs(",\"observationCoverage\":{\"before\":", output);
+  coverage(output, &receipt->before, receipt->before_known);
+  fputs(",\"after\":", output);
+  coverage(output, &receipt->after, receipt->after_known);
+  fputc('}', output);
   fputs(",\"observedChanges\":", output);
   changes(output, receipt);
   fputs(",\"timing\":{\"queueMs\":", output);
@@ -270,9 +291,21 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     fputs("null", output);
   fprintf(
     output,
-    ",\"uiWorkUs\":%" PRIu64 ",\"verificationPasses\":%u}",
+    ",\"uiWorkUs\":%" PRIu64 ",\"verificationPasses\":%u",
     receipt->ui_work_us,
     receipt->verification_passes);
+  fprintf(output, ",\"maxUiCallbackUs\":%" PRIu64 ",\"stagesUs\":{", receipt->max_ui_callback_us);
+  static const char *stage_names[] = {
+    "identity",
+    "policy",
+    "filterSetter",
+    "targetReadback",
+    "beforeObservation",
+    "afterObservation",
+    "other"};
+  for (unsigned i = 0; i < 7; i++)
+    fprintf(output, "%s\"%s\":%" PRIu64, i ? "," : "", stage_names[i], receipt->stages_us[i]);
+  fprintf(output, "},\"verificationUiUs\":%" PRIu64 "}", receipt->verification_ui_us);
   fputs(",\"error\":", output);
   if (receipt->error == MPC_NATIVE_OK)
     fputs("null", output);

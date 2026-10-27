@@ -268,6 +268,117 @@
         "verificationPasses": {
           "type": "integer",
           "minimum": 0
+        },
+        "maxUiCallbackUs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stagesUs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "verificationUiUs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "observationCoverage": {
+      "type": "object",
+      "required": [
+        "before",
+        "after"
+      ],
+      "properties": {
+        "before": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "kind",
+            "offset",
+            "count",
+            "totalTracks",
+            "topologyEpoch",
+            "durationUs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "user_track_flags"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 136
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 136
+            },
+            "totalTracks": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 136
+            },
+            "topologyEpoch": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "durationUs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "after": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "kind",
+            "offset",
+            "count",
+            "totalTracks",
+            "topologyEpoch",
+            "durationUs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "user_track_flags"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 136
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 136
+            },
+            "totalTracks": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 136
+            },
+            "topologyEpoch": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "durationUs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

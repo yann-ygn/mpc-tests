@@ -123,7 +123,7 @@ class PlaybackMatrix(FamilyMatrix):
             self.submission(
                 self.args.targets[i % len(self.args.targets)],
                 "mute",
-                bool(i % 2),
+                bool((i // len(self.args.targets)) % 2),
                 None,
                 "pressure_" + str(i),
                 wait_ms=0,

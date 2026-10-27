@@ -4,12 +4,15 @@
 #include "mpc_native.h"
 #include "mpc_identity.h"
 #include "mpc_state.h"
+#include "mpc_observation.h"
 
 /* Trusted in-process interface, separate from the public command protocol. All
  * client calls are for non-realtime threads. Only the resolver runs on the UI
  * thread. The executor owns its adapter, scheduler and copied requests. */
-#define MPC_EXECUTOR_ABI 7u
+#define MPC_EXECUTOR_ABI 8u
 #define MPC_EXECUTOR_MAX_JOBS 128u
+#define MPC_EXECUTOR_SAMPLE_TRACKS 16u
+#define MPC_EXECUTOR_SAMPLE_FANOUT 16u
 #define MPC_EXECUTOR_MAX_WAIT_MS 30000u
 
 struct mpc_executor;
@@ -43,6 +46,8 @@ enum mpc_executor_operation {
   MPC_EXECUTOR_IDENTITIES,
   MPC_EXECUTOR_VALIDATE_SEQUENCE,
   MPC_EXECUTOR_GET_STATE,
+  /* Flags-only partial sample, independent of command/automation eligibility. */
+  MPC_EXECUTOR_SAMPLE_FLAGS,
   /* For the managed command host only; require an attached handler authority. */
   MPC_EXECUTOR_COMMAND_MUTE,
   MPC_EXECUTOR_COMMAND_SOLO,
@@ -63,6 +68,10 @@ struct mpc_executor_request {
   /* Managed commands carry their original absolute monotonic deadline. This
    * prevents allocation/dispatch overhead from renewing the acceptance budget. */
   uint64_t command_deadline_ms;
+  /* SAMPLE_FLAGS: contiguous user order; zero count defaults to 16. Reuse the
+   * returned topology epoch for subsequent pages; mismatch requires resync. */
+  uint32_t sample_offset, sample_count;
+  uint64_t sample_topology;
 };
 
 enum mpc_executor_state {
@@ -93,6 +102,12 @@ struct mpc_executor_result {
   const struct mpc_state_snapshot *snapshot;
   /* Internal managed-command observation, borrowed under the same job lifetime. */
   const struct mpc_command_native_result *command;
+  /* Borrowed successful SAMPLE_FLAGS result; defined in mpc_observation.h. */
+  const struct mpc_command_observation *flags;
+  /* Complete native job callback through bounded fanout publication. A shared
+   * sample executes no independent native job and reports zero UI work. */
+  uint64_t ui_callback_us;
+  bool flags_shared;
 };
 
 struct mpc_executor_status {

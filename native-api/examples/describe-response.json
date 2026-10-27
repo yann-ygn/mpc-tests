@@ -4,7 +4,7 @@
   "instanceId": "run_3a419566592e9f9b96fcb50f009063e6",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.7.0"
+    "version": "0.8.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",

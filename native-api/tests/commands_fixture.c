@@ -1115,6 +1115,39 @@ static void playback_transitions(void) {
   }
 }
 
+static void command_observer_sharing(void) {
+  struct commands_fixture f;
+  setup(&f, 8, 16, true);
+  struct mpc_command_request input = request(&f, "shared_observation", MPC_COMMAND_MUTE, 0, true);
+  struct mpc_command_receipt receipt;
+  assert(!mpc_commands_submit(f.commands, 7, &input, 0, &receipt));
+  while (!queued(&f))
+    tiny_pause();
+  struct mpc_executor_request sample = {.operation = MPC_EXECUTOR_SAMPLE_FLAGS};
+  struct mpc_executor_job *job;
+  assert(!mpc_executor_submit(f.executor, &sample, &job));
+  pump(&f.identity);
+  struct mpc_executor_result result;
+  assert(!mpc_executor_poll(job, &result));
+  assert(result.state == MPC_EXECUTOR_COMPLETED && result.flags && result.flags->tracks[0].muted);
+  receipt = drive(&f, input.request_id);
+  assert(receipt.status == MPC_COMMAND_APPLIED && receipt.after_known);
+  assert(result.flags->captured_ms == receipt.after.captured_ms);
+  assert(result.flags->track_count == receipt.after.track_count);
+  mpc_executor_release(job);
+  /* An observer queued before a setter must see its preceding value. */
+  assert(!mpc_executor_submit(f.executor, &sample, &job));
+  input = request(&f, "after_observation", MPC_COMMAND_MUTE, 0, false);
+  assert(!mpc_commands_submit(f.commands, 7, &input, 0, &receipt));
+  pump(&f.identity);
+  assert(!mpc_executor_poll(job, &result));
+  assert(result.flags && result.flags->tracks[0].muted);
+  receipt = drive(&f, input.request_id);
+  assert(receipt.status == MPC_COMMAND_APPLIED && !receipt.after.tracks[0].muted);
+  mpc_executor_release(job);
+  cleanup(&f);
+}
+
 int main(void) {
   (void)validate_target;
   (void)get32;
@@ -1122,6 +1155,7 @@ int main(void) {
     .abi_version = MPC_COMMANDS_ABI - 1,
     .struct_bytes = sizeof incompatible};
   assert(!mpc_commands_receipt_json(&incompatible));
+  command_observer_sharing();
   qualified_family_matrix();
   playback_transitions();
   sequence_scope_and_races();

@@ -48,6 +48,14 @@ class CommandContractTests(unittest.TestCase):
             with self.subTest(request=receipt["requestId"], status=receipt["status"]):
                 validator.validate(receipt)
                 timing = receipt["timing"]
+                self.assertGreaterEqual(timing["uiWorkUs"], timing["maxUiCallbackUs"])
+                self.assertLessEqual(sum(timing["stagesUs"].values()), timing["uiWorkUs"])
+                for coverage in receipt["observationCoverage"].values():
+                    if coverage is not None:
+                        self.assertEqual(coverage["kind"], "user_track_flags")
+                        self.assertEqual(coverage["offset"], 0)
+                        self.assertEqual(coverage["count"], coverage["totalTracks"])
+
                 if receipt["requestId"].startswith("set_"):
                     self.assertIsInstance(timing["queueMs"], int)
                     self.assertIsInstance(timing["dispatchMs"], int)

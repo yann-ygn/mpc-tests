@@ -141,3 +141,12 @@ flags, alongside the plugin/drum baseline. Discovery/state expose field and
 operation qualification; completion uses each family's required evidence. Legacy
 clip/unknown flags and physical MIDI/CV output remain unqualified. Streaming #33
 and playback qualification #50 remain separate work.
+
+UI cost (#52, 2026-10-27): [lightweight flag observations](native-ui-cost.md)
+replace repeated whole-project command captures. The shared bounded sampler
+provides coverage/freshness and same-callback coalescing for #33, while all full
+read/recovery projections remain authoritative. Matrix median UI work falls
+52.8 -> 12.7 ms on the measured project; native and saturation tails remain
+explicit limits. Automation Read (#51), watch transport (#33) and maximum-density
+release qualification (#38) remain separate work. Package 0.8.0 is prepared
+locally; installed 0.7.0 is restored without MPC restart.

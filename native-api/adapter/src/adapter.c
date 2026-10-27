@@ -8,6 +8,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
+
+unsigned mpc_ui_enter(struct mpc_native_adapter *adapter, unsigned stage) {
+  struct mpc_ui_profile *p = adapter->profile;
+  if (!p)
+    return MPC_UI_OTHER;
+  struct timespec time;
+  clock_gettime(CLOCK_MONOTONIC, &time);
+  uint64_t now = (uint64_t)time.tv_sec * 1000000000 + time.tv_nsec;
+  unsigned previous = p->stage;
+  if (p->since)
+    p->ns[previous] += now - p->since;
+  p->since = now;
+  p->stage = stage;
+  return previous;
+}
+void mpc_ui_leave(struct mpc_native_adapter *adapter, unsigned previous) {
+  (void)mpc_ui_enter(adapter, previous);
+}
 
 static enum mpc_native_error verify(struct mpc_native_adapter *adapter) {
   if (!adapter)
@@ -215,7 +234,7 @@ static enum mpc_native_error target_check(
   return MPC_NATIVE_UNSUPPORTED_TRACK_TYPE;
 }
 
-static enum mpc_native_error state_read(
+static enum mpc_native_error state_read_inner(
   struct mpc_native_adapter *adapter,
   const struct mpc_native_target *target,
   struct mpc_native_track_state *output) {
@@ -246,6 +265,16 @@ static enum mpc_native_error state_read(
     return MPC_NATIVE_READ_FAILED;
   *output = state;
   return MPC_NATIVE_OK;
+}
+
+static enum mpc_native_error state_read(
+  struct mpc_native_adapter *adapter,
+  const struct mpc_native_target *target,
+  struct mpc_native_track_state *output) {
+  unsigned stage = mpc_ui_enter(adapter, MPC_UI_READBACK);
+  enum mpc_native_error error = state_read_inner(adapter, target, output);
+  mpc_ui_leave(adapter, stage);
+  return error;
 }
 
 enum mpc_native_error mpc_native_read_track(
@@ -300,8 +329,10 @@ static enum mpc_native_error set_flag(
       return MPC_NATIVE_FILTER_MISSING;
     output->native_invoked = true;
     output->changed_known = false;
+    unsigned stage = mpc_ui_enter(adapter, MPC_UI_FILTER_SETTER);
     error =
       adapter->io.filter(adapter->io.userdata, owner + binding->filter_storage, invoker, &filtered);
+    mpc_ui_leave(adapter, stage);
     if (error)
       return error;
   }
@@ -315,11 +346,13 @@ static enum mpc_native_error set_flag(
     return MPC_NATIVE_STALE_TARGET;
   output->native_invoked = true;
   output->changed_known = false;
+  unsigned stage = mpc_ui_enter(adapter, MPC_UI_FILTER_SETTER);
   error = adapter->io.setter(
     adapter->io.userdata,
     adapter->io.image + binding->setter,
     owner + binding->property,
     filtered);
+  mpc_ui_leave(adapter, stage);
   if (error)
     return error;
   error = state_read(adapter, target, &output->observed);

@@ -4,8 +4,9 @@
 #include "mpc_native.h"
 #include "mpc_identity.h"
 #include "mpc_state.h"
+#include "mpc_observation.h"
 
-#define MPC_COMMANDS_ABI 5u
+#define MPC_COMMANDS_ABI 6u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u
@@ -81,20 +82,6 @@ struct mpc_commands_config {
   struct mpc_command_policy policy;
 };
 
-/* Pointer-free observations, deliberately narrower than full state snapshots.
- * They establish best-effort peer/selection changes, not an atomic causal log. */
-struct mpc_command_track {
-  uint64_t id, generation;
-  uint32_t known, muted, soloed, record_armed, audio_soloed, audio_record_armed, silenced;
-  uint32_t family;
-};
-struct mpc_command_observation {
-  uint64_t project, generation, selected_track, selected_sequence, captured_ms;
-  uint64_t selected_sequence_generation;
-  uint32_t mute_scope;
-  uint32_t track_count;
-  struct mpc_command_track tracks[MPC_IDENTITY_MAX_TRACKS];
-};
 struct mpc_command_receipt {
   uint32_t abi_version, struct_bytes;
   struct mpc_command_request request;
@@ -108,7 +95,10 @@ struct mpc_command_receipt {
    * are durations, never wall-clock or audio/sample scheduling timestamps.
    * Zero means the corresponding stage has not been observed. */
   uint64_t accepted_ms, dispatched_ms, dispatch_finished_ms, finished_ms;
-  uint64_t ui_work_us;
+  uint64_t ui_work_us, max_ui_callback_us, verification_ui_us;
+  /* Exclusive UI stages: identity, policy, filter/setter, target readback,
+   * before observation, after observation and other executor work. */
+  uint64_t stages_us[7];
   uint32_t verification_passes;
 };
 

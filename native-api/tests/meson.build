@@ -48,6 +48,15 @@ inventory_fixture = executable(
 elf_checks += [{'binary': inventory_fixture}]
 test('inventory-fixture', inventory_fixture, suite: 'native-api', timeout: 30)
 
+observation_fixture = executable(
+  'observation_fixture', 'observation_fixture.c', adapter_sources, profiles[1],
+  include_directories: [root_inc, api_inc, adapter_inc],
+  c_args: native_args, override_options: native_options + ['optimization=1'],
+  dependencies: [dl_dep, threads_dep], link_with: elf_id,
+)
+elf_checks += [{'binary': observation_fixture}]
+test('observation-fixture', observation_fixture, suite: 'native-api', timeout: 30)
+
 commands_fixture = executable(
   'commands_fixture', 'commands_fixture.c', adapter_sources, profiles[1],
   include_directories: [root_inc, api_inc, adapter_inc],

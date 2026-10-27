@@ -1,7 +1,7 @@
 # Native command handlers (#19)
 
 `libmpc_native.so` now provides the transport-independent command API in
-[`mpc_commands.h`](include/mpc_commands.h), ABI 5. It runs on executor ABI 7 and primitive adapter ABI 2.
+[`mpc_commands.h`](include/mpc_commands.h), ABI 6. It runs on executor ABI 8 and primitive adapter ABI 2.
 The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
 The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
@@ -215,9 +215,47 @@ carry scope and the active sequence's generation; verification must match both. 
 relationship after invocation remains unknown with actual invocation/execution metadata.
 There is no inactive-sequence setter and no implicit selection change.
 
-Use command ABI 5, executor ABI 7, snapshot ABI 4 and primitive ABI 2 together.
+Use command ABI 6, executor ABI 8, snapshot ABI 4 and primitive ABI 2 together.
 Older layouts are rejected at open/transfer or receipt serialization. The export set
 is unchanged.
 The [public service guide](../README.md#sequence-scoped-mute) defines wire shapes and errors.
 `tools/mpc_sequence_mute.py` runs the bounded device matrix using the production live policy;
 the operator owns lab attach/detach, existing sequences and automation/preference setup.
+
+## Lightweight command observations (US #52)
+
+Command ABI 6 / executor ABI 8 replace the preceding layouts. Primitive ABI 2,
+snapshot ABI 4, STATE_V4 and public JSON API 0.1 are unchanged. Commands no longer
+allocate a full snapshot. Before/after and delayed verification use the shared
+[flag observation](include/mpc_observation.h) primitive, with live requested and
+family-qualified engine/silenced flags for all user tracks, plus selection and
+active sequence/mute context. All user peers remain covered because native
+Single solo/arm and follow-selection effects can span families. Names, bus
+metadata, sequence names/BPM/usage are excluded. No-op, expected values, filters,
+FIFO, lifetime/Program/context fences, retained retries and uncertainty rules
+remain in force. Automation Off still qualifies commands; reads are independent
+of command eligibility (US #51 remains separate).
+
+`observationCoverage.before` / `.after` are null for absent samples, otherwise
+`{kind: "user_track_flags", offset, count, totalTracks, topologyEpoch, durationUs}`.
+Commands cover the complete user flag interval; the shared read primitive may
+cover only a page. Missing rows or unknown fields never mean unchanged. Changes
+compare only matching project/track generations and families with fields known
+in both samples. Observation is best effort rather than an atomic causal log.
+Topology epochs permit a producer to detect reordered/deleted/replaced objects
+while paging; each sample has its own freshness and scope.
+
+`timing.maxUiCallbackUs` retains the longest command callback, including bounded
+observer fanout and executor work through publication. `uiWorkUs` sums initial
+and delayed command callbacks; coalesced observers do not add native reads.
+`stagesUs` provides exclusive identity, policy, filterSetter, targetReadback,
+beforeObservation, afterObservation and other durations. Target validation inside
+readback is charged to identity/policy, avoiding double counting. Delayed passes
+contribute to the same stage totals and increment `verificationPasses`; their
+elapsed worker/queue time is separately included in `verificationMs`.
+`verificationUiUs` isolates the UI work of delayed read-only passes. Durations
+end just before callback result notification; native message/destructor return
+and OS scheduling introduce additional overhead. They are no hard real-time or
+audio-completion guarantee.
+
+See [measurements, supported limits and restoration](../../findings/native-ui-cost.md).

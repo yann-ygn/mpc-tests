@@ -63,12 +63,31 @@ struct mpc_native_io {
   void (*destroy)(void *);
 };
 
+enum mpc_ui_stage {
+  MPC_UI_IDENTITY,
+  MPC_UI_POLICY,
+  MPC_UI_FILTER_SETTER,
+  MPC_UI_READBACK,
+  MPC_UI_BEFORE,
+  MPC_UI_AFTER,
+  MPC_UI_OTHER,
+  MPC_UI_STAGES
+};
+struct mpc_ui_profile {
+  uint64_t ns[MPC_UI_STAGES], since;
+  unsigned stage;
+};
+
 struct mpc_native_adapter {
   struct mpc_native_io io;
   struct mpc_native_hooks hooks;
   int fault;
+  struct mpc_ui_profile *profile;
   char instance_id[37];
 };
+
+unsigned mpc_ui_enter(struct mpc_native_adapter *, unsigned);
+void mpc_ui_leave(struct mpc_native_adapter *, unsigned);
 
 struct mpc_identity_registry;
 enum mpc_native_error mpc_native_verify_ui(struct mpc_native_adapter *);

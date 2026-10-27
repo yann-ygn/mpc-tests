@@ -9,11 +9,19 @@ struct mpc_identity_registry;
 
 struct mpc_command_native_result {
   uint64_t dispatched_ms, finished_ms, ui_work_us;
+  struct mpc_ui_profile profile;
   bool before_known, after_known;
   bool context_known;
   struct mpc_command_context context;
   struct mpc_command_observation before, after;
 };
+
+enum mpc_native_error mpc_identity_flags(
+  struct mpc_identity_registry *,
+  unsigned offset,
+  unsigned limit,
+  uint64_t expected_topology,
+  struct mpc_command_observation *);
 
 enum mpc_native_error mpc_executor_command_submit(
   struct mpc_executor *,
