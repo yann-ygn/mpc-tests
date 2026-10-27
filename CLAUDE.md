@@ -236,3 +236,16 @@ before running experiments.
   wrapper uses `mpc-api host-cleanup` under the lifetime lock after process exit. Nine host lifecycle cases,
   ASan/UBSan, all 14 host entries and ARM deployment guards pass. See sanitized native-package proof.
   Future instrument installs/restarts still need the owner's approval under the device-work rule above.
+
+- Mixer controls (#39), branch `us-39-native-mixer-controls`: normalized volume/pan/four sends and boolean rack/occupied-slot enables
+  extend authenticated retained commands, full state and lightweight observations. Mixer generations fence Program/rack/ordered slots
+  with native destruction observers. Plugin/drum/keygroup/audio qualify on Main, all five Mixer pages and Track Mute, stopped/playing,
+  Automation Off; MIDI/CV mixer fields and bus writes remain unqualified. Completion is model-only. Rebuild C callers for executor 9,
+  commands 7, observations 2, snapshot 5 / STATE_V5; primitive 2 is unchanged. All 21 host, 16 native ASan/UBSan, seven isolated ARM
+  fixtures and ARM guards pass. Device evidence includes 1,232 screen/playback rows, endpoint/float/conflict/retry tests, 40 Read/Write
+  rejections, controller edits, effect deletion/re-add and project reload fencing, and 320 numeric pressure submissions with a concurrent
+  observer (188 applied, 132 queue-capacity rejections). Saturated callback maximum was 145.804 ms; automation-rate updates remain
+  unqualified. See findings/native-mixer-controls.md and sanitized proof. The owner-approved session backup was reloaded and verified;
+  all captured values/flags/settings, selection, sequence, zero playhead and Mixer Effects view restored. Lab drained/unloaded and
+  installed 0.7.0 resumed without MPC restart. Package 0.10.0 is built locally, not installed. The backup and disposable playback copy
+  remain under Claude Experiments; no existing experiment was overwritten. Future installs/restarts still require owner approval.

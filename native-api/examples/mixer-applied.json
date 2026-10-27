@@ -1,0 +1,137 @@
+{
+  "apiVersion": "0.1",
+  "requestId": "quantized",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "status": "applied",
+  "execution": "completed",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "op": "set_volume",
+  "value": 0.123456789,
+  "changed": true,
+  "nativeInvoked": true,
+  "verification": {
+    "by": [
+      "model"
+    ],
+    "requestedValue": 0.12345679104328156,
+    "audioSideValue": null,
+    "observedAt": "2026-10-27T12:48:32.375Z",
+    "mixer": {
+      "generation": "6",
+      "known": 1279,
+      "scope": "global",
+      "unit": "normalized",
+      "volume": 0.123456791,
+      "pan": 1,
+      "sends": [
+        {
+          "index": 0,
+          "destination": "return_A",
+          "value": 1
+        },
+        {
+          "index": 1,
+          "destination": "return_B",
+          "value": 1
+        },
+        {
+          "index": 2,
+          "destination": "return_C",
+          "value": 1
+        },
+        {
+          "index": 3,
+          "destination": "return_D",
+          "value": 1
+        }
+      ],
+      "insertRackEnabled": true,
+      "inserts": [
+        {
+          "index": 0,
+          "occupied": true,
+          "enabled": true
+        },
+        {
+          "index": 1,
+          "occupied": false,
+          "enabled": null
+        },
+        {
+          "index": 2,
+          "occupied": false,
+          "enabled": null
+        },
+        {
+          "index": 3,
+          "occupied": true,
+          "enabled": true
+        }
+      ],
+      "verification": [
+        "model"
+      ],
+      "audioCompletionKnown": false
+    }
+  },
+  "mixerGeneration": "6",
+  "observationCoverage": {
+    "before": {
+      "kind": "user_track_flags",
+      "offset": 0,
+      "count": 2,
+      "fields": [
+        "flags",
+        "mixer"
+      ],
+      "totalTracks": 2,
+      "topologyEpoch": "1",
+      "durationUs": 24
+    },
+    "after": {
+      "kind": "user_track_flags",
+      "offset": 0,
+      "count": 2,
+      "fields": [
+        "flags",
+        "mixer"
+      ],
+      "totalTracks": 2,
+      "topologyEpoch": "1",
+      "durationUs": 23
+    }
+  },
+  "observedChanges": [
+    {
+      "projectId": "1",
+      "trackId": "2",
+      "path": "tracks.2.mixer.volume",
+      "before": 1,
+      "after": 0.12345679104328156
+    }
+  ],
+  "timing": {
+    "queueMs": 1,
+    "dispatchMs": 0,
+    "verificationMs": 0,
+    "totalMs": 1,
+    "uiWorkUs": 342,
+    "verificationPasses": 0,
+    "maxUiCallbackUs": 342,
+    "stagesUs": {
+      "identity": 139,
+      "policy": 100,
+      "filterSetter": 0,
+      "targetReadback": 51,
+      "beforeObservation": 25,
+      "afterObservation": 24,
+      "other": 2
+    },
+    "verificationUiUs": 0
+  },
+  "error": null
+}

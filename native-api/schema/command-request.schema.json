@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "MPC native API 0.1 Unix flag command request",
+  "title": "MPC native API 0.1 desired-state command request",
   "type": "object",
   "required": [
     "apiVersion",
@@ -17,7 +17,12 @@
       "enum": [
         "set_mute",
         "set_solo",
-        "set_record_armed"
+        "set_record_armed",
+        "set_volume",
+        "set_pan",
+        "set_send_level",
+        "set_insert_rack_enabled",
+        "set_insert_enabled"
       ]
     },
     "requestId": {
@@ -54,7 +59,10 @@
       "additionalProperties": false
     },
     "value": {
-      "type": "boolean"
+      "type": [
+        "boolean",
+        "number"
+      ]
     },
     "expected": {
       "type": "object",
@@ -63,7 +71,10 @@
       ],
       "properties": {
         "value": {
-          "type": "boolean"
+          "type": [
+            "boolean",
+            "number"
+          ]
         }
       },
       "additionalProperties": false
@@ -119,6 +130,21 @@
         }
       },
       "additionalProperties": false
+    },
+    "mixerGeneration": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$",
+      "maxLength": 20
+    },
+    "sendIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "slotIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
     }
   },
   "additionalProperties": false,
@@ -168,6 +194,148 @@
                 "sequence"
               ]
             }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "enum": [
+              "set_volume",
+              "set_pan",
+              "set_send_level",
+              "set_insert_rack_enabled",
+              "set_insert_enabled"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "mixerGeneration"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "muteScope"
+              ]
+            },
+            {
+              "required": [
+                "sequence"
+              ]
+            }
+          ]
+        }
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "mixerGeneration"
+              ]
+            },
+            {
+              "required": [
+                "sendIndex"
+              ]
+            },
+            {
+              "required": [
+                "slotIndex"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "enum": [
+              "set_volume",
+              "set_pan",
+              "set_send_level"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "expected": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "value": {
+            "type": "boolean"
+          },
+          "expected": {
+            "properties": {
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "set_send_level"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "sendIndex"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "sendIndex"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "set_insert_enabled"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "slotIndex"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "slotIndex"
           ]
         }
       }

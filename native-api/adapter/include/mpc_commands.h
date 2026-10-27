@@ -6,7 +6,7 @@
 #include "mpc_state.h"
 #include "mpc_observation.h"
 
-#define MPC_COMMANDS_ABI 6u
+#define MPC_COMMANDS_ABI 7u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u
@@ -19,7 +19,16 @@
 struct mpc_executor;
 struct mpc_commands;
 
-enum mpc_command_operation { MPC_COMMAND_MUTE, MPC_COMMAND_SOLO, MPC_COMMAND_RECORD_ARMED };
+enum mpc_command_operation {
+  MPC_COMMAND_MUTE,
+  MPC_COMMAND_SOLO,
+  MPC_COMMAND_RECORD_ARMED,
+  MPC_COMMAND_VOLUME,
+  MPC_COMMAND_PAN,
+  MPC_COMMAND_SEND,
+  MPC_COMMAND_RACK,
+  MPC_COMMAND_INSERT
+};
 enum mpc_command_status {
   MPC_COMMAND_ACCEPTED,
   MPC_COMMAND_APPLIED,
@@ -46,6 +55,7 @@ struct mpc_command_request {
   enum mpc_mute_scope mute_scope;
   struct mpc_command_sequence sequence;
   bool value, has_expected, expected;
+  struct mpc_mixer_request mixer;
   /* Observation revisions cannot be transaction preconditions. Reject before
    * acceptance rather than silently ignoring a caller's requested safeguard. */
   bool has_expected_revision;

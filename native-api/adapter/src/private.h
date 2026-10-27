@@ -53,6 +53,8 @@ struct mpc_native_io {
   bool (*on_ui_thread)(void *);
   enum mpc_native_error (*setter)(void *, uintptr_t, uintptr_t, bool);
   enum mpc_native_error (*filter)(void *, uintptr_t, uintptr_t, bool *);
+  enum mpc_native_error (*mixer_set)(void *, unsigned, uintptr_t, uintptr_t, unsigned, double);
+  enum mpc_native_error (*float_filter)(void *, uintptr_t, uintptr_t, float *);
   bool (*post)(void *, uintptr_t, struct mpc_native_function *);
   enum mpc_native_error (*watch)(void *, uint32_t, struct mpc_native_lifetime *);
   void (*unwatch)(void *, struct mpc_native_lifetime *);
@@ -76,6 +78,10 @@ enum mpc_ui_stage {
 struct mpc_ui_profile {
   uint64_t ns[MPC_UI_STAGES], since;
   unsigned stage;
+};
+
+struct mpc_mixer_topology {
+  uint32_t program, program_vtable, rack, slots[4], formats[4];
 };
 
 struct mpc_native_adapter {
@@ -108,6 +114,29 @@ enum mpc_native_error
 mpc_identity_sequence(struct mpc_identity_registry *, const struct mpc_executor_identity *);
 enum mpc_native_error mpc_executor_open_authoritative_backend(
   const struct mpc_native_io *, unsigned, struct mpc_executor **);
+
+enum mpc_native_error mpc_native_target_check(
+  struct mpc_native_adapter *, const struct mpc_native_target *, enum mpc_native_family *);
+enum mpc_native_error mpc_mixer_read(
+  struct mpc_native_adapter *,
+  uint32_t,
+  unsigned,
+  struct mpc_mixer_state *,
+  struct mpc_mixer_topology *);
+enum mpc_native_error mpc_mixer_set(
+  struct mpc_native_adapter *,
+  const struct mpc_native_target *,
+  unsigned,
+  const struct mpc_mixer_request *,
+  bool,
+  bool,
+  bool,
+  struct mpc_native_write_result *);
+unsigned mpc_mixer_fields(unsigned);
+unsigned mpc_mixer_field(unsigned, unsigned);
+bool mpc_mixer_numeric(unsigned);
+bool mpc_mixer_value(const struct mpc_mixer_state *, unsigned, unsigned, double *);
+bool mpc_mixer_request_valid(unsigned, const struct mpc_mixer_request *, bool);
 
 struct native_binding {
   uint32_t property, requested, observed, setter;

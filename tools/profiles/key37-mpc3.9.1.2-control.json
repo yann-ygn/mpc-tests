@@ -367,6 +367,116 @@
       "name": "playbackSongSource",
       "rva": 26607120,
       "prefixHex": "883002e3030051e10400000a482190e54c3080e2102292e5030052e10000000a"
+    },
+    {
+      "name": "mixerVolumeWrapper",
+      "rva": 42377652,
+      "prefixHex": "d8219fe5d8319fe5f4416de1604090e5f860cde110e08de5028b2dedc4719fe5"
+    },
+    {
+      "name": "mixerVolumeGetter",
+      "rva": 42377144,
+      "prefixHex": "c8219fe5c8319fe5f4416de1604090e5f860cde110e08de5b8719fe544d04de2"
+    },
+    {
+      "name": "mixerVolumeSetter",
+      "rva": 37137544,
+      "prefixHex": "c8229fe5c8329fe508402de504e08de5028b2ded0040a0e1570e80e208d04de2"
+    },
+    {
+      "name": "mixerPanWrapper",
+      "rva": 42389500,
+      "prefixHex": "20229fe520329fe5f8416de1605090e5f860cde110808de514e08de50c829fe5"
+    },
+    {
+      "name": "mixerPanGetter",
+      "rva": 42376640,
+      "prefixHex": "c4219fe5c4319fe5f4416de1604090e5f860cde110e08de5b4719fe544d04de2"
+    },
+    {
+      "name": "mixerFloatPropertySetter",
+      "rva": 15052616,
+      "prefixHex": "d8219fe5d8319fe5fc416de1f860cde1f081cde118e08de5028b2ded108080e2"
+    },
+    {
+      "name": "mixerPanFilter",
+      "rva": 25445908,
+      "prefixHex": "007a90ed007ad1ed010a90ed477af4ee10faf1ee477af04ee70ab4ee10faf1ee"
+    },
+    {
+      "name": "mixerSendWrapper",
+      "rva": 42372296,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1d8219fe5d8319fe510808de514e08de5"
+    },
+    {
+      "name": "mixerSendGetter",
+      "rva": 42371776,
+      "prefixHex": "f860cde10260a0e1cc219fe5cc319fe510808de514e08de5c4719fe540d04de2"
+    },
+    {
+      "name": "mixerSendSetter",
+      "rva": 37138292,
+      "prefixHex": "f0416de1f92f80e20050a0e168029fe5813161e00140a0e160129fe508608de5"
+    },
+    {
+      "name": "mixerSendAddress",
+      "rva": 37122216,
+      "prefixHex": "3830a0e3930120e0f90f80e21eff2fe13830a0e3930120e0f90f80e21eff2fe1"
+    },
+    {
+      "name": "mixerRackWrapper",
+      "rva": 42364904,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c8219fe5c8319fe510808de514e08de5"
+    },
+    {
+      "name": "mixerRackSetter",
+      "rva": 37081828,
+      "prefixHex": "5c219fe55c319fe5fc416de1f860cde1f081cde118e08de5a4d04de20040a0e1"
+    },
+    {
+      "name": "mixerRackDispatch",
+      "rva": 37081760,
+      "prefixHex": "0810d0e508402de50040a0e1040090e504e08de5acffffeb003094e55bf07ff5"
+    },
+    {
+      "name": "mixerSlotWrapper",
+      "rva": 42363864,
+      "prefixHex": "fc416de1604090e5f860cde10260a0e1d0219fe5f081cde10380a0e1c8319fe5"
+    },
+    {
+      "name": "mixerSlotSetter",
+      "rva": 37082720,
+      "prefixHex": "e4c19fe5f0426de1643090e50150a0e10040a0e1601090e5d0019fe5f860cde1"
+    },
+    {
+      "name": "mixerSlotGetter",
+      "rva": 37083864,
+      "prefixHex": "d82bc0e1b0c090e50c2042e0823183e0010053e1110000da000051e31f3081e2"
+    },
+    {
+      "name": "mixerRackDestructor",
+      "rva": 37079556,
+      "prefixHex": "e8329fe5f0416de1605090e508608de5646090e50040a0e10ce08de503308fe0"
+    },
+    {
+      "name": "mixerRackLifetime",
+      "rva": 37080072,
+      "prefixHex": "042093e50300a0e1041010e4000052e3002081e52200000a04c013e504e083e2"
+    },
+    {
+      "name": "mixerSlotDestructor",
+      "rva": 37062464,
+      "prefixHex": "58159fe558259fe558359fe5f8416de10040a0e1680090e5f860cde110808de5"
+    },
+    {
+      "name": "mixerSlotLifetime",
+      "rva": 37063256,
+      "prefixHex": "042093e50300a0e1041010e4000052e3002081e54900000a04c013e504e083e2"
+    },
+    {
+      "name": "mixerPropertyLifetime",
+      "rva": 32491924,
+      "prefixHex": "003094e5000053e30f00000a042093e50300a0e1041010e4000052e3002081e5"
     }
   ],
   "bindings": [
@@ -663,6 +773,53 @@
       "nativeMatrix": "findings/native-family-flags.md",
       "listenerTrace": "live_property_subscriptions",
       "outputVerified": false
+    }
+  },
+  "mixer": {
+    "schemaVersion": 1,
+    "families": [
+      "plugin",
+      "drum",
+      "keygroup",
+      "audio"
+    ],
+    "volume": {
+      "property": 1456,
+      "value": 1496,
+      "format": 1500,
+      "requiredFormat": 3,
+      "receiver": 60
+    },
+    "pan": {
+      "property": 976,
+      "value": 1016,
+      "filterStorage": 1020,
+      "filterManager": 1028,
+      "filterInvoker": 1032
+    },
+    "sends": {
+      "base": 1056,
+      "stride": 56,
+      "property": 8,
+      "value": 48,
+      "format": 52,
+      "requiredFormat": 1,
+      "count": 4
+    },
+    "rack": {
+      "programOffset": 1504,
+      "vtable": 109757296,
+      "destruction": 12,
+      "slots": 148,
+      "engineSlots": 96,
+      "enabled": 56,
+      "count": 4,
+      "slotBits": 176,
+      "slotBitCount": 188
+    },
+    "slot": {
+      "vtable": 110289280,
+      "destruction": 20
     }
   }
 }

@@ -1,8 +1,15 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include "api.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include <errno.h>
+#include <locale.h>
 
 struct parser {
   const char *p, *end;
@@ -75,6 +82,60 @@ static int boolean(struct parser *p, bool *out) {
     p->p += 5;
   } else
     return -1;
+  return 0;
+}
+
+/* JSON numeric grammar, bounded conversion, and scalar type retention. The
+ * operation can appear after value; boolean/number coercion is never allowed. */
+static int scalar(struct parser *p, bool *boolean_out, double *number_out, bool *numeric) {
+  whitespace(p);
+  if (p->p < p->end && (*p->p == 't' || *p->p == 'f')) {
+    *numeric = false;
+    return boolean(p, boolean_out);
+  }
+  *numeric = true;
+  const char *start = p->p;
+  if (p->p < p->end && *p->p == '-')
+    p->p++;
+  if (p->p == p->end || *p->p < '0' || *p->p > '9')
+    return -1;
+  if (*p->p++ != '0')
+    while (p->p < p->end && *p->p >= '0' && *p->p <= '9')
+      p->p++;
+  if (p->p < p->end && *p->p == '.') {
+    p->p++;
+    const char *digits = p->p;
+    while (p->p < p->end && *p->p >= '0' && *p->p <= '9')
+      p->p++;
+    if (p->p == digits)
+      return -1;
+  }
+  if (p->p < p->end && (*p->p == 'e' || *p->p == 'E')) {
+    p->p++;
+    if (p->p < p->end && (*p->p == '-' || *p->p == '+'))
+      p->p++;
+    const char *digits = p->p;
+    while (p->p < p->end && *p->p >= '0' && *p->p <= '9')
+      p->p++;
+    if (p->p == digits)
+      return -1;
+  }
+  size_t n = (size_t)(p->p - start);
+  if (!n || n >= 128)
+    return -1;
+  char buffer[128], *end;
+  memcpy(buffer, start, n);
+  buffer[n] = 0;
+  locale_t numeric_locale = newlocale(LC_NUMERIC_MASK, "C", (locale_t)0);
+  if (!numeric_locale)
+    return -1;
+  errno = 0;
+  double value = strtod_l(buffer, &end, numeric_locale);
+  int conversion_error = errno;
+  freelocale(numeric_locale);
+  if (*end || conversion_error || !isfinite(value) || value < 0 || value > 1)
+    return -1;
+  *number_out = value;
   return 0;
 }
 
@@ -204,10 +265,14 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     WAIT = 128,
     INSTANCE = 256,
     SCOPE = 512,
-    SEQUENCE = 1024
+    SEQUENCE = 1024,
+    MIXER = 2048,
+    SEND = 4096,
+    SLOT = 8192
   };
   unsigned seen = 0;
-  for (unsigned i = 0; i < 11; i++) {
+  bool value_numeric = false, expected_numeric = false;
+  for (unsigned i = 0; i < 14; i++) {
     char key[32];
     if ((i && token(&p, ',')) || string(&p, key, sizeof key) || token(&p, ':'))
       return -1;
@@ -227,11 +292,13 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
       error = target(&p, &out->command.target);
     } else if (!strcmp(key, "value")) {
       bit = VALUE;
-      error = boolean(&p, &out->command.value);
+      error = scalar(&p, &out->command.value, &out->command.mixer.value, &value_numeric);
     } else if (!strcmp(key, "expected")) {
       bit = EXPECTED;
       error = token(&p, '{') || string(&p, key, sizeof key) || strcmp(key, "value") ||
-        token(&p, ':') || boolean(&p, &out->command.expected) || token(&p, '}');
+        token(&p, ':') ||
+        scalar(&p, &out->command.expected, &out->command.mixer.expected, &expected_numeric) ||
+        token(&p, '}');
       out->command.has_expected = true;
     } else if (!strcmp(key, "startWithinMs")) {
       bit = START;
@@ -254,6 +321,14 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
         else
           error = -1;
       }
+    } else if (!strcmp(key, "mixerGeneration")) {
+      bit = MIXER;
+      error = handle(&p, &out->command.mixer.generation);
+    } else if (!strcmp(key, "sendIndex") || !strcmp(key, "slotIndex")) {
+      bit = !strcmp(key, "sendIndex") ? SEND : SLOT;
+      error = milliseconds(&p, &out->command.mixer.index, 0);
+      if (out->command.mixer.index > 3)
+        error = -1;
     } else if (!strcmp(key, "sequence")) {
       bit = SEQUENCE;
       error = sequence(&p, &out->command.sequence);
@@ -291,9 +366,34 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
           return -1;
       }
     }
+  } else if (
+    !strcmp(out->op, "set_volume") || !strcmp(out->op, "set_pan") ||
+    !strcmp(out->op, "set_send_level") || !strcmp(out->op, "set_insert_rack_enabled") ||
+    !strcmp(out->op, "set_insert_enabled")) {
+    required |= ID | TARGET | VALUE | MIXER;
+    allowed = required | EXPECTED | START | WAIT;
+    out->command.operation = !strcmp(out->op, "set_volume") ? MPC_COMMAND_VOLUME
+      : !strcmp(out->op, "set_pan")                         ? MPC_COMMAND_PAN
+      : !strcmp(out->op, "set_send_level")                  ? MPC_COMMAND_SEND
+      : !strcmp(out->op, "set_insert_rack_enabled")         ? MPC_COMMAND_RACK
+                                                            : MPC_COMMAND_INSERT;
+    if (out->command.operation == MPC_COMMAND_SEND) {
+      required |= SEND;
+      allowed |= SEND;
+    }
+    if (out->command.operation == MPC_COMMAND_INSERT) {
+      required |= SLOT;
+      allowed |= SLOT;
+    }
   } else if (!strcmp(out->op, "get_command")) {
     required |= ID | INSTANCE;
     allowed = required | WAIT;
   }
+  bool numeric =
+    out->command.operation >= MPC_COMMAND_VOLUME && out->command.operation <= MPC_COMMAND_SEND;
+  if ((seen & VALUE) && numeric != value_numeric)
+    return -1;
+  if ((seen & EXPECTED) && numeric != expected_numeric)
+    return -1;
   return (seen & required) != required || (seen & ~allowed) ? -1 : 0;
 }

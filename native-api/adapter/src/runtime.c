@@ -1,4 +1,5 @@
 #include "private.h"
+#include "mpc_commands.h"
 #include "elf_id.h"
 #include "mpc_adapter_profile.h"
 
@@ -74,6 +75,28 @@ static int memory_read(void *data, uintptr_t address, void *output, size_t lengt
 static bool on_ui_thread(void *data) {
   (void)data;
   return syscall(SYS_gettid) == getpid();
+}
+
+static enum mpc_native_error mixer_set(
+  void *data, unsigned op, uintptr_t function, uintptr_t receiver, unsigned index, double value) {
+  (void)data;
+  if (op == MPC_COMMAND_VOLUME || op == MPC_COMMAND_PAN)
+    ((void (*)(void *, float))function)((void *)receiver, (float)value);
+  else if (op == MPC_COMMAND_SEND)
+    ((void (*)(void *, unsigned, float))function)((void *)receiver, index, (float)value);
+  else if (op == MPC_COMMAND_RACK)
+    ((void (*)(void *, bool))function)((void *)receiver, value != 0);
+  else if (op == MPC_COMMAND_INSERT)
+    ((void (*)(void *, int, bool))function)((void *)receiver, (int)index, value != 0);
+  else
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  return MPC_NATIVE_OK;
+}
+static enum mpc_native_error
+float_filter(void *data, uintptr_t storage, uintptr_t function, float *value) {
+  (void)data;
+  *value = ((float (*)(void *, const float *))function)((void *)storage, value);
+  return MPC_NATIVE_OK;
 }
 
 static void expired(struct mpc_native_lifetime *lifetime) {
@@ -341,6 +364,8 @@ mpc_native_open(const struct mpc_native_hooks *hooks, struct mpc_native_adapter 
     .on_ui_thread = on_ui_thread,
     .setter = setter,
     .filter = filter,
+    .mixer_set = mixer_set,
+    .float_filter = float_filter,
     .post = post,
     .watch = watch,
     .unwatch = unwatch,

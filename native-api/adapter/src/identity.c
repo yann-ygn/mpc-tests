@@ -2,6 +2,7 @@
 #include "command_private.h"
 #include "mpc_adapter_profile.h"
 #include "mpc_family_profile.h"
+#include "mpc_mixer_profile.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +15,9 @@ struct entry {
   unsigned index;
   struct mpc_native_lifetime lifetime;
   struct mpc_native_sequence_watch sequence;
+  struct mpc_mixer_topology mixer_topology;
+  uint64_t mixer_generation;
+  struct mpc_native_lifetime mixer_watches[6];
 };
 
 struct mpc_identity_registry {
@@ -96,6 +100,8 @@ release_entry(struct mpc_identity_registry *registry, struct entry *entry) {
       return error;
     }
   }
+  for (unsigned i = 0; i < 6; i++)
+    unwatch(registry, &entry->mixer_watches[i]);
   unwatch(registry, &entry->lifetime);
   memset(entry, 0, sizeof *entry);
   return MPC_NATIVE_OK;
@@ -165,6 +171,81 @@ static uint64_t next_id(struct mpc_identity_registry *registry) {
   if (registry->next == UINT64_MAX)
     return 0;
   return registry->next++;
+}
+
+static enum mpc_native_error mixer_capture(
+  struct mpc_identity_registry *registry,
+  struct entry *entry,
+  uint32_t program,
+  unsigned family,
+  struct mpc_mixer_state *out) {
+  struct mpc_mixer_topology topology;
+  enum mpc_native_error error = mpc_mixer_read(registry->adapter, program, family, out, &topology);
+  if (error)
+    return error;
+  bool same =
+    entry->mixer_generation && !memcmp(&topology, &entry->mixer_topology, sizeof topology);
+  for (unsigned i = 0; i < 6; i++)
+    if (entry->mixer_watches[i].vtable && !alive(&entry->mixer_watches[i]))
+      same = false;
+  if (!same || !out->known) {
+    for (unsigned i = 0; i < 6; i++)
+      unwatch(registry, &entry->mixer_watches[i]);
+    entry->mixer_generation = 0;
+    memset(&entry->mixer_topology, 0, sizeof entry->mixer_topology);
+    if (!out->known)
+      return MPC_NATIVE_OK;
+    uint32_t subjects[6] = {program + MIXER_VOLUME_PROPERTY, topology.rack + 12};
+    for (unsigned i = 0; i < 4; i++)
+      subjects[i + 2] = topology.slots[i] ? topology.slots[i] + 0x14 : 0;
+    for (unsigned i = 0; i < 6; i++) {
+      if (!subjects[i])
+        continue;
+      error = registry->adapter->io.watch(
+        registry->adapter->io.userdata,
+        subjects[i],
+        &entry->mixer_watches[i]);
+      if (error) {
+        for (unsigned j = 0; j < 6; j++)
+          unwatch(registry, &entry->mixer_watches[j]);
+        return error;
+      }
+    }
+    entry->mixer_topology = topology;
+    entry->mixer_generation = next_id(registry);
+    if (!entry->mixer_generation)
+      return MPC_NATIVE_NOT_READY;
+  }
+  out->generation = entry->mixer_generation;
+  return MPC_NATIVE_OK;
+}
+
+static enum mpc_native_error mixer_verify(
+  struct mpc_identity_registry *registry,
+  struct entry *entry,
+  const struct mpc_mixer_state *sample) {
+  if (!sample->generation)
+    return MPC_NATIVE_OK;
+  if (!entry || sample->generation != entry->mixer_generation)
+    return MPC_NATIVE_STATE_UNSTABLE;
+  for (unsigned i = 0; i < 6; i++)
+    if (entry->mixer_watches[i].vtable && !alive(&entry->mixer_watches[i]))
+      return MPC_NATIVE_STATE_UNSTABLE;
+  unsigned family = 0;
+  for (unsigned i = 0; i < sizeof mpc_family_matrix / sizeof *mpc_family_matrix; i++)
+    if (
+      registry->adapter->io.image + mpc_family_matrix[i].vtable ==
+      entry->mixer_topology.program_vtable)
+      family = mpc_family_matrix[i].family;
+  struct mpc_mixer_state state;
+  struct mpc_mixer_topology topology;
+  enum mpc_native_error error =
+    mpc_mixer_read(registry->adapter, entry->mixer_topology.program, family, &state, &topology);
+  if (error)
+    return error;
+  return !memcmp(&topology, &entry->mixer_topology, sizeof topology) && state.known == sample->known
+    ? MPC_NATIVE_OK
+    : MPC_NATIVE_STATE_UNSTABLE;
 }
 
 static enum mpc_native_error topology(
@@ -703,7 +784,21 @@ static enum mpc_native_error state_track(
   for (unsigned i = 0; i < sizeof native_program_types / sizeof *native_program_types; i++)
     if (vtable == registry->adapter->io.image + native_program_types[i].vtable)
       strcpy(output->type, native_program_types[i].name);
-  return flag_track(registry, address, *program, normal, output);
+  enum mpc_native_error error = flag_track(registry, address, *program, normal, output);
+  if (!error && normal) {
+    for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
+      struct entry *entry = &registry->tracks[i];
+      if (entry->address == address)
+        return mixer_capture(
+          registry,
+          entry,
+          *program,
+          mpc_family_by_type(output->type)->family,
+          &output->mixer);
+    }
+    return MPC_NATIVE_STALE_TARGET;
+  }
+  return error;
 }
 
 static bool
@@ -833,6 +928,17 @@ capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot 
     return error;
   if (!same_inventory(&inventory, &verify))
     return MPC_NATIVE_STATE_UNSTABLE;
+  for (unsigned i = 0; i < output->track_count; i++) {
+    const struct mpc_state_track *track = &output->tracks[i];
+    struct entry *entry = find(
+      registry->tracks,
+      MPC_IDENTITY_MAX_TRACKS,
+      track->identity.id,
+      track->identity.generation);
+    error = mixer_verify(registry, entry, &track->mixer);
+    if (error)
+      return error;
+  }
   return MPC_NATIVE_OK;
 }
 
@@ -910,6 +1016,9 @@ enum mpc_native_error mpc_identity_flags(
       struct mpc_state_track t = {0};
       strcpy(t.type, program_type(registry, vtable));
       error = flag_track(registry, entry->address, program, true, &t);
+      if (!error)
+        error =
+          mixer_capture(registry, entry, program, mpc_family_by_type(t.type)->family, &t.mixer);
       if (error)
         return error;
       if (
@@ -930,7 +1039,8 @@ enum mpc_native_error mpc_identity_flags(
                                    t.audio_soloed,
                                    t.audio_record_armed,
                                    t.silenced,
-                                   mpc_family_by_type(t.type)->family};
+                                   mpc_family_by_type(t.type)->family,
+                                   t.mixer};
     }
   }
   error = mpc_identity_capture(registry, &after);
@@ -958,6 +1068,9 @@ enum mpc_native_error mpc_identity_flags(
       return MPC_NATIVE_READ_FAILED;
     if (program != programs[i] || vtable != vtables[i])
       return MPC_NATIVE_STATE_UNSTABLE;
+    error = mixer_verify(registry, entry, &t->mixer);
+    if (error)
+      return error;
   }
   output->captured_ms = nanoseconds(CLOCK_REALTIME) / 1000000;
   output->duration_ns = nanoseconds(CLOCK_MONOTONIC) - start;
@@ -994,4 +1107,27 @@ mpc_identity_bind(struct mpc_identity_registry *registry, struct mpc_executor_id
     }
   }
   return MPC_NATIVE_TARGET_NOT_FOUND;
+}
+
+/* Every invocation boundary obtains the current generation from live owners;
+ * no request is allowed to adopt a fresh generation at dispatch. */
+enum mpc_native_error mpc_identity_mixer(
+  struct mpc_identity_registry *registry,
+  const struct mpc_executor_identity *identity,
+  struct mpc_mixer_state *out) {
+  struct mpc_native_target target;
+  enum mpc_native_error error = mpc_identity_resolve(registry, identity, &target);
+  if (error)
+    return error;
+  struct entry *entry =
+    find(registry->tracks, MPC_IDENTITY_MAX_TRACKS, identity->track, identity->track_generation);
+  uint32_t vtable;
+  if (!entry || read32(registry, target.program, &vtable))
+    return MPC_NATIVE_STALE_TARGET;
+  return mixer_capture(
+    registry,
+    entry,
+    target.program,
+    mpc_family_by_type(program_type(registry, vtable))->family,
+    out);
 }

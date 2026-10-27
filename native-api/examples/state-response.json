@@ -192,6 +192,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -306,6 +361,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -420,6 +530,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -513,6 +678,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -628,6 +848,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -743,6 +1018,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -836,6 +1166,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -950,6 +1335,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     }
   ],
@@ -1041,6 +1481,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -1130,6 +1625,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -1219,6 +1769,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -1308,6 +1913,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     },
     {
@@ -1397,6 +2057,61 @@
           }
         },
         "outputVerified": false
+      },
+      "mixer": {
+        "generation": null,
+        "known": 0,
+        "scope": "global",
+        "unit": "normalized",
+        "volume": null,
+        "pan": null,
+        "sends": [
+          {
+            "index": 0,
+            "destination": "return_A",
+            "value": null
+          },
+          {
+            "index": 1,
+            "destination": "return_B",
+            "value": null
+          },
+          {
+            "index": 2,
+            "destination": "return_C",
+            "value": null
+          },
+          {
+            "index": 3,
+            "destination": "return_D",
+            "value": null
+          }
+        ],
+        "insertRackEnabled": null,
+        "inserts": [
+          {
+            "index": 0,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 1,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 2,
+            "occupied": null,
+            "enabled": null
+          },
+          {
+            "index": 3,
+            "occupied": null,
+            "enabled": null
+          }
+        ],
+        "verification": [],
+        "audioCompletionKnown": false
       }
     }
   ],

@@ -369,7 +369,7 @@ class DescribeTests(unittest.TestCase):
                                 or f"{state['tag']} {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
                             )
                             client.sendall(payload)
-                        elif data.startswith(b"STATE_V4 "):
+                        elif data.startswith(b"STATE_V5 "):
                             if state.get("stall_state"):
                                 state["state_idle"].clear()
                                 finished.wait(0.3)
@@ -380,13 +380,13 @@ class DescribeTests(unittest.TestCase):
                             if state.get("empty"):
                                 wire[48:80] = bytes(32)
                                 wire[108:128] = bytes(20)
-                                struct.pack_into("<I4xQ", wire, 127808, 2, 0)
+                                struct.pack_into("<I4xQ", wire, 140480, 2, 0)
                             if state.get("bad_instance"):
                                 wire[8] = ord("x")
                             if state.get("bad_count"):
                                 # Track count follows attempts in the fixed snapshot header.
                                 struct.pack_into("<I", wire, 108, 137)
-                            # ABI 4: retained 128-byte prefix and 344-byte track rows.
+                            # ABI 5: retained 128-byte prefix and 392-byte track rows.
                             if state.get("bad_ui_index"):
                                 struct.pack_into("<I", wire, 128 + 16, 1)
                             if state.get("bad_collection"):
@@ -394,7 +394,7 @@ class DescribeTests(unittest.TestCase):
                             if state.get("bad_collection_index"):
                                 struct.pack_into("<I", wire, 128 + 28, 128)
                             if state.get("duplicate_collection_index"):
-                                struct.pack_into("<I", wire, 128 + 344 + 28, 0)
+                                struct.pack_into("<I", wire, 128 + 392 + 28, 0)
                             if state.get("bad_type"):
                                 wire[128 + 32 + 256] = ord("X")
                             if state.get("partial_fields"):
@@ -402,15 +402,15 @@ class DescribeTests(unittest.TestCase):
                             if state.get("bad_field_mask"):
                                 struct.pack_into("<I", wire, 128 + 312, 64)
                             if state.get("bad_mute_scope"):
-                                struct.pack_into("<I", wire, 127808, 99)
+                                struct.pack_into("<I", wire, 140480, 99)
                             if state.get("bad_sequence_generation"):
-                                struct.pack_into("<Q", wire, 127816, 9999)
+                                struct.pack_into("<Q", wire, 140488, 9999)
                             if state.get("missing_active_sequence"):
                                 struct.pack_into("<Q", wire, 72, 0)
-                                struct.pack_into("<I4xQ", wire, 127808, 1, 0)
+                                struct.pack_into("<I4xQ", wire, 140480, 1, 0)
                             if state.get("bad_abi"):
                                 struct.pack_into("<I", wire, 0, 99)
-                            payload = struct.pack("<III", 4, len(wire), state.get("error", 0))
+                            payload = struct.pack("<III", 5, len(wire), state.get("error", 0))
                             if not state.get("error"):
                                 payload += wire
                             if state.get("truncate"):
@@ -443,7 +443,7 @@ class DescribeTests(unittest.TestCase):
         wire = subprocess.run(
             [str(fixture), "--snapshot-wire"], check=True, capture_output=True
         ).stdout
-        attachment.update(tag="MPC_ADAPTER_STATE_V4", wire=wire)
+        attachment.update(tag="MPC_ADAPTER_STATE_V5", wire=wire)
 
     def test_snapshot_operations_share_fresh_observations_and_handles(self):
         with self.attachment() as attachment:
@@ -518,6 +518,7 @@ class DescribeTests(unittest.TestCase):
                 "MPC_ADAPTER_STATE_V1",
                 "MPC_ADAPTER_STATE_V2",
                 "MPC_ADAPTER_STATE_V3",
+                "MPC_ADAPTER_STATE_V4",
                 "MPC_ADAPTER_V1",
             ):
                 attachment["tag"] = tag

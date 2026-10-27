@@ -445,3 +445,22 @@ at completion; subsequent automation can change the value. Discovery and family/
 track support expose per-operation `automation` qualification. The private
 invocation/consistency changes retain the current C ABI and transfer layouts.
 See [native sources and evidence](native-automation-read.md).
+
+## Desired-state mixer extension (US #39)
+
+The [mixer contract](native-mixer-controls.md) adds `set_volume`, `set_pan`,
+`set_send_level`, `set_insert_rack_enabled` and `set_insert_enabled` to API 0.1.
+The shared strict JSON schemas define all delivery variants. Each request uses
+the existing track reference and an observed `mixerGeneration`; sends and slots
+require a zero-based index. Numeric values are normalized 0–1, converted to native
+binary32 for dispatch/expected/no-op comparison; receipts retain the original
+request and report the observed native value. Mixer properties have global scope.
+
+Snapshot and lightweight observation objects expose independent `mixer.known`
+coverage, null unqualified fields, topology generations and freshness. Qualified
+families are plugin/drum/keygroup/audio; MIDI/CV, buses and unknown families remain
+unqualified for these controls. Automation Off is required even for mixer no-ops.
+Model-only completion does not establish audibility, persistence or audio-buffer
+completion. Existing caller-scoped retention, FIFO, deadline, retry, disconnect
+and shutdown rules apply unchanged. C/attachment versions are executor 9, commands
+7, observation 2 and snapshot 5 / STATE_V5; primitive ABI 2 is unchanged.

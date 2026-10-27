@@ -173,7 +173,8 @@
         "unsupportedFields",
         "uiIndex",
         "collection",
-        "flagSupport"
+        "flagSupport",
+        "mixer"
       ],
       "properties": {
         "ref": {
@@ -313,6 +314,9 @@
         },
         "flagSupport": {
           "$ref": "#/$defs/flagSupport"
+        },
+        "mixer": {
+          "$ref": "#/$defs/mixer"
         }
       },
       "allOf": [
@@ -770,6 +774,150 @@
           "const": "unsupported"
         }
       }
+    },
+    "mixer": {
+      "type": "object",
+      "required": [
+        "generation",
+        "known",
+        "scope",
+        "unit",
+        "volume",
+        "pan",
+        "sends",
+        "insertRackEnabled",
+        "inserts",
+        "verification",
+        "audioCompletionKnown"
+      ],
+      "properties": {
+        "generation": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "known": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2047
+        },
+        "scope": {
+          "const": "global"
+        },
+        "unit": {
+          "const": "normalized"
+        },
+        "volume": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pan": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sends": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "destination",
+              "value"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "destination": {
+                "enum": [
+                  "return_A",
+                  "return_B",
+                  "return_C",
+                  "return_D"
+                ]
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "insertRackEnabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "inserts": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "occupied",
+              "enabled"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "occupied": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "enabled": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "verification": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "const": "model"
+          }
+        },
+        "audioCompletionKnown": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

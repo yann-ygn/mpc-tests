@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     fprintf(stderr, "usage: native_client MPC_PID\n");
     return 2;
   }
-  char command[256];
+  char command[2048];
   if (!fgets(command, sizeof command, stdin) || !strchr(command, '\n'))
     return 2;
   int fd = socket(AF_UNIX, SOCK_STREAM, 0);

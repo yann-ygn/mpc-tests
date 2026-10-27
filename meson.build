@@ -31,7 +31,7 @@ profiles = custom_target(
     'tools/profiles/key37-mpc3.9.1.2.json',
     'tools/profiles/key37-mpc3.9.1.2-control.json',
   ),
-  output: ['profile.h', 'mpc_adapter_profile.h', 'mpc_family_profile.h'],
+  output: ['profile.h', 'mpc_adapter_profile.h', 'mpc_family_profile.h', 'mpc_mixer_profile.h'],
   command: [
     python, files('build-support/generate_profiles.py'),
     '@INPUT0@', '@INPUT1@', '@OUTDIR@',

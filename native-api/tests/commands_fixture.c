@@ -1,4 +1,4 @@
-#include "policy_fixture_backend.h"
+#include "mixer_fixture_backend.h"
 #include "command_private.h"
 
 #include <stdatomic.h>
@@ -45,7 +45,7 @@ static uint64_t now(void *data) {
 }
 static enum mpc_native_error qualify(void *data, enum mpc_command_operation operation) {
   struct commands_fixture *f = data;
-  assert(ui && (unsigned)operation <= MPC_COMMAND_RECORD_ARMED);
+  assert(ui && (unsigned)operation <= MPC_COMMAND_INSERT);
   f->qualifications++;
   if (f->qualifications == 4 && f->readback_drift_address)
     put_bool(&f->identity.native, f->readback_drift_address, true);
@@ -194,6 +194,8 @@ static void setup(struct commands_fixture *f, unsigned pending, unsigned receipt
   backend.project_unwatch = project_unwatch;
   backend.setter = command_setter;
   backend.filter = command_filter;
+  backend.float_filter = fixture_float_filter;
+  backend.mixer_set = fixture_mixer_set;
   assert(mpc_executor_open_authoritative_backend(&backend, 8, &f->executor) == MPC_NATIVE_OK);
   pump(&f->identity);
   assert(mpc_executor_wait_ready(f->executor, 1000) == MPC_NATIVE_OK);

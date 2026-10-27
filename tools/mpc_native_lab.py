@@ -36,10 +36,11 @@ def experiment(args):
     report = {"buildId": state_profile["buildId"], "pid": session.pid, "pulse": args.pulse}
     report["host"] = args.host
     try:
-        for function in control["functions"]:
-            if session.read(session.base + function["rva"], 32) != bytes.fromhex(
-                function["prefixHex"]
-            ):
+        fingerprints = session.read_many(
+            [(session.base + function["rva"], 32) for function in control["functions"]]
+        )
+        for function, observed in zip(control["functions"], fingerprints, strict=True):
+            if observed != bytes.fromhex(function["prefixHex"]):
                 raise RuntimeError("Native code fingerprint changed: " + function["name"])
         project = session.active_project()
         before = session.snapshot(project)
@@ -116,7 +117,7 @@ def experiment(args):
         )
         if (
             len(status) != 5
-            or status[0] not in ("MPC_ADAPTER_V2", "MPC_ADAPTER_STATE_V4")
+            or status[0] not in ("MPC_ADAPTER_V2", "MPC_ADAPTER_STATE_V5")
             or status[3] != state_profile["buildId"]
             or status[4] != "VERIFIED"
         ):

@@ -1,4 +1,4 @@
-#include "policy_fixture_backend.h"
+#include "mixer_fixture_backend.h"
 #include "host.h"
 
 #include <signal.h>
@@ -149,6 +149,8 @@ static enum mpc_native_error start(void *unused, struct mpc_executor **out) {
   struct mpc_native_io backend = io(&fixture.native);
   backend.read = wire_read;
   backend.setter = wire_setter;
+  backend.float_filter = fixture_float_filter;
+  backend.mixer_set = fixture_mixer_set;
   backend.on_ui_thread = on_identity_ui;
   backend.post = enqueue;
   backend.watch = watch;
@@ -185,7 +187,9 @@ int main(int argc, char **argv) {
   snprintf(gate, sizeof gate, "%s/gate", installation);
   snprintf(pause_ui, sizeof pause_ui, "%s/pause-ui", installation);
   state_init(&fixture);
-  native_policy = !strcmp(argv[4], "native-commands");
+  native_policy = !strcmp(argv[4], "native-commands") || !strcmp(argv[4], "mixer-commands");
+  if (!strcmp(argv[4], "mixer-commands"))
+    mixer_init(&fixture.native, PROGRAM, OBJECTS + 0x30000);
   commands_enabled = native_policy || !strcmp(argv[4], "commands");
   if (native_policy)
     policy_init(&fixture);

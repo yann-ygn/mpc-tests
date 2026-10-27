@@ -27,9 +27,9 @@ if host_machine.cpu_family() == 'arm'
   bridge_exports = files('exports.map')
   native_bridge = shared_library(
     'native_bridge',
-    'mpc_native_bridge.c',
+    'mpc_native_bridge.c', files('../native-api/src/request.c'),
     name_prefix: '',
-    include_directories: [root_inc, adapter_inc],
+    include_directories: [root_inc, adapter_inc, api_inc],
     gnu_symbol_visibility: 'hidden',
     dependencies: [dl_dep, threads_dep],
     link_args: [

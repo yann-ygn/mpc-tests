@@ -1,7 +1,7 @@
 # Native command handlers (#19)
 
 `libmpc_native.so` now provides the transport-independent command API in
-[`mpc_commands.h`](include/mpc_commands.h), ABI 6. It runs on executor ABI 8 and primitive adapter ABI 2.
+[`mpc_commands.h`](include/mpc_commands.h), ABI 7. It runs on executor ABI 9 and primitive adapter ABI 2.
 The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
 The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
@@ -224,7 +224,7 @@ carry scope and the active sequence's generation; verification must match both. 
 relationship after invocation remains unknown with actual invocation/execution metadata.
 There is no inactive-sequence setter and no implicit selection change.
 
-Use command ABI 6, executor ABI 8, snapshot ABI 4 and primitive ABI 2 together.
+Use command ABI 7, executor ABI 9, snapshot ABI 5 and primitive ABI 2 together.
 Older layouts are rejected at open/transfer or receipt serialization. The export set
 is unchanged.
 The [public service guide](../README.md#sequence-scoped-mute) defines wire shapes and errors.
@@ -298,3 +298,15 @@ and OS scheduling introduce additional overhead. They are no hard real-time or
 audio-completion guarantee.
 
 See [measurements, supported limits and restoration](../../findings/native-ui-cost.md).
+
+## Mixer commands (US #39)
+
+Executor ABI 9 / command ABI 7 add volume, pan, four sends, rack enable and four
+occupied insert slots. See [the mixer contract and qualification](../../findings/native-mixer-controls.md)
+for normalized units, native binary32 expected comparisons, global scope,
+Automation Off policy and model-only completion. Every mixer request includes
+`mixerGeneration` from a fresh track observation; send/slot requests also include
+their zero-based index. Desired numeric values live in `request.mixer.value` in C;
+booleans use the existing `value`. Flag requests leave the mixer member zeroed.
+Snapshots/observations use ABI 5/2. `MPC_EXECUTOR_SAMPLE_CONTROLS` aliases the
+historical `SAMPLE_FLAGS` operation and includes independent `mixer.known` fields.

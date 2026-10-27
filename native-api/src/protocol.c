@@ -179,6 +179,8 @@ char *api_respond(
     }
   if (
     !strcmp(op, "set_mute") || !strcmp(op, "set_solo") || !strcmp(op, "set_record_armed") ||
+    !strcmp(op, "set_volume") || !strcmp(op, "set_pan") || !strcmp(op, "set_send_level") ||
+    !strcmp(op, "set_insert_rack_enabled") || !strcmp(op, "set_insert_enabled") ||
     !strcmp(op, "get_command")) {
     if (!discovery.commands_ready)
       return api_error("NOT_READY", "Command authority is unavailable; consult describe");
@@ -237,7 +239,7 @@ char *api_respond(
       ? "[\"track.uiIndex\",\"track.collection\",\"track.index\",\"track.name\",\"track.type\","
         "\"track.requested\",\"track.audioSide.soloed\",\"track."
         "audioSide.recordArmed\",\"track.silenced\",\"sequence.name\",\"sequence.used\",\"sequence."
-        "bpm\",\"muteContext\",\"sequence.ref\",\"selection\",\"buses.metadata\"]"
+        "bpm\",\"muteContext\",\"sequence.ref\",\"selection\",\"buses.metadata\",\"track.mixer\"]"
       : "[]",
     output);
   fputs(",\"flagFamilies\":[", output);
@@ -311,6 +313,37 @@ char *api_respond(
             output);
       }
     }
+    fputc('}', output);
+  }
+  static const char *mixers[] =
+    {"set_volume", "set_pan", "set_send_level", "set_insert_rack_enabled", "set_insert_enabled"};
+  for (unsigned i = 0; i < 5; i++) {
+    fputc(',', output);
+    api_quoted(output, mixers[i]);
+    fprintf(output, ":{\"available\":%s,\"reason\":", discovery.commands_ready ? "true" : "false");
+    api_quoted(output, discovery.commands_ready ? NULL : discovery.unavailable_reason);
+    fputs(
+      ",\"trackTypes\":[\"plugin\",\"drum\",\"keygroup\",\"audio\"],"
+      "\"screens\":[\"main\",\"mixer\",\"track_mute\"],\"scope\":\"global\","
+      "\"verification\":[\"model\"],\"audioCompletionKnown\":false,\"busWrites\":false,"
+      "\"requiresMixerGeneration\":true,\"conditions\":[\"qualified_screen\",\"no_popup\","
+      "\"stopped_or_sequence_playback\",\"recording_off\",\"automation_off\",\"current_mixer_"
+      "generation\"],"
+      "\"automation\":{\"off\":\"qualified_writes\",\"read\":\"unsupported\",\"write\":"
+      "\"unsupported\",\"unknown\":\"unsupported\"},"
+      "\"transportStates\":[\"stopped\",\"sequence_playback\"]",
+      output);
+    if (i < 3)
+      fputs(
+        ",\"unit\":\"normalized\",\"minimum\":0,\"maximum\":1,\"quantization\":\"ieee_binary32\","
+        "\"expectedComparison\":\"binary32_exact\"",
+        output);
+    else
+      fputs(",\"unit\":\"boolean\"", output);
+    if (i == 1)
+      fputs(",\"centre\":0.5", output);
+    if (i == 2 || i == 4)
+      fputs(",\"indexBase\":0,\"indexCount\":4", output);
     fputc('}', output);
   }
   fprintf(

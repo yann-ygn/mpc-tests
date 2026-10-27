@@ -44,7 +44,7 @@ is callable or supported. Each story requires the specified mapping and device v
 
 | US | Work |
 |---|---|
-| #39 | Validate and add native volume, pan, sends and insert-enable controls |
+| #39 | Native volume, pan, sends and insert-enable controls — implemented; [findings](native-mixer-controls.md) |
 | #40 | Validate and add transport, tempo and track/sequence selection |
 | #41 | Validate and add track metadata, lifecycle and MIDI/CV routing |
 | #42 | Probe clip, scene and song bindings and define the supported API subset |

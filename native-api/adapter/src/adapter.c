@@ -172,7 +172,7 @@ static int get_bool(struct mpc_native_adapter *adapter, uintptr_t address, bool 
   return 0;
 }
 
-static enum mpc_native_error target_check(
+enum mpc_native_error mpc_native_target_check(
   struct mpc_native_adapter *adapter,
   const struct mpc_native_target *target,
   enum mpc_native_family *family) {
@@ -239,7 +239,7 @@ static enum mpc_native_error state_read_inner(
   const struct mpc_native_target *target,
   struct mpc_native_track_state *output) {
   enum mpc_native_family family;
-  enum mpc_native_error error = target_check(adapter, target, &family);
+  enum mpc_native_error error = mpc_native_target_check(adapter, target, &family);
   if (error)
     return error;
   const struct mpc_family_support *support = mpc_family_by_id(family);
@@ -297,7 +297,7 @@ static enum mpc_native_error invocation_check(
   enum mpc_native_family expected) {
   enum mpc_native_family family;
   adapter->invoking_flag = true;
-  enum mpc_native_error error = target_check(adapter, target, &family);
+  enum mpc_native_error error = mpc_native_target_check(adapter, target, &family);
   adapter->invoking_flag = false;
   return error ? error : family == expected ? MPC_NATIVE_OK : MPC_NATIVE_STALE_TARGET;
 }
@@ -446,6 +446,9 @@ const char *mpc_native_error_name(enum mpc_native_error error) {
     "RECORDING_UNQUALIFIED",
     "PLAYBACK_CONTEXT_UNQUALIFIED",
     "AUTOMATION_UNQUALIFIED",
-    "AUTOMATION_READ_NOOP_ONLY"};
+    "AUTOMATION_READ_NOOP_ONLY",
+    "STALE_MIXER",
+    "EMPTY_INSERT",
+    "MIXER_AUTOMATION_UNQUALIFIED"};
   return (unsigned)error < sizeof names / sizeof *names ? names[error] : "INVALID_ERROR";
 }

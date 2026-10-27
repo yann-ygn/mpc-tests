@@ -1,0 +1,17 @@
+{
+  "apiVersion": "0.1",
+  "op": "set_send_level",
+  "requestId": "send_A",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "mixerGeneration": "100",
+  "value": 0.123456789,
+  "expected": {
+    "value": 0
+  },
+  "waitMs": 1000,
+  "sendIndex": 0
+}

@@ -4,7 +4,7 @@
   "instanceId": "run_d8db975d400593d8373c4c4be8b04a46",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.8.0"
+    "version": "0.10.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -917,6 +917,228 @@
     "watch": {
       "available": false,
       "reason": "NOT_IMPLEMENTED"
+    },
+    "set_volume": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "audio"
+      ],
+      "screens": [
+        "main",
+        "mixer",
+        "track_mute"
+      ],
+      "scope": "global",
+      "unit": "normalized",
+      "verification": [
+        "model"
+      ],
+      "audioCompletionKnown": false,
+      "busWrites": false,
+      "requiresMixerGeneration": true,
+      "conditions": [
+        "qualified_screen",
+        "no_popup",
+        "stopped_or_sequence_playback",
+        "recording_off",
+        "automation_off",
+        "current_mixer_generation"
+      ],
+      "automation": {
+        "off": "qualified_writes",
+        "read": "unsupported",
+        "write": "unsupported",
+        "unknown": "unsupported"
+      },
+      "transportStates": [
+        "stopped",
+        "sequence_playback"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "quantization": "ieee_binary32",
+      "expectedComparison": "binary32_exact"
+    },
+    "set_pan": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "audio"
+      ],
+      "screens": [
+        "main",
+        "mixer",
+        "track_mute"
+      ],
+      "scope": "global",
+      "unit": "normalized",
+      "verification": [
+        "model"
+      ],
+      "audioCompletionKnown": false,
+      "busWrites": false,
+      "requiresMixerGeneration": true,
+      "conditions": [
+        "qualified_screen",
+        "no_popup",
+        "stopped_or_sequence_playback",
+        "recording_off",
+        "automation_off",
+        "current_mixer_generation"
+      ],
+      "automation": {
+        "off": "qualified_writes",
+        "read": "unsupported",
+        "write": "unsupported",
+        "unknown": "unsupported"
+      },
+      "transportStates": [
+        "stopped",
+        "sequence_playback"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "quantization": "ieee_binary32",
+      "expectedComparison": "binary32_exact",
+      "centre": 0.5
+    },
+    "set_send_level": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "audio"
+      ],
+      "screens": [
+        "main",
+        "mixer",
+        "track_mute"
+      ],
+      "scope": "global",
+      "unit": "normalized",
+      "verification": [
+        "model"
+      ],
+      "audioCompletionKnown": false,
+      "busWrites": false,
+      "requiresMixerGeneration": true,
+      "conditions": [
+        "qualified_screen",
+        "no_popup",
+        "stopped_or_sequence_playback",
+        "recording_off",
+        "automation_off",
+        "current_mixer_generation"
+      ],
+      "automation": {
+        "off": "qualified_writes",
+        "read": "unsupported",
+        "write": "unsupported",
+        "unknown": "unsupported"
+      },
+      "transportStates": [
+        "stopped",
+        "sequence_playback"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "quantization": "ieee_binary32",
+      "expectedComparison": "binary32_exact",
+      "indexBase": 0,
+      "indexCount": 4
+    },
+    "set_insert_rack_enabled": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "audio"
+      ],
+      "screens": [
+        "main",
+        "mixer",
+        "track_mute"
+      ],
+      "scope": "global",
+      "unit": "boolean",
+      "verification": [
+        "model"
+      ],
+      "audioCompletionKnown": false,
+      "busWrites": false,
+      "requiresMixerGeneration": true,
+      "conditions": [
+        "qualified_screen",
+        "no_popup",
+        "stopped_or_sequence_playback",
+        "recording_off",
+        "automation_off",
+        "current_mixer_generation"
+      ],
+      "automation": {
+        "off": "qualified_writes",
+        "read": "unsupported",
+        "write": "unsupported",
+        "unknown": "unsupported"
+      },
+      "transportStates": [
+        "stopped",
+        "sequence_playback"
+      ]
+    },
+    "set_insert_enabled": {
+      "available": true,
+      "reason": null,
+      "trackTypes": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "audio"
+      ],
+      "screens": [
+        "main",
+        "mixer",
+        "track_mute"
+      ],
+      "scope": "global",
+      "unit": "boolean",
+      "verification": [
+        "model"
+      ],
+      "audioCompletionKnown": false,
+      "busWrites": false,
+      "requiresMixerGeneration": true,
+      "conditions": [
+        "qualified_screen",
+        "no_popup",
+        "stopped_or_sequence_playback",
+        "recording_off",
+        "automation_off",
+        "current_mixer_generation"
+      ],
+      "automation": {
+        "off": "qualified_writes",
+        "read": "unsupported",
+        "write": "unsupported",
+        "unknown": "unsupported"
+      },
+      "transportStates": [
+        "stopped",
+        "sequence_playback"
+      ],
+      "indexBase": 0,
+      "indexCount": 4
     }
   },
   "limits": {
@@ -936,7 +1158,7 @@
     "maxMidiTracks": 128,
     "maxAudioTracks": 8,
     "maxBuses": 128,
-    "snapshotAbiVersion": 4,
+    "snapshotAbiVersion": 5,
     "maxJobsPerUiCallback": 1
   }
 }

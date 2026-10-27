@@ -75,11 +75,19 @@
       "enum": [
         "set_mute",
         "set_solo",
-        "set_record_armed"
+        "set_record_armed",
+        "set_volume",
+        "set_pan",
+        "set_send_level",
+        "set_insert_rack_enabled",
+        "set_insert_enabled"
       ]
     },
     "value": {
-      "type": "boolean"
+      "type": [
+        "boolean",
+        "number"
+      ]
     },
     "changed": {
       "type": [
@@ -116,7 +124,10 @@
           }
         },
         "requestedValue": {
-          "type": "boolean"
+          "type": [
+            "boolean",
+            "number"
+          ]
         },
         "audioSideValue": {
           "type": [
@@ -133,12 +144,15 @@
         },
         "muteContext": {
           "$ref": "#/$defs/muteContext"
+        },
+        "mixer": {
+          "$ref": "#/$defs/mixer"
         }
       }
     },
     "observedChanges": {
       "type": "array",
-      "maxItems": 818,
+      "maxItems": 3000,
       "items": {
         "type": "object",
         "required": [
@@ -162,6 +176,7 @@
           "before": {
             "type": [
               "boolean",
+              "number",
               "string",
               "null"
             ]
@@ -169,6 +184,7 @@
           "after": {
             "type": [
               "boolean",
+              "number",
               "string",
               "null"
             ]
@@ -333,6 +349,16 @@
             "durationUs": {
               "type": "integer",
               "minimum": 0
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "flags",
+                  "mixer"
+                ]
+              },
+              "uniqueItems": true
             }
           },
           "additionalProperties": false
@@ -376,12 +402,37 @@
             "durationUs": {
               "type": "integer",
               "minimum": 0
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "flags",
+                  "mixer"
+                ]
+              },
+              "uniqueItems": true
             }
           },
           "additionalProperties": false
         }
       },
       "additionalProperties": false
+    },
+    "mixerGeneration": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$",
+      "maxLength": 20
+    },
+    "sendIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "slotIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
     }
   },
   "allOf": [
@@ -463,6 +514,99 @@
             }
           }
         }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "enum": [
+              "set_volume",
+              "set_pan",
+              "set_send_level"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "verification": {
+            "properties": {
+              "requestedValue": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "value": {
+            "type": "boolean"
+          },
+          "verification": {
+            "properties": {
+              "requestedValue": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "enum": [
+              "set_volume",
+              "set_pan",
+              "set_send_level",
+              "set_insert_rack_enabled",
+              "set_insert_enabled"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "mixerGeneration"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "set_send_level"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "sendIndex"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "set_insert_enabled"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "slotIndex"
+        ]
       }
     }
   ],
@@ -552,6 +696,150 @@
           }
         }
       ]
+    },
+    "mixer": {
+      "type": "object",
+      "required": [
+        "generation",
+        "known",
+        "scope",
+        "unit",
+        "volume",
+        "pan",
+        "sends",
+        "insertRackEnabled",
+        "inserts",
+        "verification",
+        "audioCompletionKnown"
+      ],
+      "properties": {
+        "generation": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "known": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2047
+        },
+        "scope": {
+          "const": "global"
+        },
+        "unit": {
+          "const": "normalized"
+        },
+        "volume": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pan": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sends": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "destination",
+              "value"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "destination": {
+                "enum": [
+                  "return_A",
+                  "return_B",
+                  "return_C",
+                  "return_D"
+                ]
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "insertRackEnabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "inserts": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "occupied",
+              "enabled"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "occupied": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "enabled": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "verification": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "const": "model"
+          }
+        },
+        "audioCompletionKnown": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "description": "Applied verifies required live observations at completion; later automation may change the flag. Read mute/solo writes use AUTOMATION_READ_NOOP_ONLY. Write/unknown modes use AUTOMATION_UNQUALIFIED."

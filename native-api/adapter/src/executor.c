@@ -43,6 +43,7 @@ struct mpc_executor {
   enum mpc_command_operation command_property;
   enum mpc_mute_scope mute_scope;
   bool qualifying;
+  struct mpc_mixer_request mixer;
 };
 
 static bool time_before(const struct timespec *left, const struct timespec *right) {
@@ -121,6 +122,21 @@ static enum mpc_native_error resolve_target(
 static enum mpc_native_error qualify_command(struct mpc_executor *executor) {
   unsigned stage = mpc_ui_enter(executor->adapter, MPC_UI_POLICY);
   executor->qualifying = true;
+  if (executor->command_property >= MPC_COMMAND_VOLUME) {
+    enum mpc_native_error error = mpc_identity_mixer(
+      executor->registry,
+      &executor->identity,
+      &executor->command_context->last_mixer);
+    if (!error && !executor->command_context->last_mixer.known)
+      error = MPC_NATIVE_UNSUPPORTED_TRACK_TYPE;
+    if (!error && executor->command_context->last_mixer.generation != executor->mixer.generation)
+      error = MPC_NATIVE_STALE_MIXER;
+    if (error) {
+      executor->qualifying = false;
+      mpc_ui_leave(executor->adapter, stage);
+      return error;
+    }
+  }
   enum mpc_native_error error = executor->command_policy.qualify
     ? executor->command_policy.qualify(
         executor->command_policy.userdata,
@@ -157,7 +173,8 @@ static struct mpc_executor_result command_execute(
   clock_gettime(CLOCK_MONOTONIC, &dispatched);
   out->dispatched_ms = (uint64_t)dispatched.tv_sec * 1000 + (uint64_t)dispatched.tv_nsec / 1000000;
   struct mpc_executor_request request = *input;
-  unsigned property = input->operation == MPC_EXECUTOR_COMMAND_OBSERVE
+  unsigned property = (input->operation == MPC_EXECUTOR_COMMAND_OBSERVE ||
+                       input->operation == MPC_EXECUTOR_COMMAND_MIXER)
     ? input->command_property
     : (unsigned)(input->operation - MPC_EXECUTOR_COMMAND_MUTE);
   executor->adapter->profile = &out->profile;
@@ -171,6 +188,7 @@ static struct mpc_executor_result command_execute(
   executor->command_context = out;
   executor->command_property = (enum mpc_command_operation)property;
   executor->mute_scope = request.mute_scope;
+  executor->mixer = request.mixer;
   result.error = qualify_command(executor);
   executor->active = false;
   if (result.error)
@@ -191,7 +209,17 @@ static struct mpc_executor_result command_execute(
   result.error = resolve_target(executor, &request.identity, &target);
   if (!result.error) {
     const bool *expected = request.has_expected ? &request.expected : NULL;
-    if (!writing)
+    if (writing && property >= MPC_COMMAND_VOLUME)
+      result.error = mpc_mixer_set(
+        executor->adapter,
+        &target,
+        property,
+        &request.mixer,
+        request.desired,
+        request.has_expected,
+        request.expected,
+        &result.write);
+    else if (!writing)
       result.error = mpc_native_read_track(executor->adapter, &target, &result.observed);
     else if (property == MPC_COMMAND_MUTE)
       result.error =
@@ -231,7 +259,20 @@ static struct mpc_executor_result command_execute(
     /* The final live policy sample must agree with the completion observation
      * for the addressed operation. A Read automation/model or engine change
      * between these reads needs bounded verification, never another setter. */
-    if (out->last_readback_known) {
+    if (property >= MPC_COMMAND_VOLUME) {
+      out->readbacks_consistent = false;
+      for (unsigned i = 0; i < out->after.track_count; i++) {
+        const struct mpc_command_track *sample = &out->after.tracks[i];
+        if (sample->id != request.identity.track)
+          continue;
+        double live, sampled;
+        out->readbacks_consistent = sample->mixer.generation == request.mixer.generation &&
+          mpc_mixer_value(&out->last_mixer, property, request.mixer.index, &live) &&
+          mpc_mixer_value(&sample->mixer, property, request.mixer.index, &sampled) &&
+          live == sampled;
+        break;
+      }
+    } else if (out->last_readback_known) {
       const struct mpc_native_track_state *live = &out->last_readback;
       unsigned required = mpc_family_by_id(live->family)->required[property];
       out->readbacks_consistent = false;
@@ -339,6 +380,7 @@ static struct mpc_executor_result execute(
     case MPC_EXECUTOR_COMMAND_SOLO:
     case MPC_EXECUTOR_COMMAND_ARM:
     case MPC_EXECUTOR_COMMAND_OBSERVE:
+    case MPC_EXECUTOR_COMMAND_MIXER:
       break;
     }
     if (request->operation != MPC_EXECUTOR_READ_TRACK)
@@ -713,19 +755,22 @@ enum mpc_native_error mpc_executor_command_submit(
     return MPC_NATIVE_INVALID_ARGUMENT;
   *output = NULL;
   if (
-    !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_COMMAND_OBSERVE ||
+    !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_COMMAND_MIXER ||
     request->queue_timeout_ms > MPC_EXECUTOR_MAX_WAIT_MS ||
     (request->operation == MPC_EXECUTOR_SAMPLE_FLAGS &&
      (request->sample_count > MPC_EXECUTOR_SAMPLE_TRACKS ||
       request->sample_offset > MPC_IDENTITY_MAX_TRACKS)) ||
-    (request->operation == MPC_EXECUTOR_COMMAND_OBSERVE &&
-     request->command_property > MPC_COMMAND_RECORD_ARMED))
+    ((request->operation == MPC_EXECUTOR_COMMAND_OBSERVE ||
+      request->operation == MPC_EXECUTOR_COMMAND_MIXER) &&
+     request->command_property > MPC_COMMAND_INSERT))
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (request->operation >= MPC_EXECUTOR_COMMAND_MUTE) {
-    unsigned property = request->operation == MPC_EXECUTOR_COMMAND_OBSERVE
+    unsigned property = (request->operation == MPC_EXECUTOR_COMMAND_OBSERVE ||
+                         request->operation == MPC_EXECUTOR_COMMAND_MIXER)
       ? request->command_property
       : (unsigned)(request->operation - MPC_EXECUTOR_COMMAND_MUTE);
     if (
+      !mpc_mixer_request_valid(property, &request->mixer, request->has_expected) ||
       (unsigned)request->mute_scope > MPC_MUTE_SEQUENCE ||
       (request->mute_scope == MPC_MUTE_SEQUENCE &&
        (property != MPC_COMMAND_MUTE || !request->identity.sequence ||

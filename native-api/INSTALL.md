@@ -6,14 +6,18 @@ addin. It supports MPC Key 37, MPC 3.9.1.2, exact GNU build ID
 Mute also requires a matching explicit global/active-sequence scope (US #48). Consult `describe` for command availability and limits, and the
 [service guide](README.md#send-flag-commands) for request and receipt semantics.
 
-Version 0.9.0 qualifies Automation Read no-ops and native record-arm writes;
+Version 0.10.0 adds desired-state volume, pan, sends and rack/slot enable controls
+for qualified plugin/drum/keygroup/audio tracks under Automation Off. Mixer
+completion is model-only; MIDI/CV mixer and bus setters remain unavailable.
+See [mixer qualification](../findings/native-mixer-controls.md).
+The earlier 0.9.0 extension qualifies Automation Read no-ops and native record-arm writes;
 Read mute/solo writes remain unavailable. See [qualification and evidence](../findings/native-automation-read.md).
 The installed 0.7.0 host requires an approved restart to acquire this code.
 Version 0.8.0 reduces command UI work and adds shared incremental flag sampling;
 see [measurements and limits](../findings/native-ui-cost.md).
 Version 0.7.0 adds ordinary sequence playback with recording/overdub and automation Off,
 retained command timing and one executor job per UI message. Recording/overdub, automation
-Write/unknown, Clip and Song remain unavailable in 0.9.0. See the [tested load and limits](../findings/native-playback-flags.md).
+Write/unknown, Clip and Song remain unavailable in 0.10.0. See the [tested load and limits](../findings/native-playback-flags.md).
 Version 0.6.0 qualifies plugin/drum/keygroup/audio flags and engine copies, and MIDI/CV
 requested flags. Version 0.5.0 adds explicit sequence-scoped mute and scope-labelled state/receipts;
 the named generation must remain active and the live preference must match. An installed 0.2.0 host must
@@ -35,8 +39,8 @@ the same shared addin installer as privtap: set `MPC_VST_PLUGINS` to an
 No device is contacted. Outputs:
 
 ```text
-build/native-api/packages/mpc-native-api-0.9.0/
-build/native-api/packages/mpc-native-api-0.9.0.tar.gz
+build/native-api/packages/mpc-native-api-0.10.0/
+build/native-api/packages/mpc-native-api-0.10.0.tar.gz
 ```
 
 `PACKAGE.json` records the source revision and source-content SHA-256, dirty
@@ -61,7 +65,7 @@ MPC restart to retire its code. No reboot is normally necessary.
 Copy the directory to the device, verify the checksums there, then install:
 
 ```sh
-cd /tmp/mpc-native-api-0.9.0
+cd /tmp/mpc-native-api-0.10.0
 sha256sum -c SHA256SUMS
 sh install.sh -y
 ```

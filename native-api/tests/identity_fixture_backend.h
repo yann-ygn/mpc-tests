@@ -26,8 +26,8 @@ struct identity_fixture {
   struct mpc_native_function pending;
   bool queued;
   bool reject_post, drop_post, retain_sequence;
-  uint32_t subjects[MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1];
-  struct mpc_native_lifetime *watches[MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1];
+  uint32_t subjects[MPC_IDENTITY_MAX_TRACKS * 7 + MPC_IDENTITY_MAX_SEQUENCES + 1];
+  struct mpc_native_lifetime *watches[MPC_IDENTITY_MAX_TRACKS * 7 + MPC_IDENTITY_MAX_SEQUENCES + 1];
   struct mpc_native_sequence_watch *sequence_watches[128];
   struct mpc_native_project_watch *project_watch;
   unsigned registered, removed, expired;
@@ -124,7 +124,7 @@ static inline enum mpc_native_error
 watch(void *data, uint32_t subject, struct mpc_native_lifetime *lifetime) {
   struct identity_fixture *fixture = data;
   assert(ui);
-  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1; i++) {
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS * 7 + MPC_IDENTITY_MAX_SEQUENCES + 1; i++) {
     if (fixture->watches[i])
       continue;
     fixture->subjects[i] = subject;
@@ -140,7 +140,7 @@ watch(void *data, uint32_t subject, struct mpc_native_lifetime *lifetime) {
 static inline void unwatch(void *data, struct mpc_native_lifetime *lifetime) {
   struct identity_fixture *fixture = data;
   assert(ui);
-  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1; i++)
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS * 7 + MPC_IDENTITY_MAX_SEQUENCES + 1; i++)
     if (fixture->watches[i] == lifetime) {
       fixture->watches[i] = NULL;
       fixture->removed++;
@@ -151,7 +151,7 @@ static inline void unwatch(void *data, struct mpc_native_lifetime *lifetime) {
 static inline void destroy_object(struct identity_fixture *fixture, uint32_t object) {
   /* Destruction and recreation happen between UI samples; no pointer scan can
    * distinguish them. The native destruction observer must remember the event. */
-  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS + MPC_IDENTITY_MAX_SEQUENCES + 1; i++)
+  for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS * 7 + MPC_IDENTITY_MAX_SEQUENCES + 1; i++)
     if (fixture->watches[i] && fixture->subjects[i] == object + 4) {
       fixture->watches[i]->vtable[2](fixture->watches[i]);
       fixture->expired++;

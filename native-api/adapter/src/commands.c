@@ -8,7 +8,7 @@
 #include <time.h>
 
 struct record {
-  bool used, pending, verifying;
+  bool used, pending, verifying, frozen;
   unsigned readers;
   uint64_t caller, serial, accepted_ms, start_deadline, verify_deadline;
   struct mpc_executor_job *job;
@@ -69,7 +69,9 @@ static bool canonical(const struct mpc_command_request *a, const struct mpc_comm
     !memcmp(a->sequence.instance_id, b->sequence.instance_id, 37) &&
     !memcmp(a->target.instance_id, b->target.instance_id, 37) && a->value == b->value &&
     a->has_expected == b->has_expected && (!a->has_expected || a->expected == b->expected) &&
-    a->start_within_ms == b->start_within_ms;
+    a->start_within_ms == b->start_within_ms && a->mixer.generation == b->mixer.generation &&
+    a->mixer.index == b->mixer.index && a->mixer.value == b->mixer.value &&
+    (!a->has_expected || a->mixer.expected == b->mixer.expected);
 }
 static void finish(
   struct mpc_commands *commands,
@@ -96,6 +98,14 @@ static bool verified(const struct mpc_command_receipt *receipt) {
   unsigned property = receipt->request.operation;
   if (!track)
     return false;
+  if (property >= MPC_COMMAND_VOLUME) {
+    double value;
+    return track->mixer.generation == receipt->request.mixer.generation &&
+      mpc_mixer_value(&track->mixer, property, receipt->request.mixer.index, &value) &&
+      value ==
+      (mpc_mixer_numeric(property) ? (double)(float)receipt->request.mixer.value
+                                   : receipt->request.value);
+  }
   const struct mpc_family_support *support = mpc_family_by_id(track->family);
   unsigned required = support->required[property];
   if (!required || (track->known & required) != required)
@@ -130,6 +140,24 @@ static void fail_before_execution(
 static void advance(struct mpc_commands *commands, struct record *record) {
   struct mpc_command_receipt *receipt = &record->receipt;
   uint64_t now = commands->now(commands->clock_data);
+  /* A terminal verification timeout is immutable even if its read-only UI job
+   * is still returning. Keep ownership/retention pressure until that job drains. */
+  if (record->frozen) {
+    struct mpc_executor_result drained;
+    if (mpc_executor_poll(record->job, &drained) || drained.state == MPC_EXECUTOR_RUNNING)
+      return;
+    if (drained.state == MPC_EXECUTOR_QUEUED) {
+      mpc_executor_cancel(record->job, &drained);
+      if (drained.state == MPC_EXECUTOR_RUNNING)
+        return;
+    }
+    mpc_executor_release(record->job);
+    record->job = NULL;
+    record->pending = false;
+    commands->pending--;
+    pthread_cond_broadcast(&commands->changed);
+    return;
+  }
   if (!record->job) {
     if (!record->verifying && (commands->stopping || now >= record->start_deadline)) {
       fail_before_execution(commands, record, MPC_NATIVE_CANCELLED);
@@ -144,8 +172,9 @@ static void advance(struct mpc_commands *commands, struct record *record) {
       return;
     }
     struct mpc_executor_request request = {
-      .operation = record->verifying
-        ? MPC_EXECUTOR_COMMAND_OBSERVE
+      .operation = record->verifying ? MPC_EXECUTOR_COMMAND_OBSERVE
+        : receipt->request.operation >= MPC_COMMAND_VOLUME
+        ? MPC_EXECUTOR_COMMAND_MIXER
         : (enum mpc_executor_operation)(MPC_EXECUTOR_COMMAND_MUTE + receipt->request.operation),
       .identity =
         {.project = receipt->request.target.project,
@@ -156,6 +185,7 @@ static void advance(struct mpc_commands *commands, struct record *record) {
       .desired = receipt->request.value,
       .has_expected = receipt->request.has_expected,
       .expected = receipt->request.expected,
+      .mixer = receipt->request.mixer,
       .queue_timeout_ms =
         record->verifying ? MPC_COMMAND_VERIFICATION_MS : (unsigned)(record->start_deadline - now),
       .command_property = receipt->request.operation,
@@ -189,6 +219,8 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     return;
   if (result.state == MPC_EXECUTOR_RUNNING) {
     if (record->verifying && now >= record->verify_deadline) {
+      record->frozen = true;
+      receipt->finished_ms = now;
       receipt->status = MPC_COMMAND_UNKNOWN;
       receipt->error = MPC_NATIVE_VERIFICATION_TIMEOUT;
     }
@@ -254,6 +286,30 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     } else
       fail_before_execution(commands, record, result.error);
     return;
+  }
+  if (
+    receipt->request.operation >= MPC_COMMAND_VOLUME && receipt->before_known &&
+    receipt->after_known) {
+    double before, after;
+    const struct mpc_command_track *a = NULL, *b = target_track(receipt);
+    for (unsigned i = 0; i < receipt->before.track_count; i++)
+      if (receipt->before.tracks[i].id == receipt->request.target.track)
+        a = &receipt->before.tracks[i];
+    if (
+      a && b && a->mixer.generation == b->mixer.generation &&
+      mpc_mixer_value(
+        &a->mixer,
+        receipt->request.operation,
+        receipt->request.mixer.index,
+        &before) &&
+      mpc_mixer_value(
+        &b->mixer,
+        receipt->request.operation,
+        receipt->request.mixer.index,
+        &after)) {
+      receipt->changed_known = true;
+      receipt->changed = before != after;
+    }
   }
   if (readbacks_consistent && verified(receipt)) {
     receipt->execution = MPC_COMMAND_COMPLETED; /* Includes verified native no-ops. */
@@ -388,7 +444,7 @@ enum mpc_native_error mpc_commands_submit(
   if (
     !identifier(input->request_id) || !instance(input->target.instance_id) ||
     !input->target.project || !input->target.track ||
-    (unsigned)input->operation > MPC_COMMAND_RECORD_ARMED ||
+    (unsigned)input->operation > MPC_COMMAND_INSERT ||
     input->start_within_ms > MPC_COMMAND_MAX_START_MS)
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (
@@ -401,6 +457,8 @@ enum mpc_native_error mpc_commands_submit(
     (input->mute_scope == MPC_MUTE_GLOBAL &&
      (input->sequence.instance_id[0] || input->sequence.project || input->sequence.sequence ||
       input->sequence.generation)))
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  if (!mpc_mixer_request_valid(input->operation, &input->mixer, input->has_expected))
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (input->has_expected_revision)
     return MPC_NATIVE_UNSUPPORTED_PRECONDITION;

@@ -174,6 +174,34 @@ def main():
                         assert actual[key] == expected[key], (key, actual, expected)
                     for field in ("requested", "audioSide", "silenced"):
                         assert actual[field] == expected[field], (field, actual, expected)
+                from mpc_mixer_controls import independent as mixer_observations
+                import struct
+
+                mixer_rows = {
+                    r["userIndex"]: r
+                    for r in mixer_observations(with_session)
+                    if r["userIndex"] is not None
+                }
+                for index, track in enumerate(state["tracks"]):
+                    mixer, expected = track["mixer"], mixer_rows[index]
+                    if expected["family"] not in ("plugin", "drum", "keygroup", "audio"):
+                        assert not mixer["known"] and mixer["generation"] is None
+                        continue
+                    assert mixer["generation"] and mixer["verification"] == ["model"]
+                    for field in ("volume", "pan"):
+                        assert struct.pack("<f", mixer[field]) == struct.pack("<f", expected[field])
+                    for i, send in enumerate(mixer["sends"]):
+                        assert send["index"] == i
+                        assert struct.pack("<f", send["value"]) == struct.pack(
+                            "<f", expected["sends"][i]
+                        )
+                    assert mixer["insertRackEnabled"] == expected["rack"]
+                    assert [slot["enabled"] for slot in mixer["inserts"]] == expected["slots"]
+                report["mixerFieldsMatchedIndependentReader"] = True
+                assert all(
+                    not bus["mixer"]["known"] and bus["mixer"]["generation"] is None
+                    for bus in state["buses"]
+                )
                 assert len(state["buses"]) == len(inventory["buses"])
                 after_inventory = track_inventory(with_session, flags=True)
                 for key in ("tracks", "buses", "selectedTrack", "counts"):

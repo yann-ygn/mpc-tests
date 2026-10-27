@@ -1,0 +1,17 @@
+{
+  "apiVersion": "0.1",
+  "op": "set_insert_enabled",
+  "requestId": "enable_insert_1",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "mixerGeneration": "100",
+  "value": true,
+  "expected": {
+    "value": false
+  },
+  "waitMs": 1000,
+  "slotIndex": 0
+}

@@ -1,0 +1,681 @@
+{
+  "story": 39,
+  "date": "2026-10-27",
+  "firmwareBuildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "implementation": "0.10.0; primitive 2 / executor 9 / commands 7 / observations 2 / snapshot 5",
+  "fourFamilyWorkload": {
+    "userTracks": 4,
+    "families": [
+      "plugin",
+      "drum",
+      "keygroup",
+      "audio"
+    ],
+    "busesObserved": 28,
+    "bpm": 120,
+    "bars": 4,
+    "automationDuringWrites": "Off",
+    "scenarios": [
+      {
+        "screen": "main",
+        "playing": true,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "main",
+        "playing": false,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_effects",
+        "playing": true,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_effects",
+        "playing": false,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_io",
+        "playing": true,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_io",
+        "playing": false,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_pan_volume",
+        "playing": true,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_pan_volume",
+        "playing": false,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_sends",
+        "playing": true,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_sends",
+        "playing": false,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_volume",
+        "playing": true,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "mixer_volume",
+        "playing": false,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "track_mute",
+        "playing": true,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      },
+      {
+        "screen": "track_mute",
+        "playing": false,
+        "rows": 88,
+        "selectedAndUnselected": true,
+        "restored": true,
+        "outcomes": {
+          "applied": 70,
+          "rejected": 18
+        }
+      }
+    ],
+    "totalRows": 1232,
+    "timing": {
+      "queueMs": {
+        "n": 980,
+        "p50": 1,
+        "p95": 11,
+        "p99": 14,
+        "max": 17
+      },
+      "dispatchMs": {
+        "n": 980,
+        "p50": 19,
+        "p95": 22,
+        "p99": 24,
+        "max": 36
+      },
+      "verificationMs": {
+        "n": 980,
+        "p50": 2,
+        "p95": 5,
+        "p99": 6,
+        "max": 29
+      },
+      "totalMs": {
+        "n": 980,
+        "p50": 23,
+        "p95": 33,
+        "p99": 38,
+        "max": 47
+      },
+      "uiWorkUs": {
+        "n": 980,
+        "p50": 19330,
+        "p95": 22336,
+        "p99": 25471,
+        "max": 35388
+      },
+      "maxUiCallbackUs": {
+        "n": 980,
+        "p50": 19314,
+        "p95": 22021,
+        "p99": 24241,
+        "max": 35388
+      }
+    }
+  },
+  "fullMainMatrix": {
+    "rows": 88,
+    "nativeEndpoints": [
+      0,
+      1
+    ],
+    "interiorDouble": 0.123456789,
+    "canonicalReplays": true,
+    "noopAndExpectedConflicts": true,
+    "allFourSendAndSlotIndices": true,
+    "restored": true,
+    "revisionNote": "Before final timestamp/topology guards; final all-screen matrix regresses native write/read paths"
+  },
+  "additionalChecks": {
+    "automationReadWriteRejections": 40,
+    "floatAdjacentSteps": 9,
+    "discardedResponseRetained": true,
+    "slotRemovalReaddRetiredGeneration": true,
+    "oldSlotRequestError": "STALE_MIXER",
+    "projectReloadRejectedBeforeNative": true,
+    "manual-cases": true,
+    "manual-pan": true,
+    "sequence-global": true
+  },
+  "reads": {
+    "mixerFieldsMatchedIndependentReader": true,
+    "independentReadMatched": true,
+    "sampleCount": 20,
+    "captureP95Ms": 9.296,
+    "temporaryFilesRemoved": true
+  },
+  "checks": {
+    "hostMeson": 21,
+    "asanUbsanNative": 16,
+    "isolatedArm": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 327
+      },
+      {
+        "fixture": "mixer_fixture",
+        "passed": true,
+        "outputLines": 78
+      }
+    ],
+    "armElfGuards": true,
+    "separatePrivtapSanitizerHarness": "Not qualified: LD_PRELOAD precedes ASan runtime; both ordinary host tests pass"
+  },
+  "limits": {
+    "completion": "model only",
+    "audioUnderrunsExcluded": false,
+    "acousticOutputMeasured": false,
+    "maximumDensityDeviceQualified": false,
+    "midiCvMixerQualified": false,
+    "busSettersAvailable": false,
+    "automationReadWriteQualified": false,
+    "watchTransportImplemented": false
+  },
+  "playbackPressure": {
+    "workload": {
+      "userTracks": 8,
+      "families": {
+        "plugin": 6,
+        "audio": 2
+      },
+      "busesObserved": 28,
+      "bpm": 70,
+      "bars": 4,
+      "screen": "mixer_effects",
+      "clients": 8,
+      "burstSize": 32,
+      "bursts": 10,
+      "targetObservationHz": 10,
+      "actualObserverIncludesServiceWait": true,
+      "operations": [
+        "set_volume",
+        "set_pan"
+      ],
+      "waitMs": 0
+    },
+    "submissions": 320,
+    "outcomes": {
+      "applied": 188,
+      "QUEUE_FULL": 132
+    },
+    "appliedTiming": {
+      "queueMs": {
+        "n": 188,
+        "p50": 469,
+        "p95": 754,
+        "p99": 802,
+        "max": 826
+      },
+      "dispatchMs": {
+        "n": 188,
+        "p50": 36,
+        "p95": 99,
+        "p99": 143,
+        "max": 146
+      },
+      "verificationMs": {
+        "n": 188,
+        "p50": 3,
+        "p95": 5,
+        "p99": 7,
+        "max": 7
+      },
+      "totalMs": {
+        "n": 188,
+        "p50": 510,
+        "p95": 796,
+        "p99": 829,
+        "max": 856
+      },
+      "uiWorkUs": {
+        "n": 188,
+        "p50": 36098,
+        "p95": 99209,
+        "p99": 143300,
+        "max": 145804
+      },
+      "maxUiCallbackUs": {
+        "n": 188,
+        "p50": 36098,
+        "p95": 99209,
+        "p99": 143300,
+        "max": 145804
+      }
+    },
+    "observationSamples": 78,
+    "observationDurationUs": {
+      "n": 78,
+      "p50": 3439,
+      "p95": 15078,
+      "p99": 17500,
+      "max": 17500
+    },
+    "observationCallbackUs": {
+      "n": 78,
+      "p50": 0,
+      "p95": 6285,
+      "p99": 9121,
+      "max": 9121
+    },
+    "sharedSamples": 51,
+    "observationErrors": 0,
+    "resources": [
+      {
+        "processCpuTicksDelta": 175,
+        "rssKiB": [
+          1029684,
+          1026680
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.157,
+        "processCpuPercentOneCore": 151.24
+      },
+      {
+        "processCpuTicksDelta": 183,
+        "rssKiB": [
+          1030040,
+          1030724
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.189,
+        "processCpuPercentOneCore": 153.95
+      },
+      {
+        "processCpuTicksDelta": 177,
+        "rssKiB": [
+          1030040,
+          1030040
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.177,
+        "processCpuPercentOneCore": 150.38
+      },
+      {
+        "processCpuTicksDelta": 186,
+        "rssKiB": [
+          1030040,
+          1036048
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.221,
+        "processCpuPercentOneCore": 152.37
+      },
+      {
+        "processCpuTicksDelta": 193,
+        "rssKiB": [
+          1030040,
+          1036048
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.262,
+        "processCpuPercentOneCore": 152.92
+      },
+      {
+        "processCpuTicksDelta": 179,
+        "rssKiB": [
+          1030040,
+          1036048
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.21,
+        "processCpuPercentOneCore": 147.95
+      },
+      {
+        "processCpuTicksDelta": 192,
+        "rssKiB": [
+          1036048,
+          1030040
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.305,
+        "processCpuPercentOneCore": 147.07
+      },
+      {
+        "processCpuTicksDelta": 175,
+        "rssKiB": [
+          1030040,
+          1032048
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.157,
+        "processCpuPercentOneCore": 151.23
+      },
+      {
+        "processCpuTicksDelta": 179,
+        "rssKiB": [
+          1030040,
+          1030040
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.19,
+        "processCpuPercentOneCore": 150.39
+      },
+      {
+        "processCpuTicksDelta": 201,
+        "rssKiB": [
+          1030040,
+          1036048
+        ],
+        "sampledAlsaStates": {
+          "RUNNING": 2
+        },
+        "xrunCounterAvailable": false,
+        "apiCpuAttributionEstablished": false,
+        "elapsedSeconds": 1.299,
+        "processCpuPercentOneCore": 154.71
+      }
+    ],
+    "restored": true
+  },
+  "lightweightBaselineComparison": {
+    "source": "native-ui-cost-proof-20261027.json",
+    "baselineOperations": "mute/solo/arm; same eight-track 70 BPM four-bar session, three bursts",
+    "sameOperations": false,
+    "causalRegressionClaim": false,
+    "flagMatrixTiming": {
+      "queueMs": {
+        "n": 12,
+        "p50": 2,
+        "p95": 10,
+        "p99": 10,
+        "max": 10
+      },
+      "dispatchMs": {
+        "n": 12,
+        "p50": 13,
+        "p95": 34,
+        "p99": 34,
+        "max": 34
+      },
+      "verificationMs": {
+        "n": 12,
+        "p50": 2,
+        "p95": 5,
+        "p99": 5,
+        "max": 5
+      },
+      "totalMs": {
+        "n": 12,
+        "p50": 21,
+        "p95": 43,
+        "p99": 43,
+        "max": 43
+      },
+      "uiWorkUs": {
+        "n": 12,
+        "p50": 12669,
+        "p95": 33838,
+        "p99": 33838,
+        "max": 33838
+      },
+      "maxUiCallbackUs": {
+        "n": 12,
+        "p50": 12669,
+        "p95": 33838,
+        "p99": 33838,
+        "max": 33838
+      }
+    },
+    "flagBurstTiming": {
+      "queueMs": {
+        "n": 58,
+        "p50": 325,
+        "p95": 486,
+        "p99": 496,
+        "max": 496
+      },
+      "dispatchMs": {
+        "n": 58,
+        "p50": 16,
+        "p95": 68,
+        "p99": 91,
+        "max": 91
+      },
+      "verificationMs": {
+        "n": 58,
+        "p50": 2,
+        "p95": 5,
+        "p99": 5,
+        "max": 5
+      },
+      "totalMs": {
+        "n": 58,
+        "p50": 348,
+        "p95": 498,
+        "p99": 514,
+        "max": 514
+      },
+      "uiWorkUs": {
+        "n": 58,
+        "p50": 15621,
+        "p95": 68438,
+        "p99": 91367,
+        "max": 91367
+      },
+      "maxUiCallbackUs": {
+        "n": 58,
+        "p50": 15621,
+        "p95": 68438,
+        "p99": 91367,
+        "max": 91367
+      }
+    },
+    "flagBurstObservationUs": {
+      "n": 218,
+      "p50": 1399,
+      "p95": 2382,
+      "p99": 3167,
+      "max": 7470
+    }
+  },
+  "artifactSha256": {
+    "adapter": "13301bccf2c6fffaeaf62bec3ce675b156ccffb85619c31298730522c670d1ce",
+    "bridge": "eab4d5cd36e02e3bc78856b56ee73bceae5b1d479548e19a8b476d1dcbdff59f",
+    "embeddedHost": "629e5e5b50f7f6543f2d77a99e0d001274e3f59c29f41cb9a712c14b918125c9"
+  },
+  "realPlaybackReads": {
+    "mixerFieldsMatchedIndependentReader": true,
+    "independentReadMatched": true,
+    "sampleCount": 20,
+    "captureP95Ms": 10.555,
+    "temporaryFilesRemoved": true
+  },
+  "restoration": {
+    "mixerValuesAndAutomationMatchedSavedSession": true,
+    "stateMatched": {
+      "selectedTrack": true,
+      "selectedSequence": true,
+      "tracks": true,
+      "buses": true,
+      "sequenceSlots": true
+    },
+    "contextMatched": true,
+    "transportStopped": true,
+    "zeroPlayheadRestored": true,
+    "pidUnchanged": true,
+    "originalSelectionRestored": true,
+    "backupUnchanged": true,
+    "handlersClosed": true,
+    "labUnloaded": true,
+    "labFilesRemoved": true
+  },
+  "installedAfterRestoration": {
+    "installedHostReady": true,
+    "installedVersion": "0.7.0",
+    "allFiveReadsPassed": true,
+    "independentReadMatched": true,
+    "userTracks": 8,
+    "buses": 28,
+    "labUnloaded": true,
+    "labFilesRemoved": true,
+    "pidUnchanged": true,
+    "savedSessionReloaded": true,
+    "mpcRestarted": false
+  }
+}

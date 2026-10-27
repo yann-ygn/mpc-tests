@@ -366,6 +366,44 @@ def validate(state, control):
         for row in evidence.values()
     ):
         raise ValueError("Missing family qualification evidence")
+    mixer = control.get("mixer", {})
+    if mixer.get("schemaVersion") != 1 or mixer.get("families") != [
+        "plugin",
+        "drum",
+        "keygroup",
+        "audio",
+    ]:
+        raise ValueError("Invalid mixer qualification matrix")
+    for group in ("volume", "pan", "sends", "rack", "slot"):
+        for key, value in mixer[group].items():
+            integer(value, "mixer." + group + "." + key)
+    if mixer["sends"]["count"] != 4 or mixer["rack"]["count"] != 4:
+        raise ValueError("Invalid mixer addressing bounds")
+    if (
+        mixer["volume"]["value"] != mixer["volume"]["property"] + 40
+        or mixer["volume"]["format"] != mixer["volume"]["value"] + 4
+        or mixer["pan"]["value"] != mixer["pan"]["property"] + 40
+        or mixer["pan"]["filterStorage"] != mixer["pan"]["property"] + 44
+        or mixer["pan"]["filterManager"] != mixer["pan"]["filterStorage"] + 8
+        or mixer["pan"]["filterInvoker"] != mixer["pan"]["filterStorage"] + 12
+        or mixer["sends"]["stride"] != 56
+        or mixer["sends"]["value"] != 48
+        or mixer["sends"]["format"] != 52
+        or mixer["volume"]["requiredFormat"] != 3
+        or mixer["sends"]["requiredFormat"] != 1
+    ):
+        raise ValueError("Inconsistent mixer property/scaling ABI")
+    if (
+        not {
+            "mixerVolumeSetter",
+            "mixerSendSetter",
+            "mixerPanFilter",
+            "mixerRackSetter",
+            "mixerSlotSetter",
+        }
+        <= names
+    ):
+        raise ValueError("Missing mixer call fingerprints")
     return state, control
 
 
@@ -501,6 +539,43 @@ def generate(out, state_path=STATE, control_path=CONTROL):
         "static const struct native_binding native_bindings[]={" + ",".join(entries) + "};"
     )
     (out / "mpc_adapter_profile.h").write_text("\n".join(lines) + "\n")
+    mixer = control["mixer"]
+    macros = {
+        "VOLUME_VALUE": mixer["volume"]["value"],
+        "VOLUME_FORMAT": mixer["volume"]["format"],
+        "VOLUME_PROPERTY": mixer["volume"]["property"],
+        "RECEIVER": mixer["volume"]["receiver"],
+        "PAN_PROPERTY": mixer["pan"]["property"],
+        "PAN_VALUE": mixer["pan"]["value"],
+        "PAN_MANAGER": mixer["pan"]["filterManager"],
+        "PAN_INVOKER": mixer["pan"]["filterInvoker"],
+        "PAN_STORAGE": mixer["pan"]["filterStorage"],
+        "SEND_BASE": mixer["sends"]["base"],
+        "SEND_STRIDE": mixer["sends"]["stride"],
+        "SEND_VALUE": mixer["sends"]["value"],
+        "SEND_FORMAT": mixer["sends"]["format"],
+        "RACK_OFFSET": mixer["rack"]["programOffset"],
+        "RACK_VTABLE": mixer["rack"]["vtable"],
+        "RACK_SLOTS": mixer["rack"]["slots"],
+        "RACK_ENABLED": mixer["rack"]["enabled"],
+        "RACK_BITS": mixer["rack"]["slotBits"],
+        "RACK_BIT_COUNT": mixer["rack"]["slotBitCount"],
+        "SLOT_VTABLE": mixer["slot"]["vtable"],
+    }
+    for label, name in {
+        "VOLUME_SETTER": "mixerVolumeSetter",
+        "FLOAT_SETTER": "mixerFloatPropertySetter",
+        "SEND_SETTER": "mixerSendSetter",
+        "PAN_FILTER": "mixerPanFilter",
+        "RACK_SETTER": "mixerRackSetter",
+        "SLOT_SETTER": "mixerSlotSetter",
+    }.items():
+        macros[label] = next(f["rva"] for f in control["functions"] if f["name"] == name)
+    (out / "mpc_mixer_profile.h").write_text(
+        "/* Generated verified mixer layout. */\n"
+        + "\n".join(f"#define MIXER_{key} {value}u" for key, value in macros.items())
+        + "\n"
+    )
     matrix = family_matrix(control)
     lines = [
         "/* Generated from the qualified firmware family matrix. */",

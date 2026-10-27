@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include "mpc_executor.h"
 #include "mpc_commands.h"
+#include "mpc_mixer_wire.h"
+#include "api.h"
 
 /* Bounded lab bridge. No arbitrary calls, raw writes, saves, or transport commands.
  * Commands are local/root-only. PULSE restores its original requested value;
@@ -267,6 +269,13 @@ static void command_request(FILE *stream, const char *line) {
       request.start_within_ms = start_ms;
       error = mpc_commands_submit(commands, 0, &request, wait_ms, receipt);
     }
+  } else if (commands && !strncmp(line, "LAB_COMMAND_JSON ", 17)) {
+    struct api_request_data parsed;
+    const char *json = line + 17;
+    if (
+      !api_parse(json, strlen(json), &parsed) && !strcmp(parsed.version, "0.1") &&
+      !strncmp(parsed.op, "set_", 4))
+      error = mpc_commands_submit(commands, 0, &parsed.command, parsed.wait_ms, receipt);
   } else if (commands && !strncmp(line, "LAB_COMMAND_SET ", 16)) {
     struct mpc_command_request request = {0};
     int fields = sscanf(
@@ -444,7 +453,7 @@ static void state_command(FILE *stream, const char *line) {
   struct mpc_executor_status status;
   struct mpc_executor_job *job = NULL;
   struct mpc_executor_result result = {0};
-  if (sscanf(line, "STATE_V4 %36s %c", instance, &extra) != 1)
+  if (sscanf(line, "STATE_V5 %36s %c", instance, &extra) != 1)
     error = MPC_NATIVE_INVALID_ARGUMENT;
   else if (authoritative) {
     error = mpc_executor_get_status(executor, &status);
@@ -510,7 +519,7 @@ static void flags_command(FILE *stream, const char *line) {
       fprintf(
         stream,
         "%s{\"id\":\"%" PRIu64 "\",\"known\":%u,\"family\":%u,\"mute\":%u,"
-        "\"solo\":%u,\"arm\":%u,\"audioSolo\":%u,\"audioArm\":%u,\"silenced\":%u}",
+        "\"solo\":%u,\"arm\":%u,\"audioSolo\":%u,\"audioArm\":%u,\"silenced\":%u,\"mixer\":",
         i ? "," : "",
         t->id,
         t->known,
@@ -521,6 +530,8 @@ static void flags_command(FILE *stream, const char *line) {
         t->audio_soloed,
         t->audio_record_armed,
         t->silenced);
+      mpc_mixer_json(stream, &t->mixer);
+      fputc('}', stream);
     }
     fprintf(
       stream,
@@ -573,13 +584,13 @@ static void *worker(void *unused) {
       close(fd);
       continue;
     }
-    char line[256], verb[16] = {0}, prop[16] = {0}, extra;
+    char line[2048], verb[16] = {0}, prop[16] = {0}, extra;
     if (fgets(line, sizeof line, f)) {
       if (!strncmp(line, "LAB_COMMAND_", 12) || !strncmp(line, "LIVE_COMMAND_", 13)) {
         command_request(f, line);
       } else if (!strncmp(line, "FLAGS ", 6)) {
         flags_command(f, line);
-      } else if (!strncmp(line, "STATE_V4 ", 9)) {
+      } else if (!strncmp(line, "STATE_V5 ", 9)) {
         state_command(f, line);
       } else if (!strcmp(line, "IDENTITIES\n") || !strncmp(line, "HANDLE_", 7)) {
         identity_command(f, line);
@@ -592,7 +603,7 @@ static void *worker(void *unused) {
           fprintf(
             f,
             "%s %s %s %s VERIFIED\n",
-            authoritative ? "MPC_ADAPTER_STATE_V4" : "MPC_ADAPTER_V2",
+            authoritative ? "MPC_ADAPTER_STATE_V5" : "MPC_ADAPTER_V2",
             status.adapter.instance_id,
             status.adapter.profile_id,
             status.adapter.build_id);

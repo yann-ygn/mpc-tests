@@ -103,7 +103,7 @@ enum mpc_native_error mpc_native_qualify_command(
   struct mpc_command_context *baseline,
   bool *known,
   struct mpc_native_track_state *readback) {
-  if ((unsigned)operation > MPC_COMMAND_RECORD_ARMED || (unsigned)scope > MPC_MUTE_SEQUENCE)
+  if ((unsigned)operation > MPC_COMMAND_INSERT || (unsigned)scope > MPC_MUTE_SEQUENCE)
     return MPC_NATIVE_INVALID_ARGUMENT;
   /* Verifies firmware, UI ownership, family and live target before using the
    * family's automation layout. Both captures are disposable native reads. */
@@ -111,7 +111,10 @@ enum mpc_native_error mpc_native_qualify_command(
   enum mpc_native_error error = mpc_native_read_track(a, target, &state);
   if (error)
     return error;
-  if (!(mpc_family_by_id(state.family)->operations & (1u << operation)))
+  if (
+    operation >= MPC_COMMAND_VOLUME
+      ? !mpc_mixer_fields(state.family)
+      : !(mpc_family_by_id(state.family)->operations & (1u << operation)))
     return MPC_NATIVE_UNSUPPORTED_TRACK_TYPE;
   struct mpc_command_context before, after;
   if (!capture(a, target, &before) || !capture(a, target, &after))
@@ -133,6 +136,8 @@ enum mpc_native_error mpc_native_qualify_command(
     return MPC_NATIVE_RECORDING_UNQUALIFIED;
   if (before.playback_mode != p->normalSequenceMode || before.song_source)
     return MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED;
+  if (operation >= MPC_COMMAND_VOLUME && before.automation)
+    return MPC_NATIVE_MIXER_AUTOMATION_UNQUALIFIED;
   if (before.automation > 1)
     return MPC_NATIVE_AUTOMATION_UNQUALIFIED;
   if (operation == MPC_COMMAND_MUTE && before.sequence_mute != (scope == MPC_MUTE_SEQUENCE))

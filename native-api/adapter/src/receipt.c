@@ -1,4 +1,6 @@
 #include "mpc_commands.h"
+#include "private.h"
+#include "mpc_mixer_wire.h"
 #include "mpc_family_profile.h"
 
 #include <inttypes.h>
@@ -145,6 +147,40 @@ static void changes(FILE *output, const struct mpc_command_receipt *receipt) {
       fputc('}', output);
       comma = true;
     }
+    if (a->mixer.generation && a->mixer.generation == b->mixer.generation) {
+      for (unsigned op = MPC_COMMAND_VOLUME; op <= MPC_COMMAND_INSERT; op++) {
+        unsigned count = op == MPC_COMMAND_SEND || op == MPC_COMMAND_INSERT ? 4 : 1;
+        for (unsigned index = 0; index < count; index++) {
+          double left, right;
+          if (
+            !mpc_mixer_value(&a->mixer, op, index, &left) ||
+            !mpc_mixer_value(&b->mixer, op, index, &right) || left == right)
+            continue;
+          const char *name = op == MPC_COMMAND_VOLUME ? "volume"
+            : op == MPC_COMMAND_PAN                   ? "pan"
+            : op == MPC_COMMAND_SEND                  ? "sends"
+            : op == MPC_COMMAND_RACK                  ? "insertRackEnabled"
+                                                      : "inserts";
+          fprintf(
+            output,
+            "%s{\"projectId\":\"%" PRIu64 "\",\"trackId\":\"%" PRIu64
+            "\",\"path\":\"tracks.%" PRIu64 ".mixer.%s",
+            comma ? "," : "",
+            receipt->before.project,
+            a->id,
+            a->id,
+            name);
+          if (count == 4)
+            fprintf(output, ".%u", index);
+          fputs("\",\"before\":", output);
+          mpc_mixer_scalar_json(output, mpc_mixer_numeric(op), left);
+          fputs(",\"after\":", output);
+          mpc_mixer_scalar_json(output, mpc_mixer_numeric(op), right);
+          fputc('}', output);
+          comma = true;
+        }
+      }
+    }
   }
   fputc(']', output);
 }
@@ -157,7 +193,8 @@ static void coverage(FILE *output, const struct mpc_command_observation *sample,
   fprintf(
     output,
     "{\"kind\":\"user_track_flags\",\"offset\":%u,\"count\":%u,"
-    "\"totalTracks\":%u,\"topologyEpoch\":\"%" PRIu64 "\",\"durationUs\":%" PRIu64 "}",
+    "\"fields\":[\"flags\",\"mixer\"],\"totalTracks\":%u,\"topologyEpoch\":\"%" PRIu64
+    "\",\"durationUs\":%" PRIu64 "}",
     sample->offset,
     sample->track_count,
     sample->total_tracks,
@@ -168,9 +205,14 @@ static void coverage(FILE *output, const struct mpc_command_observation *sample,
 char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
   if (
     !receipt || receipt->abi_version != MPC_COMMANDS_ABI ||
-    receipt->struct_bytes != sizeof *receipt || (unsigned)receipt->status > MPC_COMMAND_UNKNOWN ||
+    receipt->struct_bytes != sizeof *receipt ||
+    !mpc_mixer_request_valid(
+      receipt->request.operation,
+      &receipt->request.mixer,
+      receipt->request.has_expected) ||
+    (unsigned)receipt->status > MPC_COMMAND_UNKNOWN ||
     (unsigned)receipt->execution > MPC_COMMAND_COMPLETED ||
-    (unsigned)receipt->request.operation > MPC_COMMAND_RECORD_ARMED ||
+    (unsigned)receipt->request.operation > MPC_COMMAND_INSERT ||
     (unsigned)receipt->request.mute_scope > MPC_MUTE_SEQUENCE ||
     (receipt->request.mute_scope == MPC_MUTE_SEQUENCE &&
      (receipt->request.operation != MPC_COMMAND_MUTE ||
@@ -188,7 +230,15 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     strncmp(receipt->request.target.instance_id, "run_", 4) ||
     strspn(receipt->request.target.instance_id + 4, "0123456789abcdef") != 32)
     return NULL;
-  static const char *operations[] = {"set_mute", "set_solo", "set_record_armed"};
+  static const char *operations[] = {
+    "set_mute",
+    "set_solo",
+    "set_record_armed",
+    "set_volume",
+    "set_pan",
+    "set_send_level",
+    "set_insert_rack_enabled",
+    "set_insert_enabled"};
   static const char *statuses[] = {"accepted", "applied", "rejected", "cancelled", "unknown"};
   static const char *stages[] = {"not_started", "started", "completed"};
   char *buffer = NULL;
@@ -196,6 +246,12 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
   FILE *output = open_memstream(&buffer, &bytes);
   if (!output)
     return NULL;
+  bool numeric = mpc_mixer_numeric(receipt->request.operation);
+  char desired[64];
+  if (numeric)
+    snprintf(desired, sizeof desired, "%.17g", receipt->request.mixer.value);
+  else
+    strcpy(desired, boolean(receipt->request.value));
   fprintf(
     output,
     "{\"apiVersion\":\"0.1\",\"requestId\":\"%s\",\"instanceId\":\"%s\","
@@ -210,7 +266,7 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     receipt->request.target.project,
     receipt->request.target.track,
     operations[receipt->request.operation],
-    boolean(receipt->request.value),
+    desired,
     receipt->changed_known ? boolean(receipt->changed) : "null",
     receipt->native_known ? boolean(receipt->native_invoked) : "null");
   const struct mpc_command_track *track =
@@ -219,7 +275,25 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     : NULL;
   bool requested = false;
   unsigned property = receipt->request.operation;
-  if (track && (track->known & (1u << property))) {
+  if (property >= MPC_COMMAND_VOLUME && track) {
+    double observed;
+    if (mpc_mixer_value(&track->mixer, property, receipt->request.mixer.index, &observed)) {
+      fputs("{\"by\":[\"model\"],\"requestedValue\":", output);
+      mpc_mixer_scalar_json(output, numeric, observed);
+      fputs(",\"audioSideValue\":null,\"observedAt\":", output);
+      time_t seconds = (time_t)(receipt->after.captured_ms / 1000);
+      struct tm time;
+      char date[32];
+      if (gmtime_r(&seconds, &time) && strftime(date, sizeof date, "%Y-%m-%dT%H:%M:%S", &time))
+        fprintf(output, "\"%s.%03uZ\"", date, (unsigned)(receipt->after.captured_ms % 1000));
+      else
+        fputs("null", output);
+      fputs(",\"mixer\":", output);
+      mpc_mixer_json(output, &track->mixer);
+      fputc('}', output);
+    } else
+      fputs("null", output);
+  } else if (property < MPC_COMMAND_VOLUME && track && (track->known & (1u << property))) {
     bool mute = receipt->request.operation == MPC_COMMAND_MUTE;
     bool copy_known = !mute &&
       (track->known & (property == MPC_COMMAND_SOLO ? MPC_NATIVE_SOLO_COPY : MPC_NATIVE_ARM_COPY));
@@ -247,6 +321,13 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     fputc('}', output);
   } else
     fputs("null", output);
+  if (property >= MPC_COMMAND_VOLUME) {
+    fprintf(output, ",\"mixerGeneration\":\"%" PRIu64 "\"", receipt->request.mixer.generation);
+    if (property == MPC_COMMAND_SEND)
+      fprintf(output, ",\"sendIndex\":%u", receipt->request.mixer.index);
+    if (property == MPC_COMMAND_INSERT)
+      fprintf(output, ",\"slotIndex\":%u", receipt->request.mixer.index);
+  }
   if (receipt->request.operation == MPC_COMMAND_MUTE) {
     fprintf(
       output,
@@ -316,12 +397,25 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
       "\"details\":{\"execution\":\"%s\"",
       error_name(receipt->error),
       stages[receipt->execution]);
-    if (receipt->error == MPC_NATIVE_PRECONDITION_FAILED && track)
+    if (receipt->error == MPC_NATIVE_PRECONDITION_FAILED && track && property < MPC_COMMAND_VOLUME)
       fprintf(
         output,
         ",\"expectedValue\":%s,\"observedValue\":%s",
         boolean(receipt->request.expected),
         boolean(requested));
+    if (
+      receipt->error == MPC_NATIVE_PRECONDITION_FAILED && track && property >= MPC_COMMAND_VOLUME) {
+      double observed;
+      if (mpc_mixer_value(&track->mixer, property, receipt->request.mixer.index, &observed)) {
+        fputs(",\"expectedValue\":", output);
+        mpc_mixer_scalar_json(
+          output,
+          numeric,
+          numeric ? receipt->request.mixer.expected : receipt->request.expected);
+        fputs(",\"observedValue\":", output);
+        mpc_mixer_scalar_json(output, numeric, observed);
+      }
+    }
     fputs("}}", output);
   }
   fputs("}\n", output);

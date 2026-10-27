@@ -1,4 +1,4 @@
-# Firmware adapter ABI 2 and UI executor ABI 8
+# Firmware adapter ABI 2 and UI executor ABI 9
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -42,7 +42,7 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) uses ABI 8; older configurations are rejected at open.
+The [executor header](include/mpc_executor.h) uses ABI 9; older configurations are rejected at open.
 The primitive adapter uses ABI 2. Requests support track reads/flags, identity snapshots and sequence-reference
 validation and full live state snapshots. The authoritative mode owns the resolver; the original
 host-resolver mode remains available for trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
@@ -293,10 +293,11 @@ See [command integration](COMMANDS.md#sequence-scoped-mute-48) and [the wire con
 
 ## Family flag qualification (#49)
 
-Current interfaces are **primitive ABI 2, executor ABI 8, command ABI 6 and snapshot
-ABI 4**. Recompile every trusted C caller. The snapshot transfer remains 127824 bytes,
-with 344-byte track rows, but the independent six-bit `known` mask replaces the grouped
-requested bit. `STATE_V4` / `MPC_ADAPTER_STATE_V4` reject older transfers; the primitive
+US #49 introduced snapshot ABI 4 with a 127824-byte transfer and 344-byte track rows.
+Its independent six-bit `known` mask replaced the grouped requested bit. US #39 now
+requires **primitive ABI 2, executor ABI 9, command ABI 7 and snapshot ABI 5**:
+140496-byte transfers with 392-byte track rows. Recompile every trusted C caller.
+`STATE_V5` / `MPC_ADAPTER_STATE_V5` reject older transfers; the primitive
 attachment tag is `MPC_ADAPTER_V2`. The exported symbol set is unchanged.
 
 The validated firmware profile generates `mpc_family_profile.h` for the adapter,
@@ -373,3 +374,13 @@ would require nine captures; that refresh rate/density is not device-qualified.
 Watch replay, reconnect, delivery backpressure and subscriber scheduling remain
 US #33. Authoritative GET_STATE/recovery snapshots retain their full coverage.
 See [measurements and budgets](../../findings/native-ui-cost.md).
+
+## Mixer layouts (US #39)
+
+The mixer extension uses executor ABI 9, command ABI 7, observation ABI 2 and
+snapshot ABI 5 / STATE_V5. Primitive ABI 2 remains unchanged. `mpc_mixer.h` defines
+the owned normalized controls and mixer incarnation. The adapter retains native
+volume/send conversion, pan filtering and asynchronous rack/slot forwarding.
+Program/rack/slot destruction observers fence captured generations; direct raw
+addresses never become public write targets. See [mixer findings](../../findings/native-mixer-controls.md)
+and the [managed contract](COMMANDS.md) for eligibility and completion limits.

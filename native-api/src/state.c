@@ -1,5 +1,6 @@
 #include "api.h"
 #include "mpc_native.h"
+#include "mpc_mixer_wire.h"
 #include "mpc_family_profile.h"
 
 #include <inttypes.h>
@@ -66,6 +67,27 @@ static int known_track_type(const char *type) {
   return 0;
 }
 
+static int valid_mixer(const struct mpc_mixer_state *m, int normal) {
+  if (
+    (m->known & ~MPC_MIXER_ALL) || m->occupied > 15 || m->inserts_enabled > 15 ||
+    m->rack_enabled > 1 || (!!m->known != !!m->generation) ||
+    (!normal && (m->known || m->generation)))
+    return 0;
+  if ((m->known & MPC_MIXER_VOLUME) && (!isfinite(m->volume) || m->volume < 0 || m->volume > 1))
+    return 0;
+  if ((m->known & MPC_MIXER_PAN) && (!isfinite(m->pan) || m->pan < 0 || m->pan > 1))
+    return 0;
+  for (unsigned i = 0; i < 4; i++) {
+    if (
+      (m->known & (MPC_MIXER_SEND_0 << i)) &&
+      (!isfinite(m->sends[i]) || m->sends[i] < 0 || m->sends[i] > 1))
+      return 0;
+    if ((m->known & (MPC_MIXER_INSERT_0 << i)) && !(m->occupied & (1u << i)))
+      return 0;
+  }
+  return 1;
+}
+
 static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instance) {
   if (
     s->abi_version != MPC_STATE_ABI || s->struct_bytes != sizeof *s ||
@@ -94,10 +116,10 @@ static int valid_snapshot(const struct mpc_state_snapshot *s, const char *instan
     const struct mpc_state_track *t = normal ? &s->tracks[i] : &s->buses[i - s->track_count];
     if (
       !valid_text(t->name, sizeof t->name) || !valid_text(t->type, sizeof t->type) ||
-      !known_track_type(t->type) || (t->known & ~mpc_family_by_type(t->type)->fields) ||
-      !t->type[0] || t->muted > 1 || t->soloed > 1 || t->record_armed > 1 || t->audio_soloed > 1 ||
-      t->audio_record_armed > 1 || t->silenced > 1 ||
-      t->identity.index != (normal ? i : i - s->track_count) ||
+      !valid_mixer(&t->mixer, normal) || !known_track_type(t->type) ||
+      (t->known & ~mpc_family_by_type(t->type)->fields) || !t->type[0] || t->muted > 1 ||
+      t->soloed > 1 || t->record_armed > 1 || t->audio_soloed > 1 || t->audio_record_armed > 1 ||
+      t->silenced > 1 || t->identity.index != (normal ? i : i - s->track_count) ||
       (normal && (!t->identity.id || !t->identity.generation)) ||
       (!normal && (t->known || t->identity.id || t->identity.generation)))
       return 0;
@@ -241,6 +263,8 @@ static void track(
   nullable_bool(f, t->known & MPC_STATE_AUDIO_ARM, t->audio_record_armed);
   fputs("},\"silenced\":", f);
   nullable_bool(f, t->known & MPC_STATE_SILENCED, t->silenced);
+  fputs(",\"mixer\":", f);
+  mpc_mixer_json(f, &t->mixer);
   fputs(",\"unsupportedFields\":", f);
   static const char *fields[] = {
     "requested.muted",

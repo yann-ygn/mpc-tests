@@ -27,6 +27,14 @@ class ProfileTests(unittest.TestCase):
             "schema": lambda s, c: s.update(profileSchemaVersion=2),
             "boolean_schema": lambda s, c: s.update(profileSchemaVersion=True),
             "abi": lambda s, c: s["abi"].update(pointerBits=64),
+            "mixer_count": lambda s, c: c["mixer"]["sends"].update(count=5),
+            "mixer_value": lambda s, c: c["mixer"]["volume"].update(value=1),
+            "mixer_filter": lambda s, c: c["mixer"]["pan"].update(filterInvoker=1),
+            "mixer_stride": lambda s, c: c["mixer"]["sends"].update(stride=55),
+            "mixer_family": lambda s, c: c["mixer"]["families"].append("cv"),
+            "mixer_landmark": lambda s, c: c.update(
+                functions=[f for f in c["functions"] if f["name"] != "mixerVolumeSetter"]
+            ),
             "build": lambda s, c: c.update(buildId="1122"),
             "version": lambda s, c: c.update(firmwareVersion="other"),
             "family": lambda s, c: c["supportedProgramFamilies"].append("midi"),

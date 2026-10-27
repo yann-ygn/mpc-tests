@@ -155,7 +155,7 @@ See [the native inventory map and device evidence](../findings/native-track-inve
 
 The combined API limit is 136 user tracks (128 MIDI-triggered and 8 audio), 128 master
 objects and 128 sequence slots. Discovery advertises these inventory limits and
-`snapshotAbiVersion: 4`. The private transfer requires `STATE_V4`; older attachments
+`snapshotAbiVersion: 5`. The private transfer requires `STATE_V5`; older attachments
 remain incompatible. No cached or partial list is published as a complete capture.
 
 Plugin, drum, keygroup and audio tracks expose independently qualified requested flags,
@@ -314,3 +314,20 @@ unchanged state. Completion still uses the required live family fields and
 context fence. US #51 subsequently qualifies Read as described above.
 See [native integration](adapter/COMMANDS.md#lightweight-command-observations-us-52)
 and [device measurements and limits](../findings/native-ui-cost.md).
+
+## Mixer extension (US #39)
+
+The five desired-state operations `set_volume`, `set_pan`, `set_send_level`,
+`set_insert_rack_enabled` and `set_insert_enabled` extend the same authenticated
+Unix command/receipt path. Numeric values use normalized 0–1 units; pan is centred
+at 0.5. Requests require the generation in the track's `mixer` observation, plus
+`sendIndex`/`slotIndex` where relevant. Expected comparisons use native binary32.
+Plugin, drum, keygroup and audio qualify under Automation Off on Main/Mixer/Track
+Mute, stopped or ordinary sequence playback. MIDI/CV mixer controls, bus setters,
+empty-slot enables and Automation Read/Write remain unavailable. Completion is
+model-only; no engine-buffer or audibility claim is made.
+
+See [the full contract, native paths and evidence](../findings/native-mixer-controls.md).
+All authoritative reads and lightweight observations include per-field known/null
+mixer coverage. Trusted C layouts change to executor 9, commands 7, observation 2,
+snapshot 5 / STATE_V5; primitive ABI 2 stays unchanged. Rebuild C integrations.

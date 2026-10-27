@@ -33,7 +33,7 @@ def pressure_with_observation(self, rows):
                 verb = (
                     "FLAGS 0 16 0"
                     if self.args.lightweight
-                    else ("STATE_V4 " + self.attachment["adapter"]["instanceId"])
+                    else ("STATE_V5 " + self.attachment["adapter"]["instanceId"])
                 )
                 data = self.session.command(
                     f"{self.attachment['remoteDirectory']}/native_client {self.session.pid}",
@@ -46,7 +46,7 @@ def pressure_with_observation(self, rows):
                     duration = sample["durationUs"]
                 else:
                     abi, size, error = struct.unpack_from("<III", data)
-                    if abi != 4 or size != 127824 or error or len(data) != size + 12:
+                    if abi != 5 or size != 140496 or error or len(data) != size + 12:
                         raise RuntimeError("Full observation failed")
                     duration = struct.unpack_from("<Q", data, 12 + 96)[0] / 1000
                 samples.append(
@@ -75,14 +75,14 @@ def pressure_with_observation(self, rows):
         sample = self.command("FLAGS 0 16 0")
         raw = self.session.command(
             f"{self.attachment['remoteDirectory']}/native_client {self.session.pid}",
-            data=("STATE_V4 " + self.attachment["adapter"]["instanceId"] + "\n").encode(),
+            data=("STATE_V5 " + self.attachment["adapter"]["instanceId"] + "\n").encode(),
         )
-        if struct.unpack_from("<III", raw) != (4, 127824, 0):
+        if struct.unpack_from("<III", raw) != (5, 140496, 0):
             raise RuntimeError("Authoritative comparison failed")
         independent = self.independent()
         for i, track in enumerate(sample["tracks"]):
-            identity = struct.unpack_from("<Q", raw, 12 + 128 + i * 344)[0]
-            flags = struct.unpack_from("<7I", raw, 12 + 128 + i * 344 + 312)
+            identity = struct.unpack_from("<Q", raw, 12 + 128 + i * 392)[0]
+            flags = struct.unpack_from("<7I", raw, 12 + 128 + i * 392 + 312)
             if str(identity) != track["id"] or flags != tuple(
                 track[k]
                 for k in ("known", "mute", "solo", "arm", "audioSolo", "audioArm", "silenced")

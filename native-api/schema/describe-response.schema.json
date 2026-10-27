@@ -1,7 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "MPC native API 0.1 describe response or protocol error",
-  "oneOf": [{"$ref": "#/$defs/description"}, {"$ref": "#/$defs/error"}],
+  "oneOf": [
+    {
+      "$ref": "#/$defs/description"
+    },
+    {
+      "$ref": "#/$defs/error"
+    }
+  ],
   "$defs": {
     "flagSupport": {
       "type": "object",
@@ -61,7 +68,9 @@
                     "null"
                   ]
                 },
-                "automation": {"$ref":"#/$defs/automationQualification"},
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
+                },
                 "verification": {
                   "type": "array",
                   "uniqueItems": true,
@@ -127,7 +136,9 @@
                     "null"
                   ]
                 },
-                "automation": {"$ref":"#/$defs/automationQualification"},
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
+                },
                 "verification": {
                   "type": "array",
                   "uniqueItems": true,
@@ -193,7 +204,9 @@
                     "null"
                   ]
                 },
-                "automation": {"$ref":"#/$defs/automationQualification"},
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
+                },
                 "verification": {
                   "type": "array",
                   "uniqueItems": true,
@@ -249,129 +262,579 @@
     },
     "capability": {
       "type": "object",
-      "required": ["available", "reason"],
+      "required": [
+        "available",
+        "reason"
+      ],
       "properties": {
-        "available": {"type": "boolean"},
-        "reason": {"type": ["string", "null"]},
-        "trackTypes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-        "verification": {"type": "array", "uniqueItems": true, "items": {"enum": ["model", "audio_copy"]}},
-        "screens": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-        "conditions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-        "automation": {"$ref":"#/$defs/automationQualification"},
-        "muteScopes": {"type":"array","uniqueItems":true,"items":{"enum":["global","sequence"]}},
-        "inactiveSequence": {"const":"SEQUENCE_NOT_ACTIVE"},
-        "muteReadCoverage": {"const":"active_sequence"},
-        "transportStates": {"type":"array","uniqueItems":true,"items":{"enum":["stopped","sequence_playback"]}},
-        "excludedContexts": {"type":"object","properties":{"recording":{"const":"RECORDING_UNQUALIFIED"},"overdub":{"const":"RECORDING_UNQUALIFIED"},"automationWriteUnknown":{"const":"AUTOMATION_UNQUALIFIED"},"clipSong":{"const":"PLAYBACK_CONTEXT_UNQUALIFIED"}},"additionalProperties":false},
-        "timingSemantics": {"const":"immediate_model_at_ui_dispatch"},
-        "sampleAccurate": {"const":false},
-        "quantizedScheduling": {"const":false}
+        "available": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trackTypes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "verification": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "model",
+              "audio_copy"
+            ]
+          }
+        },
+        "screens": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "automation": {
+          "$ref": "#/$defs/automationQualification"
+        },
+        "muteScopes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "global",
+              "sequence"
+            ]
+          }
+        },
+        "inactiveSequence": {
+          "const": "SEQUENCE_NOT_ACTIVE"
+        },
+        "muteReadCoverage": {
+          "const": "active_sequence"
+        },
+        "transportStates": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "stopped",
+              "sequence_playback"
+            ]
+          }
+        },
+        "excludedContexts": {
+          "type": "object",
+          "properties": {
+            "recording": {
+              "const": "RECORDING_UNQUALIFIED"
+            },
+            "overdub": {
+              "const": "RECORDING_UNQUALIFIED"
+            },
+            "automationWriteUnknown": {
+              "const": "AUTOMATION_UNQUALIFIED"
+            },
+            "clipSong": {
+              "const": "PLAYBACK_CONTEXT_UNQUALIFIED"
+            }
+          },
+          "additionalProperties": false
+        },
+        "timingSemantics": {
+          "const": "immediate_model_at_ui_dispatch"
+        },
+        "sampleAccurate": {
+          "const": false
+        },
+        "quantizedScheduling": {
+          "const": false
+        },
+        "scope": {
+          "const": "global"
+        },
+        "unit": {
+          "enum": [
+            "normalized",
+            "boolean"
+          ]
+        },
+        "minimum": {
+          "const": 0
+        },
+        "maximum": {
+          "const": 1
+        },
+        "centre": {
+          "const": 0.5
+        },
+        "indexBase": {
+          "const": 0
+        },
+        "indexCount": {
+          "const": 4
+        },
+        "requiresMixerGeneration": {
+          "const": true
+        },
+        "quantization": {
+          "const": "ieee_binary32"
+        },
+        "expectedComparison": {
+          "const": "binary32_exact"
+        },
+        "busWrites": {
+          "const": false
+        },
+        "audioCompletionKnown": {
+          "const": false
+        }
       },
       "allOf": [
-        {"if": {"properties": {"available": {"const": true}}},
-         "then": {"properties": {"reason": {"type": "null"}}},
-         "else": {"properties": {"reason": {"type": "string", "minLength": 1}}}}
+        {
+          "if": {
+            "properties": {
+              "available": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
       ]
     },
-    "automationQualification": {"type":"object","required":["off","read","write","unknown"],"additionalProperties":false,"properties":{"off":{"const":"qualified_writes"},"read":{"enum":["qualified_writes","verified_noop_only"]},"write":{"const":"unsupported"},"unknown":{"const":"unsupported"}}},
-    "nullableMilliseconds": {"type": ["integer", "null"], "minimum": 0},
+    "automationQualification": {
+      "type": "object",
+      "required": [
+        "off",
+        "read",
+        "write",
+        "unknown"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "off": {
+          "const": "qualified_writes"
+        },
+        "read": {
+          "enum": [
+            "qualified_writes",
+            "verified_noop_only",
+            "unsupported"
+          ]
+        },
+        "write": {
+          "const": "unsupported"
+        },
+        "unknown": {
+          "const": "unsupported"
+        }
+      }
+    },
+    "nullableMilliseconds": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
     "description": {
       "type": "object",
-      "required": ["apiVersion", "deviceId", "instanceId", "implementation", "firmware", "readiness", "readableFields", "capabilities", "limits", "flagFamilies"],
+      "required": [
+        "apiVersion",
+        "deviceId",
+        "instanceId",
+        "implementation",
+        "firmware",
+        "readiness",
+        "readableFields",
+        "capabilities",
+        "limits",
+        "flagFamilies"
+      ],
       "properties": {
-        "apiVersion": {"const": "0.1"},
-        "deviceId": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[A-Za-z0-9_-]+$"},
-        "instanceId": {"type": "string", "pattern": "^run_[0-9a-f]{32}$"},
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "deviceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
         "implementation": {
-          "type": "object", "required": ["name", "version"],
-          "properties": {"name": {"type": "string"}, "version": {"type": "string"}}
+          "type": "object",
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          }
         },
         "firmware": {
           "type": "object",
-          "required": ["model", "modelSource", "version", "versionSource", "buildId", "buildIdSource"],
+          "required": [
+            "model",
+            "modelSource",
+            "version",
+            "versionSource",
+            "buildId",
+            "buildIdSource"
+          ],
           "properties": {
-            "model": {"type": ["string", "null"]},
-            "modelSource": {"enum": ["device_tree", null]},
-            "version": {"type": ["string", "null"]},
-            "versionSource": {"enum": ["build_profile", null]},
-            "buildId": {"type": ["string", "null"], "pattern": "^(?:[0-9a-f]{2}){1,64}$"},
-            "buildIdSource": {"enum": ["elf_note", null]}
+            "model": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "modelSource": {
+              "enum": [
+                "device_tree",
+                null
+              ]
+            },
+            "version": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "versionSource": {
+              "enum": [
+                "build_profile",
+                null
+              ]
+            },
+            "buildId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^(?:[0-9a-f]{2}){1,64}$"
+            },
+            "buildIdSource": {
+              "enum": [
+                "elf_note",
+                null
+              ]
+            }
           }
         },
         "readiness": {
           "type": "object",
-          "required": ["status", "nativeAdapter", "mpcProcess", "firmwareProfile", "profileId"],
+          "required": [
+            "status",
+            "nativeAdapter",
+            "mpcProcess",
+            "firmwareProfile",
+            "profileId"
+          ],
           "properties": {
-            "status": {"enum": ["discovery_only", "ready", "not_ready"]},
-            "nativeAdapter": {"enum": ["not_attached", "attached"]},
+            "status": {
+              "enum": [
+                "discovery_only",
+                "ready",
+                "not_ready"
+              ]
+            },
+            "nativeAdapter": {
+              "enum": [
+                "not_attached",
+                "attached"
+              ]
+            },
             "adapter": {
-              "type": ["object", "null"],
-              "required": ["abiVersion", "instanceId", "codeVerified", "qualification"],
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "abiVersion",
+                "instanceId",
+                "codeVerified",
+                "qualification"
+              ],
               "properties": {
-                "abiVersion": {"const": 2},
-                "instanceId": {"type": "string", "pattern": "^adp_[0-9a-f]{32}$"},
-                "codeVerified": {"const": true},
-                "qualification": {"type":"string","minLength":1}
+                "abiVersion": {
+                  "const": 2
+                },
+                "instanceId": {
+                  "type": "string",
+                  "pattern": "^adp_[0-9a-f]{32}$"
+                },
+                "codeVerified": {
+                  "const": true
+                },
+                "qualification": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             },
-            "mpcProcess": {"enum": ["running", "not_running", "ambiguous", "unreadable"]},
-            "firmwareProfile": {"enum": ["matched", "unsupported", "unknown"]},
-            "profileId": {"type": ["string", "null"]}
+            "mpcProcess": {
+              "enum": [
+                "running",
+                "not_running",
+                "ambiguous",
+                "unreadable"
+              ]
+            },
+            "firmwareProfile": {
+              "enum": [
+                "matched",
+                "unsupported",
+                "unknown"
+              ]
+            },
+            "profileId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         },
-        "readableFields": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-        "flagFamilies": {"type":"array","maxItems":8,"items":{"$ref":"#/$defs/flagSupport"}},
+        "readableFields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "flagFamilies": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/flagSupport"
+          }
+        },
         "capabilities": {
           "type": "object",
-          "required": ["describe", "get_state", "current_track", "set_mute", "set_solo", "set_record_armed", "get_command", "watch"],
+          "required": [
+            "describe",
+            "get_state",
+            "current_track",
+            "set_mute",
+            "set_solo",
+            "set_record_armed",
+            "get_command",
+            "watch",
+            "set_volume",
+            "set_pan",
+            "set_send_level",
+            "set_insert_rack_enabled",
+            "set_insert_enabled"
+          ],
           "properties": {
-            "describe": {"allOf": [{"$ref": "#/$defs/capability"}, {"properties": {"available": {"const": true}}}]},
-            "get_state": {"$ref": "#/$defs/capability"},
-            "current_track": {"$ref": "#/$defs/capability"},
-            "set_mute": {"$ref": "#/$defs/capability"},
-            "set_solo": {"$ref": "#/$defs/capability"},
-            "set_record_armed": {"$ref": "#/$defs/capability"},
-            "get_command": {"$ref": "#/$defs/capability"},
-            "watch": {"$ref": "#/$defs/capability"}
+            "describe": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/capability"
+                },
+                {
+                  "properties": {
+                    "available": {
+                      "const": true
+                    }
+                  }
+                }
+              ]
+            },
+            "get_state": {
+              "$ref": "#/$defs/capability"
+            },
+            "current_track": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_mute": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_solo": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_record_armed": {
+              "$ref": "#/$defs/capability"
+            },
+            "get_command": {
+              "$ref": "#/$defs/capability"
+            },
+            "watch": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_volume": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_pan": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_send_level": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_insert_rack_enabled": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_insert_enabled": {
+              "$ref": "#/$defs/capability"
+            }
           },
-          "additionalProperties": {"$ref": "#/$defs/capability"}
+          "additionalProperties": {
+            "$ref": "#/$defs/capability"
+          }
         },
         "limits": {
           "type": "object",
-          "required": ["maxRequestBytes", "maxResponseBytes", "maxConnections", "connectionTimeoutMs", "queueCapacity", "requestRetentionMs", "defaultStartWithinMs", "maxStartWithinMs", "verificationTimeoutMs", "maxTracks", "maxMidiTracks", "maxAudioTracks", "maxBuses", "snapshotAbiVersion"],
+          "required": [
+            "maxRequestBytes",
+            "maxResponseBytes",
+            "maxConnections",
+            "connectionTimeoutMs",
+            "queueCapacity",
+            "requestRetentionMs",
+            "defaultStartWithinMs",
+            "maxStartWithinMs",
+            "verificationTimeoutMs",
+            "maxTracks",
+            "maxMidiTracks",
+            "maxAudioTracks",
+            "maxBuses",
+            "snapshotAbiVersion"
+          ],
           "properties": {
-            "maxRequestBytes": {"type": "integer", "minimum": 1},
-            "maxResponseBytes": {"type": "integer", "minimum": 1},
-            "maxConnections": {"type": "integer", "minimum": 1},
-            "connectionTimeoutMs": {"type": "integer", "minimum": 1},
-            "queueCapacity": {"type": "integer", "minimum": 0},
-            "receiptCapacity": {"type": "integer", "minimum": 0},
-            "requestRetentionMs": {"type": "integer", "minimum": 0},
-            "defaultStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
-            "maxStartWithinMs": {"$ref": "#/$defs/nullableMilliseconds"},
-            "maxWaitMs": {"$ref": "#/$defs/nullableMilliseconds"},
-            "verificationTimeoutMs": {"$ref": "#/$defs/nullableMilliseconds"},
-            "adapterProbeTimeoutMs": {"type":"integer","minimum":1},
-            "maxTracks": {"const":136},
-            "maxMidiTracks": {"const":128},
-            "maxAudioTracks": {"const":8},
-            "maxBuses": {"const":128},
-            "snapshotAbiVersion": {"const":4},
-            "maxJobsPerUiCallback": {"enum":[1,null]}
+            "maxRequestBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxResponseBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxConnections": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "connectionTimeoutMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "queueCapacity": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "receiptCapacity": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "requestRetentionMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "defaultStartWithinMs": {
+              "$ref": "#/$defs/nullableMilliseconds"
+            },
+            "maxStartWithinMs": {
+              "$ref": "#/$defs/nullableMilliseconds"
+            },
+            "maxWaitMs": {
+              "$ref": "#/$defs/nullableMilliseconds"
+            },
+            "verificationTimeoutMs": {
+              "$ref": "#/$defs/nullableMilliseconds"
+            },
+            "adapterProbeTimeoutMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxTracks": {
+              "const": 136
+            },
+            "maxMidiTracks": {
+              "const": 128
+            },
+            "maxAudioTracks": {
+              "const": 8
+            },
+            "maxBuses": {
+              "const": 128
+            },
+            "snapshotAbiVersion": {
+              "const": 5
+            },
+            "maxJobsPerUiCallback": {
+              "enum": [
+                1,
+                null
+              ]
+            }
           }
         }
       }
     },
     "error": {
-      "type": "object", "required": ["apiVersion", "error"],
+      "type": "object",
+      "required": [
+        "apiVersion",
+        "error"
+      ],
       "properties": {
-        "apiVersion": {"const": "0.1"},
+        "apiVersion": {
+          "const": "0.1"
+        },
         "error": {
-          "type": "object", "required": ["code", "message", "details"],
+          "type": "object",
+          "required": [
+            "code",
+            "message",
+            "details"
+          ],
           "properties": {
-            "code": {"type": "string", "minLength": 1},
-            "message": {"type": "string"},
-            "details": {"type": "object"}
+            "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "message": {
+              "type": "string"
+            },
+            "details": {
+              "type": "object"
+            }
           }
         }
       }

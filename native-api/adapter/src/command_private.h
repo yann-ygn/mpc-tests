@@ -14,9 +14,13 @@ struct mpc_command_native_result {
   bool context_known;
   bool last_readback_known, readbacks_consistent;
   struct mpc_native_track_state last_readback;
+  struct mpc_mixer_state last_mixer;
   struct mpc_command_context context;
   struct mpc_command_observation before, after;
 };
+
+enum mpc_native_error mpc_identity_mixer(
+  struct mpc_identity_registry *, const struct mpc_executor_identity *, struct mpc_mixer_state *);
 
 enum mpc_native_error mpc_identity_flags(
   struct mpc_identity_registry *,
