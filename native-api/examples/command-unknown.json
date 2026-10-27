@@ -20,9 +20,21 @@
     ],
     "requestedValue": false,
     "audioSideValue": true,
-    "observedAt": "2026-10-25T16:22:18.161Z"
+    "observedAt": "2026-10-26T21:28:20.453Z",
+    "muteContext": {
+      "scope": "global",
+      "sequence": null
+    }
   },
   "observedChanges": [],
+  "timing": {
+    "queueMs": 1,
+    "dispatchMs": 0,
+    "verificationMs": 502,
+    "totalMs": 503,
+    "uiWorkUs": 172,
+    "verificationPasses": 0
+  },
   "error": {
     "code": "VERIFICATION_TIMEOUT",
     "message": "Command did not establish the requested state",

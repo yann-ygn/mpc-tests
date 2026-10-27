@@ -332,6 +332,41 @@
       "name": "familyArmFilterTarget",
       "rva": 40174728,
       "prefixHex": "38229fe538329fe5f8416de10040a0e1dc0190e5f860cde110808de514e08de5"
+    },
+    {
+      "name": "playbackRecordModeGetters",
+      "rva": 29501896,
+      "prefixHex": "983090e5280593e5100f6fe1a002a0e11eff2fe1983090e5280593e5030040e2"
+    },
+    {
+      "name": "playbackLiveRecordMode",
+      "rva": 29501944,
+      "prefixHex": "983090e5280593e5010040e2010050e30000a0830100a0931eff2fe1983090e5"
+    },
+    {
+      "name": "playbackOverdubMode",
+      "rva": 29501972,
+      "prefixHex": "983090e5283593e5023043e20230d3e30100a0030000a0131eff2fe1983090e5"
+    },
+    {
+      "name": "playbackRecorderTimeline",
+      "rva": 29501840,
+      "prefixHex": "1401d0e5000050e30300000a983094e5280593e5000050e20100a01300409de5"
+    },
+    {
+      "name": "playbackContextSource",
+      "rva": 14877944,
+      "prefixHex": "883390e5e42290e5d43093e5bc0392e50c11d3e5000051e3781093151a5537ea"
+    },
+    {
+      "name": "playbackContextAssignment",
+      "rva": 29383076,
+      "prefixHex": "030055e3e45384e50900000aec0394e5000050e30d00000a0010a0e3d040cde1"
+    },
+    {
+      "name": "playbackSongSource",
+      "rva": 26607120,
+      "prefixHex": "883002e3030051e10400000a482190e54c3080e2102292e5030052e10000000a"
     }
   ],
   "bindings": [
@@ -444,7 +479,13 @@
     "armBehaviourProperties": 84,
     "armModeValue": 1260,
     "mixerMode": 8323,
-    "trackMuteMode": 8333
+    "trackMuteMode": 8333,
+    "recorderTimeline": 120,
+    "recordPropertiesVtable": 109708096,
+    "recordModeValue": 1320,
+    "sequencerMode": 996,
+    "normalSequenceMode": 0,
+    "sequencerSongSource": 528
   },
   "flagFamilies": {
     "plugin": {

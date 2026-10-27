@@ -43,6 +43,9 @@ def capture(session):
     timeline = obj(pointer(sequencer, p["sequencerTimeline"]), p["timelineVtable"])
     recorder = obj(pointer(sequencer, p["sequencerRecorder"]), p["recorderVtable"])
     record_properties = pointer(recorder, p["recorderProperties"])
+    obj(record_properties, p["recordPropertiesVtable"])
+    if pointer(recorder, p["recorderTimeline"]) != timeline:
+        raise SnapshotChanged("Recorder and sequencer have different timelines")
     arm = obj(pointer(engine, p["engineArmBehaviour"]), p["armBehaviourVtable"])
     project = session.active_project()
     if (
@@ -53,18 +56,23 @@ def capture(session):
     mute = pointer(engine, p["engineMuteProperties"])
     solo = obj(pointer(engine, p["engineSoloBehaviour"]), p["soloBehaviourVtable"])
     solo_property = pointer(solo, p["soloProperty"])
-    mode_data, timeline_data, mute_data, arm_data, solo_data = session.read_many(
-        [
-            (mode + p["modeValue"], p["popupValue"] - p["modeValue"] + 4),
-            (timeline + p["timelinePlaying"], 1),
-            (mute + p["perSequenceMute"], 1),
-            (record_properties + p["armModeValue"], 4),
-            (solo_property + p["soloValue"], 4),
-        ]
+    mode_data, timeline_data, mute_data, arm_data, solo_data, recording, playback, song = (
+        session.read_many(
+            [
+                (mode + p["modeValue"], p["popupValue"] - p["modeValue"] + 4),
+                (timeline + p["timelinePlaying"], 1),
+                (mute + p["perSequenceMute"], 1),
+                (record_properties + p["armModeValue"], 4),
+                (solo_property + p["soloValue"], 4),
+                (record_properties + p["recordModeValue"], 4),
+                (sequencer + p["sequencerMode"], 4),
+                (sequencer + p["sequencerSongSource"], 4),
+            ]
+        )
     )
     po, poolo = (session.profile["offsets"][g] for g in ("project", "trackPool"))
     pool = pointer(project, po["trackPool"])
-    tracks = session.vector(session.read(pool, 0x50), poolo, "normal")
+    tracks = session.vector(session.read(pool, 0xA0), poolo, "user")
     programs = [
         u32(data)
         for data in session.read_many(
@@ -83,6 +91,9 @@ def capture(session):
         "mode": u32(mode_data),
         "popup": u32(mode_data, p["popupValue"] - p["modeValue"]),
         "playing": timeline_data[0],
+        "recordMode": u32(recording),
+        "playbackMode": u32(playback),
+        "songSourceActive": bool(u32(song)),
         "perSequenceMute": mute_data[0],
         "recordArmMode": u32(arm_data),
         "soloMode": u32(solo_data),

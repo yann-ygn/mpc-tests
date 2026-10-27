@@ -216,18 +216,21 @@ For example, with real instance/project/track IDs substituted:
 ```
 
 Read the returned receipt's `status`, `execution`, `nativeInvoked`, `verification` and `error`.
-`accepted` means retained work is pending; `applied` requires native readback, plus an independent audio-side
-copy for solo/arm. Mute remains explicitly model-only. `unknown` preserves execution uncertainty.
+`accepted` means retained work is pending; `applied` requires native readback, plus the family's
+qualified engine copies for solo/arm. Mute and MIDI/CV commands verify the model only.
+`unknown` preserves execution uncertainty.
 `get_command` takes `instanceId`, `requestId` and optional `waitMs`; it never executes a command.
 
-The native live policy permits **Main, Mixer or Track Mute, no popup, stopped, automation Off**, on qualified plugin, drum, keygroup, MIDI, CV and audio tracks.
+The native live policy permits **Main, Mixer or Track Mute, no popup, stopped or normal sequence playback, recording/overdub Off, automation Off**, on qualified plugin, drum, keygroup, MIDI, CV and audio tracks.
 Mute requires the live **Track Mute State Per Sequence** preference to match the requested scope. Single/Multi solo and arm settings are
 read live and must be recognized. Native follow/filter effects are retained and reported in `observedChanges`.
 The policy re-resolves owners and samples its context twice at dispatch, before native invocation and readback,
 and around each owned verification snapshot. Its initial context is retained through delayed audio verification.
 Unsupported or unreadable contexts reject even no-ops. A context change before native invocation rejects; after
 a filter/setter it retains `unknown`. A queued command cannot reuse earlier eligibility.
-`describe` lists the qualified `screens` and the separate stopped/automation/settings/mute-scope `conditions`.
+Playback requests use immediate requested-model changes at UI dispatch; mute is not beat/bar quantized. Receipts distinguish acceptance, dispatch and verification with retained monotonic durations. Recording/overdub (including pending), automation Read/Write, Clip and Song remain unavailable. See [playback qualification and limits](../findings/native-playback-flags.md).
+
+`describe` lists the qualified `screens` and the separate transport/recording/automation/settings/mute-scope `conditions`.
 Mixer Volume, Pan & Volume, Sends, Effects and I/O pages address the same model tracks; commands do not navigate
 the UI. Pad Mixer, Song, Clip and other views/popups remain unqualified. See [screen qualification](../findings/native-command-screens.md).
 Use SHIFT+AUTOMATION in the UI to change the global automation Off setting. This API does not change settings.
@@ -268,12 +271,12 @@ Mute receipts echo canonical `muteScope` and `sequence`, including while pending
 generations are not compared as if they were edits to one property. Expected-value checks
 and desired-state no-ops use the addressed live scope and still require full qualification.
 
-US #49 requires trusted C callers to recompile: primitive ABI **2**, command ABI **4**,
-executor ABI **7**, snapshot ABI **4**, and private `STATE_V4` / `MPC_ADAPTER_STATE_V4`
-replace the older interfaces. Snapshot byte sizes are retained, but known-field bits have
-new independent meanings. Command observations also carry family qualification. The C
-export set and public JSON API version 0.1 remain unchanged. Package 0.6.0 contains this increment.
-See [sequence qualification and device restoration evidence](../findings/native-sequence-mute.md).
+US #50 adds command ABI **5** with retained receipt timing; recompile trusted command callers.
+Primitive ABI **2**, executor ABI **7**, snapshot ABI **4** and private
+`STATE_V4` / `MPC_ADAPTER_STATE_V4` retain US #49's layouts and independent known-field bits.
+Command observations retain family qualification. The C export set and public JSON
+API version 0.1 remain unchanged. Package 0.7.0 contains this increment.
+See [playback qualification and device restoration evidence](../findings/native-playback-flags.md).
 
 Project and track IDs are decimal strings representing nonzero unsigned 64-bit values, at most
 18446744073709551615. Names, indices, addresses, numeric coercions, caller IDs and revision preconditions are rejected.

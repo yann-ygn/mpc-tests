@@ -78,6 +78,7 @@ static void finish(
   enum mpc_native_error error) {
   record->receipt.status = status;
   record->receipt.error = error;
+  record->receipt.finished_ms = commands->now(commands->clock_data);
   record->pending = false;
   commands->pending--;
   pthread_cond_broadcast(&commands->changed);
@@ -204,6 +205,12 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     return;
   }
   if (result.command) {
+    if (!record->verifying) {
+      receipt->dispatched_ms = result.command->dispatched_ms;
+      receipt->dispatch_finished_ms = result.command->finished_ms;
+    } else
+      receipt->verification_passes++;
+    receipt->ui_work_us += result.command->ui_work_us;
     if (result.command->context_known) {
       record->context_known = true;
       record->context = result.command->context;
@@ -431,6 +438,7 @@ enum mpc_native_error mpc_commands_submit(
     empty->receipt.abi_version = MPC_COMMANDS_ABI;
     empty->receipt.struct_bytes = sizeof empty->receipt;
     empty->receipt.request = request;
+    empty->receipt.accepted_ms = now;
     empty->receipt.status = MPC_COMMAND_ACCEPTED;
     commands->pending++;
     await_receipt(commands, empty, wait_ms, output);

@@ -1,14 +1,14 @@
 {
   "apiVersion": "0.1",
   "deviceId": "dev_fixture",
-  "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+  "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
   "projectId": "1",
   "projectGeneration": "1",
   "revision": "1",
   "sample": {
-    "startedAt": "2026-10-26T17:15:05.366Z",
-    "finishedAt": "2026-10-26T17:15:05.366Z",
-    "durationMs": 0.11,
+    "startedAt": "2026-10-26T21:42:46.066Z",
+    "finishedAt": "2026-10-26T21:42:46.066Z",
+    "durationMs": 0.141,
     "attempts": 1,
     "atomic": false,
     "consistency": "identity_topology_selection_checked",
@@ -32,7 +32,7 @@
     "bpm": 123.5,
     "bpmSource": "sequence_property",
     "ref": {
-      "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+      "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
       "projectId": "1",
       "sequenceId": "10",
       "generation": "10"
@@ -51,7 +51,7 @@
       "bpm": 123.5,
       "bpmSource": "sequence_property",
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "sequenceId": "10",
         "generation": "10"
@@ -66,7 +66,7 @@
       "bpm": 123.5,
       "bpmSource": "sequence_property",
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "sequenceId": "11",
         "generation": "11"
@@ -82,7 +82,7 @@
   "tracks": [
     {
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "trackId": "2"
       },
@@ -132,7 +132,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -149,7 +150,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -164,7 +166,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -175,7 +178,7 @@
     },
     {
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "trackId": "3"
       },
@@ -225,7 +228,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -242,7 +246,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -257,7 +262,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -268,7 +274,7 @@
     },
     {
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "trackId": "4"
       },
@@ -318,7 +324,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -335,7 +342,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -350,7 +358,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -361,7 +370,7 @@
     },
     {
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "trackId": "5"
       },
@@ -414,7 +423,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -428,7 +438,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -440,7 +451,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -451,7 +463,7 @@
     },
     {
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "trackId": "6"
       },
@@ -504,7 +516,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -520,7 +533,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -534,7 +548,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -545,7 +560,7 @@
     },
     {
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "trackId": "7"
       },
@@ -598,7 +613,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -614,7 +630,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -628,7 +645,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -639,7 +657,7 @@
     },
     {
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "trackId": "8"
       },
@@ -692,7 +710,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -706,7 +725,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -718,7 +738,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -729,7 +750,7 @@
     },
     {
       "ref": {
-        "instanceId": "run_6795a643815c7859e11a66e69ba47b16",
+        "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
         "projectId": "1",
         "trackId": "9"
       },
@@ -779,7 +800,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -796,7 +818,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -811,7 +834,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -873,7 +897,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -887,7 +912,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -899,7 +925,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -959,7 +986,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -973,7 +1001,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -985,7 +1014,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -1045,7 +1075,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -1059,7 +1090,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -1071,7 +1103,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -1131,7 +1164,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -1145,7 +1179,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -1157,7 +1192,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -1217,7 +1253,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings",
               "matching_mute_scope",
@@ -1231,7 +1268,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]
@@ -1243,7 +1281,8 @@
             "conditions": [
               "qualified_screen",
               "no_popup",
-              "stopped",
+              "stopped_or_sequence_playback",
+              "recording_off",
               "automation_off",
               "recognized_solo_arm_settings"
             ]

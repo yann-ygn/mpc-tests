@@ -15,7 +15,8 @@
     "nativeInvoked",
     "verification",
     "observedChanges",
-    "error"
+    "error",
+    "timing"
   ],
   "properties": {
     "apiVersion": {
@@ -219,6 +220,57 @@
           "type": "null"
         }
       ]
+    },
+    "timing": {
+      "type": "object",
+      "description": "Monotonic durations in milliseconds except cumulative UI work in microseconds; no sample or acoustic timing guarantee. Null means the stage has not completed.",
+      "required": [
+        "queueMs",
+        "dispatchMs",
+        "verificationMs",
+        "totalMs",
+        "uiWorkUs",
+        "verificationPasses"
+      ],
+      "properties": {
+        "queueMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "dispatchMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "verificationMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "totalMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "uiWorkUs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verificationPasses": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
     }
   },
   "allOf": [

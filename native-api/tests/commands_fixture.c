@@ -17,6 +17,8 @@ struct commands_fixture {
   bool popup_after_set, broken_owner_after_set;
   uint32_t family_after_filter, family_after_set;
   uint32_t program_after_set;
+  uint32_t playback_change_address, playback_change_value;
+  unsigned playback_change_stage;
   bool sequence_values[2][2], switch_sequence_after_set, scope_after_set, reset_after_set;
   unsigned switch_sequence_at_qualification;
   unsigned qualifications;
@@ -44,6 +46,8 @@ static enum mpc_native_error qualify(void *data, enum mpc_command_operation oper
   struct commands_fixture *f = data;
   assert(ui && (unsigned)operation <= MPC_COMMAND_RECORD_ARMED);
   f->qualifications++;
+  if (f->playback_change_stage == 1 && f->qualifications == 2)
+    put32(&f->identity.native, f->playback_change_address, f->playback_change_value);
   if (f->switch_sequence_at_qualification == f->qualifications)
     choose_sequence(f, 1);
   if (f->change_at_qualification == f->qualifications)
@@ -134,6 +138,8 @@ command_setter(void *data, uintptr_t function, uintptr_t property, bool value) {
         put32(native, PROGRAM, IMAGE + f->family_after_set);
       if (f->program_after_set)
         put32(native, TRACK + NATIVE_PROGRAM_OFFSET, f->program_after_set);
+      if (f->playback_change_stage == 3)
+        put32(native, f->playback_change_address, f->playback_change_value);
       return MPC_NATIVE_OK;
     }
   }
@@ -153,6 +159,8 @@ command_filter(void *data, uintptr_t storage, uintptr_t function, bool *value) {
       POLICY_MODE + native_command_context.modeValue,
       f->change_after_filter);
   f->identity.native.filters++;
+  if (f->playback_change_stage == 2)
+    put32(&f->identity.native, f->playback_change_address, f->playback_change_value);
   if (f->family_after_filter)
     put32(&f->identity.native, PROGRAM, IMAGE + f->family_after_filter);
   *value = *value && f->identity.native.filter_allows;
@@ -444,6 +452,8 @@ static void effects_and_audio_verification(void) {
 static void capacity_expiry_and_shutdown(void) {
   struct commands_fixture f;
   setup(&f, 1, 2, true);
+  f.live_policy = true;
+  put_bool(&f.identity.native, POLICY_TIMELINE + native_command_context.timelinePlaying, true);
   struct mpc_command_receipt receipt;
   struct mpc_command_request first = request(&f, "first", MPC_COMMAND_MUTE, 0, true);
   assert(mpc_commands_submit(f.commands, 7, &first, 0, &receipt) == MPC_NATIVE_OK);
@@ -489,6 +499,8 @@ static void *pump_thread(void *data) {
 static void running_unknown_and_drain(void) {
   struct commands_fixture f;
   setup(&f, 2, 8, true);
+  f.live_policy = true;
+  put_bool(&f.identity.native, POLICY_TIMELINE + native_command_context.timelinePlaying, true);
   f.block = true;
   struct mpc_command_request input = request(&f, "running", MPC_COMMAND_MUTE, 0, true);
   struct mpc_command_receipt receipt;
@@ -771,6 +783,7 @@ static void sequence_scope_and_races(void) {
     struct commands_fixture f;
     setup(&f, 8, 64, true);
     f.live_policy = true;
+    put_bool(&f.identity.native, POLICY_TIMELINE + native_command_context.timelinePlaying, true);
     put32(&f.identity.native, POLICY_MODE + native_command_context.modeValue, screens[screen]);
     put_bool(&f.identity.native, POLICY_MUTE + native_command_context.perSequenceMute, true);
     for (unsigned target = 0; target < 2; target++) {
@@ -850,6 +863,7 @@ static void sequence_scope_and_races(void) {
     struct commands_fixture f;
     setup(&f, 8, 16, true);
     f.live_policy = true;
+    put_bool(&f.identity.native, POLICY_TIMELINE + native_command_context.timelinePlaying, true);
     put_bool(&f.identity.native, POLICY_MUTE + native_command_context.perSequenceMute, true);
     struct mpc_command_request input = sequence_request(&f, "sequence_race", 0, true, 0);
     struct mpc_command_receipt receipt;
@@ -928,6 +942,12 @@ static void qualified_family_matrix(void) {
         struct commands_fixture f;
         setup(&f, 8, 64, true);
         f.live_policy = true;
+        /* The same family/screen/peer matrix also exercises ordinary playback.
+         * Stopped behavior has independent coverage above and below. */
+        put_bool(
+          &f.identity.native,
+          POLICY_TIMELINE + native_command_context.timelinePlaying,
+          true);
         f.single_arm = f.single_solo = single;
         family_pair(&f, families[family], families[(family + 1) % 6]);
         put32(&f.identity.native, POLICY_MODE + native_command_context.modeValue, screens[screen]);
@@ -1018,6 +1038,83 @@ static void qualified_family_matrix(void) {
   }
 }
 
+static void playback_transitions(void) {
+  const struct native_command_context_layout *p = &native_command_context;
+  const struct {
+    uint32_t address, value;
+    enum mpc_native_error error;
+  } changes[] = {
+    {POLICY_TIMELINE + p->timelinePlaying, 0, MPC_NATIVE_STATE_UNSTABLE},
+    {POLICY_TIMELINE + p->timelinePlaying, 1, MPC_NATIVE_STATE_UNSTABLE},
+    {POLICY_RECORD_PROPERTIES + p->recordModeValue, 1, MPC_NATIVE_RECORDING_UNQUALIFIED},
+    {POLICY_RECORD_PROPERTIES + p->recordModeValue, 2, MPC_NATIVE_RECORDING_UNQUALIFIED},
+    {POLICY_RECORD_PROPERTIES + p->recordModeValue, 3, MPC_NATIVE_RECORDING_UNQUALIFIED},
+    {POLICY_RECORD_PROPERTIES + p->recordModeValue, 4, MPC_NATIVE_RECORDING_UNQUALIFIED},
+    {PROGRAM + p->programAutomation, 1, MPC_NATIVE_AUTOMATION_UNQUALIFIED},
+    {PROGRAM + p->programAutomation, 2, MPC_NATIVE_AUTOMATION_UNQUALIFIED},
+    {POLICY_SEQUENCER + p->sequencerMode, 1, MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED},
+    {POLICY_SEQUENCER + p->sequencerMode, 3, MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED},
+    {POLICY_SEQUENCER + p->sequencerSongSource, 4, MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED},
+  };
+  for (unsigned change = 0; change < sizeof changes / sizeof *changes; change++)
+    for (unsigned stage = 0; stage < 5; stage++) {
+      struct commands_fixture f;
+      setup(&f, 8, 16, true);
+      f.live_policy = true;
+      put_bool(
+        &f.identity.native,
+        POLICY_TIMELINE + p->timelinePlaying,
+        !(changes[change].address == POLICY_TIMELINE + p->timelinePlaying &&
+          changes[change].value));
+      f.playback_change_address = changes[change].address;
+      f.playback_change_value = changes[change].value;
+      f.playback_change_stage = stage;
+      /* Stage 2 transitions inside the native arm filter: invoked=true but the
+       * setter must not run. Stage 4 loses context during delayed readback. */
+      f.identity.native.propagate_audio = stage != 4;
+      struct mpc_command_request input =
+        request(&f, "playback_transition", MPC_COMMAND_RECORD_ARMED, 0, true);
+      struct mpc_command_receipt receipt;
+      assert(mpc_commands_submit(f.commands, 7, &input, 0, &receipt) == MPC_NATIVE_OK);
+      while (!queued(&f))
+        tiny_pause();
+      if (!stage)
+        put32(&f.identity.native, changes[change].address, changes[change].value);
+      pump(&f.identity);
+      if (stage == 4)
+        put32(&f.identity.native, changes[change].address, changes[change].value);
+      receipt = drive(&f, input.request_id);
+      /* An accepted command samples its first baseline at dispatch. A stable
+       * start/stop before dispatch is allowed; subsequent transitions fence. */
+      if (changes[change].address == POLICY_TIMELINE + p->timelinePlaying && !stage) {
+        assert(receipt.status == MPC_COMMAND_APPLIED);
+      } else {
+        assert(receipt.status == (stage < 2 ? MPC_COMMAND_REJECTED : MPC_COMMAND_UNKNOWN));
+        assert(receipt.error == changes[change].error);
+        assert(receipt.native_invoked == (stage >= 2));
+        assert(f.identity.native.setters == (stage >= 3));
+      }
+      struct mpc_command_receipt replay;
+      assert(mpc_commands_submit(f.commands, 7, &input, 0, &replay) == MPC_NATIVE_OK);
+      assert(!memcmp(&replay, &receipt, sizeof receipt));
+      emit(&receipt);
+      cleanup(&f);
+    }
+  for (unsigned target = 0; target < 2; target++) {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    f.live_policy = true;
+    put_bool(&f.identity.native, POLICY_TIMELINE + p->timelinePlaying, true);
+    f.identity.native.filter_allows = false;
+    struct mpc_command_receipt receipt =
+      send(&f, request(&f, "playback_filter", MPC_COMMAND_RECORD_ARMED, target, true));
+    assert(receipt.status == MPC_COMMAND_REJECTED && receipt.error == MPC_NATIVE_VALUE_REJECTED);
+    assert(receipt.native_invoked && f.identity.native.filters == 1);
+    emit(&receipt);
+    cleanup(&f);
+  }
+}
+
 int main(void) {
   (void)validate_target;
   (void)get32;
@@ -1026,6 +1123,7 @@ int main(void) {
     .struct_bytes = sizeof incompatible};
   assert(!mpc_commands_receipt_json(&incompatible));
   qualified_family_matrix();
+  playback_transitions();
   sequence_scope_and_races();
   live_screens_and_transitions();
   idempotence_and_preconditions();

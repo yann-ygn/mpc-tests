@@ -6,7 +6,10 @@ and guarded Unix mute/solo/arm commands across plugin, drum, keygroup, MIDI, CV 
 including explicit active-sequence mute targets. [Family qualification](findings/native-family-flags.md)
 separates native requested flags from engine copies; MIDI/CV output remains unmeasured.
 The [managed flag handlers](native-api/adapter/COMMANDS.md) retain verified command results across retries and disconnects;
-a native live policy restricts writes to qualified Main/Mixer/Track Mute, stopped, automation-Off contexts. Streaming follows separately. See [the service](native-api/README.md), [the native adapter](native-api/adapter/README.md)
+a native live policy qualifies Main/Mixer/Track Mute, stopped or during normal sequence playback,
+with recording/overdub and automation Off. [Playback qualification](findings/native-playback-flags.md)
+reports timing and tested limits. Streaming follows separately. See [the service](native-api/README.md),
+[the native adapter](native-api/adapter/README.md)
 and [privtap](privtap/README.md) for their interfaces and limitations.
 US #21 adds the [persistent addin package](native-api/INSTALL.md), including startup,
 health, stop/start and recovery. Build it with `uv run --no-sync python native-api/package.py`;

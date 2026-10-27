@@ -5,7 +5,7 @@
 #include "mpc_identity.h"
 #include "mpc_state.h"
 
-#define MPC_COMMANDS_ABI 4u
+#define MPC_COMMANDS_ABI 5u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u
@@ -53,7 +53,8 @@ struct mpc_command_request {
 
 /* A trusted host must check LIVE mode/settings on the UI thread at dispatch and
  * each verification. No callback means NOT_READY, including for no-op commands.
- * It must reject playback/automation/Clip/Song and unqualified families/modes.
+ * It must reject recording/overdub, automation Read/Write, Clip/Song and
+ * unqualified playback combinations. Ordinary sequence playback is qualified.
  * Mute must match the request's scope and named active sequence. The production
  * callback reads this context from the active executor request.
  * Callback userdata lives through successful commands_close. This callback is
@@ -65,8 +66,8 @@ struct mpc_command_policy {
 
 /* Production live policy for the exact profiled firmware. UI-thread only,
  * called from qualify while a managed command is active on this executor.
- * Checks qualified Main/Mixer/Track Mute, no popup, stopped transport, settings and target
- * automation. Samples a command-local context fence; never invokes a setter or accepts saved
+ * Checks qualified Main/Mixer/Track Mute, no popup, sequence transport, recording Off, settings and
+ * target automation. Samples a command-local context fence; never invokes a setter or accepts saved
  * settings. */
 MPC_NATIVE_API enum mpc_native_error
 mpc_executor_qualify_command(struct mpc_executor *, enum mpc_command_operation);
@@ -103,6 +104,12 @@ struct mpc_command_receipt {
   bool native_known, native_invoked, changed_known, changed;
   bool before_known, after_known;
   struct mpc_command_observation before, after;
+  /* Monotonic milliseconds, private to the authority's lifetime. Wire timings
+   * are durations, never wall-clock or audio/sample scheduling timestamps.
+   * Zero means the corresponding stage has not been observed. */
+  uint64_t accepted_ms, dispatched_ms, dispatch_finished_ms, finished_ms;
+  uint64_t ui_work_us;
+  uint32_t verification_passes;
 };
 
 /* All calls are for non-realtime, non-UI threads. Caller is the authenticated

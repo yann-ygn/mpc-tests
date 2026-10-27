@@ -334,6 +334,7 @@ their execution stage in the receipt. Initial codes include:
 |---|---|
 | Input/access | `INVALID_ARGUMENT`, `UNSUPPORTED_API_VERSION`, `UNAUTHORIZED`, `FORBIDDEN` |
 | Support/readiness | `UNSUPPORTED_FIRMWARE`, `UNSUPPORTED_OPERATION`, `UNQUALIFIED_TRACK_TYPE`, `NOT_READY` |
+| Playback policy | `RECORDING_UNQUALIFIED`, `PLAYBACK_CONTEXT_UNQUALIFIED`, `AUTOMATION_UNQUALIFIED` |
 | Identity/state | `STALE_INSTANCE`, `STALE_PROJECT`, `TARGET_NOT_FOUND`, `NO_ACTIVE_PROJECT`, `PRECONDITION_FAILED` |
 | Delivery | `QUEUE_FULL`, `REQUEST_ID_CONFLICT`, `RETENTION_CAPACITY`, `OUTCOME_UNAVAILABLE` |
 | Observation/execution | `READ_FAILED`, `STATE_UNSTABLE`, `VALUE_REJECTED`, `VERIFICATION_TIMEOUT`, `ADAPTER_LOST` |
@@ -397,7 +398,7 @@ The [transport-independent handler API](../native-api/adapter/COMMANDS.md) imple
 requests, retained receipts, caller-scoped retries, dispatch preconditions, native/audio verification and
 observed peer/selection changes. [Domain request](../native-api/schema/command-request.schema.json) and
 [receipt](../native-api/schema/command-receipt.schema.json) schemas describe that boundary. The [#32 Unix binding and native live policy](native-service.md) now expose these commands in the embedded host.
-`describe` advertises its actual authority limits and Main/no-popup/stopped/automation-Off conditions; mute additionally requires global scope.
+`describe` advertises its actual authority limits and qualified Main/Mixer/Track Mute, no-popup, sequence transport, recording-Off and automation-Off conditions; mute requires a matching explicit scope.
 
 ## Family qualification (#49)
 
@@ -414,7 +415,16 @@ with a null audio-side value. Physical output remains unmeasured. Legacy clip an
 unknown flags remain unavailable, and buses remain metadata-only. `silenced`
 never implies audio activity or audibility.
 
-Trusted clients must recompile for primitive ABI 2, executor ABI 7, command ABI 4
+Trusted clients must recompile for primitive ABI 2, executor ABI 7, command ABI 5
 and snapshot ABI 4 (`STATE_V4` / `MPC_ADAPTER_STATE_V4`). Old layouts are rejected;
 receipts carry an ABI/size prefix. The JSON API version remains 0.1. Updated strict
 schemas and examples are in `native-api/schema` and `native-api/examples`.
+
+US #50 extends flag commands to normal sequence playback, initially with
+recording/overdub and automation Off. `describe` names transport states, excluded
+contexts and immediate model timing semantics. A command receipt includes retained
+monotonic acceptance-to-dispatch, dispatch, verification and total durations.
+Acceptance does not reserve a musical position; model completion and engine-copy
+readback do not establish audibility or sample timing. See the
+[qualified subset and performance limits](native-playback-flags.md) and
+[handler semantics](../native-api/adapter/COMMANDS.md#playback-and-timing-us-50).

@@ -179,7 +179,7 @@ static struct mpc_executor_result command_execute(
     : (unsigned)(input->operation - MPC_EXECUTOR_COMMAND_MUTE);
   result.error = mpc_identity_bind(executor->registry, &request.identity);
   if (result.error)
-    return result;
+    goto done;
   executor->identity = request.identity;
   executor->active = true;
   executor->command_context = out;
@@ -240,7 +240,14 @@ static struct mpc_executor_result command_execute(
     out->after_known = true;
   } else if (!result.error)
     result.error = captured ? captured : MPC_NATIVE_STALE_TARGET;
-done:
+done: {
+  struct timespec finished;
+  clock_gettime(CLOCK_MONOTONIC, &finished);
+  out->finished_ms = (uint64_t)finished.tv_sec * 1000 + (uint64_t)finished.tv_nsec / 1000000;
+  out->ui_work_us = ((uint64_t)(finished.tv_sec - dispatched.tv_sec) * 1000000000 +
+                     finished.tv_nsec - dispatched.tv_nsec) /
+    1000;
+}
   executor->command_context = NULL;
   executor->active = false;
   return result;
@@ -339,10 +346,10 @@ static void invoke(const void *capture) {
     executor->state = MPC_EXECUTOR_READY;
     pthread_cond_broadcast(&executor->changed);
   } else {
-    /* At most capacity operations per message, even if clients replenish slots.
-     * One capture group at a time prevents reentrant execution and bounds JUCE
-     * queue ownership independently of client cancellations. */
-    for (unsigned i = 0; i < executor->config.capacity; i++) {
+    /* One operation per UI message. A full snapshot is bounded but cannot be
+     * preempted; batching capacity snapshots would multiply that UI stall under
+     * playback load. Replenishing clients cannot extend this callback. */
+    for (unsigned i = 0; i < 1; i++) {
       if (executor->state != MPC_EXECUTOR_READY || !executor->head)
         break;
       struct mpc_executor_job *job = executor->head;

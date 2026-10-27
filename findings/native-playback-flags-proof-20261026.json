@@ -1,0 +1,342 @@
+{
+  "story": 50,
+  "branch": "us-50-playback-flags",
+  "testDate": "2026-10-26",
+  "restorationDate": "2026-10-27",
+  "firmwareBuildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "model": "MPC Key 37",
+  "packageVersion": "0.7.0",
+  "interfaces": {
+    "primitiveAbi": 2,
+    "executorAbi": 7,
+    "commandAbi": 5,
+    "snapshotAbi": 4,
+    "jsonApi": "0.1"
+  },
+  "qualification": {
+    "transport": [
+      "stopped",
+      "normal_sequence_playback"
+    ],
+    "automation": "Off",
+    "recording": "Off_including_pending",
+    "families": [
+      "plugin",
+      "drum",
+      "keygroup",
+      "audio",
+      "midi",
+      "cv"
+    ],
+    "nativeViews": [
+      "Main",
+      "Channel Mixer",
+      "Track Mute"
+    ],
+    "mixerPages": [
+      "Volume",
+      "Pan & Volume",
+      "Sends",
+      "Effects",
+      "I/O"
+    ],
+    "muteScopes": [
+      "global",
+      "named_active_sequence"
+    ],
+    "muteTiming": "immediate_requested_model_at_ui_dispatch",
+    "sampleAccurate": false,
+    "quantizedScheduling": false
+  },
+  "tests": {
+    "host": {
+      "passed": 18,
+      "failed": 0
+    },
+    "executor-sanitize": {
+      "passed": 13,
+      "failed": 0
+    },
+    "arm": {
+      "passed": [
+        "native_fixture",
+        "executor_fixture",
+        "identity_fixture",
+        "inventory_fixture",
+        "commands_fixture"
+      ],
+      "isolated": true,
+      "finalPlaybackFilterCasesPassed": true
+    },
+    "elfDeploymentGuardsPassed": true
+  },
+  "device": {
+    "commandRows": 168,
+    "muteRowsByScope": {
+      "sequence": 36,
+      "global": 44
+    },
+    "rowsByFamily": {
+      "plugin": 48,
+      "audio": 24,
+      "keygroup": 24,
+      "drum": 24,
+      "midi": 24,
+      "cv": 24
+    },
+    "noopsConflictsAndRetainedRetries": true,
+    "peerRows": 36,
+    "peerModes": [
+      "Single",
+      "Multi"
+    ],
+    "controllerEditRows": 18,
+    "discardedResponseRows": 18,
+    "sequenceTransitionRows": 3,
+    "pendingRecordOverdubRejected": true,
+    "diagnosticInterruptions": {
+      "initialPressureScopeMismatchRejectedBeforeSetter": true,
+      "sshConnectionDropDuringManualRecovery": true,
+      "capturedFlagsRestoredAfterReconnect": true,
+      "sameMpcProcessAfterReconnect": true
+    },
+    "automationReadPlayingRejected": true,
+    "automationWriteStoppedRejected": true,
+    "shutdownWhilePlaying": true,
+    "realDeviceExpiryOutcomes": {
+      "cancelled": 10
+    },
+    "observedLoopWraps": 88,
+    "pressure": {
+      "requests": 32,
+      "clients": 8,
+      "outcomes": {
+        "applied": 10,
+        "cancelled": 6,
+        "QUEUE_FULL": 16
+      },
+      "roundTripMsIncludesSshAndDiagnosticClient": {
+        "samples": 32,
+        "p50": 76.03626849595457,
+        "p95": 100.65138200297952,
+        "p99": 102.33490401878953,
+        "maximum": 102.33490401878953
+      }
+    },
+    "freshReadProjections": 5,
+    "freshSnapshotSamples": 20,
+    "nativeSnapshotP95Ms": 14.451,
+    "independentNativeAndQualifiedEngineReadsMatched": true
+  },
+  "performance": {
+    "workload": {
+      "originalUserTracks": 8,
+      "temporaryEmptyFamilyTracks": 4,
+      "userTracksDuringMatrix": 12,
+      "buses": 28,
+      "firmwareSequenceSlots": 128,
+      "sequenceBpm": 70,
+      "mainSequenceBars": 4,
+      "otherSequenceBars": 1,
+      "projectLoadsDuringQualification": 0
+    },
+    "commandStageDurations": {
+      "queueMs": {
+        "samples": 168,
+        "p50": 1.5,
+        "p95": 11,
+        "p99": 23,
+        "maximum": 28
+      },
+      "dispatchMs": {
+        "samples": 168,
+        "p50": 56.0,
+        "p95": 84,
+        "p99": 102,
+        "maximum": 107
+      },
+      "verificationMs": {
+        "samples": 168,
+        "p50": 3.0,
+        "p95": 8,
+        "p99": 10,
+        "maximum": 11
+      },
+      "totalMs": {
+        "samples": 168,
+        "p50": 64.5,
+        "p95": 97,
+        "p99": 114,
+        "maximum": 129
+      },
+      "uiWorkUs": {
+        "samples": 168,
+        "p50": 55770.0,
+        "p95": 84185,
+        "p99": 102408,
+        "maximum": 107151
+      }
+    },
+    "processCpuPercentOfOneCoreRange": [
+      183.523,
+      196.139
+    ],
+    "playingWithoutApiCpuPercentOfOneCore": 59.299,
+    "sampledProcessRssKiBRange": [
+      1041696,
+      1068916
+    ],
+    "pcmStateSamples": 28,
+    "sampledPcmStates": [
+      "RUNNING"
+    ],
+    "underrunCounterAvailable": false,
+    "audibleOutputMeasured": false,
+    "clockTicksPerSecond": 100,
+    "clockSource": "AT_CLKTCK",
+    "cpuAttribution": "Whole MPC process, not isolated API overhead; workloads differ from the playing-without-API sample",
+    "limits": {
+      "maxJobsPerUiMessage": 1,
+      "pendingCapacity": 16,
+      "receiptCapacity": 128,
+      "defaultStartWithinMs": 1000,
+      "verificationBudgetMs": 500
+    }
+  },
+  "restoration": {
+    "mpcPidUnchanged": true,
+    "inventoryRestored": true,
+    "snapshotRestored": true,
+    "requestedEngineAndSilencedFlagsRestored": true,
+    "automationRestored": true,
+    "nativeContextRestored": true,
+    "playheadRestored": true,
+    "savedCommandPreferencesRestored": true,
+    "savedSettingsDifferenceKeys": [],
+    "projectPathUnchanged": true,
+    "temporaryTracksRemoved": true,
+    "labUnloaded": true,
+    "temporaryLabFilesRemoved": true,
+    "orphanedProbeRemoved": true,
+    "installedHostReady": true,
+    "installedHostReadPassed": true,
+    "mixerEffectsViewportRestored": true,
+    "restorationDate": "2026-10-27"
+  },
+  "deployment": {
+    "initialQualification": {
+      "installedVersion": "0.2.0",
+      "upgraded": false,
+      "mpcRestarted": false,
+      "projectSavedOrLoaded": false
+    },
+    "subsequentOwnerAuthorizedUpgradeEvidence": "native-playback-installed-20261027.json"
+  },
+  "limits": [
+    "Two device projects cover 70 BPM / four-bar and 174 BPM / 32-bar workloads; maximum-density release qualification remains separate.",
+    "A bounded native UI job can exceed one display frame; no hard scheduling or latency SLA is established.",
+    "ALSA RUNNING samples cannot exclude intervening underruns; no reliable xrun counter or acoustic output observation was available.",
+    "MIDI/CV physical output and audioSide.muted remain unqualified.",
+    "Live recording/overdub and automation Write while playing were excluded from device mutations; all corresponding transition races are tested in isolated host/ARM fixtures.",
+    "Clip/Song commands, unknown contexts and unrecognized settings remain unavailable."
+  ],
+  "secondProjectBenchmark": {
+    "date": "2026-10-27",
+    "project": "DnB Demo Reactor (firmware MPC 2 import, not saved)",
+    "ownerApprovedDiscardAndLoad": true,
+    "workload": {
+      "userTracks": 4,
+      "families": {
+        "drum": 1,
+        "plugin": 2,
+        "audio": 1
+      },
+      "buses": 28,
+      "sequenceSlots": 128,
+      "sequenceBpm": 174,
+      "sequenceBars": 32,
+      "temporaryTracksAdded": 0
+    },
+    "commandRows": 18,
+    "familiesExercised": [
+      "drum",
+      "plugin",
+      "audio"
+    ],
+    "screen": "Mixer Effects",
+    "muteScope": "sequence",
+    "selectedAndUnselected": true,
+    "noopsConflictsRetriesAndIndependentRequiredReadsMatched": true,
+    "observedLoopWraps": 2,
+    "commandStageDurations": {
+      "queueMs": {
+        "samples": 18,
+        "p50": 1.0,
+        "p95": 12,
+        "p99": 12,
+        "maximum": 12
+      },
+      "dispatchMs": {
+        "samples": 18,
+        "p50": 54.0,
+        "p95": 74,
+        "p99": 74,
+        "maximum": 74
+      },
+      "verificationMs": {
+        "samples": 18,
+        "p50": 2.5,
+        "p95": 5,
+        "p99": 5,
+        "maximum": 5
+      },
+      "totalMs": {
+        "samples": 18,
+        "p50": 59.5,
+        "p95": 78,
+        "p99": 78,
+        "maximum": 78
+      },
+      "uiWorkUs": {
+        "samples": 18,
+        "p50": 54422.5,
+        "p95": 74251,
+        "p99": 74251,
+        "maximum": 74251
+      }
+    },
+    "matrixCpuPercentOfOneCore": 115.385,
+    "playingWithoutApiCpuPercentOfOneCore": 105.899,
+    "rssKiB": [
+      924804,
+      924804
+    ],
+    "pcmStates": [
+      "RUNNING",
+      "RUNNING"
+    ],
+    "pressure": {
+      "requests": 32,
+      "clients": 8,
+      "outcomes": {
+        "applied": 12,
+        "cancelled": 4,
+        "QUEUE_FULL": 16
+      },
+      "roundTripMsIncludesSshAndClient": {
+        "samples": 32,
+        "p50": 75.4512379935477,
+        "p95": 100.57665000203997,
+        "p99": 102.40427299868315,
+        "maximum": 102.40427299868315
+      }
+    },
+    "freshReadSamples": 20,
+    "nativeCaptureP95Ms": 12.843,
+    "readProjectionsMatched": 5,
+    "flagsAutomationSelectionRestored": true,
+    "labUnloadedAndFilesRemoved": true,
+    "noProjectSave": true,
+    "noMpcRestartDuringBenchmark": true
+  }
+}

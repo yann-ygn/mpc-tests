@@ -256,7 +256,12 @@
         "conditions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
         "muteScopes": {"type":"array","uniqueItems":true,"items":{"enum":["global","sequence"]}},
         "inactiveSequence": {"const":"SEQUENCE_NOT_ACTIVE"},
-        "muteReadCoverage": {"const":"active_sequence"}
+        "muteReadCoverage": {"const":"active_sequence"},
+        "transportStates": {"type":"array","uniqueItems":true,"items":{"enum":["stopped","sequence_playback"]}},
+        "excludedContexts": {"type":"object","properties":{"recording":{"const":"RECORDING_UNQUALIFIED"},"overdub":{"const":"RECORDING_UNQUALIFIED"},"automationReadWrite":{"const":"AUTOMATION_UNQUALIFIED"},"clipSong":{"const":"PLAYBACK_CONTEXT_UNQUALIFIED"}},"additionalProperties":false},
+        "timingSemantics": {"const":"immediate_model_at_ui_dispatch"},
+        "sampleAccurate": {"const":false},
+        "quantizedScheduling": {"const":false}
       },
       "allOf": [
         {"if": {"properties": {"available": {"const": true}}},
@@ -346,7 +351,8 @@
             "maxMidiTracks": {"const":128},
             "maxAudioTracks": {"const":8},
             "maxBuses": {"const":128},
-            "snapshotAbiVersion": {"const":4}
+            "snapshotAbiVersion": {"const":4},
+            "maxJobsPerUiCallback": {"enum":[1,null]}
           }
         }
       }

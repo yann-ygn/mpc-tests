@@ -107,6 +107,8 @@ struct native_command_context_layout {
   uint32_t engineAudioThread, audioThreadVtable, audioThreadSequencer, sequencerVtable;
   uint32_t sequencerTimeline, timelineVtable, timelinePlaying;
   uint32_t sequencerRecorder, recorderVtable, recorderProperties;
+  uint32_t recorderTimeline, recordPropertiesVtable, recordModeValue;
+  uint32_t sequencerMode, normalSequenceMode, sequencerSongSource;
   uint32_t engineArmBehaviour, armBehaviourVtable, armBehaviourProject, armBehaviourProperties,
     armModeValue;
   uint32_t engineMuteProperties, perSequenceMute, engineSoloBehaviour, soloBehaviourVtable;
@@ -117,7 +119,7 @@ struct mpc_command_context {
   uint32_t target_program, target_vtable;
   uint32_t app, window, component, engine, mode, thread, sequencer, timeline, mute, solo,
     solo_property, arm, recorder, record_properties;
-  uint32_t view, popup, arm_mode, solo_mode, automation;
+  uint32_t view, popup, arm_mode, solo_mode, automation, record_mode, playback_mode, song_source;
   unsigned char playing, sequence_mute;
 };
 enum mpc_command_operation;

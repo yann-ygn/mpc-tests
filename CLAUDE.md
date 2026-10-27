@@ -176,7 +176,22 @@ before running experiments.
   installed 0.2.0 resumed ready without save/load or restart. Package 0.6.0 is built, not installed. See
   `findings/native-family-flags.md` and its sanitized proof. MIDI/CV have no connected external endpoint;
   physical output remains unqualified at the owner's request.
-- Next: streaming (#33).
+- Playback flags (#50), branch `us-50-playback-flags`: ordinary sequence playback now qualifies with
+  recording/overdub Off and target automation Off. Recorder pending/live enum, timeline ownership,
+  native selector and separate Song source fence every traversal and delayed verification. Command ABI 5
+  adds retained queue/dispatch/verification/total durations; other ABIs remain at #49's versions. Each
+  executor UI message handles one job. All 18 host entries, 13 ASan/UBSan entries, five isolated ARM fixtures
+  and ARM guards pass. Device evidence covers 168 command rows, 36 Single/Multi peer rows, 18 controller
+  edits/recoveries, sequence transitions, loops, expiry, shutdown and eight-client pressure. Total command
+  p95 is 97 ms; native capture p95 is 14.451 ms. Whole-process CPU/RSS and ALSA state samples have explicit
+  attribution/underrun limits. The original inventory, flags, automation, selection, sequence, playhead,
+  settings and Mixer Effects viewport were restored; lab/probe removed and installed 0.2.0 resumed ready.
+  The owner then authorized discarding unsaved changes, loading another project and installing 0.7.0.
+  A second four-track DnB demo at 174 BPM / 32 bars passed 18 additional command rows, eight-client pressure
+  and all five reads (capture p95 12.843 ms, command total p95 78 ms), with flags/automation restored and
+  lab removed. Evidence is published in `findings/native-playback-flags.md` and its sanitized proof.
+  Installation/restart and final installed verification follow separately.
+- Next: install/verify the owner-approved #50 package, then streaming (#33).
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
   the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through

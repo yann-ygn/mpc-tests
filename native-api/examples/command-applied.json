@@ -19,12 +19,14 @@
     ],
     "requestedValue": true,
     "audioSideValue": null,
-    "observedAt": "2026-10-25T16:22:18.063Z",
+    "observedAt": "2026-10-26T21:28:20.375Z",
     "muteContext": {
       "scope": "global",
       "sequence": null
     }
   },
+  "muteScope": "global",
+  "sequence": null,
   "observedChanges": [
     {
       "projectId": "1",
@@ -38,7 +40,13 @@
       }
     }
   ],
-  "error": null,
-  "muteScope": "global",
-  "sequence": null
+  "timing": {
+    "queueMs": 1,
+    "dispatchMs": 0,
+    "verificationMs": 0,
+    "totalMs": 1,
+    "uiWorkUs": 128,
+    "verificationPasses": 0
+  },
+  "error": null
 }

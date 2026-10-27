@@ -248,6 +248,31 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
   }
   fputs(",\"observedChanges\":", output);
   changes(output, receipt);
+  fputs(",\"timing\":{\"queueMs\":", output);
+  if (receipt->dispatched_ms >= receipt->accepted_ms && receipt->dispatched_ms)
+    fprintf(output, "%" PRIu64, receipt->dispatched_ms - receipt->accepted_ms);
+  else
+    fputs("null", output);
+  fputs(",\"dispatchMs\":", output);
+  if (receipt->dispatch_finished_ms >= receipt->dispatched_ms && receipt->dispatched_ms)
+    fprintf(output, "%" PRIu64, receipt->dispatch_finished_ms - receipt->dispatched_ms);
+  else
+    fputs("null", output);
+  fputs(",\"verificationMs\":", output);
+  if (receipt->finished_ms >= receipt->dispatch_finished_ms && receipt->dispatch_finished_ms)
+    fprintf(output, "%" PRIu64, receipt->finished_ms - receipt->dispatch_finished_ms);
+  else
+    fputs("null", output);
+  fputs(",\"totalMs\":", output);
+  if (receipt->finished_ms >= receipt->accepted_ms && receipt->finished_ms)
+    fprintf(output, "%" PRIu64, receipt->finished_ms - receipt->accepted_ms);
+  else
+    fputs("null", output);
+  fprintf(
+    output,
+    ",\"uiWorkUs\":%" PRIu64 ",\"verificationPasses\":%u}",
+    receipt->ui_work_us,
+    receipt->verification_passes);
   fputs(",\"error\":", output);
   if (receipt->error == MPC_NATIVE_OK)
     fputs("null", output);

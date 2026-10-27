@@ -36,6 +36,8 @@ class CommandContractTests(unittest.TestCase):
         schema = json.loads((ROOT / "native-api/schema/command-receipt.schema.json").read_text())
         jsonschema.Draft202012Validator.check_schema(schema)
         validator = jsonschema.Draft202012Validator(schema)
+        for name in ("command-applied", "command-unknown"):
+            validator.validate(json.loads((ROOT / f"native-api/examples/{name}.json").read_text()))
         receipts = [json.loads(line) for line in result.stdout.splitlines()]
         self.assertGreaterEqual(len(receipts), 25)
         self.assertEqual(
@@ -45,6 +47,14 @@ class CommandContractTests(unittest.TestCase):
         for receipt in receipts:
             with self.subTest(request=receipt["requestId"], status=receipt["status"]):
                 validator.validate(receipt)
+                timing = receipt["timing"]
+                if receipt["requestId"].startswith("set_"):
+                    self.assertIsInstance(timing["queueMs"], int)
+                    self.assertIsInstance(timing["dispatchMs"], int)
+                    self.assertGreaterEqual(
+                        timing["totalMs"], timing["queueMs"] + timing["dispatchMs"]
+                    )
+                    self.assertGreater(timing["uiWorkUs"], 0)
                 if receipt["status"] == "applied":
                     self.assertEqual(receipt["verification"]["requestedValue"], receipt["value"])
                     parts = receipt["requestId"].split("_")

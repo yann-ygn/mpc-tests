@@ -396,6 +396,9 @@ const char *mpc_native_error_name(enum mpc_native_error error) {
     "VERIFICATION_TIMEOUT",
     "STALE_SEQUENCE",
     "SEQUENCE_NOT_ACTIVE",
-    "MUTE_SCOPE_MISMATCH"};
+    "MUTE_SCOPE_MISMATCH",
+    "RECORDING_UNQUALIFIED",
+    "PLAYBACK_CONTEXT_UNQUALIFIED",
+    "AUTOMATION_UNQUALIFIED"};
   return (unsigned)error < sizeof names / sizeof *names ? names[error] : "INVALID_ERROR";
 }

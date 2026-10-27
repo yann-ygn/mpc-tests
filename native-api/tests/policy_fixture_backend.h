@@ -32,7 +32,9 @@ static inline void policy_init(struct identity_fixture *f) {
   put32(n, POLICY_TIMELINE, IMAGE + p->timelineVtable);
   put32(n, POLICY_SEQUENCER + p->sequencerRecorder, POLICY_RECORDER);
   put32(n, POLICY_RECORDER, IMAGE + p->recorderVtable);
+  put32(n, POLICY_RECORDER + p->recorderTimeline, POLICY_TIMELINE);
   put32(n, POLICY_RECORDER + p->recorderProperties, POLICY_RECORD_PROPERTIES);
+  put32(n, POLICY_RECORD_PROPERTIES, IMAGE + p->recordPropertiesVtable);
   put32(n, engine + p->engineArmBehaviour, POLICY_ARM);
   put32(n, POLICY_ARM, IMAGE + p->armBehaviourVtable);
   put32(n, POLICY_ARM + p->armBehaviourProject, OBJECTS);

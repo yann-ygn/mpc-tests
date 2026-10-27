@@ -249,8 +249,13 @@ static void typed_operations(void) {
   assert(mpc_executor_shutdown(executor, 0) == MPC_NATIVE_WRONG_THREAD);
   assert(mpc_executor_close(executor) == MPC_NATIVE_WRONG_THREAD);
   is_ui = false;
-  run(&h);
   for (unsigned i = 0; i < 4; i++) {
+    run(&h);
+    /* Traffic yields to JUCE between jobs even when all slots are occupied. */
+    if (i < 3) {
+      assert(mpc_executor_poll(jobs[i + 1], &result) == MPC_NATIVE_OK);
+      assert(result.state == MPC_EXECUTOR_QUEUED);
+    }
     assert(mpc_executor_wait(jobs[i], 0, &result) == MPC_NATIVE_OK);
     assert(result.state == MPC_EXECUTOR_COMPLETED);
     if (i) {
@@ -279,8 +284,8 @@ static void typed_operations(void) {
     assert(mpc_executor_submit(executor, &request, &jobs[i]) == MPC_NATIVE_OK);
   }
   memset(&request, 0xff, sizeof request);
-  run(&h);
   for (unsigned i = 0; i < 3; i++) {
+    run(&h);
     assert(mpc_executor_wait(jobs[i], 0, &result) == MPC_NATIVE_OK);
     assert(result.observed.muted == (i != 1));
     mpc_executor_release(jobs[i]);
@@ -558,7 +563,8 @@ static void concurrent_requests(void) {
   }
   for (unsigned i = 0; i < 8; i++)
     assert(!pthread_join(threads[i], NULL));
-  run(&h);
+  for (unsigned i = 0; i < 8; i++)
+    run(&h);
   unsigned accepted = 0, rejected = 0;
   for (unsigned i = 0; i < 8; i++) {
     struct mpc_executor_result result;

@@ -124,6 +124,12 @@ def validate(state, control):
         "sequencerRecorder",
         "recorderVtable",
         "recorderProperties",
+        "recorderTimeline",
+        "recordPropertiesVtable",
+        "recordModeValue",
+        "sequencerMode",
+        "normalSequenceMode",
+        "sequencerSongSource",
         "engineArmBehaviour",
         "armBehaviourVtable",
         "armBehaviourProject",
@@ -139,6 +145,10 @@ def validate(state, control):
     }:
         raise ValueError("Invalid command context layout")
     for key, value in context.items():
+        if key == "normalSequenceMode":
+            if type(value) is not int or value != 0:
+                raise ValueError("Unqualified sequence playback context")
+            continue
         limit = 0xFFFFFFFF if key.endswith("Vtable") else 0x10000
         if not integer(value, key, limit) or (key.endswith("Vtable") and value % 4):
             raise ValueError("Invalid command context field")
@@ -313,6 +323,13 @@ def validate(state, control):
             "commandArmBehaviourBinding",
             "commandAutomationValue",
             "commandAutomationNames",
+            "playbackRecordModeGetters",
+            "playbackLiveRecordMode",
+            "playbackOverdubMode",
+            "playbackRecorderTimeline",
+            "playbackContextSource",
+            "playbackContextAssignment",
+            "playbackSongSource",
         }
         <= names
     ):

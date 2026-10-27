@@ -45,6 +45,12 @@ class ProfileTests(unittest.TestCase):
                 functions=[f for f in c["functions"] if f["name"] != "commandMixerModeName"]
             ),
             "screen_layout": lambda s, c: c["commandContext"].pop("trackMuteMode"),
+            "recording_layout": lambda s, c: c["commandContext"].pop("recordModeValue"),
+            "playback_enum": lambda s, c: c["commandContext"].update(normalSequenceMode=3),
+            "playback_boolean": lambda s, c: c["commandContext"].update(normalSequenceMode=False),
+            "playback_landmark": lambda s, c: c.update(
+                functions=[f for f in c["functions"] if f["name"] != "playbackContextAssignment"]
+            ),
             "screen_alias": lambda s, c: c["commandContext"].update(mixerMode=8320),
             "family_missing": lambda s, c: c["flagFamilies"].pop("audio"),
             "family_unknown_field": lambda s, c: c["flagFamilies"]["midi"]["readableFields"].append(

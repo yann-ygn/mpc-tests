@@ -1,10 +1,10 @@
 {
   "apiVersion": "0.1",
-  "deviceId": "dev_defd04ff9d471d854865c07a0fe985ea",
-  "instanceId": "run_76f1ed590df6b17baccf2d488cd5173d",
+  "deviceId": "dev_f9cff1b965aec14dcbfa0ef1c69ec001",
+  "instanceId": "run_d8db975d400593d8373c4c4be8b04a46",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.6.0"
+    "version": "0.7.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -19,7 +19,7 @@
     "nativeAdapter": "attached",
     "adapter": {
       "abiVersion": 2,
-      "instanceId": "adp_ac0ad69f4fd467376852265f3b5ce4a0",
+      "instanceId": "adp_d68fa944d01ccfc8c49982229005f945",
       "codeVerified": true,
       "qualification": "bounded_lab_proof"
     },
@@ -67,7 +67,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
@@ -81,7 +82,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -93,7 +95,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -125,7 +128,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
@@ -142,7 +146,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -157,7 +162,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -189,7 +195,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
@@ -206,7 +213,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -221,7 +229,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -253,7 +262,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
@@ -270,7 +280,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -285,7 +296,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -317,7 +329,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
@@ -333,7 +346,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -347,7 +361,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -379,7 +394,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
@@ -395,7 +411,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -409,7 +426,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -441,7 +459,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
@@ -458,7 +477,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -473,7 +493,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -502,7 +523,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings",
             "matching_mute_scope",
@@ -516,7 +538,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -528,7 +551,8 @@
           "conditions": [
             "qualified_screen",
             "no_popup",
-            "stopped",
+            "stopped_or_sequence_playback",
+            "recording_off",
             "automation_off",
             "recognized_solo_arm_settings"
           ]
@@ -649,12 +673,26 @@
       "conditions": [
         "qualified_screen",
         "no_popup",
-        "stopped",
+        "stopped_or_sequence_playback",
+        "recording_off",
         "automation_off",
         "recognized_solo_arm_settings",
         "matching_mute_scope",
         "global_or_named_active_sequence"
       ],
+      "transportStates": [
+        "stopped",
+        "sequence_playback"
+      ],
+      "excludedContexts": {
+        "recording": "RECORDING_UNQUALIFIED",
+        "overdub": "RECORDING_UNQUALIFIED",
+        "automationReadWrite": "AUTOMATION_UNQUALIFIED",
+        "clipSong": "PLAYBACK_CONTEXT_UNQUALIFIED"
+      },
+      "timingSemantics": "immediate_model_at_ui_dispatch",
+      "sampleAccurate": false,
+      "quantizedScheduling": false,
       "muteScopes": [
         "global",
         "sequence"
@@ -685,10 +723,24 @@
       "conditions": [
         "qualified_screen",
         "no_popup",
-        "stopped",
+        "stopped_or_sequence_playback",
+        "recording_off",
         "automation_off",
         "recognized_solo_arm_settings"
-      ]
+      ],
+      "transportStates": [
+        "stopped",
+        "sequence_playback"
+      ],
+      "excludedContexts": {
+        "recording": "RECORDING_UNQUALIFIED",
+        "overdub": "RECORDING_UNQUALIFIED",
+        "automationReadWrite": "AUTOMATION_UNQUALIFIED",
+        "clipSong": "PLAYBACK_CONTEXT_UNQUALIFIED"
+      },
+      "timingSemantics": "immediate_model_at_ui_dispatch",
+      "sampleAccurate": false,
+      "quantizedScheduling": false
     },
     "set_record_armed": {
       "available": true,
@@ -713,10 +765,24 @@
       "conditions": [
         "qualified_screen",
         "no_popup",
-        "stopped",
+        "stopped_or_sequence_playback",
+        "recording_off",
         "automation_off",
         "recognized_solo_arm_settings"
-      ]
+      ],
+      "transportStates": [
+        "stopped",
+        "sequence_playback"
+      ],
+      "excludedContexts": {
+        "recording": "RECORDING_UNQUALIFIED",
+        "overdub": "RECORDING_UNQUALIFIED",
+        "automationReadWrite": "AUTOMATION_UNQUALIFIED",
+        "clipSong": "PLAYBACK_CONTEXT_UNQUALIFIED"
+      },
+      "timingSemantics": "immediate_model_at_ui_dispatch",
+      "sampleAccurate": false,
+      "quantizedScheduling": false
     },
     "get_command": {
       "available": true,
@@ -744,6 +810,7 @@
     "maxMidiTracks": 128,
     "maxAudioTracks": 8,
     "maxBuses": 128,
-    "snapshotAbiVersion": 4
+    "snapshotAbiVersion": 4,
+    "maxJobsPerUiCallback": 1
   }
 }

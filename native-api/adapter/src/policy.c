@@ -50,7 +50,7 @@ static bool capture(
   memset(out, 0, sizeof *out);
   out->target_program = target->program;
   const struct native_command_context_layout *p = &native_command_context;
-  uint32_t project, arm_project, arm_properties;
+  uint32_t project, arm_project, arm_properties, recorder_timeline;
   return read_value(a, target->program, 0, &out->target_vtable, 4) &&
     pointer(a, (uint32_t)a->io.image, NATIVE_APPLICATION_SLOT, &out->app) &&
     object(a, out->app, NATIVE_APPLICATION_VTABLE) &&
@@ -68,12 +68,18 @@ static bool capture(
     object(a, out->thread, p->audioThreadVtable) &&
     pointer(a, out->thread, p->audioThreadSequencer, &out->sequencer) &&
     object(a, out->sequencer, p->sequencerVtable) &&
+    read_value(a, out->sequencer, p->sequencerMode, &out->playback_mode, 4) &&
+    read_value(a, out->sequencer, p->sequencerSongSource, &out->song_source, 4) &&
     pointer(a, out->sequencer, p->sequencerTimeline, &out->timeline) &&
     object(a, out->timeline, p->timelineVtable) &&
     read_value(a, out->timeline, p->timelinePlaying, &out->playing, 1) &&
     pointer(a, out->sequencer, p->sequencerRecorder, &out->recorder) &&
     object(a, out->recorder, p->recorderVtable) &&
+    pointer(a, out->recorder, p->recorderTimeline, &recorder_timeline) &&
+    recorder_timeline == out->timeline &&
     pointer(a, out->recorder, p->recorderProperties, &out->record_properties) &&
+    object(a, out->record_properties, p->recordPropertiesVtable) &&
+    read_value(a, out->record_properties, p->recordModeValue, &out->record_mode, 4) &&
     pointer(a, out->engine, p->engineArmBehaviour, &out->arm) &&
     object(a, out->arm, p->armBehaviourVtable) &&
     pointer(a, out->arm, p->armBehaviourProject, &arm_project) && arm_project == target->project &&
@@ -115,9 +121,19 @@ enum mpc_native_error mpc_native_qualify_command(
   if (
     (before.view != p->mainMode && before.view != p->mixerMode &&
      before.view != p->trackMuteMode) ||
-    before.popup != p->noPopup || before.playing || before.automation || before.arm_mode > 1 ||
+    before.popup != p->noPopup || before.playing > 1 || before.arm_mode > 1 ||
     before.solo_mode > 1 || before.sequence_mute > 1)
     return MPC_NATIVE_NOT_READY;
+  /* The recorder enum covers pending as well as live Record/Overdub. Neither
+   * stopped transport nor a false IsRecordingActive establishes recording Off.
+   * The visible screen alone cannot establish an ordinary sequence source.
+   * The separate Song source and unknown enum values also fail closed. */
+  if (before.record_mode)
+    return MPC_NATIVE_RECORDING_UNQUALIFIED;
+  if (before.playback_mode != p->normalSequenceMode || before.song_source)
+    return MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED;
+  if (before.automation)
+    return MPC_NATIVE_AUTOMATION_UNQUALIFIED;
   if (operation == MPC_COMMAND_MUTE && before.sequence_mute != (scope == MPC_MUTE_SEQUENCE))
     return MPC_NATIVE_MUTE_SCOPE_MISMATCH;
   if (*known && memcmp(baseline, &before, sizeof before))

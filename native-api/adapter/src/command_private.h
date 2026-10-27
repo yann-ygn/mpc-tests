@@ -8,7 +8,7 @@
 struct mpc_identity_registry;
 
 struct mpc_command_native_result {
-  uint64_t dispatched_ms;
+  uint64_t dispatched_ms, finished_ms, ui_work_us;
   bool before_known, after_known;
   bool context_known;
   struct mpc_command_context context;

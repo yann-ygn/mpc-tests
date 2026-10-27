@@ -14,11 +14,15 @@ class LivePolicyTests(HostHarness):
     command = wire_tests.WireCommandTests.command
     send = wire_tests.WireCommandTests.send
     get = wire_tests.WireCommandTests.get
+    receipt = wire_tests.WireCommandTests.receipt
 
     def setUp(self):
         super().setUp()
         self.launch("native-commands")
         self.target = self.public("get_state")["tracks"][0]["ref"]
+        self.receipt_schema = json.loads(
+            (wire_tests.ROOT / "native-api/schema/command-receipt.schema.json").read_text()
+        )
 
     def test_all_operations_apply_with_qualified_live_sources(self):
         for alternate in (False, True):
@@ -36,6 +40,10 @@ class LivePolicyTests(HostHarness):
         caps = self.public("describe")["capabilities"]
         for op in ("set_mute", "set_solo", "set_record_armed"):
             self.assertEqual(caps[op]["screens"], ["main", "mixer", "track_mute"])
+            self.assertEqual(caps[op]["transportStates"], ["stopped", "sequence_playback"])
+            self.assertIn("recording_off", caps[op]["conditions"])
+            self.assertFalse(caps[op]["sampleAccurate"])
+            self.assertFalse(caps[op]["quantizedScheduling"])
         for marker in ("policy-mixer", "policy-track-mute"):
             path = self.install / marker
             path.touch()
@@ -49,6 +57,64 @@ class LivePolicyTests(HostHarness):
                         self.assertTrue(result["nativeInvoked"])
             finally:
                 path.unlink()
+
+    def test_playback_dispatch_noops_conflicts_and_retained_timing(self):
+        paused = self.install / "pause-ui"
+        paused.touch()
+        request = self.command("start-before-dispatch", waitMs=0)
+        self.assertEqual(self.send(request)["status"], "accepted")
+        (self.install / "policy-playing").touch()
+        paused.unlink()
+        result = self.get(request["requestId"])
+        self.assertEqual(result["status"], "applied", result)
+        self.assertTrue(result["nativeInvoked"])
+        self.assertGreaterEqual(result["timing"]["totalMs"], result["timing"]["queueMs"])
+        self.assertEqual(self.send(request), result)
+        for screen in (None, "policy-mixer", "policy-track-mute"):
+            path = self.install / screen if screen else None
+            if path:
+                path.touch()
+            try:
+                for op in ("set_mute", "set_solo", "set_record_armed"):
+                    for value in (False, True):
+                        label = str(screen) + op + str(value)
+                        receipt = self.send(self.command(label, op=op, value=value))
+                        self.assertEqual(receipt["status"], "applied", receipt)
+                        noop = self.send(self.command(label + "noop", op=op, value=value))
+                        self.assertEqual(noop["status"], "applied", noop)
+                        self.assertFalse(noop["nativeInvoked"])
+                        conflict = self.send(
+                            self.command(
+                                label + "conflict",
+                                op=op,
+                                value=not value,
+                                expected={"value": not value},
+                            )
+                        )
+                        self.assertEqual(conflict["error"]["code"], "PRECONDITION_FAILED")
+                        self.assertFalse(conflict["nativeInvoked"])
+            finally:
+                if path:
+                    path.unlink()
+
+    def test_playback_disconnects_expiry_pressure_and_shutdown(self):
+        (self.install / "policy-playing").touch()
+        wire_tests.WireCommandTests.test_disconnect_and_wait_timeout_preserve_work_without_blocking_other_clients(
+            self
+        )
+        wire_tests.WireCommandTests.test_queue_start_expiry_and_backpressure_are_bounded(self)
+
+    def test_stop_drains_while_playback_remains_active(self):
+        (self.install / "policy-playing").touch()
+        wire_tests.WireCommandTests.test_stop_drains_pending_delivery_and_restart_retires_authority(
+            self
+        )
+
+    def test_shutdown_cancels_queued_delivery_while_playing(self):
+        (self.install / "policy-playing").touch()
+        wire_tests.WireCommandTests.test_shutdown_drops_long_delivery_waits_and_drains_without_waiting_for_clients(
+            self
+        )
 
     def test_queued_command_qualifies_the_screen_at_dispatch(self):
         for marker in ("policy-mixer", "policy-track-mute"):
@@ -85,7 +151,18 @@ class LivePolicyTests(HostHarness):
             "policy-song",
             "policy-clips",
             "policy-popup",
-            "policy-playing",
+            "policy-invalid-playing",
+            "policy-recording",
+            "policy-overdub",
+            "policy-record-pending",
+            "policy-overdub-pending",
+            "policy-record-unknown",
+            "policy-song-playback",
+            "policy-clip-playback",
+            "policy-playback-unknown",
+            "policy-song-source",
+            "policy-recorder-mismatch",
+            "policy-record-owner",
             "policy-arm-mode",
             "policy-solo-mode",
             "policy-invalid-bool",
@@ -104,11 +181,33 @@ class LivePolicyTests(HostHarness):
                         self.assertEqual(result["status"], "rejected", result)
                         self.assertFalse(result["nativeInvoked"])
                         self.assertEqual(result["execution"], "not_started")
-                        expected = (
-                            "READ_FAILED"
-                            if marker in {"policy-broken-owner", "policy-instance-mismatch"}
-                            else ("STATE_UNSTABLE" if marker == "policy-race" else "NOT_READY")
-                        )
+                        expected = "NOT_READY"
+                        if marker in {
+                            "policy-broken-owner",
+                            "policy-instance-mismatch",
+                            "policy-recorder-mismatch",
+                            "policy-record-owner",
+                        }:
+                            expected = "READ_FAILED"
+                        elif marker == "policy-race":
+                            expected = "STATE_UNSTABLE"
+                        elif marker.startswith("policy-automation-"):
+                            expected = "AUTOMATION_UNQUALIFIED"
+                        elif marker in {
+                            "policy-recording",
+                            "policy-overdub",
+                            "policy-record-pending",
+                            "policy-overdub-pending",
+                            "policy-record-unknown",
+                        }:
+                            expected = "RECORDING_UNQUALIFIED"
+                        elif marker in {
+                            "policy-song-playback",
+                            "policy-clip-playback",
+                            "policy-playback-unknown",
+                            "policy-song-source",
+                        }:
+                            expected = "PLAYBACK_CONTEXT_UNQUALIFIED"
                         self.assertEqual(result["error"]["code"], expected)
             finally:
                 path.unlink()
@@ -127,7 +226,7 @@ class LivePolicyTests(HostHarness):
         paused.touch()
         result = self.send(self.command(waitMs=0))
         self.assertEqual(result["status"], "accepted")
-        (self.install / "policy-playing").touch()
+        (self.install / "policy-record-pending").touch()
         paused.unlink()
         result = self.get("wire")
         self.assertEqual(result["status"], "rejected", result)

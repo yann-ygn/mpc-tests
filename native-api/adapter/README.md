@@ -55,9 +55,9 @@ the instance must still be shut down and closed.
 
 The host chooses 1–128 fixed job slots. Queued, running and completed-but-unreleased results all consume slots;
 saturation returns `QUEUE_FULL` without accepting another request. Concurrent acceptance is serialized under a
-short lock and requests execute in FIFO order on the UI thread. Each UI message processes at most the configured
-capacity. Only one native callback capture group can be outstanding, including retained copies after invocation.
-Cancelling/releasing jobs cannot grow JUCE's queue. The scheduler posts the next batch only after all copies of
+short lock and requests execute in FIFO order on the UI thread. Each UI message processes at most one job.
+Only one native callback capture group can be outstanding, including retained copies after invocation.
+Cancelling/releasing jobs cannot grow JUCE's queue. The scheduler posts the next job only after all copies of
 the previous group are destroyed. A discarded callback fails pending work rather than silently retrying it.
 
 Requests can carry a monotonic queue deadline relative to acceptance. A wait can shorten that deadline, and the
@@ -293,7 +293,7 @@ See [command integration](COMMANDS.md#sequence-scoped-mute-48) and [the wire con
 
 ## Family flag qualification (#49)
 
-Current interfaces are **primitive ABI 2, executor ABI 7, command ABI 4 and snapshot
+Current interfaces are **primitive ABI 2, executor ABI 7, command ABI 5 and snapshot
 ABI 4**. Recompile every trusted C caller. The snapshot transfer remains 127824 bytes,
 with 344-byte track rows, but the independent six-bit `known` mask replaces the grouped
 requested bit. `STATE_V4` / `MPC_ADAPTER_STATE_V4` reject older transfers; the primitive
@@ -315,3 +315,9 @@ Completion requires only that family's operation-specific mask. Missing unrelate
 fields cannot invent an audio acknowledgement. Peer changes compare individual fields
 known in both observations and never compare different families. See the
 [family matrix and device evidence](../../findings/native-family-flags.md).
+
+US #50 qualifies normal sequence playback with recording/overdub Off and target
+automation Off. The native recorder enum, clip/sequence selector and separate Song
+source are checked independently of the playing flag and visible screen. Command
+ABI 5 adds retained stage durations. One executor job runs per UI message under
+load. See [playback policy, timing and device evidence](../../findings/native-playback-flags.md).

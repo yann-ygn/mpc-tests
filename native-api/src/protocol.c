@@ -86,7 +86,8 @@ void api_flag_support(FILE *f, const char *type, unsigned known, int normal) {
         fputs(",\"audio_copy\"", f);
     }
     fputs(
-      "],\"conditions\":[\"qualified_screen\",\"no_popup\",\"stopped\",\"automation_off\","
+      "],\"conditions\":[\"qualified_screen\",\"no_popup\",\"stopped_or_sequence_playback\","
+      "\"recording_off\",\"automation_off\","
       "\"recognized_solo_arm_settings\"",
       f);
     if (!i)
@@ -275,12 +276,22 @@ char *api_respond(
         fputs(i ? ",\"audio_copy\"]" : "]", output);
         fputs(
           ",\"screens\":[\"main\",\"mixer\",\"track_mute\"],"
-          "\"conditions\":[\"qualified_screen\",\"no_popup\",\"stopped\",\"automation_off\","
+          "\"conditions\":[\"qualified_screen\",\"no_popup\",\"stopped_or_sequence_playback\","
+          "\"recording_off\",\"automation_off\","
           "\"recognized_solo_arm_settings\"",
           output);
         if (!i)
           fputs(",\"matching_mute_scope\",\"global_or_named_active_sequence\"", output);
         fputc(']', output);
+        fputs(
+          ",\"transportStates\":[\"stopped\",\"sequence_playback\"],"
+          "\"excludedContexts\":{\"recording\":\"RECORDING_UNQUALIFIED\","
+          "\"overdub\":\"RECORDING_UNQUALIFIED\",\"automationReadWrite\":\"AUTOMATION_"
+          "UNQUALIFIED\","
+          "\"clipSong\":\"PLAYBACK_CONTEXT_UNQUALIFIED\"},"
+          "\"timingSemantics\":\"immediate_model_at_ui_dispatch\",\"sampleAccurate\":false,"
+          "\"quantizedScheduling\":false",
+          output);
         if (!i)
           fputs(
             ",\"muteScopes\":[\"global\",\"sequence\"],\"inactiveSequence\":\"SEQUENCE_NOT_"
@@ -296,7 +307,8 @@ char *api_respond(
     "\"connectionTimeoutMs\":%d,\"queueCapacity\":%d,\"receiptCapacity\":%d,"
     "\"requestRetentionMs\":%d,\"defaultStartWithinMs\":%s,\"maxStartWithinMs\":%s,"
     "\"maxWaitMs\":%s,\"verificationTimeoutMs\":%s,\"adapterProbeTimeoutMs\":%d,\"maxTracks\":%u,"
-    "\"maxMidiTracks\":%u,\"maxAudioTracks\":%u,\"maxBuses\":%u,\"snapshotAbiVersion\":%u}}\n",
+    "\"maxMidiTracks\":%u,\"maxAudioTracks\":%u,\"maxBuses\":%u,\"snapshotAbiVersion\":%u,"
+    "\"maxJobsPerUiCallback\":%s}}\n",
     MAX_REQUEST_BYTES,
     MAX_RESPONSE_BYTES,
     MAX_CONNECTIONS,
@@ -313,7 +325,8 @@ char *api_respond(
     MPC_IDENTITY_MAX_MIDI_TRACKS,
     MPC_IDENTITY_MAX_AUDIO_TRACKS,
     MPC_STATE_MAX_BUSES,
-    MPC_STATE_ABI);
+    MPC_STATE_ABI,
+    discovery.commands_ready ? "1" : "null");
   if (fclose(output)) {
     free(buffer);
     return NULL;

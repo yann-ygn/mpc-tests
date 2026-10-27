@@ -1,19 +1,19 @@
 # Native command handlers (#19)
 
 `libmpc_native.so` now provides the transport-independent command API in
-[`mpc_commands.h`](include/mpc_commands.h), ABI 4. It runs on executor ABI 7 and primitive adapter ABI 2.
+[`mpc_commands.h`](include/mpc_commands.h), ABI 5. It runs on executor ABI 7 and primitive adapter ABI 2.
 The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
 The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
 `mpc_executor_qualify_command`. US #46 expanded observations to 136 user tracks; US #48 adds
 explicit sequence targets/context. US #49 adds per-family observations and versions
-command ABI 4 / executor ABI 7 / primitive ABI 2.
+command ABI 4 / executor ABI 7 / primitive ABI 2. US #50 adds retained timing in command ABI 5.
 Recompile trusted callers; configurations using the earlier ABIs are rejected.
 
 [US #32](../../findings/native-service.md) binds the public Unix setters and `get_command` in the persistent
 host. The socket authenticates callers by peer UID and validates strict schemas before enqueueing.
 This library opens no sockets. Its production `mpc_executor_qualify_command` callback checks live native
-Main/Mixer/Track Mute with no popup, stopped transport, recognized solo/arm settings, target automation Off and a matching explicit mute scope.
+Main/Mixer/Track Mute with no popup, stopped or normal sequence playback, recording/overdub Off, recognized solo/arm settings, target automation Off and a matching explicit mute scope.
 The private lab can select this same policy with `LIVE_COMMAND_OPEN`; `LAB_COMMAND_OPEN` retains the older
 explicitly manual experimental policy.
 
@@ -26,7 +26,7 @@ while a handler authority is attached. Only authoritative executors can host the
 
 A `mpc_command_policy.qualify` callback is mandatory for executing writes. It runs on the verified UI thread
 at dispatch, before native filter/setter access and readback, and around every verification snapshot. The host must establish current mode/settings
-from validated live sources, reject playback/automation/Clip/Song and unqualified contexts, and reject mute when
+from validated live sources, reject recording/overdub, automation Read/Write, Clip/Song and unqualified contexts, and reject mute when
 the live mute preference does not match the request scope. A saved setting, session label or null callback cannot establish production
 qualification. Missing callbacks reject even no-ops with `NOT_READY`. The lab's manual policy is diagnostic only.
 Family/ownership checks remain inside the guarded adapter regardless of host policy.
@@ -114,6 +114,47 @@ changes, with project/track IDs and field paths. Single follow-solo can select a
 Single arm can change selection and peer arms; Multi settings preserve the native behavior from #31. These
 observations are not a complete causal history, isolation guarantee or promise to preserve selection.
 
+## Playback and timing (US #50)
+
+Normal sequence playback and stopped sequence mode use the same desired-state
+requests. Recording and overdub, including pending modes, return
+`RECORDING_UNQUALIFIED`; automation Read/Write returns `AUTOMATION_UNQUALIFIED`.
+Native Clip/other sequencer contexts or an active Song source return
+`PLAYBACK_CONTEXT_UNQUALIFIED`. An unsupported screen/popup returns `NOT_READY`.
+All checks also apply to no-ops and expected-value conflicts.
+
+Acceptance retains a request; it does not reserve a playback position. The first
+UI dispatch establishes the context fence, so a stable start/stop between
+acceptance and dispatch is allowed. A sampled start/stop, recorder, automation,
+owner, screen or settings transition after that baseline rejects before native
+invocation or yields `unknown` after invocation. Delayed verification never
+repeats the setter. Explicit sequence mute remains pinned to the named active
+generation across loops and sequence changes. Sampling cannot detect a complete
+intervening ABA transition or establish an audio-thread transaction.
+
+These setters change the requested model immediately on UI dispatch. API mute
+does not use the Track Mute pad's native quantized launch queue. There is no
+beat/bar, sample, audio-buffer or audible-output scheduling guarantee. Mute
+completion verifies the model in its labeled scope; solo/arm use the family's
+model/engine-copy requirements. A matching engine copy is not audible output.
+
+Receipts add a retained `timing` object. `queueMs` spans acceptance to first UI
+dispatch; `dispatchMs` measures that complete callback, including observations;
+`verificationMs` spans its completion to terminal receipt publication, including
+worker scheduling and any later readbacks. `totalMs` spans acceptance to terminal
+publication. Null means that stage is not yet established. `uiWorkUs` sums native
+callback work and `verificationPasses` counts later read-only callbacks. These
+monotonic durations do not timestamp the exact property change. Final retry
+results preserve the same timing values.
+
+Each UI message processes at most one executor job, even under replenishing
+traffic. One non-preemptible bounded snapshot/command can still exceed a frame
+budget; it is never multiplied by the slot capacity in one callback. The public
+host retains 16 pending commands, 128 receipts and the existing 500 ms verification
+budget. Work and waits stay on the caller/worker/UI threads; the adapter adds no
+audio callback, socket I/O or wait to the audio thread. See
+[device measurements and limits](../../findings/native-playback-flags.md).
+
 ## Delivery and lifetime
 
 Deduplication keys are caller, authority instance and request ID. Canonical comparison includes operation, target,
@@ -174,7 +215,7 @@ carry scope and the active sequence's generation; verification must match both. 
 relationship after invocation remains unknown with actual invocation/execution metadata.
 There is no inactive-sequence setter and no implicit selection change.
 
-Use command ABI 4, executor ABI 7, snapshot ABI 4 and primitive ABI 2 together.
+Use command ABI 5, executor ABI 7, snapshot ABI 4 and primitive ABI 2 together.
 Older layouts are rejected at open/transfer or receipt serialization. The export set
 is unchanged.
 The [public service guide](../README.md#sequence-scoped-mute) defines wire shapes and errors.
