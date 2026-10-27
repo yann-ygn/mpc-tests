@@ -1,0 +1,125 @@
+{
+  "story": 50,
+  "version": "0.7.0",
+  "ownerApprovedInstallAndRestart": true,
+  "previousVersion": "0.2.0",
+  "packageSha256": "7ac18453291e977609c3c783920dbf5adf82ddea468946d58b0762d739c150eb",
+  "transferredPayloadChecksumsVerified": true,
+  "status": "ready",
+  "nativeError": "OK",
+  "deviceIdentityPreserved": true,
+  "mpcPidChangedForUpgrade": true,
+  "configurationPreserved": true,
+  "identityFilePreserved": true,
+  "preloadListPreserved": true,
+  "sourceRevision": "6e6d425a2ee4f67d46071c6337c9332514fef4b3",
+  "sourceSha256": "cc073eb107d06c20b411f99d41f39d3a4a39667fc6303ddb670ffc6ba7241622",
+  "workingTreeDirty": false,
+  "artifactSha256": {
+    "mpc-api": "5fe1c3660d39cfeacda856fbbc783addcf9b4801e538495ca00f447cd013ca1e",
+    "mpc_native_host.so": "7259fefec5a57c89460e5b105c937e0e04ce61c216891f6346112a9a982a4384"
+  },
+  "installedArtifactHashesMatch": true,
+  "coexistence": {
+    "privtap.so": true,
+    "mpc_remote": true,
+    "mpc_native_host.so": true
+  },
+  "temporaryInstallFilesRemoved": true,
+  "date": "2026-10-27",
+  "previousInstallationBackedUpLocally": true,
+  "stopStartVerified": true,
+  "instanceRotated": true,
+  "socketModes": "600",
+  "mpcPidUnchangedDuringHostStopStart": true,
+  "finalChecks": {
+    "allFiveLoadedProjectReadsPassed": true,
+    "independentFullInventoryFlagsMatched": true,
+    "userTrackCount": 8,
+    "busCount": 28,
+    "originalProjectReopenedFromDisk": true,
+    "selectionRestored": true,
+    "sequenceRestored": true,
+    "playheadRestored": true,
+    "nativeAndSavedCommandPreferencesRestored": true,
+    "automationReadRestored": true,
+    "transportStoppedRecordingOff": true,
+    "mixerEffectsRestored": true,
+    "oneJobLimitAndPlaybackDiscoveryVerified": true
+  },
+  "installedPlayback": {
+    "operations": [
+      {
+        "op": "set_mute",
+        "status": "applied",
+        "nativeInvoked": true,
+        "verification": [
+          "model"
+        ],
+        "timing": {
+          "queueMs": 4,
+          "dispatchMs": 53,
+          "verificationMs": 4,
+          "totalMs": 61,
+          "uiWorkUs": 53456,
+          "verificationPasses": 0
+        },
+        "independentRequestedAndRequiredEngineReadbackMatched": true,
+        "noOpAndExpectedConflictSkipNative": true,
+        "retainedLookupAndRetryAfterRestore": true
+      },
+      {
+        "op": "set_solo",
+        "status": "applied",
+        "nativeInvoked": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "timing": {
+          "queueMs": 3,
+          "dispatchMs": 39,
+          "verificationMs": 4,
+          "totalMs": 46,
+          "uiWorkUs": 39474,
+          "verificationPasses": 0
+        },
+        "independentRequestedAndRequiredEngineReadbackMatched": true,
+        "noOpAndExpectedConflictSkipNative": true,
+        "retainedLookupAndRetryAfterRestore": true
+      },
+      {
+        "op": "set_record_armed",
+        "status": "applied",
+        "nativeInvoked": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "timing": {
+          "queueMs": 6,
+          "dispatchMs": 39,
+          "verificationMs": 2,
+          "totalMs": 47,
+          "uiWorkUs": 39100,
+          "verificationPasses": 0
+        },
+        "independentRequestedAndRequiredEngineReadbackMatched": true,
+        "noOpAndExpectedConflictSkipNative": true,
+        "retainedLookupAndRetryAfterRestore": true
+      }
+    ],
+    "transportRemainedPlaying": true,
+    "flagsInventorySelectionAndAutomationRestored": true
+  },
+  "projectSavesPerformed": false,
+  "projectLoadsAndDiscardAuthorized": true,
+  "originalProjectReopenedFromDisk": true,
+  "mpcRestartPerformedForUpgrade": true,
+  "remoteScreenshotWorks": true,
+  "limits": [
+    "MIDI/CV physical output and audible output remain unmeasured.",
+    "ALSA RUNNING samples do not establish zero underruns.",
+    "The owner authorized discarding unsaved project changes; final command restoration compares with the freshly reopened saved project."
+  ]
+}

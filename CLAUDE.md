@@ -30,6 +30,8 @@ before running experiments.
   needs `-n N`. The root filesystem is read-only; addins live in `/data/mpc-addins/`.
 - The MPC Remote addin (`/data/mpc-addins/remote`, 1.0.3) serves HTTP and MCP on port 6720 (`/tap`, `/button`,
   `/screen.png`). The `mpc` MCP server is the same addin. `privtap/profiles/` keeps a copy of its `buttons.conf`.
+- MPC Native API 0.7.0 is installed and ready (owner-approved #50 upgrade, 2026-10-27).
+  Earlier story entries below record historical installed versions; see `findings/native-playback-installed-20261027.json` for the current verification.
 - privtap's settings: `/data/mpc-addins/privtap/privtap.conf`. Keep `identity=` empty except during an experiment:
   as another model, the Key 37's LEDs show the wrong states.
 - Settings backup taken before identity experiments: `/data/claude-backup-20261023-settings.tar`.
@@ -190,8 +192,14 @@ before running experiments.
   A second four-track DnB demo at 174 BPM / 32 bars passed 18 additional command rows, eight-client pressure
   and all five reads (capture p95 12.843 ms, command total p95 78 ms), with flags/automation restored and
   lab removed. Evidence is published in `findings/native-playback-flags.md` and its sanitized proof.
-  Installation/restart and final installed verification follow separately.
-- Next: install/verify the owner-approved #50 package, then streaming (#33).
+  Owner-approved 0.7.0 installation/restart completed from commit `6e6d425`; hashes, configuration, identity
+  and preload list match, with privtap/Remote preserved. Installed five reads, host stop/start and actual
+  playback mute/solo/arm writes/readbacks/retries pass. The original project was reopened from disk as
+  authorized; its fresh baseline flags/automation were restored after testing, with original selection,
+  sequence, zero playhead, command preferences and Mixer Effects view. Installed 0.7.0 is ready/OK.
+  See `findings/native-playback-installed-20261027.json`. Unsaved changes were discarded with permission;
+  no project was saved. Future installs/restarts still require the owner's approval.
+- Next: streaming (#33).
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
   the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through

@@ -3,7 +3,8 @@
 MPC Key 37, MPC 3.9.1.2, executable build
 `8371199f945ecc40f79cb19c17ff5de72810a91c`. Package 0.7.0 adds playback policy
 and command ABI 5. The initial qualification left installed 0.2.0 unchanged;
-the owner subsequently authorized another project load and a 0.7.0 installation.
+the owner subsequently authorized another project load and a 0.7.0 installation,
+which completed successfully.
 
 ## Live qualification
 
@@ -215,5 +216,29 @@ were removed, and installed host 0.2.0 resumed ready with a successful public re
 The MPC process and project path stayed unchanged. No project save/load, addin
 installation or MPC restart occurred. Restoration claims cover the observed
 fields; they do not assert identical undo history or heap contents. The subsequent
-owner-authorized installation and restart are recorded separately in
-`native-playback-installed-20261027.json` after verification.
+owner-authorized installation and restart are recorded separately in the
+[installed verification](native-playback-installed-20261027.json).
+
+## Installed 0.7.0 verification
+
+The package built from commit `6e6d425` was installed after the owner authorized
+discarding unsaved work and restarting MPC. Transferred checksums and installed
+artifact hashes match; configuration, installation identity and the preload list
+were preserved. The previous 0.2.0 installation was backed up locally. Native
+host 0.7.0 reports ready/OK, and privtap and MPC Remote remain loaded.
+
+All five installed reads and host stop/start pass, including service/adapter
+instance rotation, stable device identity and mode-0600 sockets. The original
+project was reopened from disk. Installed Unix mute/solo/arm commands then passed
+during normal playback on its selected plugin, including independent requested
+and required engine readbacks, no-ops, expected-value conflicts, lookup and
+retained retries after restoration. These three installed rows supplement the
+186 temporary-lab matrix rows across the two projects.
+
+The fresh saved-project baseline's flags, inventory, selection and automation were
+restored after those writes. Final reads independently match all eight user
+tracks and 28 buses. The original sequence, zero playhead, native/saved command
+preferences and Mixer Effects view are restored; transport is stopped, recording
+is Off and automation is Read. The owner-authorized reload discarded unsaved
+changes; this final check does not claim that they survived the reload. No project
+was saved by the qualification or installation.
