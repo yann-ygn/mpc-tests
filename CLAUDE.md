@@ -30,8 +30,8 @@ before running experiments.
   needs `-n N`. The root filesystem is read-only; addins live in `/data/mpc-addins/`.
 - The MPC Remote addin (`/data/mpc-addins/remote`, 1.0.3) serves HTTP and MCP on port 6720 (`/tap`, `/button`,
   `/screen.png`). The `mpc` MCP server is the same addin. `privtap/profiles/` keeps a copy of its `buttons.conf`.
-- MPC Native API 0.7.0 is installed and ready (owner-approved #50 upgrade, 2026-10-27).
-  Earlier story entries below record historical installed versions; see `findings/native-playback-installed-20261027.json` for the current verification.
+- MPC Native API 0.10.0 is installed and ready (owner-approved #39 upgrade, 2026-10-27).
+  Earlier story entries below record historical installed versions; see `findings/native-mixer-installed-20261027.json` for the current verification.
 - privtap's settings: `/data/mpc-addins/privtap/privtap.conf`. Keep `identity=` empty except during an experiment:
   as another model, the Key 37's LEDs show the wrong states.
 - Settings backup taken before identity experiments: `/data/claude-backup-20261023-settings.tar`.
@@ -249,3 +249,12 @@ before running experiments.
   all captured values/flags/settings, selection, sequence, zero playhead and Mixer Effects view restored. Lab drained/unloaded and
   installed 0.7.0 resumed without MPC restart. Package 0.10.0 is built locally, not installed. The backup and disposable playback copy
   remain under Claude Experiments; no existing experiment was overwritten. Future installs/restarts still require owner approval.
+
+- Owner-approved 0.10.0 installation (#39 follow-up, 2026-10-27) completed from `b797853`. A fresh session copy was saved as
+  `Claude Experiments/US39 Install Backup.xpj` before the required MPC restart, then reopened. Package/installed hashes match;
+  configuration, persistent identity and preload list were preserved, with privtap/Remote loaded. All five installed mixer setters
+  passed independent readback, retained replay/get_command, no-op and expected-conflict checks; Automation Read rejected mixer
+  commands before invocation. Host stop/start drained and rotated the API instance. All five read projections/schema checks and
+  independent flags/mixer observations pass. All captured user/bus values, automation, selection, active sequence, settings, zero
+  playhead and Mixer Effects/no-popup context are restored. Backup bytes are unchanged; installed host is ready/OK. See
+  findings/native-mixer-installed-20261027.json. Future installs/restarts still require owner approval.

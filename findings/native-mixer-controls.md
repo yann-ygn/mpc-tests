@@ -3,8 +3,9 @@
 Key 37, MPC 3.9.1.2, build `8371199f945ecc40f79cb19c17ff5de72810a91c`.
 The implementation adds desired-state volume, pan, send level, insert-rack enable
 and insert-slot enable to the existing authenticated local command contract.
-It does not expose effect parameters or bus setters. The installed 0.7.0 addin
-is separate from the locally prepared 0.10.0 package.
+It does not expose effect parameters or bus setters. Initial qualification kept
+the installed 0.7.0 addin in place. The subsequent owner-approved 0.10.0 upgrade
+is recorded in [the installed-device report](native-mixer-installed-20261027.json).
 
 ## Typed contract
 
@@ -219,6 +220,11 @@ routing, effect parameter state and sequence contents as well; these were not
 edited by the API runner. The temporary lab drained/unloaded, its files were
 removed, and the installed 0.7.0 host resumed. MPC's PID was unchanged throughout.
 
-Package **0.10.0** is built locally with the new contracts. It is not installed;
-the instrument continues to run the existing 0.7.0 addin. Installation/restart
-remains a separate owner-authorized action.
+Package **0.10.0** was subsequently installed with the owner’s approval. A fresh
+experiment session backup was saved before the MPC restart and reopened afterward.
+Installed artifact hashes, all five mixer setters/readbacks/retries, five read
+projections and host stop/start passed. Configuration, device identity and the
+preload list were preserved. Captured values/settings, selection, active sequence,
+zero playhead and Mixer Effects/no-popup view were restored; the installed host
+is ready/OK. See [installation evidence](native-mixer-installed-20261027.json).
+Future installations/restarts still require owner approval.

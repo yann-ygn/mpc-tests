@@ -1,0 +1,216 @@
+{
+  "story": 39,
+  "version": "0.10.0",
+  "ownerApprovedInstallAndRestart": true,
+  "previousVersion": "0.7.0",
+  "packageSha256": "bace618d061bdfa3d630b3311418616c4decc31d6e87bc29cac040324a121e3e",
+  "transferredPayloadChecksumsVerified": true,
+  "status": "ready",
+  "nativeError": "OK",
+  "deviceIdentityPreserved": true,
+  "mpcPidChangedForUpgrade": true,
+  "configurationPreserved": true,
+  "identityFilePreserved": true,
+  "preloadListPreserved": true,
+  "sourceRevision": "b7978538dfdff94410c203d032150b6d4d466199",
+  "sourceSha256": "988736232e4467a971fb9e620b4015ca7d59151b0bf8a50ce12a564e91b6ee39",
+  "workingTreeDirty": false,
+  "artifactSha256": {
+    "mpc-api": "4af221b6c4fbb4e23a1fa524dbd7b5e80569d3f5d148876264128cb730ab29ac",
+    "mpc_native_host.so": "629e5e5b50f7f6543f2d77a99e0d001274e3f59c29f41cb9a712c14b918125c9"
+  },
+  "installedArtifactHashesMatch": true,
+  "coexistence": {
+    "privtap.so": true,
+    "mpc_remote": true,
+    "mpc_native_host.so": true
+  },
+  "temporaryInstallFilesRemoved": true,
+  "date": "2026-10-27",
+  "previousInstallationBackedUpLocally": true,
+  "freshSessionBackupVerified": true,
+  "mixerCommands": [
+    {
+      "op": "set_volume",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "timing": {
+        "queueMs": 8,
+        "dispatchMs": 21,
+        "verificationMs": 2,
+        "totalMs": 31,
+        "uiWorkUs": 20997,
+        "verificationPasses": 0,
+        "maxUiCallbackUs": 20997,
+        "stagesUs": {
+          "identity": 7735,
+          "policy": 5421,
+          "filterSetter": 66,
+          "targetReadback": 2347,
+          "beforeObservation": 2815,
+          "afterObservation": 2600,
+          "other": 10
+        },
+        "verificationUiUs": 0
+      },
+      "independentReadMatched": true,
+      "noOpAndExpectedConflictSkippedNative": true,
+      "retainedReplayAfterRestore": true
+    },
+    {
+      "op": "set_pan",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "timing": {
+        "queueMs": 1,
+        "dispatchMs": 21,
+        "verificationMs": 4,
+        "totalMs": 26,
+        "uiWorkUs": 20677,
+        "verificationPasses": 0,
+        "maxUiCallbackUs": 20677,
+        "stagesUs": {
+          "identity": 8885,
+          "policy": 4579,
+          "filterSetter": 30,
+          "targetReadback": 2155,
+          "beforeObservation": 2682,
+          "afterObservation": 2332,
+          "other": 9
+        },
+        "verificationUiUs": 0
+      },
+      "independentReadMatched": true,
+      "noOpAndExpectedConflictSkippedNative": true,
+      "retainedReplayAfterRestore": true
+    },
+    {
+      "op": "set_send_level",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "timing": {
+        "queueMs": 0,
+        "dispatchMs": 21,
+        "verificationMs": 4,
+        "totalMs": 25,
+        "uiWorkUs": 20851,
+        "verificationPasses": 0,
+        "maxUiCallbackUs": 20851,
+        "stagesUs": {
+          "identity": 8622,
+          "policy": 4472,
+          "filterSetter": 51,
+          "targetReadback": 2445,
+          "beforeObservation": 2702,
+          "afterObservation": 2542,
+          "other": 12
+        },
+        "verificationUiUs": 0
+      },
+      "independentReadMatched": true,
+      "noOpAndExpectedConflictSkippedNative": true,
+      "retainedReplayAfterRestore": true
+    },
+    {
+      "op": "set_insert_rack_enabled",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "timing": {
+        "queueMs": 0,
+        "dispatchMs": 21,
+        "verificationMs": 5,
+        "totalMs": 26,
+        "uiWorkUs": 21008,
+        "verificationPasses": 0,
+        "maxUiCallbackUs": 21008,
+        "stagesUs": {
+          "identity": 8981,
+          "policy": 4397,
+          "filterSetter": 4,
+          "targetReadback": 2350,
+          "beforeObservation": 2704,
+          "afterObservation": 2558,
+          "other": 11
+        },
+        "verificationUiUs": 0
+      },
+      "independentReadMatched": true,
+      "noOpAndExpectedConflictSkippedNative": true,
+      "retainedReplayAfterRestore": true
+    },
+    {
+      "op": "set_insert_enabled",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "timing": {
+        "queueMs": 1,
+        "dispatchMs": 20,
+        "verificationMs": 5,
+        "totalMs": 26,
+        "uiWorkUs": 20358,
+        "verificationPasses": 0,
+        "maxUiCallbackUs": 20358,
+        "stagesUs": {
+          "identity": 8237,
+          "policy": 4604,
+          "filterSetter": 4,
+          "targetReadback": 2187,
+          "beforeObservation": 2658,
+          "afterObservation": 2654,
+          "other": 10
+        },
+        "verificationUiUs": 0
+      },
+      "independentReadMatched": true,
+      "noOpAndExpectedConflictSkippedNative": true,
+      "retainedReplayAfterRestore": true
+    }
+  ],
+  "mixerAutomationReadRejectedBeforeNative": true,
+  "mixerValuesFlagsAndAutomationRestoredAfterWrites": true,
+  "limits": [
+    "Mixer completion is model only; acoustic output and underruns were not measured.",
+    "This installed smoke test used stopped playback; ordinary playback and load limits remain those in the mixer qualification report.",
+    "The pre-install context capture caught a closing Save popup; final restoration explicitly requires the qualified no-popup state."
+  ],
+  "finalChecks": {
+    "describeMixerCapabilitiesVerified": true,
+    "stopDrainedAndSocketRemoved": true,
+    "allFiveReadProjectionsVerified": true,
+    "instanceRotated": true,
+    "oldReceiptUnavailableAfterInstanceRotation": true,
+    "savedSessionInventoryAndFlagsRestored": true,
+    "savedSessionAllMixerValuesAndAutomationRestored": true,
+    "commandContextRestored": true,
+    "finalContextRequiresNoPopup": true,
+    "mixerAndFlagStateMatchedIndependentReader": true,
+    "backupUnchanged": true,
+    "mpcPidStableDuringHostLifecycle": true,
+    "status": "ready",
+    "nativeError": "OK",
+    "userTracks": 8,
+    "buses": 28,
+    "socketModes": [
+      "600",
+      "600"
+    ],
+    "activeSequenceRestored": true,
+    "zeroPlayheadRestored": true,
+    "passed": true
+  }
+}

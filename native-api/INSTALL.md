@@ -12,7 +12,9 @@ completion is model-only; MIDI/CV mixer and bus setters remain unavailable.
 See [mixer qualification](../findings/native-mixer-controls.md).
 The earlier 0.9.0 extension qualifies Automation Read no-ops and native record-arm writes;
 Read mute/solo writes remain unavailable. See [qualification and evidence](../findings/native-automation-read.md).
-The installed 0.7.0 host requires an approved restart to acquire this code.
+The owner-approved 0.10.0 installation is verified in
+[the installed-device report](../findings/native-mixer-installed-20261027.json).
+Upgrading any loaded older host requires an approved MPC restart to acquire new code.
 Version 0.8.0 reduces command UI work and adds shared incremental flag sampling;
 see [measurements and limits](../findings/native-ui-cost.md).
 Version 0.7.0 adds ordinary sequence playback with recording/overdub and automation Off,
