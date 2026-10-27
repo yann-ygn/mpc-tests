@@ -105,6 +105,14 @@ changes that preserve qualified owners do not remove manual-write eligibility;
 new native values still participate in expected-value and completion observations.
 The API makes no lossless event-edit or intervening-ABA detection claim.
 
+Newly added tracks can have an active Clip before MPC binds their mute updater.
+The device control rejected sequence writes before invocation in that state.
+An ordinary UI switch to another existing sequence and back bound the native
+subscriptions for the four empty research tracks, without changing their events
+or parameter maps. Each family then passed a direct native mute-parameter update
+and restoration check. This is fixture preparation; the API never navigates,
+creates a Clip or installs a subscription to obtain permission.
+
 ## Delivery and observation
 
 Expected values still precede no-op detection. Matching requests skip both setter
@@ -141,7 +149,7 @@ Use an authoritative temporary lab and prepare Read targets, matching mute scope
 recording Off and zero playhead. The runner never changes automation settings:
 
 ```sh
-python3 tools/mpc_read_writes.py --attachment build/us53/final-attachment.json \
+python3 tools/mpc_read_writes.py --attachment build/us53/release-attachment.json \
   --targets 0 4 --scope sequence --screens main mixer_volume track_mute \
   --output build/us53/read-matrix.json
 ```
@@ -149,3 +157,50 @@ python3 tools/mpc_read_writes.py --attachment build/us53/final-attachment.json \
 Raw reports remain under ignored `build/`. Final device coverage, latency/load
 measurements, restoration and installed availability are recorded in the linked
 proof; implementation qualification does not imply that 0.11.0 is installed.
+## Final device qualification and package
+
+The final canonical build passed all 21 host Meson entries, all 16 native
+ASan/UBSan entries, seven isolated ARM fixtures and ARM ELF/export/deployment
+guards. The final device matrix contains 896 distinct rows: both native mute
+preferences, all seven screens, stopped/playback, selected/unselected and every
+advertised family/operation. Flag rows make an actual transition and restore it;
+volume rows exercise 0, 1 and binary32 rounding. Independent native reads verify
+the results. The three-screen global matrix additionally checks no-ops, expected
+conflicts and retained replay; earlier sequence regression and host fixtures
+cover those delivery rules too. Six direct Clip checks verify intentional mute
+parameter changes while scheduled events stay unchanged.
+
+Twenty-four Single/Multi cross-family solo cases and 13 controller/manual and
+discarded-response cases passed. A mixed playback burst submitted 64 requests
+from eight clients alongside an 8 Hz target observer. All 64 applied, and all
+nine observer polls completed without errors.
+Successful observation callbacks: p95 9.021 ms, maximum 9.021 ms.
+The actual completed observation rate was 2.405 Hz;
+8 Hz is the target, without a delivery guarantee under pressure.
+
+Across unpressured invoked matrix commands, callback median/p95/max were
+28.507/51.960/71.456 ms;
+receipt median/p95/max were 37/60/513 ms.
+The saturated burst's maximum callback was 73.341 ms.
+The #52 optimized small-matrix baseline was 12.669 ms median, 33.838 ms p95,
+with 43 ms receipt p95; #39's saturated maximum was 145.804 ms. Read source and
+Single-peer checks add metadata work. These differing workloads do not establish
+causal overhead or a real-time budget guarantee. The implementation retains
+lightweight observations and performs no timeline scan in a command callback.
+The Read matrix exceeds #52's 25 ms callback p95, 40 ms callback maximum and
+50 ms receipt p95 targets; the pressure observer exceeds its 3 ms p95 target.
+Populated sources can prolong bounded verification; the proof records
+7 timeouts among populated-source playing-volume samples and
+49 independently observed values superseded after an applied receipt.
+
+All original track/bus flags, mixer values, Read modes, native parameter maps and
+event digests, sequence/selection, settings, zero playhead and Mixer Volume view
+were restored. The four empty temporary tracks were removed. The lab drained and
+unloaded, its files were removed and installed 0.10.0 resumed ready; all five reads
+matched independent observations and schemas. MPC was not restarted and no
+project was saved or loaded.
+
+Package 0.11.0 was built from clean production sources at `27ccb67`.
+Archive SHA-256: `193291019ab6b7d7a79d55e5531047d26ef7a8d39b002ee38e6ead2312d2f2e9`.
+It remains a local artifact pending owner-approved install/restart and installed
+Read-write verification; US #53 stays In progress until that step is completed.

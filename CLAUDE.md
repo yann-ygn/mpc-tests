@@ -260,3 +260,18 @@ before running experiments.
   independent flags/mixer observations pass. All captured user/bus values, automation, selection, active sequence, settings, zero
   playhead and Mixer Effects/no-popup context are restored. Backup bytes are unchanged; installed host is ready/OK. See
   findings/native-mixer-installed-20261027.json. Future installs/restarts still require owner approval.
+
+- US #53 implementation is committed on `us-53-automation-read-writes` (`27ccb67`):
+  native Read mute/solo/volume with active source and Single-peer fences, unchanged
+  public C layouts and precise source errors. 21 host entries, 16 ASan/UBSan entries,
+  seven isolated ARM fixtures, 896 final device matrix rows, 24 solo peer cases,
+  13 manual/lost-response cases and a 64-request mixed playback burst passed.
+  New-track sequence mute requires MPC's native subscription; an ordinary sequence
+  round trip bound the four empty fixtures, with direct Clip-parameter checks.
+  Original eight-track session values, flags, Read modes, timeline/parameter maps,
+  sequence/selection, settings, zero playhead and Mixer Volume are restored. Temporary
+  tracks removed, lab drained/unloaded and installed 0.10.0 resumed ready, without
+  project save/load or MPC restart. Package 0.11.0 is built locally; install/restart
+  still requires owner approval. See findings/native-automation-read-writes.md and
+  findings/native-automation-read-writes-proof-20261027.json. Story remains In progress
+  pending installation and actual installed Read-write verification.

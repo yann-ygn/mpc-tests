@@ -108,13 +108,16 @@ def sources(session, matrix):
                 }
             )
             node = u32(parameter)
-        automation_parameters = sorted(
-            {
-                (u32(event, 0x20), u32(event, 0x28))
-                for event in events.values()
-                if (u32(event, 0x18) & 255) == 2
-            }
-        )
+        automation_parameters = [
+            list(parameter)
+            for parameter in sorted(
+                {
+                    (u32(event, 0x20), u32(event, 0x28))
+                    for event in events.values()
+                    if (u32(event, 0x18) & 255) == 2
+                }
+            )
+        ]
         result.append(
             {
                 "index": index,

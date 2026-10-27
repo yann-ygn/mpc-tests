@@ -1,0 +1,741 @@
+{
+  "story": 53,
+  "date": "2026-10-27",
+  "firmwareBuildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "implementation": {
+    "branch": "us-53-automation-read-writes",
+    "sourceRevision": "27ccb671415b8bc04ec8094b1ba5d6d6ca6cab2d",
+    "sourceSha256": "8f5da9335862093f0d6e6661b14d6832adb321b5c02429a6891458debb52500f",
+    "packageVersion": "0.11.0",
+    "packageSha256": "193291019ab6b7d7a79d55e5531047d26ef7a8d39b002ee38e6ead2312d2f2e9",
+    "workingTreeDirty": false,
+    "loadedLabMatchesBuild": {
+      "matchesBuild": true,
+      "artifacts": {
+        "libmpc_native.so": "236e8970fd8c39a1db20027188a9a835b8a8824dc0f943cc9f61684d3582dae0",
+        "native_bridge.so": "6ee6df1eac9a0fec4a6fd59520f0857226cd1b0c9a8fbd8a70d68fe5a2a1ddc7"
+      }
+    },
+    "packageArtifactsSha256": {
+      "mpc-api": "d60ba921c535c79d6cb1f0fbf10319077002a0da46c46b0866b95b570fdff2f7",
+      "mpc_native_host.so": "9206a424aef3a5762c692eaa060bd2a0e1d6ed5b4c7ce7a6ad10cb7d991731ff"
+    }
+  },
+  "checks": {
+    "hostMesonEntries": 21,
+    "hostPassed": true,
+    "asanUbsanEntries": 16,
+    "asanUbsanPassed": true,
+    "armBuildAndElfGuardsPassed": true,
+    "isolatedArmFixtures": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 327
+      },
+      {
+        "fixture": "mixer_fixture",
+        "passed": true,
+        "outputLines": 78
+      }
+    ],
+    "packagePayloadChecksumsVerified": true,
+    "packageSourceHashMatchesCurrentProductionSources": true,
+    "newBuildFiveReadProjectionsMatchedIndependentReader": true,
+    "newBuildReadCaptureP95Ms": 11.663,
+    "hostLogSha256": "3a3510a34230383bf2b4069483d63fcebb5887e5a58f18de0685287f90fc75c9",
+    "sanitizerLogSha256": "620c04912abd2c4beebb84b593b4b203149d25d9522110dc3a9b6f818891dac0"
+  },
+  "matrix": {
+    "rows": 896,
+    "exactCombinationCoverage": 896,
+    "byFamily": {
+      "plugin": 168,
+      "audio": 168,
+      "drum": 168,
+      "keygroup": 168,
+      "midi": 112,
+      "cv": 112
+    },
+    "byOperation": {
+      "set_mute": 336,
+      "set_solo": 336,
+      "set_volume": 224
+    },
+    "byScreen": {
+      "main": 128,
+      "mixer_effects": 128,
+      "track_mute": 128,
+      "mixer_volume": 128,
+      "mixer_pan_volume": 128,
+      "mixer_sends": 128,
+      "mixer_io": 128
+    },
+    "scopes": [
+      "global",
+      "sequence"
+    ],
+    "transport": [
+      "stopped",
+      "normal_sequence_playback"
+    ],
+    "selectedAndUnselected": true,
+    "readPreserved": true,
+    "independentFlagAndVolumeReadback": true,
+    "nativeFalseTrueTransitionsAndRestore": true,
+    "volumeValues": [
+      0,
+      1,
+      0.123456789
+    ],
+    "noopsExpectedConflictsAndRetainedReplay": "Full global three-screen matrix plus existing seven-screen sequence regression; exact selected/unselected writes requalified in final matrices.",
+    "allPassedAndRestored": true,
+    "timelinesAndParameterMapsPreserved": true
+  },
+  "populatedSources": {
+    "ordinaryOwnerReadSession": true,
+    "control": "Plugin without Program-volume events; audio with populated Program namespace 257 / parameter 7 timelines; populated per-sequence mute maps.",
+    "absentTimelineControls": "Four empty temporary drum/keygroup/MIDI/CV tracks with native active Clips; removed after qualification.",
+    "nativeInvokedPlayingVolumeSamples": 73,
+    "appliedThenSupersededSamples": 49,
+    "verificationTimeoutSamples": 7,
+    "activeClipMuteParameterUpdatesVerifiedFamilies": [
+      "plugin",
+      "audio",
+      "drum",
+      "keygroup",
+      "midi",
+      "cv"
+    ],
+    "newTrackNativeSubscriptionControl": {
+      "beforeBinding": "AUTOMATION_SOURCE_UNQUALIFIED before native invocation",
+      "nativeSequenceRoundTripBoundSubscriptions": true,
+      "eventsParametersAndContextRestored": true,
+      "apiNavigatedOrInstalledSubscription": false
+    },
+    "appliedThenSupersededExample": {
+      "screen": "main",
+      "scope": "global",
+      "selected": false,
+      "desired": 0,
+      "status": "applied",
+      "error": null,
+      "observedModelAfterReceipt": 0.5796875357627869,
+      "requestedBinary32": 0.0,
+      "receiptObservedValue": 0,
+      "verificationPasses": 0,
+      "totalMs": 37
+    },
+    "verificationTimeoutExample": {
+      "screen": "mixer_effects",
+      "scope": "global",
+      "selected": true,
+      "desired": 1,
+      "status": "unknown",
+      "error": "VERIFICATION_TIMEOUT",
+      "observedModelAfterReceipt": 0.675000011920929,
+      "requestedBinary32": 1.0,
+      "receiptObservedValue": 0.66015625,
+      "verificationPasses": 15,
+      "totalMs": 512
+    },
+    "setterRetriesDuringVerification": 0,
+    "timelineEdits": false,
+    "preliminaryHarnessCorrections": [
+      "Do not require a restored manual volume to survive later applicable automation while playing.",
+      "Re-select and independently check selected/unselected state before each flag operation; old selected-solo rows excluded from final exact matrix coverage.",
+      "Normalize tuple/list parameter keys in the supplemental harness when identifying populated volume sources."
+    ]
+  },
+  "soloPeers": {
+    "rows": 24,
+    "modes": [
+      "Single",
+      "Multi"
+    ],
+    "transport": [
+      "stopped",
+      "sequence_playback"
+    ],
+    "pairs": [
+      [
+        "plugin",
+        "audio"
+      ],
+      [
+        "audio",
+        "drum"
+      ],
+      [
+        "drum",
+        "keygroup"
+      ],
+      [
+        "keygroup",
+        "midi"
+      ],
+      [
+        "midi",
+        "cv"
+      ],
+      [
+        "cv",
+        "plugin"
+      ]
+    ],
+    "independentPeersAndReceiptChangesChecked": true,
+    "restored": true
+  },
+  "manualAndDelivery": {
+    "controllerFlagRows": 12,
+    "manualVolumeRows": 1,
+    "lostResponseRecoveryAndReplayRows": 13,
+    "readbackNoopsExpectedConflictsChecked": true,
+    "independentNativeSelectionEffectsChecked": 6,
+    "selectionChangesPresentInRetainedReceipts": true,
+    "restored": true
+  },
+  "latency": {
+    "uniqueReceipts": 2931,
+    "invokedCommands": 2320,
+    "allReceipts": {
+      "queueMs": {
+        "n": 2931,
+        "p50": 1,
+        "p95": 12,
+        "p99": 16,
+        "max": 45
+      },
+      "dispatchMs": {
+        "n": 2931,
+        "p50": 27,
+        "p95": 52,
+        "p99": 63,
+        "max": 78
+      },
+      "verificationMs": {
+        "n": 2931,
+        "p50": 3,
+        "p95": 5,
+        "p99": 7,
+        "max": 481
+      },
+      "totalMs": {
+        "n": 2931,
+        "p50": 33,
+        "p95": 61,
+        "p99": 74,
+        "max": 513
+      },
+      "uiWorkUs": {
+        "n": 2931,
+        "p50": 27382,
+        "p95": 53032,
+        "p99": 65426,
+        "max": 295627
+      },
+      "maxUiCallbackUs": {
+        "n": 2931,
+        "p50": 27371,
+        "p95": 52525,
+        "p99": 62781,
+        "max": 77627
+      },
+      "verificationPasses": {
+        "n": 2931,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 16
+      },
+      "verificationUiUs": {
+        "n": 2931,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 261805
+      }
+    },
+    "invoked": {
+      "queueMs": {
+        "n": 2320,
+        "p50": 1,
+        "p95": 13,
+        "p99": 16,
+        "max": 45
+      },
+      "dispatchMs": {
+        "n": 2320,
+        "p50": 29,
+        "p95": 54,
+        "p99": 65,
+        "max": 78
+      },
+      "verificationMs": {
+        "n": 2320,
+        "p50": 3,
+        "p95": 5,
+        "p99": 8,
+        "max": 481
+      },
+      "totalMs": {
+        "n": 2320,
+        "p50": 37,
+        "p95": 63,
+        "p99": 75,
+        "max": 513
+      },
+      "uiWorkUs": {
+        "n": 2320,
+        "p50": 28686,
+        "p95": 54448,
+        "p99": 67486,
+        "max": 295627
+      },
+      "maxUiCallbackUs": {
+        "n": 2320,
+        "p50": 28653,
+        "p95": 53960,
+        "p99": 64821,
+        "max": 77627
+      },
+      "verificationPasses": {
+        "n": 2320,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 16
+      },
+      "verificationUiUs": {
+        "n": 2320,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 261805
+      }
+    },
+    "matrixUnpressuredInvoked": {
+      "queueMs": {
+        "n": 2201,
+        "p50": 1,
+        "p95": 12,
+        "p99": 15,
+        "max": 22
+      },
+      "dispatchMs": {
+        "n": 2201,
+        "p50": 29,
+        "p95": 52,
+        "p99": 61,
+        "max": 72
+      },
+      "verificationMs": {
+        "n": 2201,
+        "p50": 3,
+        "p95": 5,
+        "p99": 8,
+        "max": 481
+      },
+      "totalMs": {
+        "n": 2201,
+        "p50": 37,
+        "p95": 60,
+        "p99": 71,
+        "max": 513
+      },
+      "uiWorkUs": {
+        "n": 2201,
+        "p50": 28530,
+        "p95": 52684,
+        "p99": 61773,
+        "max": 295627
+      },
+      "maxUiCallbackUs": {
+        "n": 2201,
+        "p50": 28507,
+        "p95": 51960,
+        "p99": 60625,
+        "max": 71456
+      },
+      "verificationPasses": {
+        "n": 2201,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 16
+      },
+      "verificationUiUs": {
+        "n": 2201,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 261805
+      }
+    },
+    "byInvokedOperation": {
+      "set_mute": {
+        "queueMs": {
+          "n": 699,
+          "p50": 1,
+          "p95": 13,
+          "p99": 20,
+          "max": 45
+        },
+        "dispatchMs": {
+          "n": 699,
+          "p50": 27,
+          "p95": 33,
+          "p99": 37,
+          "max": 41
+        },
+        "verificationMs": {
+          "n": 699,
+          "p50": 3,
+          "p95": 5,
+          "p99": 6,
+          "max": 8
+        },
+        "totalMs": {
+          "n": 699,
+          "p50": 32,
+          "p95": 44,
+          "p99": 58,
+          "max": 74
+        },
+        "uiWorkUs": {
+          "n": 699,
+          "p50": 27038,
+          "p95": 33070,
+          "p99": 36870,
+          "max": 41627
+        },
+        "maxUiCallbackUs": {
+          "n": 699,
+          "p50": 27038,
+          "p95": 33070,
+          "p99": 36870,
+          "max": 41627
+        },
+        "verificationPasses": {
+          "n": 699,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "verificationUiUs": {
+          "n": 699,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "max": 0
+        }
+      },
+      "set_solo": {
+        "queueMs": {
+          "n": 741,
+          "p50": 1,
+          "p95": 12,
+          "p99": 15,
+          "max": 29
+        },
+        "dispatchMs": {
+          "n": 741,
+          "p50": 41,
+          "p95": 61,
+          "p99": 70,
+          "max": 78
+        },
+        "verificationMs": {
+          "n": 741,
+          "p50": 3,
+          "p95": 5,
+          "p99": 8,
+          "max": 10
+        },
+        "totalMs": {
+          "n": 741,
+          "p50": 49,
+          "p95": 70,
+          "p99": 80,
+          "max": 89
+        },
+        "uiWorkUs": {
+          "n": 741,
+          "p50": 41452,
+          "p95": 61182,
+          "p99": 69666,
+          "max": 77627
+        },
+        "maxUiCallbackUs": {
+          "n": 741,
+          "p50": 41452,
+          "p95": 61182,
+          "p99": 69666,
+          "max": 77627
+        },
+        "verificationPasses": {
+          "n": 741,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "max": 0
+        },
+        "verificationUiUs": {
+          "n": 741,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "max": 0
+        }
+      },
+      "set_volume": {
+        "queueMs": {
+          "n": 880,
+          "p50": 1,
+          "p95": 12,
+          "p99": 17,
+          "max": 40
+        },
+        "dispatchMs": {
+          "n": 880,
+          "p50": 27,
+          "p95": 34,
+          "p99": 37,
+          "max": 40
+        },
+        "verificationMs": {
+          "n": 880,
+          "p50": 3,
+          "p95": 6,
+          "p99": 467,
+          "max": 481
+        },
+        "totalMs": {
+          "n": 880,
+          "p50": 33,
+          "p95": 45,
+          "p99": 501,
+          "max": 513
+        },
+        "uiWorkUs": {
+          "n": 880,
+          "p50": 27117,
+          "p95": 33977,
+          "p99": 250156,
+          "max": 295627
+        },
+        "maxUiCallbackUs": {
+          "n": 880,
+          "p50": 27067,
+          "p95": 33594,
+          "p99": 37052,
+          "max": 40482
+        },
+        "verificationPasses": {
+          "n": 880,
+          "p50": 0,
+          "p95": 0,
+          "p99": 12,
+          "max": 16
+        },
+        "verificationUiUs": {
+          "n": 880,
+          "p50": 0,
+          "p95": 0,
+          "p99": 215863,
+          "max": 261805
+        }
+      }
+    },
+    "scope": "Temporary lab with 12 tracks; includes both transport states, populated native sources and capacity pressure. Not an isolated causal benchmark."
+  },
+  "playbackPressure": {
+    "requests": 64,
+    "clients": 8,
+    "operations": [
+      "mute",
+      "solo",
+      "volume"
+    ],
+    "statusCounts": {
+      "applied": 64
+    },
+    "timing": {
+      "queueMs": {
+        "n": 64,
+        "p50": 7,
+        "p95": 29,
+        "p99": 45,
+        "max": 45
+      },
+      "dispatchMs": {
+        "n": 64,
+        "p50": 36,
+        "p95": 68,
+        "p99": 73,
+        "max": 73
+      },
+      "verificationMs": {
+        "n": 64,
+        "p50": 3,
+        "p95": 5,
+        "p99": 5,
+        "max": 5
+      },
+      "totalMs": {
+        "n": 64,
+        "p50": 49,
+        "p95": 77,
+        "p99": 89,
+        "max": 89
+      },
+      "uiWorkUs": {
+        "n": 64,
+        "p50": 35584,
+        "p95": 67486,
+        "p99": 73341,
+        "max": 73341
+      },
+      "maxUiCallbackUs": {
+        "n": 64,
+        "p50": 35584,
+        "p95": 67486,
+        "p99": 73341,
+        "max": 73341
+      },
+      "verificationPasses": {
+        "n": 64,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "verificationUiUs": {
+        "n": 64,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      }
+    },
+    "errorCounts": {},
+    "observerTargetHz": 8,
+    "observationSamples": 9,
+    "observationSuccesses": 9,
+    "observationErrors": {},
+    "elapsedSeconds": 3.741789417981636,
+    "observerActualSuccessHz": 2.4052663030018144,
+    "observationDurationUs": {
+      "n": 9,
+      "p50": 4821,
+      "p95": 9021,
+      "p99": 9021,
+      "max": 9021
+    },
+    "restored": true
+  },
+  "baselineComparison": {
+    "us52OptimizedSmallMatrixUiMedianUs": 12669,
+    "us52OptimizedSmallMatrixUiP95Us": 33838,
+    "us52OptimizedSmallMatrixReceiptP95Ms": 43,
+    "us39SaturatedMaxCallbackUs": 145804,
+    "us52Targets": {
+      "commandUiP95Us": 25000,
+      "commandUiMaxUs": 40000,
+      "receiptP95Ms": 50,
+      "observationP95Us": 3000,
+      "observationMaxUs": 10000
+    },
+    "readMatrixMeetsThoseTargets": {
+      "commandUiP95": false,
+      "commandUiMax": false,
+      "receiptP95": false
+    },
+    "pressureObserverMeetsThoseTargets": {
+      "observationP95": false,
+      "observationMax": true
+    },
+    "interpretation": "Read source ownership and Single peers add bounded metadata reads. These workloads differ; callbacks and receipt latency are measurements, not real-time guarantees. No full snapshots or timeline scans were added to commands."
+  },
+  "limitations": [
+    "New/absent Clip or missing native mute subscription rejects an actual sequence-mute write; global mute/solo/volume may qualify through the canonical native map.",
+    "Single solo requires all qualified user peers in Off or Read. Write/unknown, recording/overdub, Clip/Song and unsupported screens stay gated.",
+    "Pan, sends and insert controls remain Off-only. MIDI/CV volume and bus writes remain unavailable.",
+    "A completion observation does not reserve a manual value against later native automation. Supersession before verification can produce unknown after one invocation.",
+    "The fence covers source owners and structural headers; it is not a transaction over all event values or an ABA detector.",
+    "No acoustic/external MIDI/CV measurement, persistence, sample scheduling or underrun guarantee."
+  ],
+  "restoration": {
+    "temporaryTracksRemoved": [
+      {
+        "family": "cv",
+        "empty": true
+      },
+      {
+        "family": "midi",
+        "empty": true
+      },
+      {
+        "family": "keygroup",
+        "empty": true
+      },
+      {
+        "family": "drum",
+        "empty": true
+      }
+    ],
+    "inventoryAndFlagsRestored": true,
+    "mixersRestored": true,
+    "contextRestored": true,
+    "timelineAndParameterMapsRestored": true,
+    "allReadModesRestored": true,
+    "originalUserTrackCount": 8,
+    "selectionAndSequenceRestored": true,
+    "zeroPlayheadRestored": true,
+    "screenRestored": "Mixer Volume",
+    "mpcPidUnchanged": true,
+    "mpcRestarted": false,
+    "projectSavedOrLoaded": false,
+    "passed": true,
+    "handlersClosed": true,
+    "labUnloaded": true,
+    "labTemporaryFilesRemoved": true,
+    "installedHostReady": true,
+    "installedHostVersion": "0.10.0",
+    "installedPayloadUnchanged": true,
+    "allFiveInstalledReadsAndSchemasPassed": true,
+    "independentReadMatched": true
+  },
+  "installedAvailability": {
+    "version": "0.10.0",
+    "newPackageInstalled": false,
+    "upgradeRequiresOwnerApprovedMpcRestart": true,
+    "storyStatus": "In progress pending approved install and installed Read-write verification"
+  }
+}
