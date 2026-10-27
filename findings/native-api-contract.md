@@ -464,3 +464,17 @@ Model-only completion does not establish audibility, persistence or audio-buffer
 completion. Existing caller-scoped retention, FIFO, deadline, retry, disconnect
 and shutdown rules apply unchanged. C/attachment versions are executor 9, commands
 7, observation 2 and snapshot 5 / STATE_V5; primitive ABI 2 is unchanged.
+
+
+## Actual Automation Read changes (US #53)
+
+Read mute, solo and normalized volume now support native desired-state changes through
+qualified live source owners. Sequence mute retains its explicit active generation; volume
+retains global scope and the mixer generation. Single solo requires qualified Off/Read
+user peers. Discovery and per-track operation metadata describe these conditions.
+Expected values and verified no-ops remain unchanged. Native scheduled sources may
+supersede a manual value after completion or prevent verification within its bound; the
+receipt preserves the actual execution stage and uncertainty. There is no event edit,
+implicit automation-mode switch or repeated verification write. Pan/sends/inserts remain
+Off-only. [Source ownership, precise errors and evidence](native-automation-read-writes.md)
+extend the earlier #51/#39 qualification without changing C layouts or JSON API 0.1.

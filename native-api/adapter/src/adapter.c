@@ -449,6 +449,9 @@ const char *mpc_native_error_name(enum mpc_native_error error) {
     "AUTOMATION_READ_NOOP_ONLY",
     "STALE_MIXER",
     "EMPTY_INSERT",
-    "MIXER_AUTOMATION_UNQUALIFIED"};
+    "MIXER_AUTOMATION_UNQUALIFIED",
+    "AUTOMATION_SOURCE_UNQUALIFIED",
+    "AUTOMATION_SOURCE_CHANGED",
+    "AUTOMATION_PEER_UNQUALIFIED"};
   return (unsigned)error < sizeof names / sizeof *names ? names[error] : "INVALID_ERROR";
 }

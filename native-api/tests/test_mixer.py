@@ -152,7 +152,6 @@ class MixerTests(HostHarness):
             self.receipt(self.send(self.mixer(marker)), "applied")
             path.unlink()
         for marker, code in (
-            ("policy-automation-read", "MIXER_AUTOMATION_UNQUALIFIED"),
             ("policy-automation-write", "MIXER_AUTOMATION_UNQUALIFIED"),
             ("policy-recording", "RECORDING_UNQUALIFIED"),
             ("policy-song-source", "PLAYBACK_CONTEXT_UNQUALIFIED"),
@@ -163,6 +162,7 @@ class MixerTests(HostHarness):
             self.assertEqual(result["error"]["code"], code)
             self.assertFalse(result["nativeInvoked"])
             path.unlink()
+        (self.install / "policy-automation-read").touch()
         paused = self.install / "pause-ui"
         paused.touch()
         r = self.mixer("disconnected", waitMs=0)
@@ -176,6 +176,65 @@ class MixerTests(HostHarness):
         with ThreadPoolExecutor(max_workers=8) as pool:
             results = list(pool.map(lambda _: self.send(r), range(16)))
         self.assertTrue(all(x == result for x in results))
+
+    def test_read_volume_writes_noops_sources_and_other_operation_gates(self):
+        (self.install / "policy-automation-read").touch()
+        for marker in ("policy-mixer", "policy-track-mute", "policy-playing"):
+            path = self.install / marker
+            path.touch()
+            try:
+                for index, value in enumerate((0, 1, 0.123456789)):
+                    request = self.mixer(marker + str(index), value=value)
+                    result = self.receipt(self.send(request), "applied")
+                    self.assertTrue(result["nativeInvoked"])
+                    expected = struct.unpack("<f", struct.pack("<f", value))[0]
+                    self.assertEqual(result["verification"]["requestedValue"], expected)
+                    self.assertEqual(self.send(request), result)
+                    noop = self.receipt(
+                        self.send(
+                            self.mixer(
+                                marker + str(index) + "noop", value=value, expected={"value": value}
+                            )
+                        ),
+                        "applied",
+                    )
+                    self.assertFalse(noop["nativeInvoked"])
+                    conflict = self.send(
+                        self.mixer(
+                            marker + str(index) + "conflict", value=value, expected={"value": 0.75}
+                        )
+                    )
+                    self.assertEqual(conflict["error"]["code"], "PRECONDITION_FAILED")
+            finally:
+                path.unlink()
+        for op in ("set_pan", "set_send_level", "set_insert_rack_enabled", "set_insert_enabled"):
+            extra = (
+                {"sendIndex": 0}
+                if op == "set_send_level"
+                else {"slotIndex": 0}
+                if op == "set_insert_enabled"
+                else {}
+            )
+            result = self.send(
+                self.mixer(op, op=op, value=False if "enabled" in op else 0.5, **extra)
+            )
+            self.assertEqual(result["error"]["code"], "MIXER_AUTOMATION_UNQUALIFIED")
+            self.assertFalse(result["nativeInvoked"])
+        (self.install / "policy-read-source-unknown").touch()
+        result = self.send(self.mixer("unknown-source", value=0.75))
+        self.assertEqual(result["error"]["code"], "AUTOMATION_SOURCE_UNQUALIFIED")
+        self.assertFalse(result["nativeInvoked"])
+        # Source restrictions never bypass expected checks or remove a verified no-op.
+        result = self.send(self.mixer("source-noop", value=0.123456789))
+        self.assertEqual(result["status"], "applied")
+        self.assertFalse(result["nativeInvoked"])
+        result = self.send(
+            self.mixer("source-conflict", value=0.123456789, expected={"value": 0.75})
+        )
+        self.assertEqual(result["error"]["code"], "PRECONDITION_FAILED")
+        support = self.public("get_state")["tracks"][0]["mixer"]["operations"]
+        self.assertEqual(support["set_volume"]["automation"]["read"], "qualified_writes")
+        self.assertEqual(support["set_pan"]["automation"]["read"], "unsupported")
 
     def test_stale_generation_and_mixer_fixture_receipts(self):
         stale = self.receipt(self.send({**self.mixer(), "mixerGeneration": "99999"}), "rejected")

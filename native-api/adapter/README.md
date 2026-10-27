@@ -324,7 +324,8 @@ ABI 5 adds retained stage durations. One executor job runs per UI message under
 load. See [playback policy, timing and device evidence](../../findings/native-playback-flags.md).
 
 US #51 independently qualifies Read no-ops for all supported flags and native
-record-arm writes. Read mute/solo writes return `AUTOMATION_READ_NOOP_ONLY`;
+record-arm writes. US #53 also qualifies native mute/solo/volume changes with
+[active-sequence source ownership and peer checks](../../findings/native-automation-read-writes.md);
 Write/unknown modes remain `AUTOMATION_UNQUALIFIED`. The adapter distinguishes
 observation from native invocation, checks expected values first and requalifies
 before both the arm filter and notifying setter. Existing ABIs and transfer

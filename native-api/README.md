@@ -233,7 +233,7 @@ Playback requests use immediate requested-model changes at UI dispatch; mute is 
 `describe` lists the qualified `screens` and the separate transport/recording/automation/settings/mute-scope `conditions`.
 Mixer Volume, Pan & Volume, Sends, Effects and I/O pages address the same model tracks; commands do not navigate
 the UI. Pad Mixer, Song, Clip and other views/popups remain unqualified. See [screen qualification](../findings/native-command-screens.md).
-Under Automation Read, matching desired-state requests can complete without invoking a native setter or arm filter. Expected values are checked first, and completion still requires the operation's live model/engine evidence. Record-arm writes are independently qualified under Read. Mute/solo writes return `AUTOMATION_READ_NOOP_ONLY`, including when a visible lane is empty. Write and unknown modes return `AUTOMATION_UNQUALIFIED`. `applied` records verification at completion; later automation may change the value. Commands never change automation settings/data or navigate to obtain permission. See [the Read qualification](../findings/native-automation-read.md).
+Under Automation Read, mute, solo and volume can make actual desired-state changes through qualified live native sources. Both mute scopes qualify independently; volume keeps global scope and its mixer generation. Single solo requires qualified Off/Read user peers. Expected values precede no-op detection; verified no-ops invoke neither setter nor arm filter. Unknown sources reject an actual write with `AUTOMATION_SOURCE_UNQUALIFIED`; source replacement during a command uses `AUTOMATION_SOURCE_CHANGED`; an unqualified Single peer uses `AUTOMATION_PEER_UNQUALIFIED`. Later automation can supersede an applied manual value, or prevent verification and leave an invoked command unknown. Write/unknown modes remain gated, and pan/sends/inserts remain Off-only. Commands preserve Read and timeline data. See [native routes, behavior and evidence](../findings/native-automation-read-writes.md).
 
 ### Sequence-scoped mute
 
@@ -324,7 +324,8 @@ at 0.5. Requests require the generation in the track's `mixer` observation, plus
 `sendIndex`/`slotIndex` where relevant. Expected comparisons use native binary32.
 Plugin, drum, keygroup and audio qualify under Automation Off on Main/Mixer/Track
 Mute, stopped or ordinary sequence playback. MIDI/CV mixer controls, bus setters,
-empty-slot enables and Automation Read/Write remain unavailable. Completion is
+empty-slot enables and Automation Write remain unavailable. US #53 additionally qualifies
+volume under Read; the other mixer operations remain Off-only. Completion is
 model-only; no engine-buffer or audibility claim is made.
 
 See [the full contract, native paths and evidence](../findings/native-mixer-controls.md).

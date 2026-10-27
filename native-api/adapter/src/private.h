@@ -165,6 +165,17 @@ struct native_command_context_layout {
   uint32_t engineMuteProperties, perSequenceMute, engineSoloBehaviour, soloBehaviourVtable;
   uint32_t soloProperty, soloValue, programAutomation;
 };
+/* Read writes qualify native manual changes with populated sources too. This
+ * fence identifies live source owners; it never infers absence from a lane or
+ * HasAutomation. Parameter values are deliberately excluded: the native mute
+ * listener is allowed to update the per-sequence value, and playback may apply
+ * a later event. No pointer from this disposable sample is used for a write. */
+struct mpc_read_sources {
+  uint32_t sequence, listener, updater, clip, clip_owner, event_tree[5], sequence_tree[5];
+  uint32_t playback_properties;
+  unsigned char mute_solo_play, level_pan_play;
+  uint64_t peers;
+};
 /* Disposable UI-thread policy sample. Never part of a public ABI or receipt. */
 struct mpc_command_context {
   uint32_t target_program, target_vtable;
@@ -172,6 +183,8 @@ struct mpc_command_context {
     solo_property, arm, recorder, record_properties;
   uint32_t view, popup, arm_mode, solo_mode, automation, record_mode, playback_mode, song_source;
   unsigned char playing, sequence_mute;
+  enum mpc_native_error source_error;
+  struct mpc_read_sources sources;
 };
 enum mpc_command_operation;
 enum mpc_native_error mpc_native_mute_scope(struct mpc_native_adapter *, uint32_t, uint32_t *);

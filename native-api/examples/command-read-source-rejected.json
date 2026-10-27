@@ -1,6 +1,6 @@
 {
   "apiVersion": "0.1",
-  "requestId": "read_unqualified_write",
+  "requestId": "read_unqualified_source",
   "instanceId": "run_0123456789abcdef0123456789abcdef",
   "status": "rejected",
   "execution": "not_started",
@@ -37,8 +37,8 @@
     "verificationPasses": 0
   },
   "error": {
-    "code": "AUTOMATION_READ_NOOP_ONLY",
-    "message": "Automation Read qualifies only verified no-ops for this flag",
+    "code": "AUTOMATION_SOURCE_UNQUALIFIED",
+    "message": "Native automation source ownership could not be qualified",
     "details": {
       "execution": "not_started"
     }

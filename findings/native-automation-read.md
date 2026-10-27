@@ -1,5 +1,8 @@
 # Automation Read flag qualification (US #51)
 
+US #53 subsequently extends this baseline with [actual native Read mute/solo/volume
+changes](native-automation-read-writes.md). The qualification below records the earlier release.
+
 Package 0.9.0, MPC Key 37 / MPC 3.9.1.2, GNU build ID
 `8371199f945ecc40f79cb19c17ff5de72810a91c`. The installed 0.7.0 host is
 retained; acquiring this code requires a separately approved installation/restart.

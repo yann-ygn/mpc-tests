@@ -115,7 +115,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -137,7 +137,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -200,7 +200,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -222,7 +222,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -285,7 +285,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -307,7 +307,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -370,7 +370,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -391,7 +391,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -453,7 +453,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -474,7 +474,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -536,7 +536,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -558,7 +558,7 @@
           ],
           "automation": {
             "off": "qualified_writes",
-            "read": "verified_noop_only",
+            "read": "qualified_writes",
             "write": "unsupported",
             "unknown": "unsupported"
           }
@@ -790,14 +790,20 @@
         "no_popup",
         "stopped_or_sequence_playback",
         "recording_off",
-        "automation_off",
+        "automation_off_or_qualified_read",
         "current_mixer_generation"
       ],
       "automation": {
         "off": "qualified_writes",
-        "read": "unsupported",
+        "read": "qualified_writes",
         "write": "unsupported",
-        "unknown": "unsupported"
+        "unknown": "unsupported",
+        "readBehavior": "manual_change_until_native_update",
+        "readConditions": [
+          "qualified_native_sources",
+          "stable_active_sequence"
+        ],
+        "timelineEdits": false
       },
       "transportStates": [
         "stopped",

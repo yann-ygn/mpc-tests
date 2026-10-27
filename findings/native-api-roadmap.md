@@ -160,3 +160,9 @@ retained receipts. Host, sanitizer, isolated ARM and live plugin/audio evidence
 cover the subset. Package 0.9.0 is prepared locally; installed 0.7.0 resumes
 without a project save/load or MPC restart. Event-free Read mute/solo writes
 remain unqualified, and event editing stays #43. Watch transport remains #33.
+US #53 adds [actual native mute/solo/volume changes under Read](native-automation-read-writes.md),
+with active-sequence Clip/source checks, Single solo peer restrictions and explicit
+manual-change/subsequent-automation semantics. The original no-op-only restrictions
+of #51 and Off-only volume qualification of #39 remain historical baselines.
+Implementation qualification and owner-approved installed availability are tracked
+separately; installation of the 0.11.0 package requires an approved restart.

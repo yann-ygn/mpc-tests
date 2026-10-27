@@ -25,6 +25,12 @@ class ProfileTests(unittest.TestCase):
     def test_invalid_profiles_rejected(self):
         cases = {
             "schema": lambda s, c: s.update(profileSchemaVersion=2),
+            "read_source_missing": lambda s, c: c["readSources"].pop("clipEventList"),
+            "read_source_layout": lambda s, c: c["readSources"].update(eventTree=4),
+            "read_source_bound": lambda s, c: c["readSources"].update(listenerLimit=1000),
+            "read_source_landmark": lambda s, c: c.update(
+                functions=[f for f in c["functions"] if f["name"] != "readMuteClipListener"]
+            ),
             "boolean_schema": lambda s, c: s.update(profileSchemaVersion=True),
             "abi": lambda s, c: s["abi"].update(pointerBits=64),
             "mixer_count": lambda s, c: c["mixer"]["sends"].update(count=5),

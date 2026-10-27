@@ -2,6 +2,7 @@
 #define MPC_POLICY_FIXTURE_BACKEND_H
 
 #include "identity_fixture_backend.h"
+#include "mpc_read_profile.h"
 
 enum {
   POLICY_MODE = OBJECTS + 0x20000,
@@ -13,8 +14,30 @@ enum {
   POLICY_SOLO_PROPERTY = OBJECTS + 0x26000,
   POLICY_RECORD_PROPERTIES = OBJECTS + 0x27000,
   POLICY_RECORDER = OBJECTS + 0x28000,
-  POLICY_ARM = OBJECTS + 0x29000
+  POLICY_ARM = OBJECTS + 0x29000,
+  POLICY_PLAYBACK = OBJECTS + 0x40000,
+  POLICY_SOURCE = OBJECTS + 0x41000,
+  POLICY_SOURCE2 = OBJECTS + 0x43000,
+  POLICY_SEQUENCE_MAP = OBJECTS + 0x45000
 };
+
+static inline void policy_source(struct fixture *f, uint32_t program, uint32_t base) {
+  uint32_t prop = program + native_bindings[0].property;
+  uint32_t listener = base + 0x100, updater = base + 0x200, clip = base + 0x400;
+  put32(f, prop + 8, base);
+  put32(f, base + 4, prop + 4);
+  put32(f, base + 12, listener);
+  put32(f, listener, IMAGE + READ_muteListenerVtable);
+  put32(f, listener + READ_listenerOwner, updater);
+  put32(f, listener + READ_listenerCallback, IMAGE + READ_muteListenerCallback);
+  put32(f, listener + READ_listenerParameterGroup, 0x100);
+  put32(f, listener + READ_listenerParameterId, 0x101);
+  put32(f, listener + READ_listenerClip, clip);
+  put32(f, listener + READ_listenerClip + 4, clip + 0x500);
+  put32(f, updater + READ_updaterProject, OBJECTS);
+  put32(f, clip, IMAGE + READ_clipVtable);
+  put32(f, clip + READ_clipEventList, IMAGE + READ_eventListVtable);
+}
 
 static inline void policy_init(struct identity_fixture *f) {
   struct fixture *n = &f->native;
@@ -46,6 +69,25 @@ static inline void policy_init(struct identity_fixture *f) {
   put32(n, engine + p->engineSoloBehaviour, POLICY_SOLO);
   put32(n, POLICY_SOLO, IMAGE + p->soloBehaviourVtable);
   put32(n, POLICY_SOLO + p->soloProperty, POLICY_SOLO_PROPERTY);
+  put32(n, POLICY_SEQUENCER + READ_sequencerPlaybackProperties, POLICY_PLAYBACK);
+  put_bool(n, POLICY_PLAYBACK + READ_muteSoloPlayValue, true);
+  put_bool(n, POLICY_PLAYBACK + READ_levelPanPlayValue, true);
+  policy_source(n, PROGRAM, POLICY_SOURCE);
+  policy_source(n, OBJECTS + 0x16000, POLICY_SOURCE2);
+  for (unsigned i = 0; i < 2; i++) {
+    uint32_t tree = (i ? SEQUENCE2 : SEQUENCE) + READ_sequenceClipTree;
+    put32(n, tree + 4, POLICY_SEQUENCE_MAP);
+    put32(n, tree + 8, POLICY_SEQUENCE_MAP);
+    put32(n, tree + 12, POLICY_SEQUENCE_MAP + 0x40);
+    put32(n, tree + 16, 2);
+  }
+  put32(n, POLICY_SEQUENCE_MAP + 12, POLICY_SEQUENCE_MAP + 0x40);
+  put32(n, POLICY_SEQUENCE_MAP + 16, TRACK);
+  put32(n, POLICY_SEQUENCE_MAP + 20, POLICY_SOURCE + 0x400);
+  put32(n, POLICY_SEQUENCE_MAP + 24, POLICY_SOURCE + 0x900);
+  put32(n, POLICY_SEQUENCE_MAP + 0x40 + 16, TRACK2);
+  put32(n, POLICY_SEQUENCE_MAP + 0x40 + 20, POLICY_SOURCE2 + 0x400);
+  put32(n, POLICY_SEQUENCE_MAP + 0x40 + 24, POLICY_SOURCE2 + 0x900);
 }
 
 #endif

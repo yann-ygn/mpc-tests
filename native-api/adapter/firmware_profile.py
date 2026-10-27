@@ -404,6 +404,61 @@ def validate(state, control):
         <= names
     ):
         raise ValueError("Missing mixer call fingerprints")
+    sources = control.get("readSources", {})
+    expected_sources = {
+        "schemaVersion": 1,
+        "sequenceClipTree": 0x524,
+        "updaterProject": 0x30,
+        "listenerLimit": 64,
+        "muteListenerVtable": 110315468,
+        "muteListenerCallback": 39541132,
+        "clipVtable": 110293008,
+        "eventListVtable": 109670140,
+        "listenerOwner": 32,
+        "listenerCallback": 36,
+        "listenerAdjustment": 40,
+        "listenerParameterGroup": 44,
+        "listenerParameterId": 48,
+        "listenerClip": 52,
+        "updaterApplying": 100,
+        "clipEventList": 904,
+        "eventTree": 956,
+        "eventTreeWords": 5,
+        "clipParameterMap": 1120,
+        "sequencerPlaybackProperties": 764,
+        "muteSoloPlayValue": 84,
+        "levelPanPlayValue": 216,
+    }
+    if sources != expected_sources:
+        raise ValueError("Unqualified Automation Read source layout")
+    if sources.get("schemaVersion") != 1 or sources.get("listenerLimit") != 64:
+        raise ValueError("Missing Automation Read source qualification")
+    for key, value in sources.items():
+        integer(value, "readSources." + key)
+    if sources.get("eventTreeWords") != 5:
+        raise ValueError("Invalid Automation Read event fence")
+    if (
+        not {
+            "readSequenceClipLookup",
+            "readSequenceSourceBinding",
+            "readScheduledParameterDispatch",
+            "readScheduledEventDispatch",
+            "readParameterApplication",
+            "readParameterMuteCase",
+            "readParameterSoloCase",
+            "readParameterVolumeCase",
+            "readMuteClipListener",
+            "familySequenceMutePropagation",
+            "readClipParameterNotify",
+            "readSoloParameterNotify",
+            "readEventReplacement",
+            "readEventInvalidation",
+            "readMuteSoloPlaybackSwitch",
+            "readVolumePlaybackSwitch",
+        }
+        <= names
+    ):
+        raise ValueError("Missing Automation Read route fingerprints")
     return state, control
 
 
@@ -539,6 +594,11 @@ def generate(out, state_path=STATE, control_path=CONTROL):
         "static const struct native_binding native_bindings[]={" + ",".join(entries) + "};"
     )
     (out / "mpc_adapter_profile.h").write_text("\n".join(lines) + "\n")
+    (out / "mpc_read_profile.h").write_text(
+        "/* Generated verified Automation Read sources. */\n"
+        + "\n".join(f"#define READ_{key} {value}u" for key, value in control["readSources"].items())
+        + "\n"
+    )
     mixer = control["mixer"]
     macros = {
         "VOLUME_VALUE": mixer["volume"]["value"],

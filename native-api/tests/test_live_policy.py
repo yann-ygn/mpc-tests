@@ -64,13 +64,8 @@ class LivePolicyTests(HostHarness):
                 self.assertEqual(conflict["error"]["code"], "PRECONDITION_FAILED")
                 self.assertFalse(conflict["nativeInvoked"])
                 write = self.send(self.command(label + "write", op=op, value=not value))
-                if op == "set_record_armed":
-                    self.assertEqual(write["status"], "applied", write)
-                    self.assertTrue(write["nativeInvoked"])
-                else:
-                    self.assertEqual(write["status"], "rejected", write)
-                    self.assertEqual(write["error"]["code"], "AUTOMATION_READ_NOOP_ONLY")
-                    self.assertFalse(write["nativeInvoked"])
+                self.assertEqual(write["status"], "applied", write)
+                self.assertTrue(write["nativeInvoked"])
             if playing:
                 marker.unlink()
 
@@ -83,8 +78,8 @@ class LivePolicyTests(HostHarness):
         read.touch()
         paused.unlink()
         rejected = self.get(request["requestId"])
-        self.assertEqual(rejected["error"]["code"], "AUTOMATION_READ_NOOP_ONLY")
-        self.assertFalse(rejected["nativeInvoked"])
+        self.assertEqual(rejected["status"], "applied", rejected)
+        self.assertTrue(rejected["nativeInvoked"])
         read.unlink()
         self.assertEqual(self.send(request), rejected)
         read.touch()
@@ -102,7 +97,7 @@ class LivePolicyTests(HostHarness):
             time.sleep(0.01)
             receipt = self.get(request["requestId"])
         self.assertEqual(receipt["status"], "applied", receipt)
-        self.assertFalse(receipt["nativeInvoked"])
+        self.assertTrue(receipt["nativeInvoked"])
         self.assertEqual(self.send(request), receipt)
 
     def test_qualified_screens_and_discovery(self):
@@ -113,7 +108,7 @@ class LivePolicyTests(HostHarness):
             self.assertIn("recording_off", caps[op]["conditions"])
             self.assertEqual(
                 caps[op]["automation"]["read"],
-                "qualified_writes" if op == "set_record_armed" else "verified_noop_only",
+                "qualified_writes",
             )
             self.assertEqual(caps[op]["automation"]["write"], "unsupported")
             self.assertFalse(caps[op]["sampleAccurate"])
@@ -172,6 +167,7 @@ class LivePolicyTests(HostHarness):
                     path.unlink()
 
     def test_playback_disconnects_expiry_pressure_and_shutdown(self):
+        (self.install / "policy-automation-read").touch()
         (self.install / "policy-playing").touch()
         wire_tests.WireCommandTests.test_disconnect_and_wait_timeout_preserve_work_without_blocking_other_clients(
             self
@@ -179,12 +175,14 @@ class LivePolicyTests(HostHarness):
         wire_tests.WireCommandTests.test_queue_start_expiry_and_backpressure_are_bounded(self)
 
     def test_stop_drains_while_playback_remains_active(self):
+        (self.install / "policy-automation-read").touch()
         (self.install / "policy-playing").touch()
         wire_tests.WireCommandTests.test_stop_drains_pending_delivery_and_restart_retires_authority(
             self
         )
 
     def test_shutdown_cancels_queued_delivery_while_playing(self):
+        (self.install / "policy-automation-read").touch()
         (self.install / "policy-playing").touch()
         wire_tests.WireCommandTests.test_shutdown_drops_long_delivery_waits_and_drains_without_waiting_for_clients(
             self

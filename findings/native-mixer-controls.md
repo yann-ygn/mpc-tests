@@ -1,5 +1,8 @@
 # Native mixer controls (US #39)
 
+US #53 subsequently extends this baseline with [actual native Read mute/solo/volume
+changes](native-automation-read-writes.md). The qualification below records the earlier release.
+
 Key 37, MPC 3.9.1.2, build `8371199f945ecc40f79cb19c17ff5de72810a91c`.
 The implementation adds desired-state volume, pan, send level, insert-rack enable
 and insert-slot enable to the existing authenticated local command contract.

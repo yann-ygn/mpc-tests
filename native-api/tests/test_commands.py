@@ -40,7 +40,8 @@ class CommandContractTests(unittest.TestCase):
             "command-applied",
             "command-unknown",
             "command-read-noop",
-            "command-read-write-rejected",
+            "command-read-source-rejected",
+            "command-read-applied",
         ):
             validator.validate(json.loads((ROOT / f"native-api/examples/{name}.json").read_text()))
         receipts = [json.loads(line) for line in result.stdout.splitlines()]

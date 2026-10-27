@@ -55,7 +55,108 @@ static void *verification_pump(void *data) {
   return NULL;
 }
 
+static void read_without_clip(void) {
+  struct commands_fixture f;
+  setup(&f, 8, 64, true);
+  f.live_policy = true;
+  struct fixture *n = &f.identity.native;
+  mixer_init(n, PROGRAM, OBJECTS + 0x30000);
+  put32(n, PROGRAM + native_command_context.programAutomation, 1);
+  put32(n, PROGRAM + native_bindings[0].property + 8, PROGRAM + native_bindings[0].property + 4);
+  /* A newly added Track may have its canonical Clip before the mute updater
+   * is bound. Global volume still qualifies that real populated owner path. */
+  struct mpc_command_request initial =
+    mixer_request(&f, MPC_COMMAND_VOLUME, 0, 0, .5, "clip_without_subscription");
+  struct mpc_command_receipt first = send(&f, initial);
+  assert(first.status == MPC_COMMAND_APPLIED && first.native_invoked);
+  put32(n, POLICY_SEQUENCE_MAP + 20, 0);
+  put32(n, POLICY_SEQUENCE_MAP + 24, 0);
+  for (unsigned op = MPC_COMMAND_MUTE; op <= MPC_COMMAND_SOLO; op++) {
+    struct mpc_command_request input =
+      request(&f, op ? "no_clip_solo" : "no_clip_mute", op, 0, true);
+    struct mpc_command_receipt r = send(&f, input);
+    assert(r.status == MPC_COMMAND_APPLIED && r.native_invoked);
+  }
+  struct mpc_command_request input =
+    mixer_request(&f, MPC_COMMAND_VOLUME, 0, 0, .25, "no_clip_volume");
+  struct mpc_command_receipt r = send(&f, input);
+  assert(r.status == MPC_COMMAND_APPLIED && r.native_invoked);
+  put_bool(n, POLICY_MUTE + native_command_context.perSequenceMute, true);
+  input = request(&f, "no_clip_sequence", MPC_COMMAND_MUTE, 0, false);
+  input.mute_scope = MPC_MUTE_SEQUENCE;
+  memcpy(input.sequence.instance_id, service, 37);
+  input.sequence.project = f.ids.project;
+  input.sequence.sequence = f.ids.selected_sequence;
+  input.sequence.generation = f.ids.sequences[0].generation;
+  r = send(&f, input);
+  assert(
+    r.status == MPC_COMMAND_REJECTED && !r.native_invoked &&
+    r.error == MPC_NATIVE_AUTOMATION_SOURCE_UNQUALIFIED);
+  cleanup(&f);
+}
+
+static void read_volume(void) {
+  const uint32_t families[] =
+    {NATIVE_PLUGIN_VTABLE, NATIVE_DRUM_VTABLE, NATIVE_KEYGROUP_VTABLE, NATIVE_AUDIO_VTABLE};
+  const uint32_t screens[] = {
+    native_command_context.mainMode,
+    native_command_context.mixerMode,
+    native_command_context.trackMuteMode};
+  for (unsigned family = 0; family < 4; family++)
+    for (unsigned playing = 0; playing < 2; playing++)
+      for (unsigned screen = 0; screen < 3; screen++) {
+        struct commands_fixture f;
+        setup(&f, 8, 128, true);
+        f.live_policy = true;
+        struct fixture *n = &f.identity.native;
+        family_pair(&f, families[family], families[(family + 1) % 4]);
+        mixer_init(n, PROGRAM, OBJECTS + 0x30000);
+        mixer_init(n, PROGRAM2, OBJECTS + 0x32000);
+        put32(n, PROGRAM + native_command_context.programAutomation, 1);
+        put32(n, PROGRAM2 + native_command_context.programAutomation, 1);
+        put32(n, POLICY_MODE + native_command_context.modeValue, screens[screen]);
+        put_bool(n, POLICY_TIMELINE + native_command_context.timelinePlaying, playing);
+        put32(n, POLICY_SOURCE + 0x400 + READ_eventTree + 16, 7);
+        put32(n, POLICY_SOURCE2 + 0x400 + READ_eventTree + 16, 11);
+        const double values[] = {0, 1, .123456789, .123456790, .8};
+        for (unsigned target_index = 0; target_index < 2; target_index++)
+          for (unsigned selected = 0; selected < 2; selected++) {
+            choose(&f, selected ? TRACK : TRACK2);
+            for (unsigned v = 0; v < 5; v++) {
+              char id[80];
+              snprintf(id, sizeof id, "read_volume_%u_%u_%u", target_index, selected, v);
+              struct mpc_command_request r =
+                mixer_request(&f, MPC_COMMAND_VOLUME, target_index, 0, values[v], id);
+              struct mpc_command_receipt out = send(&f, r), replay;
+              assert(out.status == MPC_COMMAND_APPLIED);
+              assert(out.after.tracks[target_index].mixer.volume == (float)values[v]);
+              unsigned setters = n->setters;
+              assert(!mpc_commands_submit(f.commands, 7, &r, 0, &replay));
+              assert(!memcmp(&out, &replay, sizeof out));
+              r.request_id[0] = 'n';
+              r.has_expected = true;
+              r.mixer.expected = values[v];
+              out = send(&f, r);
+              assert(out.status == MPC_COMMAND_APPLIED && !out.native_invoked && !out.changed);
+              r.request_id[0] = 'c';
+              r.mixer.expected = values[v] < .5 ? 1 : 0;
+              out = send(&f, r);
+              assert(out.error == MPC_NATIVE_PRECONDITION_FAILED && !out.native_invoked);
+              assert(n->setters == setters);
+            }
+          }
+        for (unsigned op = MPC_COMMAND_PAN; op <= MPC_COMMAND_INSERT; op++) {
+          struct mpc_command_request r = mixer_request(&f, op, 0, 0, .5, "read_other");
+          r.request_id[0] = (char)('a' + op);
+          struct mpc_command_receipt out = send(&f, r);
+          assert(out.error == MPC_NATIVE_MIXER_AUTOMATION_UNQUALIFIED && !out.native_invoked);
+        }
+        cleanup(&f);
+      }
+}
 int main(void) {
+  read_volume();
+  read_without_clip();
   struct commands_fixture f;
   setup(&f, 8, 128, true);
   f.live_policy = true;

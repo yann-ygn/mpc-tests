@@ -764,7 +764,8 @@
         "read": {
           "enum": [
             "qualified_writes",
-            "verified_noop_only"
+            "verified_noop_only",
+            "unsupported"
           ]
         },
         "write": {
@@ -772,6 +773,28 @@
         },
         "unknown": {
           "const": "unsupported"
+        },
+        "readBehavior": {
+          "enum": [
+            "manual_change_until_native_update",
+            "native_record_arm",
+            "unsupported"
+          ]
+        },
+        "readConditions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "qualified_native_sources",
+              "stable_active_sequence",
+              "solo_peers_off_or_read",
+              "sequence_mute_active_clip"
+            ]
+          }
+        },
+        "timelineEdits": {
+          "const": false
         }
       }
     },
@@ -915,9 +938,103 @@
         },
         "audioCompletionKnown": {
           "const": false
+        },
+        "operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "set_volume",
+            "set_pan",
+            "set_send_level",
+            "set_insert_rack_enabled",
+            "set_insert_enabled"
+          ],
+          "properties": {
+            "set_volume": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "automation"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
+                }
+              }
+            },
+            "set_pan": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "automation"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
+                }
+              }
+            },
+            "set_send_level": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "automation"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
+                }
+              }
+            },
+            "set_insert_rack_enabled": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "automation"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
+                }
+              }
+            },
+            "set_insert_enabled": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "automation"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "automation": {
+                  "$ref": "#/$defs/automationQualification"
+                }
+              }
+            }
+          }
         }
       },
       "additionalProperties": false
     }
-  }
+  },
+  "description": "Automation Read qualifies native mute/solo/volume manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Pan/sends/inserts remain Off-only."
 }

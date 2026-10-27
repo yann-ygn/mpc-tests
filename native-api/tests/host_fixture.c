@@ -104,6 +104,7 @@ static int wire_read(void *data, uintptr_t address, void *output, size_t bytes) 
     {POLICY_SOLO_PROPERTY + p->soloValue, "policy-solo-mode", 2},
     {PROGRAM + p->programAutomation, "policy-automation-read", 1},
     {PROGRAM + p->programAutomation, "policy-automation-write", 2},
+    {POLICY_SOURCE + 0x400 + READ_clipEventList, "policy-read-source-unknown", IMAGE + 4},
     {POLICY_THREAD, "policy-broken-owner", 0},
   };
   if (ui && native_policy) {
@@ -191,8 +192,13 @@ int main(int argc, char **argv) {
   if (!strcmp(argv[4], "mixer-commands"))
     mixer_init(&fixture.native, PROGRAM, OBJECTS + 0x30000);
   commands_enabled = native_policy || !strcmp(argv[4], "commands");
-  if (native_policy)
+  if (native_policy) {
     policy_init(&fixture);
+    /* This transport fixture deliberately shares one Program across its two
+     * Track objects. Their synthetic sequence bindings share that Clip too. */
+    put32(&fixture.native, POLICY_SEQUENCE_MAP + 0x40 + 20, POLICY_SOURCE + 0x400);
+    put32(&fixture.native, POLICY_SEQUENCE_MAP + 0x40 + 24, POLICY_SOURCE + 0x900);
+  }
   if (commands_enabled) {
     put_bool(&fixture.native, PROGRAM + native_bindings[1].requested, false);
     put_bool(&fixture.native, TRACK + native_bindings[2].requested, false);

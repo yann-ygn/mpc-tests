@@ -1201,17 +1201,10 @@ static void automation_read_matrix(void) {
               input.expected = original;
               input.value = !original;
               receipt = send(&f, input);
-              if (property == MPC_COMMAND_RECORD_ARMED)
-                assert(
-                  receipt.status == MPC_COMMAND_APPLIED && receipt.native_invoked &&
-                  f.identity.native.setters == setters + 1 &&
-                  f.identity.native.filters == filters + 1);
-              else
-                assert(
-                  receipt.status == MPC_COMMAND_REJECTED &&
-                  receipt.error == MPC_NATIVE_AUTOMATION_READ_NOOP_ONLY &&
-                  !receipt.native_invoked && f.identity.native.setters == setters &&
-                  f.identity.native.filters == filters);
+              assert(
+                receipt.status == MPC_COMMAND_APPLIED && receipt.native_invoked &&
+                f.identity.native.setters == setters + 1 &&
+                f.identity.native.filters == filters + (property == MPC_COMMAND_RECORD_ARMED));
             }
         cleanup(&f);
       }
@@ -1368,6 +1361,96 @@ static void command_observer_sharing(void) {
   cleanup(&f);
 }
 
+/* A source edit never becomes event-absence permission. Structural source loss
+ * is rejected before invocation and remains unknown after the one native call.
+ * Stable populated sources remain eligible; native automation can supersede the
+ * result during bounded observation without another call. */
+static void automation_sources(void) {
+  const struct native_command_context_layout *p = &native_command_context;
+  const uint32_t changes[][2] = {
+    {POLICY_SOURCE + 0x100 + READ_listenerCallback, IMAGE + 4},
+    {POLICY_SOURCE + 0x100 + READ_listenerParameterId, 0x102},
+    {POLICY_SOURCE + 0x100 + READ_listenerClip, POLICY_SOURCE + 0x800},
+    {POLICY_SOURCE + 0x400 + READ_eventTree + 16, 23},
+    {POLICY_SOURCE + 0x400 + READ_clipEventList, 0},
+    {POLICY_PLAYBACK + READ_muteSoloPlayValue, 0},
+    {PROGRAM2 + 532, 2},
+    {POLICY_SEQUENCE_MAP + 20, POLICY_SOURCE2 + 0x400},
+    {POLICY_SEQUENCE_MAP + 24, POLICY_SOURCE2 + 0x900},
+    {POLICY_SOURCE + 0x200 + READ_updaterProject, PROJECT2},
+  };
+  for (unsigned op = 0; op < 2; op++)
+    for (unsigned change = 0; change < sizeof changes / sizeof *changes; change++)
+      for (unsigned stage = 0; stage < 3; stage++) {
+        if (op == 0 && change == 6)
+          continue;
+        struct commands_fixture f;
+        setup(&f, 8, 16, true);
+        f.live_policy = true;
+        struct fixture *n = &f.identity.native;
+        put32(n, PROGRAM + p->programAutomation, 1);
+        /* Both native parameter maps and timeline source lists are populated. */
+        put32(n, POLICY_SOURCE + 0x400 + READ_eventTree + 16, 17);
+        put32(n, POLICY_SOURCE + 0x400 + READ_clipParameterMap + 12, 2);
+        f.playback_change_address = changes[change][0];
+        f.playback_change_value = changes[change][1];
+        f.playback_change_stage = stage == 1 ? 1 : stage == 2 ? 3 : 0;
+        struct mpc_command_request input = request(&f, "source_change", op, 0, true);
+        struct mpc_command_receipt r;
+        assert(!mpc_commands_submit(f.commands, 7, &input, 0, &r));
+        while (!queued(&f))
+          tiny_pause();
+        if (!stage)
+          put32(n, changes[change][0], changes[change][1]);
+        pump(&f.identity);
+        r = drive(&f, input.request_id);
+        bool invalid = change <= 2 || change == 4 || change >= 6;
+        if (stage || invalid) {
+          assert(r.status == (stage == 2 ? MPC_COMMAND_UNKNOWN : MPC_COMMAND_REJECTED));
+          assert(r.native_invoked == (stage == 2));
+          assert(n->setters == (stage == 2));
+          assert(
+            r.error ==
+            (stage           ? MPC_NATIVE_AUTOMATION_SOURCE_CHANGED
+               : change == 6 ? MPC_NATIVE_AUTOMATION_PEER_UNQUALIFIED
+                             : MPC_NATIVE_AUTOMATION_SOURCE_UNQUALIFIED));
+          if (!stage) {
+            struct mpc_command_request noop = request(&f, "source_noop", op, 0, false);
+            struct mpc_command_receipt observed = send(&f, noop);
+            assert(observed.status == MPC_COMMAND_APPLIED && !observed.native_invoked);
+            noop.has_expected = true;
+            noop.expected = true;
+            strcpy(noop.request_id, "source_expected");
+            observed = send(&f, noop);
+            assert(observed.error == MPC_NATIVE_PRECONDITION_FAILED && !observed.native_invoked);
+          }
+        } else {
+          /* A stable populated source (or changed play preference) at dispatch
+           * is qualified afresh rather than adopting an enqueue-time cache. */
+          assert(r.status == MPC_COMMAND_APPLIED && r.native_invoked && n->setters == 1);
+        }
+        struct mpc_command_receipt replay;
+        assert(!mpc_commands_submit(f.commands, 7, &input, 0, &replay));
+        assert(!memcmp(&r, &replay, sizeof r));
+        cleanup(&f);
+      }
+  for (unsigned single = 0; single < 2; single++) {
+    struct commands_fixture f;
+    setup(&f, 8, 16, true);
+    f.live_policy = true;
+    f.single_solo = single;
+    family_pair(&f, NATIVE_PLUGIN_VTABLE, NATIVE_AUDIO_VTABLE);
+    put32(&f.identity.native, PROGRAM + p->programAutomation, 1);
+    put32(&f.identity.native, PROGRAM2 + p->programAutomation, 1);
+    put32(&f.identity.native, POLICY_SOLO_PROPERTY + p->soloValue, !single);
+    struct mpc_command_receipt r = send(&f, request(&f, "read_solo_peer_a", 1, 0, true));
+    assert(r.status == MPC_COMMAND_APPLIED);
+    r = send(&f, request(&f, "read_solo_peer_b", 1, 1, true));
+    assert(r.status == MPC_COMMAND_APPLIED && r.after.tracks[0].soloed == !single);
+    assert(r.after.tracks[1].soloed && f.identity.native.setters == 2);
+    cleanup(&f);
+  }
+}
 int main(void) {
   (void)validate_target;
   (void)get32;
@@ -1376,6 +1459,7 @@ int main(void) {
     .struct_bytes = sizeof incompatible};
   assert(!mpc_commands_receipt_json(&incompatible));
   automation_read_matrix();
+  automation_sources();
   command_observer_sharing();
   qualified_family_matrix();
   playback_transitions();

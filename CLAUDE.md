@@ -223,7 +223,9 @@ before running experiments.
   mute-source rejection/control case. Flags/buses, selection, sequence, automation, settings, zero
   playhead and Mixer Effects are restored; temporary lab unloaded and installed 0.7.0 resumed.
   Package 0.9.0 is prepared locally. See `findings/native-automation-read.md` and its sanitized proof.
-- Next: streaming (#33). Event-free Read mute/solo writes remain unqualified; event editing stays #43.
+- US #53 extends the historical #51/#39 restrictions with actual native Read mute/solo/volume writes.
+  See findings/native-automation-read-writes.md for source ownership, native reversion and remaining limits.
+  Installed availability requires a separately approved 0.11.0 upgrade/restart. Streaming stays #33; event editing stays #43.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
   the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through

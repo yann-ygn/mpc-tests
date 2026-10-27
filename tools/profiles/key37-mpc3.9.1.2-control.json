@@ -477,6 +477,81 @@
       "name": "mixerPropertyLifetime",
       "rva": 32491924,
       "prefixHex": "003094e5000053e30f00000a042093e50300a0e1041010e4000052e3002081e5"
+    },
+    {
+      "name": "readMuteClipListener",
+      "rva": 39533632,
+      "prefixHex": "fc406de1283090e520c090e5245090e50020a0e1dc019fe5101a00eed8119fe5"
+    },
+    {
+      "name": "readClipParameterNotify",
+      "rva": 37510484,
+      "prefixHex": "f4219fe5f4319fe5f0426de1f860cde1f081cde118a08de51ce08de5109080e2"
+    },
+    {
+      "name": "readSoloParameterNotify",
+      "rva": 38912724,
+      "prefixHex": "fc416de1f081cde10280a0e1bc219fe50350a0e1b8319fe5f860cde118e08de5"
+    },
+    {
+      "name": "readEventReplacement",
+      "rva": 37803340,
+      "prefixHex": "f8416de10050a0e1dc049fe5dc249fe5083091e5000bd1edf860cde110808de5"
+    },
+    {
+      "name": "readEventInvalidation",
+      "rva": 37801512,
+      "prefixHex": "f4426de1703090e50040a0e1bc069fe5bc269fe5f860cde1f081cde1f8a1cde1"
+    },
+    {
+      "name": "readMuteSoloPlaybackSwitch",
+      "rva": 42263800,
+      "prefixHex": "5c3096e534109de538209de50500a0e1fc3293e5543083e230fdffeb34009de5"
+    },
+    {
+      "name": "readVolumePlaybackSwitch",
+      "rva": 42264004,
+      "prefixHex": "5c3096e534109de538209de50500a0e1fc3293e5d83083e2fdfcffeb34009de5"
+    },
+    {
+      "name": "readScheduledParameterDispatch",
+      "rva": 38204072,
+      "prefixHex": "f4426de10240a0e130219fe50350a0e12c319fe5f860cde1f081cde1f8a1cde1"
+    },
+    {
+      "name": "readScheduledEventDispatch",
+      "rva": 38208408,
+      "prefixHex": "f4426de10240a0e13c219fe50350a0e138319fe5f860cde1f081cde1f8a1cde1"
+    },
+    {
+      "name": "readParameterApplication",
+      "rva": 37939452,
+      "prefixHex": "6c259fe56c359fe5f4426de1f860cde1f081cde1f8a1cde120e08de5048b2ded"
+    },
+    {
+      "name": "readParameterMuteCase",
+      "rva": 37948932,
+      "prefixHex": "007af6ee140085e2e78ab4ee10faf1ee0110a0c30010a0d3a6e2a7eb0500a0e1"
+    },
+    {
+      "name": "readParameterSoloCase",
+      "rva": 37948900,
+      "prefixHex": "007af6ee5c0085e2e78ab4ee10faf1ee0110a0c30010a0d3cc7aa8eb1ef7ffea"
+    },
+    {
+      "name": "readParameterVolumeCase",
+      "rva": 37949052,
+      "prefixHex": "480ab0ee0500a0e17fe7fcebfcf6ffea013a85e2b03393e5013a83e2403193e5"
+    },
+    {
+      "name": "readSequenceClipLookup",
+      "rva": 39558536,
+      "prefixHex": "000052e3f0416de10050a0e108608de50ce08de51b00000a000053e32000001a"
+    },
+    {
+      "name": "readSequenceSourceBinding",
+      "rva": 39548948,
+      "prefixHex": "f0426de10140a0e140139fe540339fe5f860cde1f081cde118a08de51ce08de5"
     }
   ],
   "bindings": [
@@ -821,5 +896,29 @@
       "vtable": 110289280,
       "destruction": 20
     }
+  },
+  "readSources": {
+    "schemaVersion": 1,
+    "listenerLimit": 64,
+    "muteListenerVtable": 110315468,
+    "muteListenerCallback": 39541132,
+    "clipVtable": 110293008,
+    "eventListVtable": 109670140,
+    "listenerOwner": 32,
+    "listenerCallback": 36,
+    "listenerAdjustment": 40,
+    "listenerParameterGroup": 44,
+    "listenerParameterId": 48,
+    "listenerClip": 52,
+    "updaterApplying": 100,
+    "clipEventList": 904,
+    "eventTree": 956,
+    "eventTreeWords": 5,
+    "clipParameterMap": 1120,
+    "sequencerPlaybackProperties": 764,
+    "muteSoloPlayValue": 84,
+    "levelPanPlayValue": 216,
+    "sequenceClipTree": 1316,
+    "updaterProject": 48
   }
 }

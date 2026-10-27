@@ -79,7 +79,7 @@ struct mpc_command_policy {
  * called from qualify while a managed command is active on this executor.
  * Checks qualified Main/Mixer/Track Mute, no popup, sequence transport, recording Off, settings and
  * target automation. Read qualifies verified no-ops for all flags and native
- * record-arm writes; Read mute/solo writes remain unqualified. Samples a
+ * record-arm and source-qualified mute/solo/volume writes. Samples a
  * command-local context fence, including at native invocation boundaries; never
  * invokes a setter or accepts saved settings. */
 MPC_NATIVE_API enum mpc_native_error

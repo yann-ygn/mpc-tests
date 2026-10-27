@@ -2,6 +2,7 @@
 #include "host.h"
 #include "profile.h"
 #include "mpc_family_profile.h"
+#include "mpc_mixer_wire.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,12 +94,10 @@ void api_flag_support(FILE *f, const char *type, unsigned known, int normal) {
     if (!i)
       fputs(",\"matching_mute_scope\",\"global_or_named_active_sequence\"", f);
     fputc(']', f);
-    if (available)
-      fprintf(
-        f,
-        ",\"automation\":{\"off\":\"qualified_writes\",\"read\":\"%s\","
-        "\"write\":\"unsupported\",\"unknown\":\"unsupported\"}",
-        i == 2 ? "qualified_writes" : "verified_noop_only");
+    if (available) {
+      fputs(",\"automation\":", f);
+      mpc_automation_json(f, 1, i != 2, i == 1, i == 0);
+    }
     fputc('}', f);
   }
   fputs("},\"outputVerified\":false}", f);
@@ -292,11 +291,8 @@ char *api_respond(
         if (!i)
           fputs(",\"matching_mute_scope\",\"global_or_named_active_sequence\"", output);
         fputc(']', output);
-        fprintf(
-          output,
-          ",\"automation\":{\"off\":\"qualified_writes\",\"read\":\"%s\","
-          "\"write\":\"unsupported\",\"unknown\":\"unsupported\"}",
-          i == 2 ? "qualified_writes" : "verified_noop_only");
+        fputs(",\"automation\":", output);
+        mpc_automation_json(output, 1, i != 2, i == 1, i == 0);
         fputs(
           ",\"transportStates\":[\"stopped\",\"sequence_playback\"],"
           "\"excludedContexts\":{\"recording\":\"RECORDING_UNQUALIFIED\","
@@ -327,12 +323,12 @@ char *api_respond(
       "\"screens\":[\"main\",\"mixer\",\"track_mute\"],\"scope\":\"global\","
       "\"verification\":[\"model\"],\"audioCompletionKnown\":false,\"busWrites\":false,"
       "\"requiresMixerGeneration\":true,\"conditions\":[\"qualified_screen\",\"no_popup\","
-      "\"stopped_or_sequence_playback\",\"recording_off\",\"automation_off\",\"current_mixer_"
-      "generation\"],"
-      "\"automation\":{\"off\":\"qualified_writes\",\"read\":\"unsupported\",\"write\":"
-      "\"unsupported\",\"unknown\":\"unsupported\"},"
-      "\"transportStates\":[\"stopped\",\"sequence_playback\"]",
+      "\"stopped_or_sequence_playback\",\"recording_off\",\"current_mixer_generation\",",
       output);
+    api_quoted(output, i == 0 ? "automation_off_or_qualified_read" : "automation_off");
+    fputs("],\"automation\":", output);
+    mpc_automation_json(output, i == 0, i == 0, 0, 0);
+    fputs(",\"transportStates\":[\"stopped\",\"sequence_playback\"]", output);
     if (i < 3)
       fputs(
         ",\"unit\":\"normalized\",\"minimum\":0,\"maximum\":1,\"quantization\":\"ieee_binary32\","

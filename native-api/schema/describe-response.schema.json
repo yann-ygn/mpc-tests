@@ -455,6 +455,28 @@
         },
         "unknown": {
           "const": "unsupported"
+        },
+        "readBehavior": {
+          "enum": [
+            "manual_change_until_native_update",
+            "native_record_arm",
+            "unsupported"
+          ]
+        },
+        "readConditions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "qualified_native_sources",
+              "stable_active_sequence",
+              "solo_peers_off_or_read",
+              "sequence_mute_active_clip"
+            ]
+          }
+        },
+        "timelineEdits": {
+          "const": false
         }
       }
     },
@@ -839,5 +861,6 @@
         }
       }
     }
-  }
+  },
+  "description": "Automation Read qualifies native mute/solo/volume manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Pan/sends/inserts remain Off-only."
 }
