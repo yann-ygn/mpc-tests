@@ -11,9 +11,12 @@ the configured replay/sampling limits, eight subscribers, eight tested tracks
 and `maximumDensityQualified: false`. Device qualification covers stopped and
 ordinary sequence playback on six plugin and two audio tracks, with recording
 Off and Automation Read. See the [measurements and evidence](../findings/native-watch.md).
-The installed 0.10.0 host requires a separately approved upgrade/restart to
-acquire this implementation. Qualification used a temporary host without an
-addin install, MPC restart, or project save/load.
+Qualification used a temporary host without an addin install, MPC restart, or
+project save/load. The owner-requested persistent 0.12.0 installation and restart
+completed on 2026-10-28. The saved session was reopened and independently matched
+the pre-install capture. Installed watch/replay, stop/start, recovery and actual
+Read mute/solo/volume writes pass; all changed values were restored. See
+[installed-device evidence](../findings/native-watch-installed-20261028.json).
 
 ## Start and consume
 

@@ -9,15 +9,17 @@ Mute also requires a matching explicit global/active-sequence scope (US #48). Co
 Version 0.12.0 adds [qualified Unix watch/replay](WATCH.md), a shared observation
 publisher and retained snapshot cursors. Eight subscribers on the declared
 eight-track stopped/playback workload are device-qualified; maximum-density and
-automation-rate delivery remain unqualified. The installed 0.10.0 host does not
-gain this code through stop/start; upgrade/restart still requires owner approval.
+automation-rate delivery remain unqualified. The owner-requested 0.12.0 upgrade
+and MPC restart completed on 2026-10-28; installed watch/replay, lifecycle and
+Automation Read writes pass. Configuration, identity, other addins and the saved
+session were preserved. See [installed-device evidence](../findings/native-watch-installed-20261028.json).
 
 Version 0.11.0 adds actual mute/solo/volume changes under Automation Read, including
 live native source ownership, active-sequence Clip associations and Single solo
 peer checks. Later automation can supersede manual values; completion remains
 readback-based and bounded. Pan/sends/inserts remain Off-only. See
 [qualification and source restrictions](../findings/native-automation-read-writes.md).
-The installed baseline remains 0.10.0 until an owner-approved upgrade/restart.
+These Read writes are included in the installed 0.12.0 host.
 
 Version 0.10.0 adds desired-state volume, pan, sends and rack/slot enable controls
 for qualified plugin/drum/keygroup/audio tracks under Automation Off. Mixer

@@ -10,8 +10,12 @@ its authoritative observation backend is ready. Acknowledgements report
 `qualified: true`. The public API version and native adapter ABIs are unchanged.
 HTTP, MCP and SDK delivery remain separate stories. Installed 0.10.0 was stopped
 temporarily for qualification and resumed afterward; no addin was installed and
-MPC was not restarted. Acquiring 0.12.0 persistently requires a separately
-approved upgrade/restart.
+MPC was not restarted during qualification. The subsequent owner-requested
+0.12.0 installation and restart completed on 2026-10-28. Installed watch/replay,
+recovery, lifecycle and actual Read mute/solo/volume writes pass. A fresh session
+backup was reopened; independent reads matched all pre-install track/bus flags,
+mixer values, automation, selection, sequence and zero playhead. See the
+[installed-device proof](native-watch-installed-20261028.json).
 
 ## Workload and delivery
 

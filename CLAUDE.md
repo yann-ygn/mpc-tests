@@ -31,8 +31,8 @@ before running experiments.
   needs `-n N`. The root filesystem is read-only; addins live in `/data/mpc-addins/`.
 - The MPC Remote addin (`/data/mpc-addins/remote`, 1.0.3) serves HTTP and MCP on port 6720 (`/tap`, `/button`,
   `/screen.png`). The `mpc` MCP server is the same addin. `privtap/profiles/` keeps a copy of its `buttons.conf`.
-- MPC Native API 0.10.0 is installed and ready (owner-approved #39 upgrade, 2026-10-27).
-  Earlier story entries below record historical installed versions; see `findings/native-mixer-installed-20261027.json` for the current verification.
+- MPC Native API 0.12.0 is installed and ready (owner-requested #33 upgrade, 2026-10-28).
+  Earlier story entries below record historical installed versions; see `findings/native-watch-installed-20261028.json` for the current verification.
 - privtap's settings: `/data/mpc-addins/privtap/privtap.conf`. Keep `identity=` empty except during an experiment:
   as another model, the Key 37's LEDs show the wrong states.
 - Settings backup taken before identity experiments: `/data/claude-backup-20261023-settings.tar`.
@@ -91,7 +91,8 @@ before running experiments.
   performance remains unqualified. Original state/settings, zero playhead and Mixer Volume
   are restored; temporary hosts are drained/unloaded and installed 0.10.0 resumes ready.
   No project save/load or MPC restart. See `findings/native-watch.md` and its sanitized proof.
-  Persistent upgrade/restart still needs owner approval. HTTP/MCP/SDKs remain separate stories.
+  The subsequent owner-requested 0.12.0 installation/restart is verified below.
+  HTTP/MCP/SDKs remain separate stories.
 - Accepted public API contract: `findings/native-api-contract.md` (#28). Initial `describe` implementation is in
   `native-api/` under local-service story #32 (implemented: state, authenticated commands/receipts and native live policy; watch remains #33).
 - Firmware adapter (#29) implemented: eight C exports, profile schema v1, exact build/model/ABI plus seven code
@@ -240,7 +241,8 @@ before running experiments.
   Package 0.9.0 is prepared locally. See `findings/native-automation-read.md` and its sanitized proof.
 - US #53 extends the historical #51/#39 restrictions with actual native Read mute/solo/volume writes.
   See findings/native-automation-read-writes.md for source ownership, native reversion and remaining limits.
-  Installed availability requires a separately approved 0.11.0 upgrade/restart. Streaming stays #33; event editing stays #43.
+  Read writes are included in the owner-requested installed 0.12.0 host, verified below.
+  Streaming is #33; event editing stays #43.
 - Packaging (#21), branch `us-21-native-package`: `native-api/package.py` builds a reproducible ARM addin with
   the shared preload-preserving installer. `mpc_native_host.so` embeds the adapter and service with zero exports
   and NODELETE; no ptrace/privtap worker dependency. `mpc-api host-status|host-stop|host-start` manages it through
@@ -286,7 +288,18 @@ before running experiments.
   Original eight-track session values, flags, Read modes, timeline/parameter maps,
   sequence/selection, settings, zero playhead and Mixer Volume are restored. Temporary
   tracks removed, lab drained/unloaded and installed 0.10.0 resumed ready, without
-  project save/load or MPC restart. Package 0.11.0 is built locally; install/restart
-  still requires owner approval. See findings/native-automation-read-writes.md and
-  findings/native-automation-read-writes-proof-20261027.json. Story remains In progress
-  pending installation and actual installed Read-write verification.
+  project save/load or MPC restart. At that point package 0.11.0 was built locally
+  pending owner-approved installation. See findings/native-automation-read-writes.md and
+  findings/native-automation-read-writes-proof-20261027.json. Subsequent installation
+  and actual installed Read-write verification completed with 0.12.0, below.
+
+- Owner-requested 0.12.0 installation (#33/#53 follow-up, 2026-10-28) completed from
+  clean source `eb7013e`. The session was saved as a new `Claude Experiments/US33 Install Backup.xpj`
+  before the required MPC restart and reopened afterward. Package and installed hashes match;
+  configuration, persistent identity, preload list and privtap/Remote were preserved. All five reads,
+  independent flags/mixer observations and schema checks pass. Installed watch snapshot/change,
+  retained replay, unsubscribe, active-stream stop/drain, new-instance resync and recovery pass.
+  Actual Automation Read mute/solo/volume writes pass readback, retry/lookup, no-op and conflict checks.
+  All pre-install user/bus flags, mixer values, Read modes, selection, sequence, settings, zero playhead
+  and Mixer Volume/no-popup context are restored; backup bytes are unchanged. Installed host is ready/OK.
+  See `findings/native-watch-installed-20261028.json`. Future installs/restarts still require owner approval.

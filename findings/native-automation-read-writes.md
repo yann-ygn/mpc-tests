@@ -202,5 +202,10 @@ project was saved or loaded.
 
 Package 0.11.0 was built from clean production sources at `27ccb67`.
 Archive SHA-256: `193291019ab6b7d7a79d55e5531047d26ef7a8d39b002ee38e6ead2312d2f2e9`.
-It remains a local artifact pending owner-approved install/restart and installed
-Read-write verification; US #53 stays In progress until that step is completed.
+The subsequent 0.12.0 package includes this implementation. Its owner-requested
+installation and MPC restart completed on 2026-10-28. Actual installed Read
+mute/solo/volume writes pass independent readback, retained retry/lookup, no-op
+and expected-conflict checks, plus watch delivery and replay. All captured values,
+flags, automation and session context were restored after verification; the
+pre-install backup bytes remain unchanged. See
+[installed-device evidence](native-watch-installed-20261028.json).

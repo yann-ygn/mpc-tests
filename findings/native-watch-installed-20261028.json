@@ -1,0 +1,129 @@
+{
+  "story": 33,
+  "version": "0.12.0",
+  "ownerRequestedInstallation": true,
+  "requiredRestartAuthorizedByInstallationRequest": true,
+  "previousVersion": "0.10.0",
+  "packageSha256": "47ced24f96b5fe01eb599b302e40ccab9a2925c1b17dd55842229166b6c2f3d4",
+  "transferredPayloadChecksumsVerified": true,
+  "mpcRestarted": true,
+  "status": "ready",
+  "nativeError": "OK",
+  "deviceIdentityPreserved": true,
+  "configurationPreserved": true,
+  "identityFilePreserved": true,
+  "preloadListPreserved": true,
+  "sourceRevision": "eb7013e1ccf15833257ca8f895d1a4805aaa5be5",
+  "sourceSha256": "b9c479f2a8759d19f9b90cf735278bce6919be31aa012fd6d415c26cb149b5db",
+  "workingTreeDirty": false,
+  "artifactSha256": {
+    "mpc-api": "a69af982a8908a571569e8a773d2c079bb14f6dd87061f5d9a90d18878de7e5f",
+    "mpc_native_host.so": "e81a33df7c5f9f81d12bc96805a0d6438e7bf5f4c00bce83cf40c46d5c421c99"
+  },
+  "installedArtifactHashesMatch": true,
+  "coexistence": {
+    "privtap.so": true,
+    "mpc_remote": true,
+    "mpc_native_host.so": true
+  },
+  "temporaryInstallerFilesRemoved": true,
+  "date": "2026-10-28",
+  "mpcPidChangedForUpgrade": true,
+  "previousInstallationBackedUpLocally": true,
+  "freshSessionBackupVerified": true,
+  "sessionBackup": "Claude Experiments/US33 Install Backup.xpj",
+  "sessionBackupSha256": "5003fc40046190c96e89e3e948695c8ba5f76a595d0f5e5b7c18c5bbc3415a5b",
+  "backupReopenedAfterRestart": true,
+  "finalScreen": "Mixer Volume",
+  "advertisedWatch": {
+    "available": true,
+    "reason": null,
+    "maxSubscribers": 8,
+    "replayCapacity": 64,
+    "replayBytes": 4194304,
+    "replayRetentionMs": 30000,
+    "sampleIntervalMs": 100,
+    "samplePageTracks": 16,
+    "metadataAuditMs": 5000,
+    "heartbeatMs": 1000,
+    "testedTracks": 8,
+    "maximumDensityQualified": false
+  },
+  "installedVerification": {
+    "date": "2026-10-28",
+    "version": "0.12.0",
+    "checks": {
+      "watchDiscoveryAvailable": true,
+      "allFiveReadProjectionsAndSchemas": true,
+      "loadedBackupMatchesPreInstallSession": true,
+      "qualifiedFreshSnapshot": true,
+      "watchFramesMatchSchemas": true,
+      "activeWatchDrainsOnHostStop": true,
+      "instanceRotatedAndOldCursorRequiresResync": true,
+      "oldReceiptUnavailableAfterHostRestart": true,
+      "freshWatchRecoversAndUnsubscribes": true,
+      "allPreInstallTrackAndBusFlagsRestored": true,
+      "allMixerValuesAndAutomationRestored": true,
+      "selectionSequenceContextAndZeroPlayheadRestored": true,
+      "backupBytesUnchanged": true,
+      "privateSocketModes": true,
+      "mpcPidStableDuringHostLifecycle": true
+    },
+    "commands": [
+      {
+        "op": "set_mute",
+        "automation": "Read",
+        "status": "applied",
+        "nativeInvoked": true,
+        "verification": [
+          "model"
+        ],
+        "independentReadMatched": true,
+        "watchChangeObserved": true,
+        "replayMatched": true,
+        "retainedRetryAndLookupMatched": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "op": "set_solo",
+        "automation": "Read",
+        "status": "applied",
+        "nativeInvoked": true,
+        "verification": [
+          "model",
+          "audio_copy"
+        ],
+        "independentReadMatched": true,
+        "watchChangeObserved": true,
+        "replayMatched": true,
+        "retainedRetryAndLookupMatched": true,
+        "noOpAndConflictSkippedNative": true
+      },
+      {
+        "op": "set_volume",
+        "automation": "Read",
+        "status": "applied",
+        "nativeInvoked": true,
+        "verification": [
+          "model"
+        ],
+        "independentReadMatched": true,
+        "watchChangeObserved": true,
+        "replayMatched": true,
+        "retainedRetryAndLookupMatched": true,
+        "noOpAndConflictSkippedNative": true
+      }
+    ],
+    "userTracks": 8,
+    "buses": 28,
+    "status": "ready",
+    "nativeError": "OK",
+    "passed": true
+  },
+  "limits": [
+    "Installed smoke checks used stopped playback on the original eight-track session with Automation Read; playback, fanout and pressure qualification remain those in native-watch-proof-20261028.json.",
+    "Volume completion is model readback; acoustic output and underruns were not measured.",
+    "No changes from verification were saved; the pre-install session backup bytes remain unchanged."
+  ],
+  "passed": true
+}
