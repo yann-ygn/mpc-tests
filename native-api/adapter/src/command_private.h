@@ -17,6 +17,7 @@ struct mpc_command_native_result {
   struct mpc_mixer_state last_mixer;
   struct mpc_command_context context;
   struct mpc_command_observation before, after;
+  struct mpc_navigation_state navigation_before, navigation_after;
 };
 
 enum mpc_native_error mpc_identity_mixer(

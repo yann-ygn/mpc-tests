@@ -100,7 +100,17 @@ int api_valid_snapshot(const struct mpc_state_snapshot *s, const char *instance)
     (!s->project &&
      (s->project_generation || s->selected_track || s->selected_sequence || s->track_count ||
       s->bus_count || s->sequence_count || s->sequence_slots)) ||
-    (s->project && !s->project_generation))
+    (s->project && !s->project_generation) || s->navigation.known > 1 ||
+    (s->navigation.known &&
+     (!s->project || s->navigation.playing > 1 || s->navigation.record_mode > 4 ||
+      !isfinite(s->navigation.sequence_bpm) || s->navigation.sequence_bpm < 20 ||
+      s->navigation.sequence_bpm > 999 || s->navigation.master_known > 1 ||
+      s->navigation.master_enabled > 1 ||
+      (s->navigation.master_known &&
+       (!isfinite(s->navigation.master_bpm) || s->navigation.master_bpm < 20 ||
+        s->navigation.master_bpm > 999)) ||
+      s->navigation.selected_track != s->selected_track ||
+      s->navigation.selected_sequence != s->selected_sequence)))
     return 0;
   if (
     (s->project && s->mute_scope > MPC_MUTE_SEQUENCE) ||
@@ -436,9 +446,37 @@ char *api_state_json(
         sequence(f, api, s->project, &s->sequences[i]);
       }
       fputs(
-        "],\"transport\":{\"effectiveBpm\":null,\"tempoSource\":null,\"playing\":null,"
-        "\"recording\":null}",
+        "],\"transport\":{\"queuedSequenceId\":null,\"effectiveBpm\":null,\"tempoSource\":null,"
+        "\"playing\":",
         f);
+      fputs(s->navigation.known ? (s->navigation.playing ? "true" : "false") : "null", f);
+      fputs(",\"recording\":", f);
+      fputs(
+        s->navigation.known
+          ? (s->navigation.playing && s->navigation.record_mode ? "true" : "false")
+          : "null",
+        f);
+      fputs(",\"recordMode\":", f);
+      if (s->navigation.known) {
+        fprintf(
+          f,
+          "%u,\"pulse\":\"%" PRId64 "\",\"sequenceBpm\":%.9g,\"masterBpm\":",
+          s->navigation.record_mode,
+          s->navigation.pulse,
+          s->navigation.sequence_bpm);
+        if (s->navigation.master_known)
+          fprintf(
+            f,
+            "%.9g,\"masterTempoEnabled\":%s}",
+            s->navigation.master_bpm,
+            s->navigation.master_enabled ? "true" : "false");
+        else
+          fputs("null,\"masterTempoEnabled\":null}", f);
+      } else
+        fputs(
+          "null,\"pulse\":null,\"sequenceBpm\":null,\"masterBpm\":null,\"masterTempoEnabled\":"
+          "null}",
+          f);
     }
     fputs(",\"tracks\":[", f);
     for (unsigned i = 0; i < s->track_count; i++) {
@@ -456,8 +494,16 @@ char *api_state_json(
   }
   fputs(
     ",\"unsupportedFields\":[\"project.name\",\"transport.effectiveBpm\",\"transport.tempoSource\","
-    "\"transport.playing\",\"transport.recording\"]}\n",
+    "\"transport.queuedSequenceId\"",
     f);
+  if (!s->navigation.known)
+    fputs(
+      ",\"transport.playing\",\"transport.recording\",\"transport.recordMode\","
+      "\"transport.pulse\",\"transport.sequenceBpm\"",
+      f);
+  if (!s->navigation.master_known)
+    fputs(",\"transport.masterBpm\",\"transport.masterTempoEnabled\"", f);
+  fputs("]}\n", f);
   if (fclose(f) || bytes > MAX_RESPONSE_BYTES) {
     free(buffer);
     return NULL;

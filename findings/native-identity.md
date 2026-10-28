@@ -117,3 +117,10 @@ load after both libraries were unmapped. One rejected cleanup candidate required
 application restart. The saved experiment's observed selection, names/order, flags, buses and sequence-slot count
 were restored; temporary attachments and owned files were removed. This is firmware-specific foundation evidence,
 not release qualification for the later public state/write service.
+
+
+US #40 refines Sequence metadata handling: native BPM notification callback
+`0x25bc2fc` dispatches virtual offset `0x10` (listener slot 4). It now preserves
+the Sequence generation. Destructive reset/Clear All still notify slots 2 and
+3, including an unchanged unused slot, and continue to retire generations.
+Host fixtures invoke the actual production callback table for both cases.

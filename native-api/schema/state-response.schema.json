@@ -134,6 +134,83 @@
     },
     "muteContext": {
       "$ref": "#/$defs/muteContext"
+    },
+    "transport": {
+      "type": "object",
+      "required": [
+        "playing",
+        "recording",
+        "recordMode",
+        "pulse",
+        "sequenceBpm",
+        "masterBpm",
+        "masterTempoEnabled",
+        "effectiveBpm",
+        "tempoSource",
+        "queuedSequenceId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "playing": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "recording": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "recordMode": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4
+        },
+        "pulse": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^-?(0|[1-9][0-9]*)$",
+          "maxLength": 20
+        },
+        "sequenceBpm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 20,
+          "maximum": 999
+        },
+        "masterBpm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 20,
+          "maximum": 999
+        },
+        "masterTempoEnabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "effectiveBpm": {
+          "type": "null"
+        },
+        "tempoSource": {
+          "type": "null"
+        },
+        "queuedSequenceId": {
+          "type": "null"
+        }
+      }
     }
   },
   "anyOf": [

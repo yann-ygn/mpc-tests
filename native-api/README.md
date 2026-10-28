@@ -162,7 +162,7 @@ See [the native inventory map and device evidence](../findings/native-track-inve
 
 The combined API limit is 136 user tracks (128 MIDI-triggered and 8 audio), 128 master
 objects and 128 sequence slots. Discovery advertises these inventory limits and
-`snapshotAbiVersion: 5`. The private transfer requires `STATE_V5`; older attachments
+`snapshotAbiVersion: 6`. The private transfer requires `STATE_V6`; older attachments
 remain incompatible. No cached or partial list is published as a complete capture.
 
 Plugin, drum, keygroup and audio tracks expose independently qualified requested flags,
@@ -339,3 +339,40 @@ See [the full contract, native paths and evidence](../findings/native-mixer-cont
 All authoritative reads and lightweight observations include per-field known/null
 mixer coverage. Trusted C layouts change to executor 9, commands 7, observation 2,
 snapshot 5 / STATE_V5; primitive ABI 2 stays unchanged. Rebuild C integrations.
+
+
+## Transport and selection (0.14.0 / US #40)
+
+Conditional authenticated commands now include `play`, `stop`, `play_start`,
+`locate`, `select_track`, `select_sequence` and `set_sequence_bpm`. Play/stop
+request desired states. Play Start, locate, sequence selection and stored BPM
+writes require stopped playback. Recording/pending record, Song and external
+transport remain gated. Track and Sequence references, dispatch checks and
+retained request IDs apply equally to navigation; changing a UI view is not a
+write prerequisite. See [wire details](adapter/COMMANDS.md#transport-and-navigation-us-40)
+and [qualification](../findings/native-transport-navigation.md).
+
+Full state adds a `transport` object: model playing, record mode/recording,
+absolute pulse, stored sequence BPM, master BPM and master-tempo enabled.
+Effective BPM, tempo source and queued sequence remain null and explicitly
+unsupported. These fields are snapshots, not lightweight watch change fields.
+`snapshotAbiVersion` is 6, private transfer STATE_V6; executor and command ABI
+versions are 10 and 8. C consumers must rebuild. Primitive/observation ABIs stay
+2. No new version is installed by the build or qualification runner.
+
+Example using references from `get_state`:
+
+```json
+{"apiVersion":"0.1","op":"locate","requestId":"locate_1","target":{"instanceId":"run_0123456789abcdef0123456789abcdef","projectId":"1"},"sequence":{"instanceId":"run_0123456789abcdef0123456789abcdef","projectId":"1","sequenceId":"14","generation":"14"},"pulse":"0","waitMs":1000}
+```
+
+For `set_sequence_bpm` replace `pulse` with `bpm: 120`. For `play`, `stop`,
+`play_start` and `select_sequence`, omit both fields. `select_track` uses the
+full Track target and omits `sequence`. No navigation request accepts `value`.
+
+
+The [navigation request](examples/navigation-request.json) and
+[applied receipt](examples/navigation-applied.json) show the retained Play Start
+shape. Native `recording` means playing with a nonzero record mode, including
+pending count-in. Modes 1/2 distinguish active Record/Overdub from pending 3/4;
+it does not report whether an audio buffer or event was written.

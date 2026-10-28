@@ -4,7 +4,7 @@
   "instanceId": "run_3a419566592e9f9b96fcb50f009063e6",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.12.0"
+    "version": "0.14.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -1006,6 +1006,164 @@
       ],
       "indexBase": 0,
       "indexCount": 4
+    },
+    "play": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "verification": [
+        "model"
+      ],
+      "viewIndependent": true,
+      "conditions": [
+        "stable_view",
+        "no_popup_or_menu",
+        "recording_off",
+        "sequence_mode",
+        "explicit_sequence_generation",
+        "local_transport_source",
+        "transport_controller_ready",
+        "native_transport_queue_idle"
+      ],
+      "sampleAccurate": false,
+      "quantizedScheduling": false,
+      "requestReplay": "retained_result"
+    },
+    "stop": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "verification": [
+        "model"
+      ],
+      "viewIndependent": true,
+      "conditions": [
+        "stable_view",
+        "no_popup_or_menu",
+        "recording_off",
+        "sequence_mode",
+        "explicit_sequence_generation",
+        "local_transport_source",
+        "transport_controller_ready",
+        "native_transport_queue_idle"
+      ],
+      "sampleAccurate": false,
+      "quantizedScheduling": false,
+      "requestReplay": "retained_result"
+    },
+    "play_start": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "verification": [
+        "model"
+      ],
+      "viewIndependent": true,
+      "conditions": [
+        "stable_view",
+        "no_popup_or_menu",
+        "recording_off",
+        "sequence_mode",
+        "explicit_sequence_generation",
+        "local_transport_source",
+        "transport_controller_ready",
+        "native_transport_queue_idle",
+        "stopped"
+      ],
+      "sampleAccurate": false,
+      "quantizedScheduling": false,
+      "requestReplay": "retained_result"
+    },
+    "locate": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "verification": [
+        "model"
+      ],
+      "viewIndependent": true,
+      "conditions": [
+        "stable_view",
+        "no_popup_or_menu",
+        "recording_off",
+        "sequence_mode",
+        "explicit_sequence_generation",
+        "local_transport_source",
+        "transport_controller_ready",
+        "native_transport_queue_idle",
+        "stopped"
+      ],
+      "sampleAccurate": false,
+      "quantizedScheduling": false,
+      "requestReplay": "retained_result"
+    },
+    "select_track": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "verification": [
+        "model"
+      ],
+      "viewIndependent": true,
+      "conditions": [
+        "stable_view",
+        "no_popup_or_menu",
+        "recording_off",
+        "sequence_mode",
+        "current_track_incarnation",
+        "local_transport_source",
+        "transport_controller_ready",
+        "native_transport_queue_idle"
+      ],
+      "sampleAccurate": false,
+      "quantizedScheduling": false,
+      "requestReplay": "retained_result"
+    },
+    "select_sequence": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "verification": [
+        "model"
+      ],
+      "viewIndependent": true,
+      "conditions": [
+        "stable_view",
+        "no_popup_or_menu",
+        "recording_off",
+        "sequence_mode",
+        "explicit_sequence_generation",
+        "local_transport_source",
+        "transport_controller_ready",
+        "native_transport_queue_idle",
+        "stopped"
+      ],
+      "sampleAccurate": false,
+      "quantizedScheduling": false,
+      "requestReplay": "retained_result",
+      "queuedSelection": false
+    },
+    "set_sequence_bpm": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "verification": [
+        "model"
+      ],
+      "viewIndependent": true,
+      "conditions": [
+        "stable_view",
+        "no_popup_or_menu",
+        "recording_off",
+        "sequence_mode",
+        "explicit_sequence_generation",
+        "local_transport_source",
+        "transport_controller_ready",
+        "native_transport_queue_idle",
+        "stopped",
+        "used_sequence"
+      ],
+      "sampleAccurate": false,
+      "quantizedScheduling": false,
+      "requestReplay": "retained_result",
+      "tempoScope": "stored_sequence_bpm",
+      "effectiveTempoKnown": false,
+      "minimum": 20,
+      "maximum": 999,
+      "quantization": "ieee_binary32"
     }
   },
   "limits": {
@@ -1025,7 +1183,7 @@
     "maxMidiTracks": 128,
     "maxAudioTracks": 8,
     "maxBuses": 128,
-    "snapshotAbiVersion": 5,
+    "snapshotAbiVersion": 6,
     "maxJobsPerUiCallback": null
   }
 }

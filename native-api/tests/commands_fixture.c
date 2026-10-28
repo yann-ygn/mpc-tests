@@ -2,6 +2,7 @@
 #include "command_private.h"
 
 #include <stdatomic.h>
+#include <math.h>
 #include <unistd.h>
 
 enum { PROGRAM2 = OBJECTS + 0x16000 };
@@ -1451,7 +1452,36 @@ static void automation_sources(void) {
     cleanup(&f);
   }
 }
+static void navigation_receipt_validation(void) {
+  struct mpc_command_receipt receipt = {
+    .abi_version = MPC_COMMANDS_ABI,
+    .struct_bytes = sizeof receipt,
+    .request =
+      {.request_id = "nav_receipt",
+       .operation = MPC_COMMAND_PLAY,
+       .target = {.project = 1},
+       .sequence = {.project = 1, .sequence = 1, .generation = 1}},
+    .navigation_after = {.known = 1, .playing = 1, .sequence_bpm = 120}};
+  memcpy(receipt.request.target.instance_id, service, sizeof service);
+  memcpy(receipt.request.sequence.instance_id, service, sizeof service);
+  char *json = mpc_commands_receipt_json(&receipt);
+  assert(json && strstr(json, "\"transport\""));
+  free(json);
+  const float invalid_bpm[] = {NAN, INFINITY, 19, 1000};
+  for (unsigned i = 0; i < sizeof invalid_bpm / sizeof *invalid_bpm; i++) {
+    receipt.navigation_after.sequence_bpm = invalid_bpm[i];
+    assert(!mpc_commands_receipt_json(&receipt));
+  }
+  receipt.navigation_after.sequence_bpm = 120;
+  receipt.navigation_after.record_mode = 5;
+  assert(!mpc_commands_receipt_json(&receipt));
+  receipt.navigation_after.record_mode = 0;
+  receipt.navigation_after.playing = 2;
+  assert(!mpc_commands_receipt_json(&receipt));
+}
+
 int main(void) {
+  navigation_receipt_validation();
   (void)validate_target;
   (void)get32;
   struct mpc_command_receipt incompatible = {

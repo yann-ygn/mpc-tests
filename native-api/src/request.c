@@ -133,7 +133,7 @@ static int scalar(struct parser *p, bool *boolean_out, double *number_out, bool 
   double value = strtod_l(buffer, &end, numeric_locale);
   int conversion_error = errno;
   freelocale(numeric_locale);
-  if (*end || conversion_error || !isfinite(value) || value < 0 || value > 1)
+  if (*end || conversion_error || !isfinite(value) || value < 0 || value > 999)
     return -1;
   *number_out = value;
   return 0;
@@ -212,8 +212,11 @@ static int target(struct parser *p, struct mpc_command_target *out) {
     if (error || (seen & bit))
       return -1;
     seen |= bit;
+    whitespace(p);
+    if (p->p < p->end && *p->p == '}')
+      break;
   }
-  return seen != 7 || token(p, '}') ? -1 : 0;
+  return (seen & 3) != 3 || token(p, '}') ? -1 : 0;
 }
 
 static int sequence(struct parser *p, struct mpc_command_sequence *out) {
@@ -269,11 +272,13 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     MIXER = 2048,
     SEND = 4096,
     SLOT = 8192,
-    CURSOR = 16384
+    CURSOR = 16384,
+    PULSE = 32768,
+    BPM = 65536
   };
   unsigned seen = 0;
   bool value_numeric = false, expected_numeric = false;
-  for (unsigned i = 0; i < 15; i++) {
+  for (unsigned i = 0; i < 17; i++) {
     char key[32];
     if ((i && token(&p, ',')) || string(&p, key, sizeof key) || token(&p, ':'))
       return -1;
@@ -351,6 +356,28 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
       error = milliseconds(&p, &out->command.mixer.index, 0);
       if (out->command.mixer.index > 3)
         error = -1;
+    } else if (!strcmp(key, "bpm")) {
+      bit = BPM;
+      bool ignored, numeric;
+      error = scalar(&p, &ignored, &out->command.bpm, &numeric);
+      if (!numeric || out->command.bpm < 20 || out->command.bpm > 999)
+        error = -1;
+    } else if (!strcmp(key, "pulse")) {
+      bit = PULSE;
+      uint64_t pulse;
+      /* Absolute pulses are bounded signed integers, encoded as decimal strings. */
+      char number[12];
+      error = string(&p, number, sizeof number);
+      pulse = 0;
+      if (!error && (!number[0] || (number[0] == '0' && number[1])))
+        error = -1;
+      for (const char *c = number; !error && *c; c++) {
+        if (*c < '0' || *c > '9' || pulse > ((uint64_t)INT32_MAX - (unsigned)(*c - '0')) / 10)
+          error = -1;
+        else
+          pulse = pulse * 10 + (unsigned)(*c - '0');
+      }
+      out->command.pulse = (int64_t)pulse;
     } else if (!strcmp(key, "sequence")) {
       bit = SEQUENCE;
       error = sequence(&p, &out->command.sequence);
@@ -407,17 +434,49 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
       required |= SLOT;
       allowed |= SLOT;
     }
+  } else if (
+    !strcmp(out->op, "play") || !strcmp(out->op, "stop") || !strcmp(out->op, "play_start") ||
+    !strcmp(out->op, "locate") || !strcmp(out->op, "select_track") ||
+    !strcmp(out->op, "select_sequence") || !strcmp(out->op, "set_sequence_bpm")) {
+    required |= ID | TARGET;
+    out->command.operation = !strcmp(out->op, "play") ? MPC_COMMAND_PLAY
+      : !strcmp(out->op, "stop")                      ? MPC_COMMAND_STOP
+      : !strcmp(out->op, "play_start")                ? MPC_COMMAND_PLAY_START
+      : !strcmp(out->op, "locate")                    ? MPC_COMMAND_LOCATE
+      : !strcmp(out->op, "select_track")              ? MPC_COMMAND_SELECT_TRACK
+      : !strcmp(out->op, "select_sequence")           ? MPC_COMMAND_SELECT_SEQUENCE
+                                                      : MPC_COMMAND_SEQUENCE_BPM;
+    if (out->command.operation == MPC_COMMAND_SELECT_TRACK) {
+      if (!out->command.target.track)
+        return -1;
+    } else {
+      required |= SEQUENCE;
+      if (
+        out->command.target.track ||
+        strcmp(out->command.sequence.instance_id, out->command.target.instance_id) ||
+        out->command.sequence.project != out->command.target.project)
+        return -1;
+    }
+    if (out->command.operation == MPC_COMMAND_LOCATE)
+      required |= PULSE;
+    if (out->command.operation == MPC_COMMAND_SEQUENCE_BPM)
+      required |= BPM;
+    allowed = required | START | WAIT;
   } else if (!strcmp(out->op, "watch")) {
     allowed |= CURSOR;
   } else if (!strcmp(out->op, "get_command")) {
     required |= ID | INSTANCE;
     allowed = required | WAIT;
   }
+  if (out->command.operation < MPC_COMMAND_PLAY && (seen & TARGET) && !out->command.target.track)
+    return -1;
   bool numeric =
     out->command.operation >= MPC_COMMAND_VOLUME && out->command.operation <= MPC_COMMAND_SEND;
-  if ((seen & VALUE) && numeric != value_numeric)
+  if ((seen & VALUE) && (numeric != value_numeric || (numeric && out->command.mixer.value > 1)))
     return -1;
-  if ((seen & EXPECTED) && numeric != expected_numeric)
+  if (
+    (seen & EXPECTED) &&
+    (numeric != expected_numeric || (numeric && out->command.mixer.expected > 1)))
     return -1;
   return (seen & required) != required || (seen & ~allowed) ? -1 : 0;
 }

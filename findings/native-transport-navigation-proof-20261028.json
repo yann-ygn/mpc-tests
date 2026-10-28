@@ -1,0 +1,352 @@
+{
+  "story": 40,
+  "date": "2026-10-28",
+  "branch": "us-40-transport-navigation",
+  "packageVersion": "0.14.0",
+  "firmware": {
+    "model": "MPC Key 37",
+    "version": "3.9.1.2",
+    "gnuBuildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "installedVersion": "0.13.0",
+  "addinInstalled": false,
+  "deliberateMpcRestart": false,
+  "prototypeFailures": {
+    "automaticRestarts": 4,
+    "scope": "Direct core/controller transport calls during disposable prototypes; excluded from implementation",
+    "faultThread": "audio",
+    "faultRva": "0xf7efd8",
+    "callerRva": "0x1c103cc",
+    "invalidEventPointer": "0x208",
+    "replacement": "Native AsyncSequencer queue; no adapter audio callback"
+  },
+  "queuedImplementation": {
+    "sameProcessThroughQualificationAndBackupReload": true,
+    "nativeQueueCounterRequired": true,
+    "playStartStoppedOnly": true,
+    "playStartObserveZeroBeforePlay": true
+  },
+  "abis": {
+    "primitive": 2,
+    "executor": 10,
+    "commands": 8,
+    "snapshot": 6,
+    "observation": 2,
+    "privateState": "STATE_V6"
+  },
+  "views": [
+    "main",
+    "mixer_volume",
+    "mixer_pan_volume",
+    "mixer_sends",
+    "mixer_effects",
+    "mixer_io",
+    "track_mute"
+  ],
+  "batches": {
+    "async-smoke": {
+      "rows": 34,
+      "statuses": {
+        "applied": 34
+      }
+    },
+    "screen-matrix": {
+      "rows": 129,
+      "statuses": {
+        "applied": 128,
+        "admission_error": 1
+      }
+    },
+    "final-start-matrix": {
+      "rows": 42,
+      "statuses": {
+        "applied": 35,
+        "rejected": 7
+      }
+    },
+    "record-probes": {
+      "rows": 20,
+      "statuses": {
+        "rejected": 16,
+        "applied": 4
+      }
+    },
+    "count-off-probe": {
+      "rows": 2,
+      "statuses": {
+        "rejected": 1,
+        "applied": 1
+      }
+    },
+    "master-playback": {
+      "rows": 17,
+      "statuses": {
+        "applied": 14,
+        "rejected": 3
+      }
+    },
+    "sync-clock": {
+      "rows": 7,
+      "statuses": {
+        "rejected": 7
+      }
+    },
+    "sync-mtc": {
+      "rows": 7,
+      "statuses": {
+        "rejected": 7
+      }
+    },
+    "sync-link": {
+      "rows": 7,
+      "statuses": {
+        "rejected": 7
+      }
+    }
+  },
+  "matrix": {
+    "mainCommandRows": 29,
+    "otherSixViewCommandRows": 126,
+    "allMatrixRowsPassed": true,
+    "usedSequenceIndices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "userTrackIndices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "independentSelectionChecks": 96,
+    "finalStagedPlayStartViews": 7,
+    "playStartWhilePlayingRejections": 7,
+    "playStartRetainedReplaysAfterStop": 7,
+    "concurrentDesiredPlayDuplicateReplies": 8,
+    "duplicateRepliesIdentical": true,
+    "originalMatrixCleanupIssue": {
+      "code": "RETENTION_CAPACITY",
+      "phase": "Cleanup after the 126 passing rows",
+      "resolved": "Closed the test authority; completed restoration with a fresh authority. Runner now rotates per view and before cleanup."
+    }
+  },
+  "latency": {
+    "scope": "Applied managed-command rows, including no-ops and cleanup; not acoustic timing",
+    "totalMs": {
+      "count": 216,
+      "p50": 27,
+      "p95": 47,
+      "max": 60
+    },
+    "maxUiCallbackUs": {
+      "count": 216,
+      "p50": 11000,
+      "p95": 27245,
+      "max": 35543
+    }
+  },
+  "recording": {
+    "disposableProjectOnly": true,
+    "nativeModes": {
+      "0": "Off",
+      "1": "Record",
+      "2": "Overdub",
+      "3": "Record pending",
+      "4": "Overdub pending"
+    },
+    "pendingRecordAndOverdubRejections": 14,
+    "liveRecordAndOverdubRejections": 2,
+    "allRejectedBeforeInvocation": true,
+    "countInRecord": {
+      "recordModes": [
+        3,
+        1
+      ],
+      "overdubModes": [
+        4,
+        2
+      ],
+      "playingTrueWhilePending": true,
+      "pulseHeldAtZeroWhilePending": true
+    },
+    "countInOff": {
+      "firstObservedRecordMode": 1,
+      "firstObservedPulsePositive": true
+    },
+    "nativeCountInFlagChangedWithUiMode": false,
+    "nativeCountInFlagPubliclyExposed": false,
+    "recordControlsPubliclyExposed": false,
+    "punch": {
+      "class": "ScriptableSequenceRecorderProperties",
+      "registrationRva": "0x284b054",
+      "enableCallbackRva": "0x284a540",
+      "members": [
+        "EnablePunchIn",
+        "SetPunchInStartBBP",
+        "SetPunchInEndBBP"
+      ],
+      "qualifiedLiveReceiver": false,
+      "called": false
+    },
+    "punchQualified": false,
+    "punchLimitation": "No qualified live punch receiver/UI path was established; compiled registration is not evidence of executable support. No punch setter or interval write was attempted."
+  },
+  "sync": {
+    "uiOffValue": 0,
+    "testedConfiguredSources": {
+      "clock": {
+        "nativeValue": 1,
+        "rejectionsBeforeInvocation": 7,
+        "modelUnchanged": true
+      },
+      "mtc": {
+        "nativeValue": 2,
+        "rejectionsBeforeInvocation": 7,
+        "modelUnchanged": true
+      },
+      "link": {
+        "nativeValue": 3,
+        "rejectionsBeforeInvocation": 7,
+        "modelUnchanged": true
+      }
+    },
+    "externalClockGeneratorUsed": false,
+    "externallyClockedPlaybackQualified": false
+  },
+  "tempo": {
+    "scope": "stored_sequence_bpm",
+    "binary32Readback": true,
+    "masterEnabledProbe": true,
+    "masterBpmRemained": 120,
+    "storedBpmValuesTested": [
+      70,
+      123.456
+    ],
+    "genericSetTempoAvailable": false,
+    "effectiveBpmKnown": false,
+    "effectiveSourceKnown": false
+  },
+  "projectReload": {
+    "oldPlayAndBpmReferenceRejections": [
+      "STALE_PROJECT",
+      "STALE_PROJECT"
+    ],
+    "allBeforeInvocation": true
+  },
+  "restoration": {
+    "backupReloaded": "US40 Session Backup.xpj",
+    "originalAndBothCopiesByteHashesUnchanged": true,
+    "originalUserAndBusFlagsSelectionSequence": true,
+    "all36MixerAndAutomationRows": true,
+    "commandSettingsAndAutomationContext": true,
+    "persistedSettingKeysChanged": [],
+    "finalTransport": {
+      "playing": false,
+      "recordMode": 0,
+      "pulse": 0,
+      "sequenceBpm": 70.0,
+      "masterBpm": 120.0,
+      "masterTempoEnabled": false,
+      "trackIndex": 2,
+      "sequenceIndex": 4
+    },
+    "originalMenuContextRestored": true,
+    "temporaryMappingsRemoved": true,
+    "retainedLabsUnloaded": true,
+    "installedHostReady": true,
+    "installedReadSchemaChecks": [
+      "describe",
+      "get_state",
+      "list_tracks",
+      "current_track",
+      "current_sequence",
+      "recovery_snapshot"
+    ],
+    "independentInstalledReadbacksMatch": true,
+    "readOnlySnapshotLabUnloaded": true,
+    "allTaskOwnedReadHelperFilesRemoved": true,
+    "finalPersistedSettingsUnchanged": true
+  },
+  "validation": {
+    "hostMesonEntries": 24,
+    "sanitizerMesonEntries": 19,
+    "armFixtures": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 327
+      },
+      {
+        "fixture": "mixer_fixture",
+        "passed": true,
+        "outputLines": 78
+      },
+      {
+        "fixture": "watch_fixture",
+        "passed": true,
+        "outputLines": 1
+      }
+    ],
+    "formatsAndElfGuards": true,
+    "navigationReceiptSchemaRows": 264,
+    "liveSnapshotAbi6": {
+      "passed": true,
+      "schemaValidatedReads": [
+        "describe",
+        "get_state",
+        "list_tracks",
+        "current_track",
+        "current_sequence",
+        "recovery_snapshot"
+      ],
+      "transport": {
+        "queuedSequenceId": null,
+        "effectiveBpm": null,
+        "tempoSource": null,
+        "playing": false,
+        "recording": false,
+        "recordMode": 0,
+        "pulse": "0",
+        "sequenceBpm": 70,
+        "masterBpm": 120,
+        "masterTempoEnabled": false
+      },
+      "allReadProjectionsAgree": true,
+      "contextUnchanged": true
+    },
+    "unknownQueuedChangeIsNull": true
+  },
+  "packageArchiveSha256": "a2a71b1a8548b3f908453998298d26b5d2b26b850e827bbbde57f92e13e35494"
+}

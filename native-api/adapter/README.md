@@ -1,4 +1,4 @@
-# Firmware adapter ABI 2 and UI executor ABI 9
+# Firmware adapter ABI 2 and UI executor ABI 10
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -42,7 +42,7 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) uses ABI 9; older configurations are rejected at open.
+The [executor header](include/mpc_executor.h) uses ABI 10; older configurations are rejected at open.
 The primitive adapter uses ABI 2. Requests support track reads/flags, identity snapshots and sequence-reference
 validation and full live state snapshots. The authoritative mode owns the resolver; the original
 host-resolver mode remains available for trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
@@ -294,10 +294,10 @@ See [command integration](COMMANDS.md#sequence-scoped-mute-48) and [the wire con
 ## Family flag qualification (#49)
 
 US #49 introduced snapshot ABI 4 with a 127824-byte transfer and 344-byte track rows.
-Its independent six-bit `known` mask replaced the grouped requested bit. US #39 now
-requires **primitive ABI 2, executor ABI 9, command ABI 7 and snapshot ABI 5**:
-140496-byte transfers with 392-byte track rows. Recompile every trusted C caller.
-`STATE_V5` / `MPC_ADAPTER_STATE_V5` reject older transfers; the primitive
+Its independent six-bit `known` mask replaced the grouped requested bit. US #40 now
+requires **primitive ABI 2, executor ABI 10, command ABI 8 and snapshot ABI 6**:
+140552-byte transfers with 392-byte track rows. Recompile every trusted C caller.
+`STATE_V6` / `MPC_ADAPTER_STATE_V6` reject older transfers; the primitive
 attachment tag is `MPC_ADAPTER_V2`. The exported symbol set is unchanged.
 
 The validated firmware profile generates `mpc_family_profile.h` for the adapter,
@@ -388,3 +388,19 @@ addresses never become public write targets. See [mixer findings](../../findings
 and the [managed contract](COMMANDS.md) for eligibility and completion limits.
 
 US #54 adds actual Read pan writes and pan filter/source fences without changing public C layouts. See [qualification and native automation behavior](../../findings/native-automation-read-pan.md).
+
+
+## US #40 ABI and queue boundary
+
+Current layouts are primitive 2 / executor 10 / command 8 / snapshot 6 /
+observation 2. STATE_V6 rejects older private transfers. Navigation uses the
+application-owned AsyncSequencer through native firmware captures. No adapter
+callback executes on the realtime thread. A pending native counter is part of
+completion evidence; a matching model before native drain is insufficient.
+Play Start has a retained locate-then-play phase and accepts stopped playback
+only. See [COMMANDS.md](COMMANDS.md#transport-and-navigation-us-40) and
+[device evidence](../../findings/native-transport-navigation.md).
+
+Sequence listener slots 2 and 3 still retire destructive generations. Slot 4
+is the traced BPM metadata notification and preserves a Sequence reference;
+Clear All emits slots 2/3 as well, including unchanged unused sequences.

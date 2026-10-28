@@ -69,8 +69,9 @@ static bool canonical(const struct mpc_command_request *a, const struct mpc_comm
     !memcmp(a->sequence.instance_id, b->sequence.instance_id, 37) &&
     !memcmp(a->target.instance_id, b->target.instance_id, 37) && a->value == b->value &&
     a->has_expected == b->has_expected && (!a->has_expected || a->expected == b->expected) &&
-    a->start_within_ms == b->start_within_ms && a->mixer.generation == b->mixer.generation &&
-    a->mixer.index == b->mixer.index && a->mixer.value == b->mixer.value &&
+    a->pulse == b->pulse && a->bpm == b->bpm && a->start_within_ms == b->start_within_ms &&
+    a->mixer.generation == b->mixer.generation && a->mixer.index == b->mixer.index &&
+    a->mixer.value == b->mixer.value &&
     (!a->has_expected || a->mixer.expected == b->mixer.expected);
 }
 static void finish(
@@ -94,8 +95,24 @@ static const struct mpc_command_track *target_track(const struct mpc_command_rec
   return NULL;
 }
 static bool verified(const struct mpc_command_receipt *receipt) {
-  const struct mpc_command_track *track = target_track(receipt);
   unsigned property = receipt->request.operation;
+  if (property >= MPC_COMMAND_PLAY) {
+    const struct mpc_navigation_state *state = &receipt->navigation_after;
+    if (!state->known)
+      return false;
+    if (property == MPC_COMMAND_SELECT_TRACK)
+      return state->selected_track == receipt->request.target.track;
+    if (state->selected_sequence != receipt->request.sequence.sequence)
+      return false;
+    if (property == MPC_COMMAND_SEQUENCE_BPM)
+      return state->sequence_bpm == (float)receipt->request.bpm;
+    if (property == MPC_COMMAND_LOCATE)
+      return state->pulse == receipt->request.pulse;
+    if (property == MPC_COMMAND_SELECT_SEQUENCE)
+      return true;
+    return state->playing == (property != MPC_COMMAND_STOP);
+  }
+  const struct mpc_command_track *track = target_track(receipt);
   if (!track)
     return false;
   if (property >= MPC_COMMAND_VOLUME) {
@@ -172,7 +189,9 @@ static void advance(struct mpc_commands *commands, struct record *record) {
       return;
     }
     struct mpc_executor_request request = {
-      .operation = record->verifying ? MPC_EXECUTOR_COMMAND_OBSERVE
+      .operation = receipt->request.operation >= MPC_COMMAND_PLAY
+        ? (record->verifying ? MPC_EXECUTOR_COMMAND_OBSERVE : MPC_EXECUTOR_COMMAND_NAVIGATION)
+        : record->verifying ? MPC_EXECUTOR_COMMAND_OBSERVE
         : receipt->request.operation >= MPC_COMMAND_VOLUME
         ? MPC_EXECUTOR_COMMAND_MIXER
         : (enum mpc_executor_operation)(MPC_EXECUTOR_COMMAND_MUTE + receipt->request.operation),
@@ -186,6 +205,8 @@ static void advance(struct mpc_commands *commands, struct record *record) {
       .has_expected = receipt->request.has_expected,
       .expected = receipt->request.expected,
       .mixer = receipt->request.mixer,
+      .pulse = receipt->request.pulse,
+      .bpm = receipt->request.bpm,
       .queue_timeout_ms =
         record->verifying ? MPC_COMMAND_VERIFICATION_MS : (unsigned)(record->start_deadline - now),
       .command_property = receipt->request.operation,
@@ -255,6 +276,9 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     }
     if (!record->verifying)
       record->verify_deadline = result.command->dispatched_ms + MPC_COMMAND_VERIFICATION_MS;
+    if (!record->verifying)
+      receipt->navigation_before = result.command->navigation_before;
+    receipt->navigation_after = result.command->navigation_after;
     if (result.command->before_known && !record->verifying) {
       receipt->before = result.command->before;
       receipt->before_known = true;
@@ -288,7 +312,8 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     return;
   }
   if (
-    receipt->request.operation >= MPC_COMMAND_VOLUME && receipt->before_known &&
+    receipt->request.operation >= MPC_COMMAND_VOLUME &&
+    receipt->request.operation < MPC_COMMAND_PLAY && receipt->before_known &&
     receipt->after_known) {
     double before, after;
     const struct mpc_command_track *a = NULL, *b = target_track(receipt);
@@ -312,6 +337,12 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     }
   }
   if (readbacks_consistent && verified(receipt)) {
+    if (receipt->request.operation >= MPC_COMMAND_PLAY) {
+      /* Invocation alone does not prove a queued operation changed state.
+       * Before/desired comparisons already filtered native no-ops at dispatch. */
+      receipt->changed_known = true;
+      receipt->changed = receipt->native_invoked;
+    }
     receipt->execution = MPC_COMMAND_COMPLETED; /* Includes verified native no-ops. */
     finish(commands, record, MPC_COMMAND_APPLIED, MPC_NATIVE_OK);
     return;
@@ -443,8 +474,8 @@ enum mpc_native_error mpc_commands_submit(
   memset(output, 0, sizeof *output);
   if (
     !identifier(input->request_id) || !instance(input->target.instance_id) ||
-    !input->target.project || !input->target.track ||
-    (unsigned)input->operation > MPC_COMMAND_INSERT ||
+    !input->target.project || (input->operation < MPC_COMMAND_PLAY && !input->target.track) ||
+    (unsigned)input->operation > MPC_COMMAND_SEQUENCE_BPM ||
     input->start_within_ms > MPC_COMMAND_MAX_START_MS)
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (
@@ -454,9 +485,11 @@ enum mpc_native_error mpc_commands_submit(
       memcmp(input->sequence.instance_id, input->target.instance_id, 37) ||
       input->sequence.project != input->target.project || !input->sequence.sequence ||
       !input->sequence.generation)) ||
-    (input->mute_scope == MPC_MUTE_GLOBAL &&
+    (input->operation < MPC_COMMAND_PLAY && input->mute_scope == MPC_MUTE_GLOBAL &&
      (input->sequence.instance_id[0] || input->sequence.project || input->sequence.sequence ||
       input->sequence.generation)))
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  if (!mpc_navigation_request_valid(input))
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (!mpc_mixer_request_valid(input->operation, &input->mixer, input->has_expected))
     return MPC_NATIVE_INVALID_ARGUMENT;

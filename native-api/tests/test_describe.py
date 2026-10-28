@@ -369,7 +369,7 @@ class DescribeTests(unittest.TestCase):
                                 or f"{state['tag']} {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
                             )
                             client.sendall(payload)
-                        elif data.startswith(b"STATE_V5 "):
+                        elif data.startswith(b"STATE_V6 "):
                             if state.get("stall_state"):
                                 state["state_idle"].clear()
                                 finished.wait(0.3)
@@ -410,7 +410,7 @@ class DescribeTests(unittest.TestCase):
                                 struct.pack_into("<I4xQ", wire, 140480, 1, 0)
                             if state.get("bad_abi"):
                                 struct.pack_into("<I", wire, 0, 99)
-                            payload = struct.pack("<III", 5, len(wire), state.get("error", 0))
+                            payload = struct.pack("<III", 6, len(wire), state.get("error", 0))
                             if not state.get("error"):
                                 payload += wire
                             if state.get("truncate"):
@@ -443,7 +443,7 @@ class DescribeTests(unittest.TestCase):
         wire = subprocess.run(
             [str(fixture), "--snapshot-wire"], check=True, capture_output=True
         ).stdout
-        attachment.update(tag="MPC_ADAPTER_STATE_V5", wire=wire)
+        attachment.update(tag="MPC_ADAPTER_STATE_V6", wire=wire)
 
     def test_snapshot_operations_share_fresh_observations_and_handles(self):
         with self.attachment() as attachment:

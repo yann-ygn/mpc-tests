@@ -6,7 +6,7 @@
 #include "mpc_state.h"
 #include "mpc_observation.h"
 
-#define MPC_COMMANDS_ABI 7u
+#define MPC_COMMANDS_ABI 8u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u
@@ -27,7 +27,14 @@ enum mpc_command_operation {
   MPC_COMMAND_PAN,
   MPC_COMMAND_SEND,
   MPC_COMMAND_RACK,
-  MPC_COMMAND_INSERT
+  MPC_COMMAND_INSERT,
+  MPC_COMMAND_PLAY,
+  MPC_COMMAND_STOP,
+  MPC_COMMAND_PLAY_START,
+  MPC_COMMAND_LOCATE,
+  MPC_COMMAND_SELECT_TRACK,
+  MPC_COMMAND_SELECT_SEQUENCE,
+  MPC_COMMAND_SEQUENCE_BPM
 };
 enum mpc_command_status {
   MPC_COMMAND_ACCEPTED,
@@ -56,6 +63,9 @@ struct mpc_command_request {
   struct mpc_command_sequence sequence;
   bool value, has_expected, expected;
   struct mpc_mixer_request mixer;
+  /* Absolute native pulses; LOCATE only. No relative or toggle operations. */
+  int64_t pulse;
+  double bpm; /* SEQUENCE_BPM only: stored sequence BPM, independent of effective tempo. */
   /* Observation revisions cannot be transaction preconditions. Reject before
    * acceptance rather than silently ignoring a caller's requested safeguard. */
   bool has_expected_revision;
@@ -103,6 +113,7 @@ struct mpc_command_receipt {
   bool native_known, native_invoked, changed_known, changed;
   bool before_known, after_known;
   struct mpc_command_observation before, after;
+  struct mpc_navigation_state navigation_before, navigation_after;
   /* Monotonic milliseconds, private to the authority's lifetime. Wire timings
    * are durations, never wall-clock or audio/sample scheduling timestamps.
    * Zero means the corresponding stage has not been observed. */

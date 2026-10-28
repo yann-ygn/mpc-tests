@@ -333,3 +333,27 @@ before running experiments.
   backup bytes are unchanged. Installed 0.13.0 is ready/OK. See
   `findings/native-pan-installed-20261028.json`. Future installs/restarts still
   require owner approval.
+
+
+- US #40, branch `us-40-transport-navigation`: package 0.14.0 adds native queued
+  play/stop, stopped-only staged Play Start/absolute locate, Track/Sequence identity
+  selection and stored sequence BPM. Direct UI core/controller prototypes caused
+  four automatic SEGV recoveries in the disposable project; they are excluded.
+  Native AsyncSequencer owns all audio captures; pending drain and model readback
+  govern completion. Play Start observes zero/stopped before its sole play phase.
+  Command 8 / executor 10 / snapshot 6 and STATE_V6 require C callers to rebuild;
+  primitive/observation remain 2. BPM metadata callback slot 4 preserves Sequence
+  generations; destructive slots 2/3 still retire them. Record/pending record,
+  Song and external transport are gated; generic/effective tempo, queued sequence,
+  record/count-in and punch controls remain unavailable. Punch has no qualified
+  live receiver; its compiled registration was not invoked.
+  24 host, 19 ASan/UBSan and eight ARM entries pass. 155 base matrix rows and
+  the final 42-row staged-start matrix cover Main, all Mixer pages and Track Mute;
+  master-enabled playback, record/count-in and configured Clock/MTC/Link gates
+  are independently checked. The queued implementation did not restart MPC.
+  Backup reloaded; old references reject. All original flags/mixers/automation,
+  selection, tempo, zero playhead, recording Off and persisted settings are restored;
+  all backup hashes are unchanged. Original native Menu context 0x2084/0x3100
+  (over Track View) is restored. Labs unloaded and installed 0.13.0 resumed ready;
+  0.14.0 is not installed. See `findings/native-transport-navigation.md` and its
+  sanitized proof. The US40 backup/disposable copies remain in Claude Experiments.

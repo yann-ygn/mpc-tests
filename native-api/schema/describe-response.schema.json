@@ -735,6 +735,27 @@
             },
             "set_insert_enabled": {
               "$ref": "#/$defs/capability"
+            },
+            "play": {
+              "$ref": "#/$defs/navigationCapability"
+            },
+            "stop": {
+              "$ref": "#/$defs/navigationCapability"
+            },
+            "play_start": {
+              "$ref": "#/$defs/navigationCapability"
+            },
+            "locate": {
+              "$ref": "#/$defs/navigationCapability"
+            },
+            "select_track": {
+              "$ref": "#/$defs/navigationCapability"
+            },
+            "select_sequence": {
+              "$ref": "#/$defs/navigationCapability"
+            },
+            "set_sequence_bpm": {
+              "$ref": "#/$defs/navigationCapability"
             }
           },
           "additionalProperties": {
@@ -817,7 +838,7 @@
               "const": 128
             },
             "snapshotAbiVersion": {
-              "const": 5
+              "const": 6
             },
             "maxJobsPerUiCallback": {
               "enum": [
@@ -922,6 +943,97 @@
       "allOf": [
         {
           "$ref": "#/$defs/capability"
+        }
+      ]
+    },
+    "navigationCapability": {
+      "type": "object",
+      "required": [
+        "available",
+        "reason",
+        "verification",
+        "conditions",
+        "viewIndependent",
+        "requestReplay"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verification": {
+          "const": [
+            "model"
+          ]
+        },
+        "viewIndependent": {
+          "const": true
+        },
+        "requestReplay": {
+          "const": "retained_result"
+        },
+        "conditions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleAccurate": {
+          "const": false
+        },
+        "quantizedScheduling": {
+          "const": false
+        },
+        "queuedSelection": {
+          "const": false
+        },
+        "tempoScope": {
+          "const": "stored_sequence_bpm"
+        },
+        "effectiveTempoKnown": {
+          "const": false
+        },
+        "minimum": {
+          "const": 20
+        },
+        "maximum": {
+          "const": 999
+        },
+        "quantization": {
+          "const": "ieee_binary32"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "available": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
         }
       ]
     }

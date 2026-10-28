@@ -36,7 +36,7 @@
       "id": "10",
       "generation": "10",
       "index": 0,
-      "name": "Live \"é\"\n",
+      "name": "Live \"\u00e9\"\n",
       "used": true,
       "bpm": 123.5,
       "bpmSource": "sequence_property",
@@ -55,7 +55,7 @@
         "id": "10",
         "generation": "10",
         "index": 0,
-        "name": "Live \"é\"\n",
+        "name": "Live \"\u00e9\"\n",
         "used": true,
         "bpm": 123.5,
         "bpmSource": "sequence_property",
@@ -71,7 +71,13 @@
       "effectiveBpm": null,
       "tempoSource": null,
       "playing": null,
-      "recording": null
+      "recording": null,
+      "recordMode": null,
+      "pulse": null,
+      "sequenceBpm": null,
+      "masterBpm": null,
+      "masterTempoEnabled": null,
+      "queuedSequenceId": null
     },
     "tracks": [
       {
@@ -83,7 +89,7 @@
         "generation": "2",
         "kind": "track",
         "index": 0,
-        "name": "Live \"é\"\n",
+        "name": "Live \"\u00e9\"\n",
         "collection": "midi_triggered",
         "uiIndex": 0,
         "type": "plugin",
@@ -250,7 +256,13 @@
       "transport.effectiveBpm",
       "transport.tempoSource",
       "transport.playing",
-      "transport.recording"
+      "transport.recording",
+      "transport.recordMode",
+      "transport.pulse",
+      "transport.sequenceBpm",
+      "transport.masterBpm",
+      "transport.masterTempoEnabled",
+      "transport.queuedSequenceId"
     ]
   }
 }

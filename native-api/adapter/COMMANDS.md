@@ -1,7 +1,7 @@
 # Native command handlers (#19)
 
 `libmpc_native.so` now provides the transport-independent command API in
-[`mpc_commands.h`](include/mpc_commands.h), ABI 7. It runs on executor ABI 9 and primitive adapter ABI 2.
+[`mpc_commands.h`](include/mpc_commands.h), ABI 8. It runs on executor ABI 10 and primitive adapter ABI 2.
 The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
 The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
@@ -224,7 +224,7 @@ carry scope and the active sequence's generation; verification must match both. 
 relationship after invocation remains unknown with actual invocation/execution metadata.
 There is no inactive-sequence setter and no implicit selection change.
 
-Use command ABI 7, executor ABI 9, snapshot ABI 5 and primitive ABI 2 together.
+Use command ABI 8, executor ABI 10, snapshot ABI 6 and primitive ABI 2 together.
 Older layouts are rejected at open/transfer or receipt serialization. The export set
 is unchanged.
 The [public service guide](../README.md#sequence-scoped-mute) defines wire shapes and errors.
@@ -316,3 +316,48 @@ Snapshots/observations use ABI 5/2. `MPC_EXECUTOR_SAMPLE_CONTROLS` aliases the
 historical `SAMPLE_FLAGS` operation and includes independent `mixer.known` fields.
 
 US #54 extends the same Read source fences to pan, including its native float filter capture. See [pan qualification](../../findings/native-automation-read-pan.md).
+
+
+## Transport and navigation (US #40)
+
+Package 0.14.0 uses command ABI 8, executor ABI 10 and snapshot ABI 6 / STATE_V6.
+Primitive ABI 2 and observation ABI 2 stay unchanged. Rebuild both ends of C and
+private snapshot integrations. See [qualification and firmware paths](../../findings/native-transport-navigation.md).
+
+`play` and `stop` are desired states, never toggles. `locate` is an absolute pulse
+position. `select_track` uses a current Track incarnation; `select_sequence` uses
+an explicit Sequence ID plus generation. Every other navigation request also
+requires its active sequence reference. Numeric UI indices are discovery data,
+never write authority. Sequence selection is stopped-only; no next-sequence
+queue is exposed. `play_start` is a stopped-only action: enqueue locate zero,
+observe stopped/zero with the native queue drained, then enqueue play once.
+
+Play, stop and locate use MPC's AsyncSequencer, whose own captures execute on
+its audio queue. The UI executor never mutates the core Sequencer event vectors.
+Completion requires native queue drain plus the requested model state. During
+Play Start verification, one retained phase may enqueue the still-unexecuted
+play step after zero is observed; all subsequent passes are read-only. A timeout
+or shutdown may leave a partial locate, reported unknown. No retries replay the
+action or any phase. Retention is finite: use `get_command` and the original
+request ID while it is retained; a new request ID authorizes a new action.
+
+`set_sequence_bpm` means stored sequence BPM, in [20,999], rounded to binary32.
+It is stopped-only and requires a used active sequence, a native filter and the
+notifying property setter. It does not claim an effective tempo change. Master
+BPM/enabled are separate model observations; effective BPM, tempo source and
+queued selection remain unsupported. External/unknown transport sources, Song
+mode, live or pending record/overdub, modal popups and unstable context reject.
+All navigation operates independently of the view, with context fenced across
+execution and completion; Main, five Mixer pages and Track Mute form the device
+qualification matrix. Menu is permitted; other popups are not.
+
+Requests omit `value`, `expected`, mixer fields and mute scope. Except
+`select_track`, the target has only instance/project IDs and `sequence` carries
+its complete reference. Locate additionally requires `pulse`, a canonical
+decimal string from 0 through 2147483647. BPM additionally requires numeric `bpm`.
+Receipts keep the normal lifecycle/timing/replay fields and add
+`verification.transport` with playing, record mode, pulse, selected public IDs
+and sequence BPM. `verification.by` is model only, without acoustic or sample
+scheduling guarantees. Flag/mixer side effects remain in `observedChanges`.
+Transport observations are full-snapshot/receipt fields; the lightweight watch
+change sampler still covers flags and mixer values, not a playhead stream.

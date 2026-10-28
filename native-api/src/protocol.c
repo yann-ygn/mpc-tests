@@ -182,7 +182,9 @@ char *api_respond(
     !strcmp(op, "set_mute") || !strcmp(op, "set_solo") || !strcmp(op, "set_record_armed") ||
     !strcmp(op, "set_volume") || !strcmp(op, "set_pan") || !strcmp(op, "set_send_level") ||
     !strcmp(op, "set_insert_rack_enabled") || !strcmp(op, "set_insert_enabled") ||
-    !strcmp(op, "get_command")) {
+    !strcmp(op, "play") || !strcmp(op, "stop") || !strcmp(op, "play_start") ||
+    !strcmp(op, "locate") || !strcmp(op, "select_track") || !strcmp(op, "select_sequence") ||
+    !strcmp(op, "set_sequence_bpm") || !strcmp(op, "get_command")) {
     if (!discovery.commands_ready)
       return api_error("NOT_READY", "Command authority is unavailable; consult describe");
     return command_reply(api, caller, &parsed, delivery);
@@ -240,7 +242,10 @@ char *api_respond(
       ? "[\"track.uiIndex\",\"track.collection\",\"track.index\",\"track.name\",\"track.type\","
         "\"track.requested\",\"track.audioSide.soloed\",\"track."
         "audioSide.recordArmed\",\"track.silenced\",\"sequence.name\",\"sequence.used\",\"sequence."
-        "bpm\",\"muteContext\",\"sequence.ref\",\"selection\",\"buses.metadata\",\"track.mixer\"]"
+        "bpm\",\"muteContext\",\"sequence.ref\",\"selection\",\"buses.metadata\",\"track.mixer\","
+        "\"transport.playing\",\"transport.recording\",\"transport.recordMode\",\"transport."
+        "pulse\",\"transport.sequenceBpm\",\"transport.masterBpm\",\"transport."
+        "masterTempoEnabled\"]"
       : "[]",
     output);
   fputs(",\"flagFamilies\":[", output);
@@ -357,6 +362,38 @@ char *api_respond(
       fputs(",\"centre\":0.5", output);
     if (i == 2 || i == 4)
       fputs(",\"indexBase\":0,\"indexCount\":4", output);
+    fputc('}', output);
+  }
+  static const char *navigation[] =
+    {"play", "stop", "play_start", "locate", "select_track", "select_sequence", "set_sequence_bpm"};
+  for (unsigned i = 0; i < 7; i++) {
+    fputc(',', output);
+    api_quoted(output, navigation[i]);
+    fprintf(output, ":{\"available\":%s,\"reason\":", discovery.commands_ready ? "true" : "false");
+    api_quoted(output, discovery.commands_ready ? NULL : discovery.unavailable_reason);
+    fputs(
+      ",\"verification\":[\"model\"],\"viewIndependent\":true,\"conditions\":[\"stable_view\","
+      "\"no_popup_or_menu\",\"recording_off\",\"sequence_mode\",",
+      output);
+    api_quoted(output, i == 4 ? "current_track_incarnation" : "explicit_sequence_generation");
+    fputs(
+      ",\"local_transport_source\",\"transport_controller_ready\",\"native_transport_queue_idle\"",
+      output);
+    if (i == 2 || i == 3 || i >= 5)
+      fputs(",\"stopped\"", output);
+    if (i == 6)
+      fputs(",\"used_sequence\"", output);
+    fputs(
+      "],\"sampleAccurate\":false,\"quantizedScheduling\":false,\"requestReplay\":\"retained_"
+      "result\"",
+      output);
+    if (i == 5)
+      fputs(",\"queuedSelection\":false", output);
+    if (i == 6)
+      fputs(
+        ",\"tempoScope\":\"stored_sequence_bpm\",\"effectiveTempoKnown\":false,"
+        "\"minimum\":20,\"maximum\":999,\"quantization\":\"ieee_binary32\"",
+        output);
     fputc('}', output);
   }
   fprintf(

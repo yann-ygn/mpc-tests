@@ -3,6 +3,7 @@
 #include "mpc_family_profile.h"
 
 #include <errno.h>
+#include <math.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -122,7 +123,9 @@ static enum mpc_native_error resolve_target(
 static enum mpc_native_error qualify_command(struct mpc_executor *executor) {
   unsigned stage = mpc_ui_enter(executor->adapter, MPC_UI_POLICY);
   executor->qualifying = true;
-  if (executor->command_property >= MPC_COMMAND_VOLUME) {
+  if (
+    executor->command_property >= MPC_COMMAND_VOLUME &&
+    executor->command_property < MPC_COMMAND_PLAY) {
     enum mpc_native_error error = mpc_identity_mixer(
       executor->registry,
       &executor->identity,
@@ -161,6 +164,192 @@ static enum mpc_native_error revalidate(void *data, const struct mpc_native_targ
     return MPC_NATIVE_STALE_TARGET;
   return executor->command_context && !executor->qualifying ? qualify_command(executor)
                                                             : MPC_NATIVE_OK;
+}
+
+static struct mpc_executor_result navigation_execute(
+  struct mpc_executor *executor,
+  const struct mpc_executor_request *input,
+  struct mpc_command_native_result *out) {
+  struct mpc_executor_result result = {.state = MPC_EXECUTOR_COMPLETED, .command = out};
+  struct timespec now, dispatched;
+  clock_gettime(CLOCK_MONOTONIC, &dispatched);
+  now = dispatched;
+  executor->adapter->profile = &out->profile;
+  unsigned stage = mpc_ui_enter(executor->adapter, MPC_UI_OTHER);
+  out->dispatched_ms = (uint64_t)now.tv_sec * 1000 + (uint64_t)now.tv_nsec / 1000000;
+  struct mpc_executor_identity identity = input->identity;
+  struct mpc_navigation_context before, current;
+  struct mpc_navigation_state state;
+  uint32_t target, checked;
+  bool writing = input->operation != MPC_EXECUTOR_COMMAND_OBSERVE;
+  out->readbacks_consistent = true;
+  result.error = mpc_identity_navigation(
+    executor->registry,
+    &identity,
+    input->command_property,
+    true,
+    &before,
+    &state,
+    &target);
+  if (result.error)
+    goto done;
+  if (out->context_known) {
+    struct mpc_navigation_context expected = out->context.navigation;
+    if (input->command_property <= MPC_COMMAND_PLAY_START)
+      expected.playing = before.playing;
+    if (input->command_property == MPC_COMMAND_SELECT_SEQUENCE) {
+      expected.sequence = before.sequence;
+      expected.sequence_used = before.sequence_used;
+      memcpy(expected.tempo_filter, before.tempo_filter, sizeof expected.tempo_filter);
+    }
+    if (memcmp(&expected, &before, sizeof before)) {
+      result.error = MPC_NATIVE_STATE_UNSTABLE;
+      goto done;
+    }
+  }
+  out->context.navigation = before;
+  out->context_known = true;
+  if (writing)
+    out->navigation_before = state;
+  executor->identity = identity;
+  executor->active = executor->qualifying = true;
+  executor->command_context = out;
+  executor->command_property = (enum mpc_command_operation)input->command_property;
+  result.error = executor->command_policy.qualify ? executor->command_policy.qualify(
+                                                      executor->command_policy.userdata,
+                                                      executor->command_property)
+                                                  : MPC_NATIVE_NOT_READY;
+  executor->active = executor->qualifying = false;
+  if (result.error)
+    goto done;
+  if (writing) {
+    result.error =
+      mpc_identity_flags(executor->registry, 0, MPC_IDENTITY_MAX_TRACKS, 0, &out->before);
+    if (result.error)
+      goto done;
+    out->before_known = true;
+  }
+  result.error = mpc_identity_navigation(
+    executor->registry,
+    &identity,
+    input->command_property,
+    false,
+    &current,
+    &state,
+    &checked);
+  if (!result.error && (memcmp(&before, &current, sizeof before) || target != checked))
+    result.error = MPC_NATIVE_STATE_UNSTABLE;
+  if (result.error)
+    goto done;
+  if (writing && input->command_property == MPC_COMMAND_PLAY_START && current.playing) {
+    result.error = MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED;
+    goto done;
+  }
+  bool noop = input->command_property == MPC_COMMAND_PLAY ? state.playing != 0
+    : input->command_property == MPC_COMMAND_STOP         ? !state.playing
+    : input->command_property == MPC_COMMAND_SEQUENCE_BPM ? state.sequence_bpm == (float)input->bpm
+    : input->command_property == MPC_COMMAND_LOCATE       ? state.pulse == input->pulse
+    : input->command_property == MPC_COMMAND_SELECT_TRACK ? state.selected_track == identity.track
+    : input->command_property == MPC_COMMAND_SELECT_SEQUENCE
+    ? state.selected_sequence == identity.sequence
+    : false;
+  if (writing && !mpc_navigation_idle(executor->adapter, &current)) {
+    result.error = MPC_NATIVE_NOT_READY;
+    goto done;
+  }
+  if (writing && !noop) {
+    if (!executor->adapter->io.navigate) {
+      result.error = MPC_NATIVE_NOT_READY;
+      goto done;
+    }
+    if (input->command_property == MPC_COMMAND_PLAY_START) {
+      /* First enqueue locate. A later, fenced UI pass may enqueue play only
+       * after native queue drain and an exact zero-pulse stopped readback. */
+      result.error = mpc_navigation_invoke(
+        executor->adapter,
+        &current,
+        MPC_COMMAND_LOCATE,
+        target,
+        0,
+        0,
+        &result.write.native_invoked);
+      out->context.navigation_step = 1;
+    } else
+      result.error = mpc_navigation_invoke(
+        executor->adapter,
+        &current,
+        input->command_property,
+        target,
+        input->pulse,
+        input->bpm,
+        &result.write.native_invoked);
+    if (result.error)
+      goto done;
+  }
+  if (
+    !writing && input->command_property == MPC_COMMAND_PLAY_START &&
+    out->context.navigation_step == 1 && mpc_navigation_idle(executor->adapter, &current)) {
+    if (state.playing) {
+      result.error = MPC_NATIVE_STATE_UNSTABLE;
+      goto done;
+    }
+    if (!state.pulse) {
+      /* This is the command's sole remaining invocation, never a retry of the
+       * locate or a previous play. The retained step survives worker passes. */
+      result.error = mpc_navigation_invoke(
+        executor->adapter,
+        &current,
+        MPC_COMMAND_PLAY,
+        target,
+        0,
+        0,
+        &result.write.native_invoked);
+      out->context.navigation_step = 2;
+      if (result.error)
+        goto done;
+    }
+  }
+  result.write.changed_known = writing && noop;
+  result.write.changed = false;
+  result.error = mpc_identity_navigation(
+    executor->registry,
+    &identity,
+    input->command_property,
+    false,
+    &current,
+    &out->navigation_after,
+    &checked);
+  if (result.error)
+    goto done;
+  /* Native operations may change playing/selection; ownership must survive.
+   * All other policy changes after invocation retain uncertainty. */
+  if (input->command_property <= MPC_COMMAND_PLAY_START)
+    before.playing = current.playing;
+  if (input->command_property == MPC_COMMAND_SELECT_SEQUENCE) {
+    before.sequence = current.sequence;
+    before.sequence_used = current.sequence_used;
+    memcpy(before.tempo_filter, current.tempo_filter, sizeof before.tempo_filter);
+  }
+  if (memcmp(&before, &current, sizeof before) || target != checked) {
+    result.error = MPC_NATIVE_STATE_UNSTABLE;
+    goto done;
+  }
+  out->readbacks_consistent = mpc_navigation_idle(executor->adapter, &current) &&
+    (input->command_property != MPC_COMMAND_PLAY_START || out->context.navigation_step == 2);
+  out->context.navigation = current;
+  result.error = mpc_identity_flags(executor->registry, 0, MPC_IDENTITY_MAX_TRACKS, 0, &out->after);
+  out->after_known = !result.error;
+done:
+  executor->active = executor->qualifying = false;
+  executor->command_context = NULL;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  out->finished_ms = (uint64_t)now.tv_sec * 1000 + (uint64_t)now.tv_nsec / 1000000;
+  mpc_ui_leave(executor->adapter, stage);
+  executor->adapter->profile = NULL;
+  out->ui_work_us =
+    ((uint64_t)(now.tv_sec - dispatched.tv_sec) * 1000000000 + now.tv_nsec - dispatched.tv_nsec) /
+    1000;
+  return result;
 }
 
 static struct mpc_executor_result command_execute(
@@ -318,6 +507,11 @@ static struct mpc_executor_result execute(
   struct mpc_state_snapshot *snapshot,
   struct mpc_command_native_result *command,
   struct mpc_command_observation *flags) {
+  if (
+    request->operation == MPC_EXECUTOR_COMMAND_NAVIGATION ||
+    (request->operation == MPC_EXECUTOR_COMMAND_OBSERVE &&
+     request->command_property >= MPC_COMMAND_PLAY))
+    return navigation_execute(executor, request, command);
   if (request->operation >= MPC_EXECUTOR_COMMAND_MUTE)
     return command_execute(executor, request, command);
   struct mpc_executor_result result = {.state = MPC_EXECUTOR_COMPLETED};
@@ -381,6 +575,7 @@ static struct mpc_executor_result execute(
     case MPC_EXECUTOR_COMMAND_ARM:
     case MPC_EXECUTOR_COMMAND_OBSERVE:
     case MPC_EXECUTOR_COMMAND_MIXER:
+    case MPC_EXECUTOR_COMMAND_NAVIGATION:
       break;
     }
     if (request->operation != MPC_EXECUTOR_READ_TRACK)
@@ -755,18 +950,39 @@ enum mpc_native_error mpc_executor_command_submit(
     return MPC_NATIVE_INVALID_ARGUMENT;
   *output = NULL;
   if (
-    !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_COMMAND_MIXER ||
+    !executor || !request || (unsigned)request->operation > MPC_EXECUTOR_COMMAND_NAVIGATION ||
     request->queue_timeout_ms > MPC_EXECUTOR_MAX_WAIT_MS ||
     (request->operation == MPC_EXECUTOR_SAMPLE_FLAGS &&
      (request->sample_count > MPC_EXECUTOR_SAMPLE_TRACKS ||
       request->sample_offset > MPC_IDENTITY_MAX_TRACKS)) ||
     ((request->operation == MPC_EXECUTOR_COMMAND_OBSERVE ||
-      request->operation == MPC_EXECUTOR_COMMAND_MIXER) &&
-     request->command_property > MPC_COMMAND_INSERT))
+      request->operation == MPC_EXECUTOR_COMMAND_MIXER ||
+      request->operation == MPC_EXECUTOR_COMMAND_NAVIGATION) &&
+     request->command_property > MPC_COMMAND_SEQUENCE_BPM))
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  if (
+    (request->operation == MPC_EXECUTOR_COMMAND_NAVIGATION &&
+     request->command_property < MPC_COMMAND_PLAY) ||
+    (request->operation == MPC_EXECUTOR_COMMAND_MIXER &&
+     (request->command_property < MPC_COMMAND_VOLUME ||
+      request->command_property > MPC_COMMAND_INSERT)))
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  if (
+    (request->operation == MPC_EXECUTOR_COMMAND_NAVIGATION ||
+     request->operation == MPC_EXECUTOR_COMMAND_OBSERVE) &&
+    request->command_property >= MPC_COMMAND_PLAY &&
+    (request->mute_scope || request->desired || request->has_expected || request->expected ||
+     (request->command_property == MPC_COMMAND_LOCATE
+        ? request->pulse < 0 || request->pulse > INT32_MAX
+        : request->pulse != 0) ||
+     (request->command_property == MPC_COMMAND_SEQUENCE_BPM
+        ? !isfinite(request->bpm) || request->bpm < 20 || request->bpm > 999
+        : request->bpm != 0)))
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (request->operation >= MPC_EXECUTOR_COMMAND_MUTE) {
     unsigned property = (request->operation == MPC_EXECUTOR_COMMAND_OBSERVE ||
-                         request->operation == MPC_EXECUTOR_COMMAND_MIXER)
+                         request->operation == MPC_EXECUTOR_COMMAND_MIXER ||
+                         request->operation == MPC_EXECUTOR_COMMAND_NAVIGATION)
       ? request->command_property
       : (unsigned)(request->operation - MPC_EXECUTOR_COMMAND_MUTE);
     if (
@@ -775,7 +991,7 @@ enum mpc_native_error mpc_executor_command_submit(
       (request->mute_scope == MPC_MUTE_SEQUENCE &&
        (property != MPC_COMMAND_MUTE || !request->identity.sequence ||
         !request->identity.sequence_generation)) ||
-      (request->mute_scope == MPC_MUTE_GLOBAL &&
+      (property < MPC_COMMAND_PLAY && request->mute_scope == MPC_MUTE_GLOBAL &&
        (request->identity.sequence || request->identity.sequence_generation)))
       return MPC_NATIVE_INVALID_ARGUMENT;
   }
@@ -966,6 +1182,23 @@ mpc_executor_qualify_command(struct mpc_executor *executor, enum mpc_command_ope
     return MPC_NATIVE_WRONG_THREAD;
   if (!executor->active || !executor->registry)
     return MPC_NATIVE_NOT_READY;
+  if (operation >= MPC_COMMAND_PLAY) {
+    if (
+      !executor->command_context || !executor->qualifying ||
+      operation != executor->command_property)
+      return MPC_NATIVE_NOT_READY;
+    struct mpc_navigation_context context;
+    struct mpc_navigation_state state;
+    uint32_t target;
+    return mpc_identity_navigation(
+      executor->registry,
+      &executor->identity,
+      operation,
+      false,
+      &context,
+      &state,
+      &target);
+  }
   struct mpc_native_target target;
   enum mpc_native_error error = resolve_target(executor, &executor->identity, &target);
   if (error)

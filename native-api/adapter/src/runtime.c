@@ -77,6 +77,20 @@ static bool on_ui_thread(void *data) {
   return syscall(SYS_gettid) == getpid();
 }
 
+static enum mpc_native_error
+navigate(void *data, unsigned op, uintptr_t function, uintptr_t receiver, int64_t value) {
+  (void)data;
+  if (op == MPC_COMMAND_PLAY || op == MPC_COMMAND_STOP || op == MPC_COMMAND_PLAY_START)
+    ((void (*)(void *, bool))function)((void *)receiver, value != 0);
+  else if (op == MPC_COMMAND_LOCATE)
+    ((void (*)(void *, int64_t))function)((void *)receiver, value);
+  else if (op == MPC_COMMAND_SELECT_TRACK || op == MPC_COMMAND_SELECT_SEQUENCE)
+    ((void (*)(void *, void *))function)((void *)receiver, (void *)(uintptr_t)value);
+  else
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  return MPC_NATIVE_OK;
+}
+
 static enum mpc_native_error mixer_set(
   void *data, unsigned op, uintptr_t function, uintptr_t receiver, unsigned index, double value) {
   (void)data;
@@ -159,16 +173,15 @@ static void sequence_used_changed(struct mpc_native_sequence_watch *watch, uint3
     __atomic_store_n(&watch->changed, true, __ATOMIC_RELEASE);
 }
 
-/* Reset always emits slots 2, 3, 4, including slot zero which can remain unused
- * before and after Clear All. They also cover destructive content/length edits:
- * conservatively retire sequence refs for these events. Metadata alone does
- * not retire them; slot 5 is separately checked for an actual used transition. */
-static void (*const sequence_vtable[])(struct mpc_native_sequence_watch *, uint32_t) = {
+/* Reset emits slots 2 and 3 even when the used flag stays unchanged. Slot 4 is
+ * the BPM notification (0x25bc2fc passes virtual offset 0x10); it is metadata,
+ * not a replacement. Slot 5 also retires actual used/unused transitions. */
+void (*const mpc_sequence_callbacks[])(struct mpc_native_sequence_watch *, uint32_t) = {
   sequence_noop,
   sequence_noop,
   sequence_structure_changed,
   sequence_structure_changed,
-  sequence_structure_changed,
+  sequence_noop,
   sequence_used_changed,
   sequence_noop,
   sequence_noop,
@@ -196,7 +209,7 @@ sequence_watch(void *data, uint32_t sequence, struct mpc_native_sequence_watch *
     return MPC_NATIVE_WRONG_THREAD;
   if (memory_read(data, sequence + NATIVE_SEQUENCE_USED, &watch->used, 1) || watch->used > 1)
     return MPC_NATIVE_READ_FAILED;
-  watch->vtable = sequence_vtable;
+  watch->vtable = mpc_sequence_callbacks;
   watch->sequence = sequence;
   ((void (*)(void *, void *, bool))(runtime->image + NATIVE_SEQUENCE_LISTENER_ADD))(
     (void *)(uintptr_t)(sequence + NATIVE_SEQUENCE_NOTIFIER),
@@ -365,6 +378,7 @@ mpc_native_open(const struct mpc_native_hooks *hooks, struct mpc_native_adapter 
     .setter = setter,
     .filter = filter,
     .mixer_set = mixer_set,
+    .navigate = navigate,
     .float_filter = float_filter,
     .post = post,
     .watch = watch,

@@ -7,7 +7,7 @@
 
 /* Pointer-free snapshot, owned by its executor job until release. The private
  * attachment protocol checks this version and size before transferring it. */
-#define MPC_STATE_ABI 5u
+#define MPC_STATE_ABI 6u
 #define MPC_STATE_MAX_BUSES 128u
 #define MPC_STATE_NAME_BYTES 256u
 #define MPC_STATE_ATTEMPTS 3u
@@ -49,6 +49,15 @@ struct mpc_state_sequence {
   uint32_t used;
 };
 
+/* Availability is explicit; position is native pulses, not an audio timestamp. */
+struct mpc_navigation_state {
+  uint32_t known, playing, record_mode;
+  int64_t pulse;
+  uint64_t selected_track, selected_sequence;
+  float sequence_bpm, master_bpm;
+  uint32_t master_known, master_enabled;
+};
+
 struct mpc_state_snapshot {
   uint32_t abi_version, struct_bytes;
   char instance_id[37];
@@ -64,6 +73,7 @@ struct mpc_state_snapshot {
    * sequence is read; no independent inactive/global copy is claimed. */
   uint32_t mute_scope;
   uint64_t selected_sequence_generation;
+  struct mpc_navigation_state navigation;
 };
 
 #endif

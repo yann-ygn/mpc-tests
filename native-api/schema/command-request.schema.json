@@ -1,344 +1,543 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "MPC native API 0.1 desired-state command request",
-  "type": "object",
-  "required": [
-    "apiVersion",
-    "op",
-    "requestId",
-    "target",
-    "value"
-  ],
-  "properties": {
-    "apiVersion": {
-      "const": "0.1"
-    },
-    "op": {
-      "enum": [
-        "set_mute",
-        "set_solo",
-        "set_record_armed",
-        "set_volume",
-        "set_pan",
-        "set_send_level",
-        "set_insert_rack_enabled",
-        "set_insert_enabled"
-      ]
-    },
-    "requestId": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 80,
-      "pattern": "^[A-Za-z0-9_-]+$"
-    },
-    "target": {
+  "title": "MPC native API 0.1 command request",
+  "oneOf": [
+    {
       "type": "object",
       "required": [
-        "instanceId",
-        "projectId",
-        "trackId"
-      ],
-      "properties": {
-        "instanceId": {
-          "type": "string",
-          "pattern": "^run_[0-9a-f]{32}$"
-        },
-        "projectId": {
-          "type": "string",
-          "maxLength": 20,
-          "description": "Nonzero unsigned 64-bit incarnation ID, at most 18446744073709551615",
-          "pattern": "^[1-9][0-9]*$"
-        },
-        "trackId": {
-          "type": "string",
-          "maxLength": 20,
-          "description": "Nonzero unsigned 64-bit incarnation ID, at most 18446744073709551615",
-          "pattern": "^[1-9][0-9]*$"
-        }
-      },
-      "additionalProperties": false
-    },
-    "value": {
-      "type": [
-        "boolean",
-        "number"
-      ]
-    },
-    "expected": {
-      "type": "object",
-      "required": [
+        "apiVersion",
+        "op",
+        "requestId",
+        "target",
         "value"
       ],
       "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "op": {
+          "enum": [
+            "set_mute",
+            "set_solo",
+            "set_record_armed",
+            "set_volume",
+            "set_pan",
+            "set_send_level",
+            "set_insert_rack_enabled",
+            "set_insert_enabled"
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "instanceId",
+            "projectId",
+            "trackId"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "pattern": "^run_[0-9a-f]{32}$"
+            },
+            "projectId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero unsigned 64-bit incarnation ID, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "trackId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero unsigned 64-bit incarnation ID, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          "additionalProperties": false
+        },
         "value": {
           "type": [
             "boolean",
             "number"
           ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "startWithinMs": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 30000,
-      "default": 1000
-    },
-    "waitMs": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 30000
-    },
-    "muteScope": {
-      "enum": [
-        "global",
-        "sequence"
-      ],
-      "default": "global"
-    },
-    "sequence": {
-      "type": "object",
-      "required": [
-        "instanceId",
-        "projectId",
-        "sequenceId",
-        "generation"
-      ],
-      "properties": {
-        "instanceId": {
-          "type": "string",
-          "pattern": "^run_[0-9a-f]{32}$"
         },
-        "projectId": {
-          "type": "string",
-          "maxLength": 20,
-          "description": "Nonzero uint64, at most 18446744073709551615",
-          "pattern": "^[1-9][0-9]*$"
-        },
-        "sequenceId": {
-          "type": "string",
-          "maxLength": 20,
-          "description": "Nonzero uint64, at most 18446744073709551615",
-          "pattern": "^[1-9][0-9]*$"
-        },
-        "generation": {
-          "type": "string",
-          "maxLength": 20,
-          "description": "Nonzero uint64, at most 18446744073709551615",
-          "pattern": "^[1-9][0-9]*$"
-        }
-      },
-      "additionalProperties": false
-    },
-    "mixerGeneration": {
-      "type": "string",
-      "pattern": "^[1-9][0-9]*$",
-      "maxLength": 20
-    },
-    "sendIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 3
-    },
-    "slotIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 3
-    }
-  },
-  "additionalProperties": false,
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "const": "set_mute"
-          }
-        }
-      },
-      "then": {
-        "if": {
+        "expected": {
+          "type": "object",
           "required": [
-            "muteScope"
+            "value"
           ],
           "properties": {
-            "muteScope": {
-              "const": "sequence"
-            }
-          }
-        },
-        "then": {
-          "required": [
-            "sequence"
-          ]
-        },
-        "else": {
-          "not": {
-            "required": [
-              "sequence"
-            ]
-          }
-        }
-      },
-      "else": {
-        "not": {
-          "anyOf": [
-            {
-              "required": [
-                "muteScope"
-              ]
-            },
-            {
-              "required": [
-                "sequence"
+            "value": {
+              "type": [
+                "boolean",
+                "number"
               ]
             }
-          ]
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "enum": [
-              "set_volume",
-              "set_pan",
-              "set_send_level",
-              "set_insert_rack_enabled",
-              "set_insert_enabled"
-            ]
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "mixerGeneration"
-        ],
-        "not": {
-          "anyOf": [
-            {
-              "required": [
-                "muteScope"
-              ]
-            },
-            {
-              "required": [
-                "sequence"
-              ]
-            }
-          ]
-        }
-      },
-      "else": {
-        "not": {
-          "anyOf": [
-            {
-              "required": [
-                "mixerGeneration"
-              ]
-            },
-            {
-              "required": [
-                "sendIndex"
-              ]
-            },
-            {
-              "required": [
-                "slotIndex"
-              ]
-            }
-          ]
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "enum": [
-              "set_volume",
-              "set_pan",
-              "set_send_level"
-            ]
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "value": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
           },
-          "expected": {
+          "additionalProperties": false
+        },
+        "startWithinMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30000,
+          "default": 1000
+        },
+        "waitMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30000
+        },
+        "muteScope": {
+          "enum": [
+            "global",
+            "sequence"
+          ],
+          "default": "global"
+        },
+        "sequence": {
+          "type": "object",
+          "required": [
+            "instanceId",
+            "projectId",
+            "sequenceId",
+            "generation"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "pattern": "^run_[0-9a-f]{32}$"
+            },
+            "projectId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "sequenceId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "generation": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "mixerGeneration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "maxLength": 20
+        },
+        "sendIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "slotIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_mute"
+              }
+            }
+          },
+          "then": {
+            "if": {
+              "required": [
+                "muteScope"
+              ],
+              "properties": {
+                "muteScope": {
+                  "const": "sequence"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "sequence"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "sequence"
+                ]
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "muteScope"
+                  ]
+                },
+                {
+                  "required": [
+                    "sequence"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "set_volume",
+                  "set_pan",
+                  "set_send_level",
+                  "set_insert_rack_enabled",
+                  "set_insert_enabled"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "mixerGeneration"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "muteScope"
+                  ]
+                },
+                {
+                  "required": [
+                    "sequence"
+                  ]
+                }
+              ]
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "mixerGeneration"
+                  ]
+                },
+                {
+                  "required": [
+                    "sendIndex"
+                  ]
+                },
+                {
+                  "required": [
+                    "slotIndex"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "set_volume",
+                  "set_pan",
+                  "set_send_level"
+                ]
+              }
+            }
+          },
+          "then": {
             "properties": {
               "value": {
                 "type": "number",
                 "minimum": 0,
                 "maximum": 1
+              },
+              "expected": {
+                "properties": {
+                  "value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
               }
             }
-          }
-        }
-      },
-      "else": {
-        "properties": {
-          "value": {
-            "type": "boolean"
           },
-          "expected": {
+          "else": {
             "properties": {
               "value": {
                 "type": "boolean"
+              },
+              "expected": {
+                "properties": {
+                  "value": {
+                    "type": "boolean"
+                  }
+                }
               }
             }
           }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "const": "set_send_level"
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_send_level"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sendIndex"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "sendIndex"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_insert_enabled"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "slotIndex"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "slotIndex"
+              ]
+            }
           }
         }
-      },
-      "then": {
-        "required": [
-          "sendIndex"
-        ]
-      },
-      "else": {
-        "not": {
-          "required": [
-            "sendIndex"
-          ]
-        }
-      }
+      ]
     },
     {
-      "if": {
-        "properties": {
-          "op": {
-            "const": "set_insert_enabled"
+      "type": "object",
+      "required": [
+        "apiVersion",
+        "op",
+        "requestId",
+        "target"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "op": {
+          "enum": [
+            "play",
+            "stop",
+            "play_start",
+            "locate",
+            "select_track",
+            "select_sequence",
+            "set_sequence_bpm"
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "instanceId",
+            "projectId"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "pattern": "^run_[0-9a-f]{32}$"
+            },
+            "projectId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero unsigned 64-bit incarnation ID, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "trackId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero unsigned 64-bit incarnation ID, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "startWithinMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30000,
+          "default": 1000
+        },
+        "waitMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30000
+        },
+        "sequence": {
+          "type": "object",
+          "required": [
+            "instanceId",
+            "projectId",
+            "sequenceId",
+            "generation"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "pattern": "^run_[0-9a-f]{32}$"
+            },
+            "projectId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "sequenceId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "generation": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "pulse": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 10,
+          "description": "Absolute native pulses, from 0 through 2147483647; no beat or sample scheduling guarantee."
+        },
+        "bpm": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 999
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "select_track"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "required": [
+                  "trackId"
+                ]
+              }
+            },
+            "not": {
+              "required": [
+                "sequence"
+              ]
+            }
+          },
+          "else": {
+            "required": [
+              "sequence"
+            ],
+            "properties": {
+              "target": {
+                "not": {
+                  "required": [
+                    "trackId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "locate"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "pulse"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "pulse"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_sequence_bpm"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bpm"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "bpm"
+              ]
+            }
           }
         }
-      },
-      "then": {
-        "required": [
-          "slotIndex"
-        ]
-      },
-      "else": {
-        "not": {
-          "required": [
-            "slotIndex"
-          ]
-        }
-      }
+      ]
     }
   ]
 }

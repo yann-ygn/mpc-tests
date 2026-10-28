@@ -1,0 +1,84 @@
+{
+  "apiVersion": "0.1",
+  "requestId": "start_1",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "status": "applied",
+  "execution": "completed",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1"
+  },
+  "op": "play_start",
+  "value": null,
+  "changed": true,
+  "nativeInvoked": true,
+  "verification": {
+    "by": [
+      "model"
+    ],
+    "requestedValue": null,
+    "audioSideValue": null,
+    "observedAt": null,
+    "transport": {
+      "playing": true,
+      "recordMode": 0,
+      "pulse": "19",
+      "selectedTrackId": "4",
+      "selectedSequenceId": "14",
+      "sequenceBpm": 70
+    }
+  },
+  "sequence": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "sequenceId": "14",
+    "generation": "14"
+  },
+  "observationCoverage": {
+    "before": {
+      "kind": "user_track_flags",
+      "offset": 0,
+      "count": 8,
+      "fields": [
+        "flags",
+        "mixer"
+      ],
+      "totalTracks": 8,
+      "topologyEpoch": "1",
+      "durationUs": 2682
+    },
+    "after": {
+      "kind": "user_track_flags",
+      "offset": 0,
+      "count": 8,
+      "fields": [
+        "flags",
+        "mixer"
+      ],
+      "totalTracks": 8,
+      "topologyEpoch": "1",
+      "durationUs": 2644
+    }
+  },
+  "observedChanges": [],
+  "timing": {
+    "queueMs": 17,
+    "dispatchMs": 9,
+    "verificationMs": 32,
+    "totalMs": 58,
+    "uiWorkUs": 23438,
+    "verificationPasses": 2,
+    "maxUiCallbackUs": 9583,
+    "stagesUs": {
+      "identity": 0,
+      "policy": 0,
+      "filterSetter": 0,
+      "targetReadback": 0,
+      "beforeObservation": 0,
+      "afterObservation": 0,
+      "other": 23438
+    },
+    "verificationUiUs": 13855
+  },
+  "error": null
+}

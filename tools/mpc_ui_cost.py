@@ -33,7 +33,7 @@ def pressure_with_observation(self, rows):
                 verb = (
                     "FLAGS 0 16 0"
                     if self.args.lightweight
-                    else ("STATE_V5 " + self.attachment["adapter"]["instanceId"])
+                    else ("STATE_V6 " + self.attachment["adapter"]["instanceId"])
                 )
                 data = self.session.command(
                     f"{self.attachment['remoteDirectory']}/native_client {self.session.pid}",
@@ -75,7 +75,7 @@ def pressure_with_observation(self, rows):
         sample = self.command("FLAGS 0 16 0")
         raw = self.session.command(
             f"{self.attachment['remoteDirectory']}/native_client {self.session.pid}",
-            data=("STATE_V5 " + self.attachment["adapter"]["instanceId"] + "\n").encode(),
+            data=("STATE_V6 " + self.attachment["adapter"]["instanceId"] + "\n").encode(),
         )
         if struct.unpack_from("<III", raw) != (5, 140496, 0):
             raise RuntimeError("Authoritative comparison failed")

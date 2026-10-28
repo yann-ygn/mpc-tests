@@ -35,6 +35,7 @@ struct mpc_native_sequence_watch {
   unsigned char used;
   bool changed, attached;
 };
+extern void (*const mpc_sequence_callbacks[])(struct mpc_native_sequence_watch *, uint32_t);
 
 struct mpc_native_project_watch {
   void (*const *vtable)(struct mpc_native_project_watch *, uint32_t);
@@ -62,6 +63,7 @@ struct mpc_native_io {
   enum mpc_native_error (*sequence_unwatch)(void *, struct mpc_native_sequence_watch *, bool);
   enum mpc_native_error (*project_watch)(void *, uint32_t, struct mpc_native_project_watch *);
   enum mpc_native_error (*project_unwatch)(void *, struct mpc_native_project_watch *, bool);
+  enum mpc_native_error (*navigate)(void *, unsigned, uintptr_t, uintptr_t, int64_t);
   void (*destroy)(void *);
 };
 
@@ -138,6 +140,33 @@ bool mpc_mixer_numeric(unsigned);
 bool mpc_mixer_value(const struct mpc_mixer_state *, unsigned, unsigned, double *);
 bool mpc_mixer_request_valid(unsigned, const struct mpc_mixer_request *, bool);
 
+struct mpc_command_request;
+bool mpc_navigation_request_valid(const struct mpc_command_request *);
+struct mpc_navigation_context;
+enum mpc_native_error mpc_navigation_capture(
+  struct mpc_native_adapter *,
+  uint32_t,
+  struct mpc_navigation_context *,
+  struct mpc_navigation_state *);
+bool mpc_navigation_idle(struct mpc_native_adapter *, const struct mpc_navigation_context *);
+enum mpc_native_error mpc_navigation_qualify(const struct mpc_navigation_context *, unsigned);
+enum mpc_native_error mpc_navigation_invoke(
+  struct mpc_native_adapter *,
+  const struct mpc_navigation_context *,
+  unsigned,
+  uint32_t,
+  int64_t,
+  double,
+  bool *);
+enum mpc_native_error mpc_identity_navigation(
+  struct mpc_identity_registry *,
+  struct mpc_executor_identity *,
+  unsigned,
+  bool,
+  struct mpc_navigation_context *,
+  struct mpc_navigation_state *,
+  uint32_t *);
+
 struct native_binding {
   uint32_t property, requested, observed, setter;
   uint32_t filter_storage, filter_manager, filter_invoker, filter_rva;
@@ -176,6 +205,15 @@ struct mpc_read_sources {
   unsigned char mute_solo_play, level_pan_play;
   uint64_t peers;
 };
+struct mpc_navigation_context {
+  uint32_t engine, project, sequencer, timeline, recorder, properties, sequence;
+  uint32_t mode, popup, playback_mode, song_source, record_mode;
+  unsigned char playing, count_in, sequence_used;
+  uint32_t tempo_filter[4];
+  uint32_t controller, time_source, async, async_queue;
+  unsigned char transport_ready;
+};
+
 /* Disposable UI-thread policy sample. Never part of a public ABI or receipt. */
 struct mpc_command_context {
   uint32_t target_program, target_vtable;
@@ -185,6 +223,8 @@ struct mpc_command_context {
   unsigned char playing, sequence_mute;
   enum mpc_native_error source_error;
   struct mpc_read_sources sources;
+  struct mpc_navigation_context navigation;
+  unsigned navigation_step;
 };
 enum mpc_command_operation;
 enum mpc_native_error mpc_native_mute_scope(struct mpc_native_adapter *, uint32_t, uint32_t *);

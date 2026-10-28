@@ -4,6 +4,7 @@
 #include "mpc_family_profile.h"
 
 #include <inttypes.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -205,20 +206,26 @@ static void coverage(FILE *output, const struct mpc_command_observation *sample,
 char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
   if (
     !receipt || receipt->abi_version != MPC_COMMANDS_ABI ||
-    receipt->struct_bytes != sizeof *receipt ||
+    receipt->struct_bytes != sizeof *receipt || !mpc_navigation_request_valid(&receipt->request) ||
     !mpc_mixer_request_valid(
       receipt->request.operation,
       &receipt->request.mixer,
       receipt->request.has_expected) ||
     (unsigned)receipt->status > MPC_COMMAND_UNKNOWN ||
     (unsigned)receipt->execution > MPC_COMMAND_COMPLETED ||
-    (unsigned)receipt->request.operation > MPC_COMMAND_INSERT ||
+    (unsigned)receipt->request.operation > MPC_COMMAND_SEQUENCE_BPM ||
     (unsigned)receipt->request.mute_scope > MPC_MUTE_SEQUENCE ||
     (receipt->request.mute_scope == MPC_MUTE_SEQUENCE &&
      (receipt->request.operation != MPC_COMMAND_MUTE ||
       memcmp(receipt->request.sequence.instance_id, receipt->request.target.instance_id, 37) ||
       receipt->request.sequence.project != receipt->request.target.project ||
       !receipt->request.sequence.sequence || !receipt->request.sequence.generation)) ||
+    receipt->navigation_after.known > 1 ||
+    (receipt->navigation_after.known &&
+     (receipt->navigation_after.playing > 1 || receipt->navigation_after.record_mode > 4 ||
+      !isfinite(receipt->navigation_after.sequence_bpm) ||
+      receipt->navigation_after.sequence_bpm < 20 ||
+      receipt->navigation_after.sequence_bpm > 999)) ||
     receipt->before.track_count > MPC_IDENTITY_MAX_TRACKS ||
     receipt->after.track_count > MPC_IDENTITY_MAX_TRACKS ||
     strnlen(receipt->request.request_id, MPC_COMMAND_ID_BYTES) >= MPC_COMMAND_ID_BYTES ||
@@ -238,7 +245,14 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     "set_pan",
     "set_send_level",
     "set_insert_rack_enabled",
-    "set_insert_enabled"};
+    "set_insert_enabled",
+    "play",
+    "stop",
+    "play_start",
+    "locate",
+    "select_track",
+    "select_sequence",
+    "set_sequence_bpm"};
   static const char *statuses[] = {"accepted", "applied", "rejected", "cancelled", "unknown"};
   static const char *stages[] = {"not_started", "started", "completed"};
   char *buffer = NULL;
@@ -250,21 +264,30 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
   char desired[64];
   if (numeric)
     snprintf(desired, sizeof desired, "%.17g", receipt->request.mixer.value);
+  else if (receipt->request.operation >= MPC_COMMAND_PLAY)
+    strcpy(desired, "null");
   else
     strcpy(desired, boolean(receipt->request.value));
+  char track_field[64] = "";
+  if (receipt->request.target.track)
+    snprintf(
+      track_field,
+      sizeof track_field,
+      ",\"trackId\":\"%" PRIu64 "\"",
+      receipt->request.target.track);
   fprintf(
     output,
     "{\"apiVersion\":\"0.1\",\"requestId\":\"%s\",\"instanceId\":\"%s\","
     "\"status\":\"%s\",\"execution\":\"%s\",\"target\":{\"instanceId\":\"%s\","
-    "\"projectId\":\"%" PRIu64 "\",\"trackId\":\"%" PRIu64
-    "\"},\"op\":\"%s\",\"value\":%s,\"changed\":%s,\"nativeInvoked\":%s,\"verification\":",
+    "\"projectId\":\"%" PRIu64
+    "\"%s},\"op\":\"%s\",\"value\":%s,\"changed\":%s,\"nativeInvoked\":%s,\"verification\":",
     receipt->request.request_id,
     receipt->request.target.instance_id,
     statuses[receipt->status],
     stages[receipt->execution],
     receipt->request.target.instance_id,
     receipt->request.target.project,
-    receipt->request.target.track,
+    track_field,
     operations[receipt->request.operation],
     desired,
     receipt->changed_known ? boolean(receipt->changed) : "null",
@@ -275,7 +298,23 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     : NULL;
   bool requested = false;
   unsigned property = receipt->request.operation;
-  if (property >= MPC_COMMAND_VOLUME && track) {
+  if (property >= MPC_COMMAND_PLAY) {
+    if (receipt->navigation_after.known) {
+      fprintf(
+        output,
+        "{\"by\":[\"model\"],\"requestedValue\":null,\"audioSideValue\":null,"
+        "\"observedAt\":null,\"transport\":{\"playing\":%s,\"recordMode\":%u,\"pulse\":\"%" PRId64
+        "\",\"selectedTrackId\":",
+        boolean(receipt->navigation_after.playing),
+        receipt->navigation_after.record_mode,
+        receipt->navigation_after.pulse);
+      id(output, receipt->navigation_after.selected_track);
+      fputs(",\"selectedSequenceId\":", output);
+      id(output, receipt->navigation_after.selected_sequence);
+      fprintf(output, ",\"sequenceBpm\":%.9g}}", receipt->navigation_after.sequence_bpm);
+    } else
+      fputs("null", output);
+  } else if (property >= MPC_COMMAND_VOLUME && track) {
     double observed;
     if (mpc_mixer_value(&track->mixer, property, receipt->request.mixer.index, &observed)) {
       fputs("{\"by\":[\"model\"],\"requestedValue\":", output);
@@ -321,13 +360,26 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     fputc('}', output);
   } else
     fputs("null", output);
-  if (property >= MPC_COMMAND_VOLUME) {
+  if (property >= MPC_COMMAND_VOLUME && property < MPC_COMMAND_PLAY) {
     fprintf(output, ",\"mixerGeneration\":\"%" PRIu64 "\"", receipt->request.mixer.generation);
     if (property == MPC_COMMAND_SEND)
       fprintf(output, ",\"sendIndex\":%u", receipt->request.mixer.index);
     if (property == MPC_COMMAND_INSERT)
       fprintf(output, ",\"slotIndex\":%u", receipt->request.mixer.index);
   }
+  if (property >= MPC_COMMAND_PLAY && property != MPC_COMMAND_SELECT_TRACK) {
+    fputs(",\"sequence\":", output);
+    sequence_ref(
+      output,
+      receipt->request.sequence.instance_id,
+      receipt->request.sequence.project,
+      receipt->request.sequence.sequence,
+      receipt->request.sequence.generation);
+  }
+  if (property == MPC_COMMAND_SEQUENCE_BPM)
+    fprintf(output, ",\"bpm\":%.17g", receipt->request.bpm);
+  if (property == MPC_COMMAND_LOCATE)
+    fprintf(output, ",\"pulse\":\"%" PRId64 "\"", receipt->request.pulse);
   if (receipt->request.operation == MPC_COMMAND_MUTE) {
     fprintf(
       output,

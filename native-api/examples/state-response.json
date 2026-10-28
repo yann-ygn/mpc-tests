@@ -74,10 +74,16 @@
     }
   ],
   "transport": {
+    "playing": false,
+    "recording": false,
+    "recordMode": 0,
+    "pulse": "0",
+    "sequenceBpm": 123.5,
+    "masterBpm": 120,
+    "masterTempoEnabled": false,
     "effectiveBpm": null,
     "tempoSource": null,
-    "playing": null,
-    "recording": null
+    "queuedSequenceId": null
   },
   "tracks": [
     {
@@ -2119,7 +2125,6 @@
     "project.name",
     "transport.effectiveBpm",
     "transport.tempoSource",
-    "transport.playing",
-    "transport.recording"
+    "transport.queuedSequenceId"
   ]
 }

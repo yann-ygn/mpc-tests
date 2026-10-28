@@ -32,7 +32,7 @@ api = executable(
   dependencies: threads_dep,
 )
 
-adapter_sources = files('adapter/src/adapter.c', 'adapter/src/runtime.c', 'adapter/src/executor.c', 'adapter/src/identity.c', 'adapter/src/commands.c', 'adapter/src/receipt.c', 'adapter/src/policy.c', 'adapter/src/mixer.c')
+adapter_sources = files('adapter/src/adapter.c', 'adapter/src/runtime.c', 'adapter/src/executor.c', 'adapter/src/identity.c', 'adapter/src/commands.c', 'adapter/src/receipt.c', 'adapter/src/policy.c', 'adapter/src/mixer.c', 'adapter/src/navigation.c')
 adapter_exports = files('adapter/exports.map')
 adapter = shared_library(
   'mpc_native',

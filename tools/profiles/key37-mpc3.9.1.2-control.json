@@ -577,6 +577,36 @@
       "name": "readPanNotifyingApplication",
       "rva": 37990532,
       "prefixHex": "0400a0e108d08de200409de504e09de508d08de2aa7fa8ea30209fe524309fe5"
+    },
+    {
+      "name": "navigationSequence",
+      "rva": 17061836,
+      "prefixHex": "d4219fe5d4319fe5f0426de1f860cde1f081cde118a08de51ce08de5109080e2"
+    },
+    {
+      "name": "navigationTrack",
+      "rva": 15052120,
+      "prefixHex": "d4219fe5d4319fe5f0426de1f860cde1f081cde118a08de51ce08de5109080e2"
+    },
+    {
+      "name": "navigationTempoFilter",
+      "rva": 39625956,
+      "prefixHex": "007a90ed007ad1ed010a90ed477af4ee10faf1ee477af04ee70ab4ee10faf1ee"
+    },
+    {
+      "name": "navigationTempoNotification",
+      "rva": 39568124,
+      "prefixHex": "08402de57c409fe504e08de578e09fe510d04de21020a0e30130a0e300c0a0e1"
+    },
+    {
+      "name": "navigationAsyncPlay",
+      "rva": 29067192,
+      "prefixHex": "5c219fe55c319fe5fc416de1f860cde1f081cde118e08de5a4d04de20040a0e1"
+    },
+    {
+      "name": "navigationAsyncLocate",
+      "rva": 29068832,
+      "prefixHex": "f0426de118a08de502a0a0e160219fe50350a0e15c319fe5f860cde1f081cde1"
     }
   ],
   "bindings": [
@@ -945,5 +975,35 @@
     "levelPanPlayValue": 216,
     "sequenceClipTree": 1316,
     "updaterProject": 48
+  },
+  "navigation": {
+    "schemaVersion": 1,
+    "timelinePulse": 168,
+    "sequencerProject": 484,
+    "sequencerSequence": 520,
+    "sequencerCountIn": 1000,
+    "sequenceProperty": 188,
+    "trackProperty": 120,
+    "menuPopup": 12544,
+    "sequenceTempoProperty": 156,
+    "sequenceTempoStorage": 200,
+    "sequenceTempoManager": 208,
+    "sequenceTempoInvoker": 212,
+    "masterOwner": 488,
+    "masterEnabled": 44,
+    "masterBpm": 88,
+    "engineSurface": 904,
+    "surfaceController": 240,
+    "controllerVtable": 109664764,
+    "controllerSequencer": 496,
+    "controllerTime": 492,
+    "controllerReady": 562,
+    "sequencerTime": 1020,
+    "timeSource": 600,
+    "audioThreadAsync": 984,
+    "asyncVtable": 109706668,
+    "asyncSequencer": 64,
+    "asyncQueue": 8,
+    "asyncPending": 12
   }
 }

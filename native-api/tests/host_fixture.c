@@ -12,7 +12,7 @@ static atomic_int finished;
 static char gate[4096], pause_ui[4096];
 static const char *installation, *runtime, *root;
 static bool commands_enabled;
-static bool native_policy;
+static bool native_policy, navigation_enabled;
 static unsigned policy_reads;
 static bool sequence_mutes[2];
 static bool scope_changed_after_set;
@@ -60,6 +60,77 @@ wire_setter(void *data, uintptr_t function, uintptr_t property, bool value) {
   return error;
 }
 
+static enum mpc_native_error
+wire_float_filter(void *data, uintptr_t storage, uintptr_t function, float *value) {
+  if (function == IMAGE + NAV_navigationTempoFilter) {
+    assert(
+      ui &&
+      (storage == SEQUENCE + NAV_sequenceTempoStorage ||
+       storage == SEQUENCE2 + NAV_sequenceTempoStorage));
+    return *value >= 20 && *value <= 999 ? MPC_NATIVE_OK : MPC_NATIVE_VALUE_REJECTED;
+  }
+  return fixture_float_filter(data, storage, function, value);
+}
+static enum mpc_native_error wire_mixer_set(
+  void *data, unsigned op, uintptr_t function, uintptr_t receiver, unsigned index, double value) {
+  if (
+    function == IMAGE + NAV_navigationTempoSetter &&
+    (receiver == SEQUENCE + NAV_sequenceTempoProperty ||
+     receiver == SEQUENCE2 + NAV_sequenceTempoProperty)) {
+    assert(ui && op == MPC_COMMAND_PAN && index == 0);
+    float bpm = (float)value;
+    memcpy(
+      fixture.native.objects + receiver - NAV_sequenceTempoProperty + NATIVE_SEQUENCE_BPM - OBJECTS,
+      &bpm,
+      4);
+    for (unsigned i = 0; i < MPC_IDENTITY_MAX_SEQUENCES; i++) {
+      struct mpc_native_sequence_watch *watch = fixture.sequence_watches[i];
+      if (watch && watch->sequence == receiver - NAV_sequenceTempoProperty)
+        mpc_sequence_callbacks[4](watch, watch->sequence);
+    }
+    return MPC_NATIVE_OK;
+  }
+  return fixture_mixer_set(data, op, function, receiver, index, value);
+}
+
+static enum mpc_native_error
+wire_navigate(void *data, unsigned op, uintptr_t function, uintptr_t receiver, int64_t value) {
+  (void)data;
+  assert(ui);
+  struct fixture *f = &fixture.native;
+  const struct native_command_context_layout *p = &native_command_context;
+  if (op == MPC_COMMAND_PLAY || op == MPC_COMMAND_STOP || op == MPC_COMMAND_PLAY_START) {
+    assert(receiver == OBJECTS + 0x4A000);
+    assert(function == IMAGE + NAV_navigationAsyncPlay);
+    assert(value == (op != MPC_COMMAND_STOP));
+    put_bool(f, POLICY_TIMELINE + p->timelinePlaying, op != MPC_COMMAND_STOP);
+    if (op == MPC_COMMAND_PLAY_START)
+      memset(f->objects + POLICY_TIMELINE - OBJECTS + NAV_timelinePulse, 0, 8);
+  } else if (op == MPC_COMMAND_LOCATE) {
+    assert(function == IMAGE + NAV_navigationAsyncLocate && receiver == OBJECTS + 0x4A000);
+    if (marker("navigation-locate-diverged"))
+      value = 960;
+    memcpy(f->objects + POLICY_TIMELINE - OBJECTS + NAV_timelinePulse, &value, 8);
+  } else if (op == MPC_COMMAND_SELECT_TRACK) {
+    assert(function == IMAGE + NAV_navigationTrack && receiver == OBJECTS + NAV_trackProperty);
+    put32(f, OBJECTS + NATIVE_SELECTED_TRACK, (uint32_t)value);
+    put32(f, OBJECTS + NATIVE_SELECTED_TRACK_MIRROR, (uint32_t)value);
+    put32(f, OBJECTS + NATIVE_SELECTED_TRACK_INDEX, value == TRACK ? 0 : 1);
+  } else if (op == MPC_COMMAND_SELECT_SEQUENCE) {
+    assert(
+      function == IMAGE + NAV_navigationSequence && receiver == OBJECTS + NAV_sequenceProperty);
+    select_sequence(value == SEQUENCE2);
+  } else
+    assert(false);
+  if (marker("navigation-pending-after-set"))
+    put32(f, OBJECTS + 0x4A000 + NAV_asyncPending, 1);
+  if (marker("navigation-replace-after-set"))
+    select_project(&fixture, PROJECT2);
+  if (marker("navigation-context-after-set"))
+    put32(f, POLICY_MODE + p->modeValue, 999);
+  return MPC_NATIVE_OK;
+}
+
 static int wire_read(void *data, uintptr_t address, void *output, size_t bytes) {
   if (ui && marker("manual-mute"))
     put_bool(&fixture.native, PROGRAM + native_bindings[0].requested, true);
@@ -84,6 +155,7 @@ static int wire_read(void *data, uintptr_t address, void *output, size_t bytes) 
     {POLICY_MODE + p->modeValue, "policy-clips", 0x209c},
     {POLICY_MODE + p->popupValue, "policy-popup", 0x3081},
     {POLICY_TIMELINE + p->timelinePlaying, "policy-playing", 1},
+    {POLICY_SEQUENCER + NAV_sequencerCountIn, "navigation-count-in", 1},
     {POLICY_TIMELINE + p->timelinePlaying, "policy-invalid-playing", 2},
     {POLICY_RECORD_PROPERTIES + p->recordModeValue, "policy-recording", 1},
     {POLICY_RECORD_PROPERTIES + p->recordModeValue, "policy-overdub", 2},
@@ -162,8 +234,9 @@ static enum mpc_native_error start(void *unused, struct mpc_executor **out) {
   struct mpc_native_io backend = io(&fixture.native);
   backend.read = wire_read;
   backend.setter = wire_setter;
-  backend.float_filter = fixture_float_filter;
-  backend.mixer_set = fixture_mixer_set;
+  backend.float_filter = wire_float_filter;
+  backend.mixer_set = wire_mixer_set;
+  backend.navigate = wire_navigate;
   backend.on_ui_thread = on_identity_ui;
   backend.post = enqueue;
   backend.watch = watch;
@@ -204,12 +277,38 @@ int main(int argc, char **argv) {
   snprintf(gate, sizeof gate, "%s/gate", installation);
   snprintf(pause_ui, sizeof pause_ui, "%s/pause-ui", installation);
   state_init(&fixture);
-  native_policy = !strcmp(argv[4], "native-commands") || !strcmp(argv[4], "mixer-commands");
+  navigation_enabled = !strcmp(argv[4], "navigation-commands");
+  native_policy =
+    navigation_enabled || !strcmp(argv[4], "native-commands") || !strcmp(argv[4], "mixer-commands");
   if (!strcmp(argv[4], "mixer-commands"))
     mixer_init(&fixture.native, PROGRAM, OBJECTS + 0x30000);
   commands_enabled = native_policy || !strcmp(argv[4], "commands");
   if (native_policy) {
     policy_init(&fixture);
+    put32(&fixture.native, POLICY_SEQUENCER + NAV_sequencerProject, OBJECTS);
+    put32(
+      &fixture.native,
+      COMPONENT + NATIVE_COMPONENT_ENGINE + NAV_engineSurface,
+      OBJECTS + 0x47000);
+    put32(&fixture.native, OBJECTS + 0x47000 + NAV_surfaceController, OBJECTS + 0x48000);
+    put32(&fixture.native, OBJECTS + 0x48000, IMAGE + NAV_controllerVtable);
+    put32(&fixture.native, OBJECTS + 0x48000 + NAV_controllerSequencer, POLICY_SEQUENCER);
+    put32(&fixture.native, OBJECTS + 0x48000 + NAV_controllerTime, OBJECTS + 0x49000);
+    put_bool(&fixture.native, OBJECTS + 0x48000 + NAV_controllerReady, true);
+    put32(&fixture.native, POLICY_SEQUENCER + NAV_sequencerTime, OBJECTS + 0x49000);
+    put_bool(&fixture.native, POLICY_SEQUENCER + NAV_sequencerCountIn, false);
+    put32(&fixture.native, POLICY_THREAD + NAV_audioThreadAsync, OBJECTS + 0x4A000);
+    put32(&fixture.native, OBJECTS + 0x4A000, IMAGE + NAV_asyncVtable);
+    put32(&fixture.native, OBJECTS + 0x4A000 + NAV_asyncSequencer, POLICY_SEQUENCER);
+    put32(&fixture.native, OBJECTS + 0x4A000 + NAV_asyncQueue, OBJECTS + 0x4B000);
+    for (unsigned i = 0; i < 2; i++) {
+      uint32_t sequence = i ? SEQUENCE2 : SEQUENCE;
+      put32(&fixture.native, sequence + NAV_sequenceTempoManager, IMAGE + 4);
+      put32(
+        &fixture.native,
+        sequence + NAV_sequenceTempoInvoker,
+        IMAGE + NAV_navigationTempoFilter);
+    }
     /* This transport fixture deliberately shares one Program across its two
      * Track objects. Their synthetic sequence bindings share that Clip too. */
     put32(&fixture.native, POLICY_SEQUENCE_MAP + 0x40 + 20, POLICY_SOURCE + 0x400);
@@ -252,7 +351,8 @@ int main(int argc, char **argv) {
           marker("watch-reorder") ? 0 : 1);
       }
       if (native_policy) {
-        select_sequence(marker("sequence-two"));
+        if (!navigation_enabled || marker("sequence-two"))
+          select_sequence(marker("sequence-two"));
         put_bool(
           &fixture.native,
           POLICY_MUTE + native_command_context.perSequenceMute,

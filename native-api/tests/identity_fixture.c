@@ -93,6 +93,20 @@ static void state_tests(void) {
 }
 
 int main(int argc, char **argv) {
+  /* Exercise production callback classification, independent of the fixture's
+   * own generic lifecycle event injector. BPM is metadata; reset signals stay
+   * destructive even when the used flag never changes. */
+  struct mpc_native_sequence_watch metadata = {.sequence = SEQUENCE};
+  mpc_sequence_callbacks[4](&metadata, SEQUENCE);
+  assert(!metadata.changed);
+  mpc_sequence_callbacks[2](&metadata, SEQUENCE2);
+  assert(!metadata.changed);
+  mpc_sequence_callbacks[2](&metadata, SEQUENCE);
+  assert(metadata.changed);
+  metadata.changed = false;
+  mpc_sequence_callbacks[3](&metadata, SEQUENCE);
+  assert(metadata.changed);
+
   if (argc == 2 && !strcmp(argv[1], "--snapshot-wire")) {
     struct identity_fixture fixture;
     state_init(&fixture);

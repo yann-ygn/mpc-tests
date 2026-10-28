@@ -35,7 +35,7 @@ unsigned mpc_mixer_field(unsigned op, unsigned index) {
 }
 
 bool mpc_mixer_request_valid(unsigned op, const struct mpc_mixer_request *r, bool expected) {
-  if (op < MPC_COMMAND_VOLUME)
+  if (op < MPC_COMMAND_VOLUME || op >= MPC_COMMAND_PLAY)
     return !r->generation && !r->index && !r->value && !r->expected;
   if (
     !r->generation || !mpc_mixer_field(op, r->index) ||

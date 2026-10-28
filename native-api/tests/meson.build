@@ -105,7 +105,7 @@ if not meson.is_cross_build()
   native_test_env.set('MPC_READELF', readelf.full_path())
   native_test_env.set('MPC_HOST_TEST_FIXTURE', host_fixture.full_path())
   native_test_env.set('MPC_HOST_TEST_LIBRARY', native_host.full_path())
-  foreach module : ['test_describe', 'test_adapter', 'test_semantics', 'test_commands', 'test_host', 'test_wire_commands', 'test_live_policy', 'test_mixer', 'test_package', 'test_watch']
+  foreach module : ['test_describe', 'test_adapter', 'test_semantics', 'test_commands', 'test_host', 'test_wire_commands', 'test_live_policy', 'test_mixer', 'test_navigation', 'test_package', 'test_watch']
     test(
       module,
       python,

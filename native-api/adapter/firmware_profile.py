@@ -236,6 +236,51 @@ def validate(state, control):
         ]
         if len(candidates) != 1 or not candidates[0] or candidates[0] % 4:
             raise ValueError("Ambiguous program family")
+    navigation = control.get("navigation")
+    if navigation != {
+        "schemaVersion": 1,
+        "timelinePulse": 0xA8,
+        "sequencerProject": 0x1E4,
+        "sequencerSequence": 0x208,
+        "sequencerCountIn": 0x3E8,
+        "sequenceProperty": 0xBC,
+        "trackProperty": 0x78,
+        "menuPopup": 12544,
+        "sequenceTempoProperty": 0x9C,
+        "sequenceTempoStorage": 0xC8,
+        "sequenceTempoManager": 0xD0,
+        "sequenceTempoInvoker": 0xD4,
+        "masterOwner": 0x1E8,
+        "masterEnabled": 0x2C,
+        "masterBpm": 0x58,
+        "engineSurface": 0x388,
+        "surfaceController": 0xF0,
+        "controllerVtable": 0x68959FC,
+        "controllerSequencer": 0x1F0,
+        "controllerTime": 0x1EC,
+        "controllerReady": 0x232,
+        "sequencerTime": 0x3FC,
+        "timeSource": 0x258,
+        "audioThreadAsync": 0x3D8,
+        "asyncVtable": 0x689FDAC,
+        "asyncSequencer": 0x40,
+        "asyncQueue": 8,
+        "asyncPending": 12,
+    } or any(type(v) is not int for v in navigation.values()):
+        raise ValueError("Unqualified navigation layout")
+    required_navigation = {
+        "navigationAsyncPlay": 0x1BB87B8,
+        "navigationAsyncLocate": 0x1BB8E20,
+        "navigationSequence": 0x10457CC,
+        "navigationTrack": 0xE5AD58,
+        "navigationTempoFilter": 0x25CA4E4,
+        "navigationTempoNotification": 0x25BC2FC,
+    }
+    if any(
+        not any(f["name"] == n and f["rva"] == r for f in control["functions"])
+        for n, r in required_navigation.items()
+    ):
+        raise ValueError("Missing navigation call fingerprints")
     fingerprints = {}
     names = set()
     for function in control["functions"]:
@@ -598,6 +643,12 @@ def generate(out, state_path=STATE, control_path=CONTROL):
     lines.append(
         "static const struct native_binding native_bindings[]={" + ",".join(entries) + "};"
     )
+    for key, value in control.get("navigation", {}).items():
+        lines.append(f"#define NAV_{key} {integer(value, key)}u")
+    for function in control["functions"]:
+        if function["name"].startswith("navigation"):
+            lines.append(f"#define NAV_{function['name']} {function['rva']}u")
+    lines.append("#define NAV_navigationTempoSetter 0xE5AF48u")
     (out / "mpc_adapter_profile.h").write_text("\n".join(lines) + "\n")
     (out / "mpc_read_profile.h").write_text(
         "/* Generated verified Automation Read sources. */\n"

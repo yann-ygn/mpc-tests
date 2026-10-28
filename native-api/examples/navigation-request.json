@@ -1,0 +1,16 @@
+{
+  "apiVersion": "0.1",
+  "op": "play_start",
+  "requestId": "start_1",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1"
+  },
+  "waitMs": 1000,
+  "sequence": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "sequenceId": "14",
+    "generation": "14"
+  }
+}

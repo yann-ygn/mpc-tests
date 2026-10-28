@@ -956,6 +956,34 @@ mpc_identity_state(struct mpc_identity_registry *registry, struct mpc_state_snap
       continue;
     if (error)
       break;
+    if (registry->root) {
+      struct mpc_navigation_context context;
+      struct mpc_navigation_state state;
+      /* Unavailable transport ownership does not invalidate track snapshots. */
+      if (!mpc_navigation_capture(registry->adapter, registry->root, &context, &state)) {
+        state.selected_track = output->selected_track;
+        state.selected_sequence = output->selected_sequence;
+        output->navigation = state;
+        struct mpc_identity_snapshot identity;
+        error = mpc_identity_capture(registry, &identity);
+        if (
+          !error &&
+          (identity.project != output->project ||
+           identity.project_generation != output->project_generation ||
+           identity.selected_track != output->selected_track ||
+           identity.selected_sequence != output->selected_sequence))
+          error = MPC_NATIVE_STATE_UNSTABLE;
+        for (unsigned i = 0; !error && i < output->sequence_count; i++)
+          if (
+            output->sequences[i].identity.id == output->selected_sequence &&
+            output->sequences[i].bpm != state.sequence_bpm)
+            error = MPC_NATIVE_STATE_UNSTABLE;
+        if (error == MPC_NATIVE_STATE_UNSTABLE)
+          continue;
+        if (error)
+          break;
+      }
+    }
     output->abi_version = MPC_STATE_ABI;
     output->struct_bytes = sizeof *output;
     output->started_ms = started;
@@ -1130,4 +1158,68 @@ enum mpc_native_error mpc_identity_mixer(
     target.program,
     mpc_family_by_type(program_type(registry, vtable))->family,
     out);
+}
+
+/* Project-wide command resolution also supports an empty user-track inventory.
+ * Explicit sequences resolve inactive slots without selecting them. Callers
+ * separately require active selection for play/stop/locate. */
+enum mpc_native_error mpc_identity_navigation(
+  struct mpc_identity_registry *registry,
+  struct mpc_executor_identity *identity,
+  unsigned op,
+  bool bind,
+  struct mpc_navigation_context *context,
+  struct mpc_navigation_state *state,
+  uint32_t *target) {
+  if (memcmp(identity->instance_id, registry->adapter->instance_id, 37))
+    return MPC_NATIVE_STALE_INSTANCE;
+  enum mpc_native_error error = refresh(registry);
+  if (error)
+    return error;
+  if (!registry->project)
+    return MPC_NATIVE_NO_ACTIVE_PROJECT;
+  if (
+    identity->project != registry->project ||
+    (!bind && identity->project_generation != registry->generation))
+    return MPC_NATIVE_STALE_PROJECT;
+  identity->project_generation = registry->generation;
+  *target = 0;
+  if (op == MPC_COMMAND_SELECT_TRACK) {
+    for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
+      struct entry *entry = &registry->tracks[i];
+      if (
+        entry->address && entry->id == identity->track && alive(&entry->lifetime) &&
+        (bind || entry->generation == identity->track_generation)) {
+        identity->track_generation = entry->generation;
+        *target = entry->address;
+        break;
+      }
+    }
+    if (!*target)
+      return MPC_NATIVE_TARGET_NOT_FOUND;
+  } else {
+    struct entry *entry = find(
+      registry->sequences,
+      MPC_IDENTITY_MAX_SEQUENCES,
+      identity->sequence,
+      identity->sequence_generation);
+    if (!entry)
+      return MPC_NATIVE_STALE_SEQUENCE;
+    *target = entry->address;
+    if (op != MPC_COMMAND_SELECT_SEQUENCE) {
+      error = check_sequence(registry, identity);
+      if (error)
+        return error;
+    }
+  }
+  error = mpc_navigation_capture(registry->adapter, registry->root, context, state);
+  if (error)
+    return error;
+  uint32_t selected;
+  if (read32(registry, registry->root + NATIVE_SELECTED_TRACK, &selected))
+    return MPC_NATIVE_READ_FAILED;
+  state->selected_track = object_id(registry->tracks, MPC_IDENTITY_MAX_TRACKS, selected);
+  state->selected_sequence =
+    object_id(registry->sequences, MPC_IDENTITY_MAX_SEQUENCES, context->sequence);
+  return mpc_navigation_qualify(context, op);
 }

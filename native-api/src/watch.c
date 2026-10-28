@@ -197,6 +197,7 @@ static int controls(struct api_watch *p, const struct mpc_command_observation *o
     return -1;
   *next = p->state;
   next->selected_track = o->selected_track;
+  next->navigation.selected_track = o->selected_track;
   for (unsigned i = 0; i < o->track_count; i++) {
     const struct mpc_command_track *a = &o->tracks[i];
     struct mpc_state_track *b = &next->tracks[o->offset + i];

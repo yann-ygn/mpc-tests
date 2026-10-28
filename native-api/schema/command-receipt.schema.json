@@ -1,615 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Native command receipt",
-  "type": "object",
-  "required": [
-    "apiVersion",
-    "requestId",
-    "instanceId",
-    "status",
-    "execution",
-    "target",
-    "op",
-    "value",
-    "changed",
-    "nativeInvoked",
-    "verification",
-    "observedChanges",
-    "error",
-    "timing"
-  ],
-  "properties": {
-    "apiVersion": {
-      "const": "0.1"
-    },
-    "requestId": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 80,
-      "pattern": "^[A-Za-z0-9_-]+$"
-    },
-    "instanceId": {
-      "type": "string",
-      "pattern": "^run_[0-9a-f]{32}$"
-    },
-    "status": {
-      "enum": [
-        "accepted",
-        "applied",
-        "rejected",
-        "cancelled",
-        "unknown"
-      ]
-    },
-    "execution": {
-      "enum": [
-        "not_started",
-        "started",
-        "completed"
-      ]
-    },
-    "target": {
-      "type": "object",
-      "required": [
-        "instanceId",
-        "projectId",
-        "trackId"
-      ],
-      "properties": {
-        "instanceId": {
-          "type": "string",
-          "pattern": "^run_[0-9a-f]{32}$"
-        },
-        "projectId": {
-          "type": "string",
-          "pattern": "^[1-9][0-9]*$"
-        },
-        "trackId": {
-          "type": "string",
-          "pattern": "^[1-9][0-9]*$"
-        }
-      },
-      "additionalProperties": false
-    },
-    "op": {
-      "enum": [
-        "set_mute",
-        "set_solo",
-        "set_record_armed",
-        "set_volume",
-        "set_pan",
-        "set_send_level",
-        "set_insert_rack_enabled",
-        "set_insert_enabled"
-      ]
-    },
-    "value": {
-      "type": [
-        "boolean",
-        "number"
-      ]
-    },
-    "changed": {
-      "type": [
-        "boolean",
-        "null"
-      ]
-    },
-    "nativeInvoked": {
-      "type": [
-        "boolean",
-        "null"
-      ]
-    },
-    "verification": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "required": [
-        "by",
-        "requestedValue",
-        "audioSideValue",
-        "observedAt"
-      ],
-      "properties": {
-        "by": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "enum": [
-              "model",
-              "audio_copy"
-            ]
-          }
-        },
-        "requestedValue": {
-          "type": [
-            "boolean",
-            "number"
-          ]
-        },
-        "audioSideValue": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "observedAt": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "date-time"
-        },
-        "muteContext": {
-          "$ref": "#/$defs/muteContext"
-        },
-        "mixer": {
-          "$ref": "#/$defs/mixer"
-        }
-      }
-    },
-    "observedChanges": {
-      "type": "array",
-      "maxItems": 3000,
-      "items": {
-        "type": "object",
-        "required": [
-          "projectId",
-          "path",
-          "before",
-          "after"
-        ],
-        "properties": {
-          "projectId": {
-            "type": "string",
-            "pattern": "^[1-9][0-9]*$"
-          },
-          "trackId": {
-            "type": "string",
-            "pattern": "^[1-9][0-9]*$"
-          },
-          "path": {
-            "type": "string"
-          },
-          "before": {
-            "type": [
-              "boolean",
-              "number",
-              "string",
-              "null"
-            ]
-          },
-          "after": {
-            "type": [
-              "boolean",
-              "number",
-              "string",
-              "null"
-            ]
-          },
-          "muteContext": {
-            "$ref": "#/$defs/muteContext"
-          }
-        }
-      }
-    },
-    "error": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "required": [
-        "code",
-        "message",
-        "details"
-      ],
-      "properties": {
-        "code": {
-          "type": "string",
-          "minLength": 1
-        },
-        "message": {
-          "type": "string"
-        },
-        "details": {
-          "type": "object",
-          "required": [
-            "execution"
-          ]
-        }
-      }
-    },
-    "muteScope": {
-      "enum": [
-        "global",
-        "sequence"
-      ]
-    },
-    "sequence": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/sequenceRef"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "timing": {
-      "type": "object",
-      "description": "Monotonic durations in milliseconds except cumulative UI work in microseconds; no sample or acoustic timing guarantee. Null means the stage has not completed.",
-      "required": [
-        "queueMs",
-        "dispatchMs",
-        "verificationMs",
-        "totalMs",
-        "uiWorkUs",
-        "verificationPasses"
-      ],
-      "properties": {
-        "queueMs": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0
-        },
-        "dispatchMs": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0
-        },
-        "verificationMs": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0
-        },
-        "totalMs": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0
-        },
-        "uiWorkUs": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "verificationPasses": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maxUiCallbackUs": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "stagesUs": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "verificationUiUs": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "additionalProperties": false
-    },
-    "observationCoverage": {
-      "type": "object",
-      "required": [
-        "before",
-        "after"
-      ],
-      "properties": {
-        "before": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "required": [
-            "kind",
-            "offset",
-            "count",
-            "totalTracks",
-            "topologyEpoch",
-            "durationUs"
-          ],
-          "properties": {
-            "kind": {
-              "const": "user_track_flags"
-            },
-            "offset": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 136
-            },
-            "count": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 136
-            },
-            "totalTracks": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 136
-            },
-            "topologyEpoch": {
-              "type": "string",
-              "pattern": "^[1-9][0-9]*$"
-            },
-            "durationUs": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "fields": {
-              "type": "array",
-              "items": {
-                "enum": [
-                  "flags",
-                  "mixer"
-                ]
-              },
-              "uniqueItems": true
-            }
-          },
-          "additionalProperties": false
-        },
-        "after": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "required": [
-            "kind",
-            "offset",
-            "count",
-            "totalTracks",
-            "topologyEpoch",
-            "durationUs"
-          ],
-          "properties": {
-            "kind": {
-              "const": "user_track_flags"
-            },
-            "offset": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 136
-            },
-            "count": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 136
-            },
-            "totalTracks": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 136
-            },
-            "topologyEpoch": {
-              "type": "string",
-              "pattern": "^[1-9][0-9]*$"
-            },
-            "durationUs": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "fields": {
-              "type": "array",
-              "items": {
-                "enum": [
-                  "flags",
-                  "mixer"
-                ]
-              },
-              "uniqueItems": true
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "mixerGeneration": {
-      "type": "string",
-      "pattern": "^[1-9][0-9]*$",
-      "maxLength": 20
-    },
-    "sendIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 3
-    },
-    "slotIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 3
-    }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "status": {
-            "const": "applied"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "execution": {
-            "const": "completed"
-          },
-          "changed": {
-            "type": "boolean"
-          },
-          "error": {
-            "type": "null"
-          },
-          "verification": {
-            "type": "object"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "status": {
-            "const": "cancelled"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "execution": {
-            "const": "not_started"
-          },
-          "nativeInvoked": {
-            "const": false
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "const": "set_mute"
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "muteScope",
-          "sequence"
-        ],
-        "if": {
-          "properties": {
-            "muteScope": {
-              "const": "sequence"
-            }
-          }
-        },
-        "then": {
-          "properties": {
-            "sequence": {
-              "$ref": "#/$defs/sequenceRef"
-            }
-          }
-        },
-        "else": {
-          "properties": {
-            "sequence": {
-              "type": "null"
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "enum": [
-              "set_volume",
-              "set_pan",
-              "set_send_level"
-            ]
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "value": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          },
-          "verification": {
-            "properties": {
-              "requestedValue": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              }
-            }
-          }
-        }
-      },
-      "else": {
-        "properties": {
-          "value": {
-            "type": "boolean"
-          },
-          "verification": {
-            "properties": {
-              "requestedValue": {
-                "type": "boolean"
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "enum": [
-              "set_volume",
-              "set_pan",
-              "set_send_level",
-              "set_insert_rack_enabled",
-              "set_insert_enabled"
-            ]
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "mixerGeneration"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "const": "set_send_level"
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "sendIndex"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "op": {
-            "const": "set_insert_enabled"
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "slotIndex"
-        ]
-      }
-    }
-  ],
   "$defs": {
     "sequenceRef": {
       "type": "object",
@@ -985,5 +376,1176 @@
       }
     }
   },
-  "description": "Automation Read qualifies native mute/solo/volume/pan manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Sends/inserts remain Off-only."
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "apiVersion",
+        "requestId",
+        "instanceId",
+        "status",
+        "execution",
+        "target",
+        "op",
+        "value",
+        "changed",
+        "nativeInvoked",
+        "verification",
+        "observedChanges",
+        "error",
+        "timing"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "applied",
+            "rejected",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "execution": {
+          "enum": [
+            "not_started",
+            "started",
+            "completed"
+          ]
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "instanceId",
+            "projectId",
+            "trackId"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "pattern": "^run_[0-9a-f]{32}$"
+            },
+            "projectId": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "trackId": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "op": {
+          "enum": [
+            "set_mute",
+            "set_solo",
+            "set_record_armed",
+            "set_volume",
+            "set_pan",
+            "set_send_level",
+            "set_insert_rack_enabled",
+            "set_insert_enabled"
+          ]
+        },
+        "value": {
+          "type": [
+            "boolean",
+            "number"
+          ]
+        },
+        "changed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "nativeInvoked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "verification": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "by",
+            "requestedValue",
+            "audioSideValue",
+            "observedAt"
+          ],
+          "properties": {
+            "by": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "model",
+                  "audio_copy"
+                ]
+              }
+            },
+            "requestedValue": {
+              "type": [
+                "boolean",
+                "number"
+              ]
+            },
+            "audioSideValue": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "observedAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "muteContext": {
+              "$ref": "#/$defs/muteContext"
+            },
+            "mixer": {
+              "$ref": "#/$defs/mixer"
+            }
+          }
+        },
+        "observedChanges": {
+          "type": "array",
+          "maxItems": 3000,
+          "items": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "path",
+              "before",
+              "after"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*$"
+              },
+              "trackId": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*$"
+              },
+              "path": {
+                "type": "string"
+              },
+              "before": {
+                "type": [
+                  "boolean",
+                  "number",
+                  "string",
+                  "null"
+                ]
+              },
+              "after": {
+                "type": [
+                  "boolean",
+                  "number",
+                  "string",
+                  "null"
+                ]
+              },
+              "muteContext": {
+                "$ref": "#/$defs/muteContext"
+              }
+            }
+          }
+        },
+        "error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "code",
+            "message",
+            "details"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "message": {
+              "type": "string"
+            },
+            "details": {
+              "type": "object",
+              "required": [
+                "execution"
+              ]
+            }
+          }
+        },
+        "muteScope": {
+          "enum": [
+            "global",
+            "sequence"
+          ]
+        },
+        "sequence": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sequenceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timing": {
+          "type": "object",
+          "description": "Monotonic durations in milliseconds except cumulative UI work in microseconds; no sample or acoustic timing guarantee. Null means the stage has not completed.",
+          "required": [
+            "queueMs",
+            "dispatchMs",
+            "verificationMs",
+            "totalMs",
+            "uiWorkUs",
+            "verificationPasses"
+          ],
+          "properties": {
+            "queueMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "dispatchMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "verificationMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "totalMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "uiWorkUs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "verificationPasses": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maxUiCallbackUs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stagesUs": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "verificationUiUs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "observationCoverage": {
+          "type": "object",
+          "required": [
+            "before",
+            "after"
+          ],
+          "properties": {
+            "before": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "kind",
+                "offset",
+                "count",
+                "totalTracks",
+                "topologyEpoch",
+                "durationUs"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "user_track_flags"
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "totalTracks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "topologyEpoch": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*$"
+                },
+                "durationUs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "flags",
+                      "mixer"
+                    ]
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "after": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "kind",
+                "offset",
+                "count",
+                "totalTracks",
+                "topologyEpoch",
+                "durationUs"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "user_track_flags"
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "totalTracks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "topologyEpoch": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*$"
+                },
+                "durationUs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "flags",
+                      "mixer"
+                    ]
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "mixerGeneration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "maxLength": 20
+        },
+        "sendIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "slotIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "applied"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution": {
+                "const": "completed"
+              },
+              "changed": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": "null"
+              },
+              "verification": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "cancelled"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution": {
+                "const": "not_started"
+              },
+              "nativeInvoked": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_mute"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "muteScope",
+              "sequence"
+            ],
+            "if": {
+              "properties": {
+                "muteScope": {
+                  "const": "sequence"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "sequence": {
+                  "$ref": "#/$defs/sequenceRef"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "sequence": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "set_volume",
+                  "set_pan",
+                  "set_send_level"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "boolean"
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "set_volume",
+                  "set_pan",
+                  "set_send_level",
+                  "set_insert_rack_enabled",
+                  "set_insert_enabled"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "mixerGeneration"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_send_level"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sendIndex"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_insert_enabled"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "slotIndex"
+            ]
+          }
+        }
+      ],
+      "description": "Automation Read qualifies native mute/solo/volume/pan manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Sends/inserts remain Off-only."
+    },
+    {
+      "title": "Native command receipt",
+      "type": "object",
+      "required": [
+        "apiVersion",
+        "requestId",
+        "instanceId",
+        "status",
+        "execution",
+        "target",
+        "op",
+        "value",
+        "changed",
+        "nativeInvoked",
+        "verification",
+        "observedChanges",
+        "error",
+        "timing"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "applied",
+            "rejected",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "execution": {
+          "enum": [
+            "not_started",
+            "started",
+            "completed"
+          ]
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "instanceId",
+            "projectId"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "pattern": "^run_[0-9a-f]{32}$"
+            },
+            "projectId": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "trackId": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "op": {
+          "enum": [
+            "play",
+            "stop",
+            "play_start",
+            "locate",
+            "select_track",
+            "select_sequence",
+            "set_sequence_bpm"
+          ]
+        },
+        "value": {
+          "type": "null"
+        },
+        "changed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "nativeInvoked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "verification": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "by": {
+              "const": [
+                "model"
+              ]
+            },
+            "requestedValue": {
+              "type": "null"
+            },
+            "audioSideValue": {
+              "type": "null"
+            },
+            "observedAt": {
+              "type": "null"
+            },
+            "transport": {
+              "type": "object",
+              "required": [
+                "playing",
+                "recordMode",
+                "pulse",
+                "selectedTrackId",
+                "selectedSequenceId",
+                "sequenceBpm"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "playing": {
+                  "type": "boolean"
+                },
+                "recordMode": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "pulse": {
+                  "type": "string",
+                  "pattern": "^-?(0|[1-9][0-9]*)$",
+                  "maxLength": 20
+                },
+                "selectedTrackId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*$",
+                      "maxLength": 20
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "selectedSequenceId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*$",
+                      "maxLength": 20
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "sequenceBpm": {
+                  "type": "number",
+                  "minimum": 20,
+                  "maximum": 999
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "observedChanges": {
+          "type": "array",
+          "maxItems": 3000,
+          "items": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "path",
+              "before",
+              "after"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*$"
+              },
+              "trackId": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*$"
+              },
+              "path": {
+                "type": "string"
+              },
+              "before": {
+                "type": [
+                  "boolean",
+                  "number",
+                  "string",
+                  "null"
+                ]
+              },
+              "after": {
+                "type": [
+                  "boolean",
+                  "number",
+                  "string",
+                  "null"
+                ]
+              },
+              "muteContext": {
+                "$ref": "#/$defs/muteContext"
+              }
+            }
+          }
+        },
+        "error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "code",
+            "message",
+            "details"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "message": {
+              "type": "string"
+            },
+            "details": {
+              "type": "object",
+              "required": [
+                "execution"
+              ]
+            }
+          }
+        },
+        "sequence": {
+          "type": "object",
+          "required": [
+            "instanceId",
+            "projectId",
+            "sequenceId",
+            "generation"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "pattern": "^run_[0-9a-f]{32}$"
+            },
+            "projectId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "sequenceId": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "generation": {
+              "type": "string",
+              "maxLength": 20,
+              "description": "Nonzero uint64, at most 18446744073709551615",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "timing": {
+          "type": "object",
+          "description": "Monotonic durations in milliseconds except cumulative UI work in microseconds; no sample or acoustic timing guarantee. Null means the stage has not completed.",
+          "required": [
+            "queueMs",
+            "dispatchMs",
+            "verificationMs",
+            "totalMs",
+            "uiWorkUs",
+            "verificationPasses"
+          ],
+          "properties": {
+            "queueMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "dispatchMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "verificationMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "totalMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "uiWorkUs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "verificationPasses": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maxUiCallbackUs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stagesUs": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "verificationUiUs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "observationCoverage": {
+          "type": "object",
+          "required": [
+            "before",
+            "after"
+          ],
+          "properties": {
+            "before": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "kind",
+                "offset",
+                "count",
+                "totalTracks",
+                "topologyEpoch",
+                "durationUs"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "user_track_flags"
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "totalTracks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "topologyEpoch": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*$"
+                },
+                "durationUs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "flags",
+                      "mixer"
+                    ]
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "after": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "kind",
+                "offset",
+                "count",
+                "totalTracks",
+                "topologyEpoch",
+                "durationUs"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "user_track_flags"
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "totalTracks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "topologyEpoch": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*$"
+                },
+                "durationUs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "flags",
+                      "mixer"
+                    ]
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "pulse": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 10,
+          "description": "Absolute native pulses, from 0 through 2147483647; no beat or sample scheduling guarantee."
+        },
+        "bpm": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 999
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "select_track"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "required": [
+                  "trackId"
+                ]
+              }
+            },
+            "not": {
+              "required": [
+                "sequence"
+              ]
+            }
+          },
+          "else": {
+            "required": [
+              "sequence"
+            ],
+            "properties": {
+              "target": {
+                "not": {
+                  "required": [
+                    "trackId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "locate"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "pulse"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "pulse"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_sequence_bpm"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bpm"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "bpm"
+              ]
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  ]
 }
