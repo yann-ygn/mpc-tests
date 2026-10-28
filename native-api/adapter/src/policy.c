@@ -3,6 +3,7 @@
 #include "mpc_adapter_profile.h"
 #include "mpc_family_profile.h"
 #include "mpc_read_profile.h"
+#include "mpc_mixer_profile.h"
 
 #include <string.h>
 
@@ -121,6 +122,16 @@ static enum mpc_native_error capture_sources(
     !read_value(a, s->playback_properties, READ_muteSoloPlayValue, &s->mute_solo_play, 1) ||
     !read_value(a, s->playback_properties, READ_levelPanPlayValue, &s->level_pan_play, 1) ||
     s->mute_solo_play > 1 || s->level_pan_play > 1)
+    return MPC_NATIVE_AUTOMATION_SOURCE_UNQUALIFIED;
+  /* Pan's native parameter 0x205 reaches Mixable +0x394 (Program
+   * +0x3d0), through the same filtered/notifying property path as manual
+   * control. Fence its live filter capture as well as the canonical Clip;
+   * volume ownership alone is insufficient. Capture contains the clamp
+   * limits, not the current pan value, so native playback remains eligible. */
+  if (
+    operation == MPC_COMMAND_PAN &&
+    (!read_value(a, target->program, MIXER_PAN_STORAGE, s->pan_filter, sizeof s->pan_filter) ||
+     !s->pan_filter[2] || s->pan_filter[3] != a->io.image + MIXER_PAN_FILTER))
     return MPC_NATIVE_AUTOMATION_SOURCE_UNQUALIFIED;
   /* Single solo invokes native peer setters. Every possible user peer must
    * have a qualified Program/source and Off/Read policy too; a Write peer must
@@ -268,7 +279,7 @@ enum mpc_native_error mpc_native_qualify_command(
     return MPC_NATIVE_READ_FAILED;
   bool read_write = before.automation == 1 &&
     (operation == MPC_COMMAND_MUTE || operation == MPC_COMMAND_SOLO ||
-     operation == MPC_COMMAND_VOLUME);
+     operation == MPC_COMMAND_VOLUME || operation == MPC_COMMAND_PAN);
   if (read_write) {
     before.source_error = capture_sources(a, target, operation, &before);
     after.source_error = capture_sources(a, target, operation, &after);
@@ -301,7 +312,7 @@ enum mpc_native_error mpc_native_qualify_command(
     return MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED;
   if (
     operation >= MPC_COMMAND_VOLUME && before.automation &&
-    !(operation == MPC_COMMAND_VOLUME && before.automation == 1))
+    !((operation == MPC_COMMAND_VOLUME || operation == MPC_COMMAND_PAN) && before.automation == 1))
     return MPC_NATIVE_MIXER_AUTOMATION_UNQUALIFIED;
   if (before.automation > 1)
     return MPC_NATIVE_AUTOMATION_UNQUALIFIED;

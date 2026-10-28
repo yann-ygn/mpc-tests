@@ -39,11 +39,12 @@ class MixerTests(HostHarness):
         return self.command(request_id, op, value, mixerGeneration=self.generation, **extra)
 
     def test_shared_mixer_examples_match_the_strict_contract(self):
-        for name in ("mixer-request", "send-request", "insert-request"):
+        for name in ("mixer-request", "pan-read-request", "send-request", "insert-request"):
             example = json.loads((ROOT / f"native-api/examples/{name}.json").read_text())
             jsonschema.validate(example, self.request_schema)
-        example = json.loads((ROOT / "native-api/examples/mixer-applied.json").read_text())
-        jsonschema.validate(example, self.receipt_schema)
+        for name in ("mixer-applied", "pan-read-superseded"):
+            example = json.loads((ROOT / f"native-api/examples/{name}.json").read_text())
+            jsonschema.validate(example, self.receipt_schema)
         for path in (ROOT / "native-api/examples").glob("describe*response.json"):
             jsonschema.validate(
                 json.loads(path.read_text()),
@@ -207,7 +208,7 @@ class MixerTests(HostHarness):
                     self.assertEqual(conflict["error"]["code"], "PRECONDITION_FAILED")
             finally:
                 path.unlink()
-        for op in ("set_pan", "set_send_level", "set_insert_rack_enabled", "set_insert_enabled"):
+        for op in ("set_send_level", "set_insert_rack_enabled", "set_insert_enabled"):
             extra = (
                 {"sendIndex": 0}
                 if op == "set_send_level"
@@ -234,7 +235,39 @@ class MixerTests(HostHarness):
         self.assertEqual(result["error"]["code"], "PRECONDITION_FAILED")
         support = self.public("get_state")["tracks"][0]["mixer"]["operations"]
         self.assertEqual(support["set_volume"]["automation"]["read"], "qualified_writes")
-        self.assertEqual(support["set_pan"]["automation"]["read"], "unsupported")
+        self.assertEqual(support["set_pan"]["automation"]["read"], "qualified_writes")
+
+    def test_read_pan_float_boundaries_source_noops_and_parallel_receipt_ownership(self):
+        (self.install / "policy-automation-read").touch()
+        for index, value in enumerate((0, 0.5, 1, 0.123456789, 1e-40, 1 - 1e-9)):
+            request = self.mixer("pan-boundary-" + str(index), "set_pan", value)
+            result = self.receipt(self.send(request), "applied")
+            self.assertEqual(result["value"], value)
+            self.assertEqual(
+                result["verification"]["requestedValue"],
+                struct.unpack("f", struct.pack("f", value))[0],
+            )
+            self.assertEqual(self.get(request["requestId"]), result)
+        stale = self.send({**self.mixer("pan-stale", "set_pan", 0), "mixerGeneration": "99999"})
+        self.assertEqual(stale["error"]["code"], "STALE_MIXER")
+        self.assertFalse(stale["nativeInvoked"])
+        (self.install / "policy-read-source-unknown").touch()
+        result = self.send(self.mixer("pan-source-noop", "set_pan", 1))
+        self.assertEqual(result["status"], "applied")
+        self.assertFalse(result["nativeInvoked"])
+        result = self.send(self.mixer("pan-source-conflict", "set_pan", 1, expected={"value": 0}))
+        self.assertEqual(result["error"]["code"], "PRECONDITION_FAILED")
+        result = self.send(self.mixer("pan-source-write", "set_pan", 0))
+        self.assertEqual(result["error"]["code"], "AUTOMATION_SOURCE_UNQUALIFIED")
+        self.assertFalse(result["nativeInvoked"])
+        (self.install / "policy-read-source-unknown").unlink()
+        requests = [self.mixer("pan-pressure-" + str(i), "set_pan", (i + 1) / 10) for i in range(8)]
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            results = list(pool.map(self.send, requests))
+        for request, result in zip(requests, results, strict=True):
+            self.assertEqual(result["status"], "applied", result)
+            self.assertEqual(self.get(request["requestId"]), result)
+            self.assertEqual(self.send(request), result)
 
     def test_stale_generation_and_mixer_fixture_receipts(self):
         stale = self.receipt(self.send({**self.mixer(), "mixerGeneration": "99999"}), "rejected")

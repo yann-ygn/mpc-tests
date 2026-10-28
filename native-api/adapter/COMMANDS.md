@@ -264,7 +264,7 @@ active-sequence Clip associations and Single solo peer policy. Native populated
 sources are supported; no absence heuristic grants permission. Source replacement
 rejects before invocation or preserves uncertainty afterward. Later automation
 can replace a manual value, including before completion can be verified. The
-setter is never repeated during verification. Pan/sends/inserts remain Off-only.
+setter is never repeated during verification. Sends/inserts remain Off-only.
 See [source restrictions and native interaction](../../findings/native-automation-read-writes.md).
 
 The adapter marks the boundary before a native filter and again before its
@@ -274,7 +274,7 @@ change rejects before native invocation or retains uncertainty afterward. The
 policy never changes settings, event data or screen to gain permission.
 
 Discovery and per-track/family support add `automation`: Off is
-`qualified_writes`; Read is `qualified_writes` for mute/solo/arm and volume,
+`qualified_writes`; Read is `qualified_writes` for mute/solo/arm, volume and pan,
 with `readConditions`/`readBehavior`; Write/unknown are `unsupported`. This metadata is
 conditional qualification, not a cached permission for a specific request.
 See [native sources and device evidence](../../findings/native-automation-read-writes.md).
@@ -314,3 +314,5 @@ their zero-based index. Desired numeric values live in `request.mixer.value` in 
 booleans use the existing `value`. Flag requests leave the mixer member zeroed.
 Snapshots/observations use ABI 5/2. `MPC_EXECUTOR_SAMPLE_CONTROLS` aliases the
 historical `SAMPLE_FLAGS` operation and includes independent `mixer.known` fields.
+
+US #54 extends the same Read source fences to pan, including its native float filter capture. See [pan qualification](../../findings/native-automation-read-pan.md).

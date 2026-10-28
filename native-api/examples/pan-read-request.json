@@ -1,0 +1,16 @@
+{
+  "apiVersion": "0.1",
+  "op": "set_pan",
+  "requestId": "pan-read",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "mixerGeneration": "100",
+  "value": 0.75,
+  "expected": {
+    "value": 0.75
+  },
+  "waitMs": 1000
+}

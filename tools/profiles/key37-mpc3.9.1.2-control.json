@@ -552,6 +552,31 @@
       "name": "readSequenceSourceBinding",
       "rva": 39548948,
       "prefixHex": "f0426de10140a0e140139fe540339fe5f860cde1f081cde118a08de51ce08de5"
+    },
+    {
+      "name": "readParameterPanDispatch",
+      "rva": 37941004,
+      "prefixHex": "1c0600ead90700ea260300ea250300ea240300ead00700eaca0700eac40700ea"
+    },
+    {
+      "name": "readParameterPanCase",
+      "rva": 37947268,
+      "prefixHex": "480ab0eee50f85e2202a00ebbaf8ffea760e85e2480ab0ee0c0080e21b2a00eb"
+    },
+    {
+      "name": "readPanFilteredApplication",
+      "rva": 37990420,
+      "prefixHex": "ac209fe5ac309fe508402de504e08de508d04de202208fe0033092e7003093e5"
+    },
+    {
+      "name": "readPanFilterInvocation",
+      "rva": 37990460,
+      "prefixHex": "343090e5000a8ded000053e31300000a0040a0e10d10a0e1383094e52c0080e2"
+    },
+    {
+      "name": "readPanNotifyingApplication",
+      "rva": 37990532,
+      "prefixHex": "0400a0e108d08de200409de504e09de508d08de2aa7fa8ea30209fe524309fe5"
     }
   ],
   "bindings": [

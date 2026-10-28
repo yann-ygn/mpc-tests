@@ -25,6 +25,8 @@ struct fixture {
   unsigned code_reads, object_reads, validations, setters, filters, sequence, filter_order,
     setter_order;
   uint32_t family_after_filter, family_after_set;
+  uint32_t pan_change_address, pan_change_value;
+  bool pan_normalize, pan_reject;
   char build[129], model[256];
 };
 static const struct mpc_native_target target = {OBJECTS, TRACK, PROGRAM};

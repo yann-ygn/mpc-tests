@@ -1,0 +1,245 @@
+{
+  "story": 54,
+  "firmware": {
+    "model": "MPC Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "availability": {
+    "implementation": "0.13.0",
+    "deviceQualified": true,
+    "installed": "0.12.0",
+    "installedReadPan": false
+  },
+  "contract": {
+    "scope": "global",
+    "unit": "normalized",
+    "left": 0,
+    "centre": 0.5,
+    "right": 1,
+    "expectedComparison": "binary32_exact",
+    "completion": [
+      "model"
+    ],
+    "nativeFilterPreserved": true,
+    "timelineEditsByCommands": false,
+    "verificationWrites": false
+  },
+  "tests": {
+    "hostEntries": 23,
+    "asanUbsanEntries": 18,
+    "isolatedArmFixtures": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 327
+      },
+      {
+        "fixture": "mixer_fixture",
+        "passed": true,
+        "outputLines": 78
+      },
+      {
+        "fixture": "watch_fixture",
+        "passed": true,
+        "outputLines": 1
+      }
+    ],
+    "armDeploymentGuards": true
+  },
+  "deviceMatrix": {
+    "eventFreeRows": 112,
+    "populatedRows": 28,
+    "actualValueWrites": 560,
+    "actualWritesApplied": 559,
+    "deviceVerificationTimeouts": 1,
+    "families": [
+      "plugin",
+      "drum",
+      "keygroup",
+      "audio"
+    ],
+    "screens": [
+      "main",
+      "mixer_volume",
+      "mixer_pan_volume",
+      "mixer_sends",
+      "mixer_effects",
+      "mixer_io",
+      "track_mute"
+    ],
+    "playing": [
+      false,
+      true
+    ],
+    "selected": [
+      false,
+      true
+    ],
+    "values": [
+      0,
+      0.5,
+      1,
+      0.123456789
+    ],
+    "independentReadback": true,
+    "expectedConflictsNoopsAndRetainedRetries": true,
+    "uiEvidenceRows": 140,
+    "timelineAndCapturedStateRestored": true
+  },
+  "populatedSource": {
+    "preparation": "Native UI created five scheduled pan events on a disposable keygroup track; no original track timeline was edited",
+    "instrumentIndex": 257,
+    "parameterId": 10,
+    "nativeReplacementObserved": true,
+    "manualReceiptStatus": "applied",
+    "retainedReceiptUnchanged": true,
+    "independentValues": [
+      0.12345679104328156,
+      0.23333333432674408,
+      0.8777777552604675
+    ],
+    "timelineAndParametersPreservedDuringCommands": true,
+    "cleanup": "Locate to zero before the single stopped restore; locating itself can reapply native pan automation",
+    "boundedUnknownVerification": {
+      "screen": "mixer_volume",
+      "playing": true,
+      "selected": false,
+      "requestValue": 0.123456789,
+      "observedPan": 0.8777777552604675,
+      "status": "unknown",
+      "error": "VERIFICATION_TIMEOUT",
+      "nativeInvoked": true,
+      "execution": "completed",
+      "totalMs": 502,
+      "verificationMs": 475,
+      "verificationPasses": 15,
+      "accumulatedUiWorkMs": 284.058,
+      "verificationUiWorkMs": 257.652,
+      "retainedRetryUnchanged": true,
+      "setterRepeatedDuringVerification": false
+    }
+  },
+  "timingMs": {
+    "unpressuredMatrixMaxUiCallback": {
+      "count": 560,
+      "p50": 26.522,
+      "p95": 32.307,
+      "p99": 34.119,
+      "max": 38.051
+    },
+    "unpressuredMatrixReceipt": {
+      "count": 560,
+      "p50": 32,
+      "p95": 43,
+      "p99": 48,
+      "max": 502
+    },
+    "watchDelivery": {
+      "count": 24,
+      "p50": 127.76374,
+      "p95": 245.429019,
+      "p99": 362.106178,
+      "max": 362.106178
+    },
+    "successfulWatchCallback": {
+      "count": 78,
+      "p50": 3.909,
+      "p95": 7.39,
+      "p99": 10.874,
+      "max": 10.874
+    },
+    "pressureMaxUiCallback": {
+      "count": 8,
+      "p50": 31.636,
+      "p95": 38.571,
+      "p99": 38.571,
+      "max": 38.571
+    },
+    "boundary": "Unix watch and receipt timings include SSH forwarding; native callback work is measured on the MPC",
+    "limits": "Workloads differ from US39/52/53. Callback p95 exceeds the US52 25ms target and observation p95 exceeds its 3ms target; no automation-rate or real-time guarantee"
+  },
+  "watch": {
+    "trackCount": 10,
+    "steadySubscribers": 7,
+    "replaySubscriber": 8,
+    "moves": 24,
+    "lostResponseCases": 2,
+    "retainedReplayReconnectCases": 24,
+    "nativeReadbackMatched": true,
+    "pressureClients": 8,
+    "pressureRequests": 8,
+    "pressureApplied": 8,
+    "successfulLightweightSamples": 78,
+    "fullReads": 7,
+    "cancelledSampleAttempts": 3,
+    "fullSnapshotPerControlUpdate": false,
+    "schemaValidatedFrames": 6,
+    "retentionCapacity": "The UI evidence workload reached the existing 128-receipt limit, rejected further admission, and continued in a fresh temporary API instance"
+  },
+  "restoration": {
+    "inventoryFlagsAndSelectionRestored": true,
+    "mixersRestored": true,
+    "timelineAndNativeParametersRestored": true,
+    "settingsAndAutomationContextRestored": true,
+    "zeroPlayheadRestored": true,
+    "temporaryTracksRemoved": true,
+    "pidUnchanged": true,
+    "mpcRestarted": false,
+    "projectSavedOrLoaded": false,
+    "screenRestored": "Menu over Mixer Volume; original viewport",
+    "passed": true
+  },
+  "installedVerification": {
+    "version": "0.12.0",
+    "ready": true,
+    "schemaValidatedOperations": [
+      "describe",
+      "get_state",
+      "list_tracks",
+      "current_track",
+      "current_sequence",
+      "recovery_snapshot"
+    ],
+    "independentFlagsAndMixersMatched": true,
+    "originalEightTracks": true,
+    "temporaryMappingsRemoved": true,
+    "readPanRemainsUnsupported": true,
+    "pidUnchanged": true
+  },
+  "artifacts": {
+    "screens": "7b2a8842ba1bdc0f26654fc536f7043d7518387de87761b587ead9f63182193f",
+    "families": "278eb96c4e73074a852ca7a307981c67b1ba259f3d4c464803edd0f625cbd9a2",
+    "populated-final": "150132be0ce05ea3005140eeb65a293ba318d0377369b058026984b5e611e1ea",
+    "populated-manual": "82bf97a416b6bf9bbdb716160301bd8abb57f4372684aea7a1f53da0c413ae46",
+    "watch/pan": "3540db76c6b751f7eac56fe677ab6fa1af8ee576a3c51456f9eaa72586f485ca",
+    "watch/ui": "0ca7c02b66bf258ae2e1089fd925210fda31d08d475fd50c60aa1e1bf97aa643",
+    "restoration": "af90368ed5c6929bd38c2f054dffc46c41ee5f52d713d9e2ac82e7496a0c86d0",
+    "installed-verification": "ba927fe47c6e8f789131da0afe238c7e6f038f846468602ec989c4f40c904060"
+  }
+}

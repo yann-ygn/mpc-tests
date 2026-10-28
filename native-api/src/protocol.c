@@ -342,9 +342,9 @@ char *api_respond(
       "\"requiresMixerGeneration\":true,\"conditions\":[\"qualified_screen\",\"no_popup\","
       "\"stopped_or_sequence_playback\",\"recording_off\",\"current_mixer_generation\",",
       output);
-    api_quoted(output, i == 0 ? "automation_off_or_qualified_read" : "automation_off");
+    api_quoted(output, i <= 1 ? "automation_off_or_qualified_read" : "automation_off");
     fputs("],\"automation\":", output);
-    mpc_automation_json(output, i == 0, i == 0, 0, 0);
+    mpc_automation_json(output, i <= 1, i <= 1, 0, 0);
     fputs(",\"transportStates\":[\"stopped\",\"sequence_playback\"]", output);
     if (i < 3)
       fputs(

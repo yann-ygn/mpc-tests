@@ -1,0 +1,203 @@
+{
+  "apiVersion": "0.1",
+  "requestId": "pan-read-superseded",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "status": "unknown",
+  "execution": "completed",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "147"
+  },
+  "op": "set_pan",
+  "value": 0.123456789,
+  "changed": false,
+  "nativeInvoked": true,
+  "verification": {
+    "by": [
+      "model"
+    ],
+    "requestedValue": 0.8777777552604675,
+    "audioSideValue": null,
+    "observedAt": "2026-10-28T09:32:48.559Z",
+    "mixer": {
+      "generation": "149",
+      "known": 127,
+      "scope": "global",
+      "unit": "normalized",
+      "volume": 0.70809114,
+      "pan": 0.877777755,
+      "sends": [
+        {
+          "index": 0,
+          "destination": "return_A",
+          "value": 0
+        },
+        {
+          "index": 1,
+          "destination": "return_B",
+          "value": 0
+        },
+        {
+          "index": 2,
+          "destination": "return_C",
+          "value": 0
+        },
+        {
+          "index": 3,
+          "destination": "return_D",
+          "value": 0
+        }
+      ],
+      "insertRackEnabled": true,
+      "inserts": [
+        {
+          "index": 0,
+          "occupied": false,
+          "enabled": null
+        },
+        {
+          "index": 1,
+          "occupied": false,
+          "enabled": null
+        },
+        {
+          "index": 2,
+          "occupied": false,
+          "enabled": null
+        },
+        {
+          "index": 3,
+          "occupied": false,
+          "enabled": null
+        }
+      ],
+      "verification": [
+        "model"
+      ],
+      "audioCompletionKnown": false,
+      "operations": {
+        "set_volume": {
+          "available": true,
+          "automation": {
+            "off": "qualified_writes",
+            "read": "qualified_writes",
+            "write": "unsupported",
+            "unknown": "unsupported",
+            "readBehavior": "manual_change_until_native_update",
+            "readConditions": [
+              "qualified_native_sources",
+              "stable_active_sequence"
+            ],
+            "timelineEdits": false
+          }
+        },
+        "set_pan": {
+          "available": true,
+          "automation": {
+            "off": "qualified_writes",
+            "read": "qualified_writes",
+            "write": "unsupported",
+            "unknown": "unsupported",
+            "readBehavior": "manual_change_until_native_update",
+            "readConditions": [
+              "qualified_native_sources",
+              "stable_active_sequence"
+            ],
+            "timelineEdits": false
+          }
+        },
+        "set_send_level": {
+          "available": true,
+          "automation": {
+            "off": "qualified_writes",
+            "read": "unsupported",
+            "write": "unsupported",
+            "unknown": "unsupported",
+            "readBehavior": "unsupported",
+            "readConditions": [],
+            "timelineEdits": false
+          }
+        },
+        "set_insert_rack_enabled": {
+          "available": true,
+          "automation": {
+            "off": "qualified_writes",
+            "read": "unsupported",
+            "write": "unsupported",
+            "unknown": "unsupported",
+            "readBehavior": "unsupported",
+            "readConditions": [],
+            "timelineEdits": false
+          }
+        },
+        "set_insert_enabled": {
+          "available": false,
+          "automation": {
+            "off": "qualified_writes",
+            "read": "unsupported",
+            "write": "unsupported",
+            "unknown": "unsupported",
+            "readBehavior": "unsupported",
+            "readConditions": [],
+            "timelineEdits": false
+          }
+        }
+      }
+    }
+  },
+  "mixerGeneration": "149",
+  "observationCoverage": {
+    "before": {
+      "kind": "user_track_flags",
+      "offset": 0,
+      "count": 10,
+      "fields": [
+        "flags",
+        "mixer"
+      ],
+      "totalTracks": 10,
+      "topologyEpoch": "2",
+      "durationUs": 3262
+    },
+    "after": {
+      "kind": "user_track_flags",
+      "offset": 0,
+      "count": 10,
+      "fields": [
+        "flags",
+        "mixer"
+      ],
+      "totalTracks": 10,
+      "topologyEpoch": "2",
+      "durationUs": 3291
+    }
+  },
+  "observedChanges": [],
+  "timing": {
+    "queueMs": 1,
+    "dispatchMs": 26,
+    "verificationMs": 475,
+    "totalMs": 502,
+    "uiWorkUs": 284058,
+    "verificationPasses": 15,
+    "maxUiCallbackUs": 26406,
+    "stagesUs": {
+      "identity": 104935,
+      "policy": 75914,
+      "filterSetter": 32,
+      "targetReadback": 41536,
+      "beforeObservation": 3265,
+      "afterObservation": 58103,
+      "other": 211
+    },
+    "verificationUiUs": 257652
+  },
+  "error": {
+    "code": "VERIFICATION_TIMEOUT",
+    "message": "Command did not establish the requested state",
+    "details": {
+      "execution": "completed"
+    }
+  }
+}

@@ -386,3 +386,5 @@ volume/send conversion, pan filtering and asynchronous rack/slot forwarding.
 Program/rack/slot destruction observers fence captured generations; direct raw
 addresses never become public write targets. See [mixer findings](../../findings/native-mixer-controls.md)
 and the [managed contract](COMMANDS.md) for eligibility and completion limits.
+
+US #54 adds actual Read pan writes and pan filter/source fences without changing public C layouts. See [qualification and native automation behavior](../../findings/native-automation-read-pan.md).

@@ -63,6 +63,8 @@ wire_setter(void *data, uintptr_t function, uintptr_t property, bool value) {
 static int wire_read(void *data, uintptr_t address, void *output, size_t bytes) {
   if (ui && marker("manual-mute"))
     put_bool(&fixture.native, PROGRAM + native_bindings[0].requested, true);
+  if (ui && marker("manual-pan"))
+    mixer_float(&fixture.native, PROGRAM + MIXER_PAN_VALUE, .25f);
   const struct native_command_context_layout *p = &native_command_context;
   if (
     ui && scope_changed_after_set && marker("scope-after-set") &&

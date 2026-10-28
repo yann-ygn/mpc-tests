@@ -10,9 +10,9 @@ tracks under Automation Off, with generation-bound targets and model-only comple
 separates native requested flags from engine copies; MIDI/CV output remains unmeasured.
 The [managed flag handlers](native-api/adapter/COMMANDS.md) retain verified command results across retries and disconnects;
 a native live policy qualifies Main/Mixer/Track Mute, stopped or during normal sequence playback,
-with recording/overdub Off. Automation Read supports native mute, solo and volume changes through qualified live sources,
+with recording/overdub Off. Automation Read supports native mute, solo, volume and pan changes through qualified live sources,
 plus verified no-ops and native record-arm writes. Later native automation may supersede manual values.
-See [Read write qualification](findings/native-automation-read-writes.md). [Playback qualification](findings/native-playback-flags.md)
+See [Read write qualification](findings/native-automation-read-writes.md) and [pan qualification](findings/native-automation-read-pan.md). [Playback qualification](findings/native-playback-flags.md)
 reports timing and tested limits. Command observations use a [lightweight flag sampler](findings/native-ui-cost.md);
 authoritative full reads retain their coverage. See [the service](native-api/README.md),
 [the native adapter](native-api/adapter/README.md)

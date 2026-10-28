@@ -172,7 +172,7 @@ struct native_command_context_layout {
  * a later event. No pointer from this disposable sample is used for a write. */
 struct mpc_read_sources {
   uint32_t sequence, listener, updater, clip, clip_owner, event_tree[5], sequence_tree[5];
-  uint32_t playback_properties;
+  uint32_t playback_properties, pan_filter[4];
   unsigned char mute_solo_play, level_pan_play;
   uint64_t peers;
 };

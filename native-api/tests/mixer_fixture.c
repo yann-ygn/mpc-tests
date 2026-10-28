@@ -81,6 +81,9 @@ static void read_without_clip(void) {
     mixer_request(&f, MPC_COMMAND_VOLUME, 0, 0, .25, "no_clip_volume");
   struct mpc_command_receipt r = send(&f, input);
   assert(r.status == MPC_COMMAND_APPLIED && r.native_invoked);
+  input = mixer_request(&f, MPC_COMMAND_PAN, 0, 0, .25, "no_clip_pan");
+  r = send(&f, input);
+  assert(r.status == MPC_COMMAND_APPLIED && r.native_invoked);
   put_bool(n, POLICY_MUTE + native_command_context.perSequenceMute, true);
   input = request(&f, "no_clip_sequence", MPC_COMMAND_MUTE, 0, false);
   input.mute_scope = MPC_MUTE_SEQUENCE;
@@ -95,7 +98,7 @@ static void read_without_clip(void) {
   cleanup(&f);
 }
 
-static void read_volume(void) {
+static void read_numeric(unsigned operation) {
   const uint32_t families[] =
     {NATIVE_PLUGIN_VTABLE, NATIVE_DRUM_VTABLE, NATIVE_KEYGROUP_VTABLE, NATIVE_AUDIO_VTABLE};
   const uint32_t screens[] = {
@@ -126,10 +129,13 @@ static void read_volume(void) {
               char id[80];
               snprintf(id, sizeof id, "read_volume_%u_%u_%u", target_index, selected, v);
               struct mpc_command_request r =
-                mixer_request(&f, MPC_COMMAND_VOLUME, target_index, 0, values[v], id);
+                mixer_request(&f, operation, target_index, 0, values[v], id);
               struct mpc_command_receipt out = send(&f, r), replay;
               assert(out.status == MPC_COMMAND_APPLIED);
-              assert(out.after.tracks[target_index].mixer.volume == (float)values[v]);
+              assert(
+                (operation == MPC_COMMAND_PAN
+                   ? out.after.tracks[target_index].mixer.pan
+                   : out.after.tracks[target_index].mixer.volume) == (float)values[v]);
               unsigned setters = n->setters;
               assert(!mpc_commands_submit(f.commands, 7, &r, 0, &replay));
               assert(!memcmp(&out, &replay, sizeof out));
@@ -145,7 +151,7 @@ static void read_volume(void) {
               assert(n->setters == setters);
             }
           }
-        for (unsigned op = MPC_COMMAND_PAN; op <= MPC_COMMAND_INSERT; op++) {
+        for (unsigned op = MPC_COMMAND_SEND; op <= MPC_COMMAND_INSERT; op++) {
           struct mpc_command_request r = mixer_request(&f, op, 0, 0, .5, "read_other");
           r.request_id[0] = (char)('a' + op);
           struct mpc_command_receipt out = send(&f, r);
@@ -154,8 +160,62 @@ static void read_volume(void) {
         cleanup(&f);
       }
 }
+static void read_pan_fences(void) {
+  for (unsigned scenario = 0; scenario < 8; scenario++) {
+    struct commands_fixture f;
+    setup(&f, 8, 64, true);
+    f.live_policy = true;
+    struct fixture *n = &f.identity.native;
+    mixer_init(n, PROGRAM, OBJECTS + 0x30000);
+    put32(n, PROGRAM + native_command_context.programAutomation, 1);
+    if (scenario == 0) {
+      put32(n, PROGRAM + MIXER_PAN_INVOKER, IMAGE + 4);
+      struct mpc_command_request noop = mixer_request(&f, MPC_COMMAND_PAN, 0, 0, .5, "source_noop");
+      struct mpc_command_receipt receipt = send(&f, noop);
+      assert(receipt.status == MPC_COMMAND_APPLIED && !receipt.native_invoked && !n->filters);
+    } else if (scenario < 5) {
+      n->pan_change_address = scenario == 1 ? PROGRAM + MIXER_PAN_MANAGER
+        : scenario == 2                     ? POLICY_PLAYBACK + READ_levelPanPlayValue
+        : scenario == 3                     ? PROGRAM + native_command_context.programAutomation
+                                            : POLICY_SOURCE + 0x400 + READ_eventTree + 16;
+      n->pan_change_value = scenario == 1 ? IMAGE + 8 : scenario == 2 ? 0 : scenario == 3 ? 2 : 1;
+    } else if (scenario == 7) {
+      n->pan_change_address = OBJECTS + 0x30200;
+      n->pan_change_value = OBJECTS + 0x30700;
+    } else {
+      n->pan_normalize = scenario == 5;
+      n->pan_reject = scenario == 6;
+    }
+    struct mpc_command_request request = mixer_request(&f, MPC_COMMAND_PAN, 0, 0, 1, "pan_fence");
+    struct mpc_command_receipt receipt = send(&f, request);
+    if (scenario == 0) {
+      assert(receipt.error == MPC_NATIVE_AUTOMATION_SOURCE_UNQUALIFIED && !receipt.native_invoked);
+    } else if (scenario < 5) {
+      assert(receipt.native_invoked && n->filters == 1 && !n->setters);
+      assert(
+        receipt.error ==
+        (scenario == 3 ? MPC_NATIVE_MIXER_AUTOMATION_UNQUALIFIED
+                       : MPC_NATIVE_AUTOMATION_SOURCE_CHANGED));
+    } else if (scenario == 7) {
+      assert(receipt.native_invoked && n->filters == 1 && !n->setters);
+      assert(receipt.error == MPC_NATIVE_STALE_MIXER);
+    } else if (scenario == 5) {
+      /* Normalization preserves the original desired request. Verification
+       * cannot claim it applied when the filter selected a different value. */
+      assert(receipt.native_invoked && n->filters == 1 && n->setters == 1);
+      assert(receipt.status == MPC_COMMAND_UNKNOWN);
+      assert(receipt.after.tracks[0].mixer.pan == .25f);
+    } else {
+      assert(receipt.native_invoked && n->filters == 1 && !n->setters);
+      assert(receipt.error == MPC_NATIVE_VALUE_REJECTED);
+    }
+    cleanup(&f);
+  }
+}
 int main(void) {
-  read_volume();
+  read_pan_fences();
+  read_numeric(MPC_COMMAND_VOLUME);
+  read_numeric(MPC_COMMAND_PAN);
   read_without_clip();
   struct commands_fixture f;
   setup(&f, 8, 128, true);
@@ -238,8 +298,8 @@ int main(void) {
   assert(result.status == MPC_COMMAND_REJECTED && result.error == MPC_NATIVE_STALE_MIXER);
   emit(&result);
   /* Automation restrictions cover no-ops as well as notifying writes. */
-  for (unsigned mode = 1; mode <= 2; mode++) {
-    r = mixer_request(&f, MPC_COMMAND_PAN, 0, 0, 1, mode == 1 ? "read" : "write");
+  for (unsigned mode = 2; mode <= 3; mode++) {
+    r = mixer_request(&f, MPC_COMMAND_PAN, 0, 0, 1, mode == 2 ? "write" : "unknown");
     put32(n, PROGRAM + native_command_context.programAutomation, mode);
     result = send(&f, r);
     assert(

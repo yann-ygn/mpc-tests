@@ -985,5 +985,5 @@
       }
     }
   },
-  "description": "Automation Read qualifies native mute/solo/volume manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Pan/sends/inserts remain Off-only."
+  "description": "Automation Read qualifies native mute/solo/volume/pan manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Sends/inserts remain Off-only."
 }

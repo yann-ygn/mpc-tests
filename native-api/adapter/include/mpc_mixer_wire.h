@@ -98,7 +98,7 @@ static inline void mpc_mixer_json(FILE *f, const struct mpc_mixer_state *s) {
       i ? "," : "",
       ops[i],
       (s->known & mask) ? "true" : "false");
-    mpc_automation_json(f, i == 0 && (s->known & mask), i == 0, 0, 0);
+    mpc_automation_json(f, i <= 1 && (s->known & mask), i <= 1, 0, 0);
     fputc('}', f);
   }
   fputs("}}", f);

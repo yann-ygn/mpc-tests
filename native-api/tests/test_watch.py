@@ -20,7 +20,7 @@ SCHEMAS = ROOT / "native-api/schema"
 class WatchTests(HostHarness):
     def setUp(self):
         super().setUp()
-        self.launch("native-commands")
+        self.launch("mixer-commands")
         self.streams = []
         registry = Registry().with_resources(
             (p.name, Resource.from_contents(json.loads(p.read_text())))
@@ -154,6 +154,33 @@ class WatchTests(HostHarness):
         self.assertEqual(self.until(retry, "change"), change)
         actual = self.public("get_state")
         self.assertEqual(actual["tracks"][0]["requested"], change["tracks"][0]["requested"])
+
+    def test_read_pan_commands_and_native_updates_replay_through_shared_observation(self):
+        (self.install / "policy-automation-read").touch()
+        _, reader, first = self.start()
+        track = first["state"]["tracks"][0]
+        command = {
+            "apiVersion": "0.1",
+            "op": "set_pan",
+            "requestId": "watch-pan",
+            "target": track["ref"],
+            "mixerGeneration": track["mixer"]["generation"],
+            "value": 1,
+            "waitMs": 1000,
+        }
+        result = self.call(json.dumps(command).encode() + b"\n", self.api)
+        self.assertEqual(result["status"], "applied", result)
+        self.assertTrue(result["nativeInvoked"])
+        changed = self.until(reader, "change")
+        self.assertEqual(changed["tracks"][0]["mixer"]["pan"], 1)
+        self.assertEqual(changed["coverage"]["count"], 2)
+        (self.install / "manual-pan").touch()
+        native = self.until(reader, "change")
+        self.assertEqual(native["tracks"][0]["mixer"]["pan"], 0.25)
+        _, replay = self.stream(changed["cursor"])
+        self.assertTrue(self.frame(replay)["resumed"])
+        self.assertEqual(self.until(replay, "change"), native)
+        self.assertEqual(self.call(json.dumps(command).encode() + b"\n", self.api), result)
 
     def test_topology_reconciliation_preserves_order_and_ids(self):
         _, reader, first = self.start()

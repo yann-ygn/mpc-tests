@@ -47,6 +47,12 @@ fixture_float_filter(void *data, uintptr_t receiver, uintptr_t function, float *
   assert(
     receiver == PROGRAM + MIXER_PAN_STORAGE || receiver == OBJECTS + 0x16000 + MIXER_PAN_STORAGE);
   f->filters++;
+  if (f->pan_change_address)
+    put32(f, f->pan_change_address, f->pan_change_value);
+  if (f->pan_reject)
+    return MPC_NATIVE_VALUE_REJECTED;
+  if (f->pan_normalize)
+    *value = .25f;
   if (f->family_after_filter)
     put32(f, PROGRAM, IMAGE + f->family_after_filter);
   if (*value < 0)

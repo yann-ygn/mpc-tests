@@ -303,3 +303,19 @@ before running experiments.
   All pre-install user/bus flags, mixer values, Read modes, selection, sequence, settings, zero playhead
   and Mixer Volume/no-popup context are restored; backup bytes are unchanged. Installed host is ready/OK.
   See `findings/native-watch-installed-20261028.json`. Future installs/restarts still require owner approval.
+
+- US #54, branch `us-54-automation-read-pan`: 0.13.0 implements actual global Read
+  pan writes with native filter capture and Clip/source/playback fences, unchanged
+  public C layouts, binary32 expected/no-op checks and model-only completion.
+  All 23 host, 18 ASan/UBSan and eight isolated ARM entries pass. Device evidence
+  covers 112 event-free plus 28 populated-source contexts, 560 invoked writes
+  (559 applied, one bounded native-automation timeout), 140 UI captures, native
+  replacement, 24 watch/replay moves with seven steady/eight replay subscribers,
+  two discarded responses and an eight-client burst. Callback p95 32.307 ms and
+  watch observation p95 7.390 ms remain above #52 targets. All captured original
+  state, events, parameter maps, settings, selection, sequence, zero playhead and
+  Menu over Mixer Volume are restored; temporary tracks/labs removed. Installed
+  0.12.0 resumed ready with independent reads/schema checks; Read pan remains
+  unavailable there. No project save/load or MPC restart. See
+  `findings/native-automation-read-pan.md` and its sanitized proof. Installing
+  0.13.0 still requires owner approval under the device-work rule above.
