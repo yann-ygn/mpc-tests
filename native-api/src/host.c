@@ -47,7 +47,7 @@ static int state(void *data, const char *instance, struct mpc_state_snapshot *ou
   struct host *h = data;
   struct mpc_executor_status status;
   struct mpc_executor_job *job = NULL;
-  struct mpc_executor_result result;
+  struct mpc_executor_result result = {0};
   pthread_mutex_lock(&h->mutex);
   enum mpc_native_error error =
     h->executor ? mpc_executor_get_status(h->executor, &status) : MPC_NATIVE_NOT_READY;
@@ -64,6 +64,8 @@ static int state(void *data, const char *instance, struct mpc_state_snapshot *ou
     error = mpc_executor_wait(job, 150, &result);
   if (!error)
     *out = *result.snapshot;
+  if (h->ops->observed)
+    h->ops->observed(h->ops->userdata, true, error, &result);
   if (job)
     mpc_executor_release(job);
   return error;
@@ -78,7 +80,7 @@ static int sample(
   struct host *h = data;
   struct mpc_executor_status status;
   struct mpc_executor_job *job = NULL;
-  struct mpc_executor_result result;
+  struct mpc_executor_result result = {0};
   pthread_mutex_lock(&h->mutex);
   enum mpc_native_error error =
     h->executor ? mpc_executor_get_status(h->executor, &status) : MPC_NATIVE_NOT_READY;
@@ -98,6 +100,8 @@ static int sample(
     error = mpc_executor_wait(job, 50, &result);
   if (!error)
     *out = *result.flags;
+  if (h->ops->observed)
+    h->ops->observed(h->ops->userdata, false, error, &result);
   if (job)
     mpc_executor_release(job);
   return error;
@@ -439,7 +443,7 @@ int mpc_host_run(const char *installation, const char *runtime, const struct mpc
   api_socket_remember(1, address.sun_path, &owned);
   if (fchmodat(directory, "control.sock", 0600, 0) || listen(listener, 8))
     goto cleanup;
-  pthread_setname_np(pthread_self(), "mpc api host");
+  pthread_setname_np(pthread_self(), ops->thread_name ? ops->thread_name : "mpc api host");
   start_host(&h, install, directory);
   while (!ops->exiting(ops->userdata)) {
     advance(&h);

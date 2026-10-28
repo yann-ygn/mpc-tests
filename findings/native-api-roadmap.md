@@ -29,7 +29,7 @@ Only the bounded native mute/solo/arm proof is already validated; these stories 
 | #31 | Validate mute, solo and record-arm semantics beyond the bounded proof | Done — stopped-mode matrix |
 | #19 | Provide idempotent native mute, solo and record-arm command handlers | Done — managed handlers |
 | #32 | Expose the native adapter through a local command service | Implemented — discovery, state, authenticated commands and live policy |
-| #33 | Publish live state changes and recover subscriptions after reconnect | Local implementation; device qualification pending |
+| #33 | Publish live state changes and recover subscriptions after reconnect | Implemented; eight-subscriber device qualification |
 | #34 | Connect paired HTTP state and commands to Akai's web service | New |
 | #35 | Expose the native-control API as typed MCP tools | New |
 | #36 | Provide a Python client library for live state and track control | New |

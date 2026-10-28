@@ -1,0 +1,557 @@
+{
+  "story": 33,
+  "date": "2026-10-28",
+  "measurementsStarted": "2026-10-27",
+  "status": "qualified_local_unix_service",
+  "firmware": {
+    "model": "MPC Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "workload": {
+    "userTracks": 8,
+    "families": {
+      "plugin": 6,
+      "audio": 2
+    },
+    "buses": 28,
+    "sequenceSlots": 128,
+    "sequenceObjects": 128,
+    "usedSequences": 5,
+    "bpm": 70,
+    "recording": false,
+    "automation": "Read",
+    "supportedSubscribers": 8,
+    "maximumDensityDeviceQualified": false
+  },
+  "delivery": {
+    "unit": "milliseconds",
+    "boundary": "workstation command send to complete frame receipt through SSH Unix forwarding; schema checks outside timing path",
+    "updates": {
+      "count": 96,
+      "p50": 113.07608,
+      "p95": 203.892769,
+      "p99": 228.716547,
+      "max": 228.716547
+    },
+    "reconnect": {
+      "count": 24,
+      "p50": 43.486568,
+      "p95": 61.656406,
+      "p99": 77.074007,
+      "max": 77.074007
+    },
+    "stoppedUpdates": {
+      "count": 48,
+      "p50": 110.756049,
+      "p95": 200.265722,
+      "p99": 217.862352,
+      "max": 217.862352
+    },
+    "playingUpdates": {
+      "count": 48,
+      "p50": 116.560151,
+      "p95": 209.178287,
+      "p99": 228.716547,
+      "max": 228.716547
+    },
+    "nativeCaptureCountsSharedAcrossSubscribers": true,
+    "independentReadback": true,
+    "allEightSubscriberModelsEquivalent": true
+  },
+  "phases": [
+    {
+      "transport": "stopped",
+      "phase": "cold_idle",
+      "seconds": 5.4037435069913045,
+      "samples": 0,
+      "fullCaptures": 0,
+      "captureFailures": 0,
+      "sampleCallbackMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "max": null
+      },
+      "sampleNativeMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "max": null
+      },
+      "fullCallbackMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "max": null
+      },
+      "wholeProcessCpuPercentOneCore": 116.58584445855227,
+      "rssKiB": [
+        1034528,
+        1037532
+      ],
+      "alsaStates": [
+        "state: RUNNING",
+        "state: RUNNING"
+      ]
+    },
+    {
+      "transport": "stopped",
+      "phase": "one_subscriber",
+      "seconds": 8.036776355002075,
+      "samples": 74,
+      "fullCaptures": 1,
+      "captureFailures": 0,
+      "sampleCallbackMs": {
+        "count": 74,
+        "p50": 3.058,
+        "p95": 3.903,
+        "p99": 5.868,
+        "max": 5.868
+      },
+      "sampleNativeMs": {
+        "count": 74,
+        "p50": 3.040732,
+        "p95": 3.886223,
+        "p99": 5.848728,
+        "max": 5.848728
+      },
+      "fullCallbackMs": {
+        "count": 1,
+        "p50": 11.572,
+        "p95": 11.572,
+        "p99": 11.572,
+        "max": 11.572
+      },
+      "wholeProcessCpuPercentOneCore": 122.31272298478015,
+      "rssKiB": [
+        1037532,
+        1037532
+      ],
+      "alsaStates": [
+        "state: RUNNING",
+        "state: RUNNING"
+      ]
+    },
+    {
+      "transport": "stopped",
+      "phase": "eight_subscribers",
+      "seconds": 8.042947929003276,
+      "samples": 74,
+      "fullCaptures": 1,
+      "captureFailures": 0,
+      "sampleCallbackMs": {
+        "count": 74,
+        "p50": 2.927,
+        "p95": 4.169,
+        "p99": 7.13,
+        "max": 7.13
+      },
+      "sampleNativeMs": {
+        "count": 74,
+        "p50": 2.912407,
+        "p95": 4.157165,
+        "p99": 7.106028,
+        "max": 7.106028
+      },
+      "fullCallbackMs": {
+        "count": 1,
+        "p50": 11.782,
+        "p95": 11.782,
+        "p99": 11.782,
+        "max": 11.782
+      },
+      "wholeProcessCpuPercentOneCore": 122.34320160791373,
+      "rssKiB": [
+        1034528,
+        1037944
+      ],
+      "alsaStates": [
+        "state: RUNNING",
+        "state: RUNNING"
+      ]
+    },
+    {
+      "transport": "stopped",
+      "phase": "expired_lease_idle",
+      "seconds": 5.032742668990977,
+      "samples": 0,
+      "fullCaptures": 0,
+      "captureFailures": 0,
+      "sampleCallbackMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "max": null
+      },
+      "sampleNativeMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "max": null
+      },
+      "fullCallbackMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "max": null
+      },
+      "wholeProcessCpuPercentOneCore": 116.43750506271924,
+      "rssKiB": [
+        1034336,
+        1037340
+      ],
+      "alsaStates": [
+        "state: RUNNING",
+        "state: RUNNING"
+      ]
+    },
+    {
+      "transport": "playing",
+      "phase": "one_subscriber",
+      "seconds": 8.039256140007637,
+      "samples": 73,
+      "fullCaptures": 1,
+      "captureFailures": 0,
+      "sampleCallbackMs": {
+        "count": 73,
+        "p50": 3.735,
+        "p95": 7.115,
+        "p99": 8.048,
+        "max": 8.048
+      },
+      "sampleNativeMs": {
+        "count": 73,
+        "p50": 3.716193,
+        "p95": 7.093488,
+        "p99": 8.031723,
+        "max": 8.031723
+      },
+      "fullCallbackMs": {
+        "count": 1,
+        "p50": 14.127,
+        "p95": 14.127,
+        "p99": 14.127,
+        "max": 14.127
+      },
+      "wholeProcessCpuPercentOneCore": 214.44770137630695,
+      "rssKiB": [
+        1037600,
+        1046596
+      ],
+      "alsaStates": [
+        "state: RUNNING",
+        "state: RUNNING"
+      ]
+    },
+    {
+      "transport": "playing",
+      "phase": "eight_subscribers",
+      "seconds": 8.102007284003776,
+      "samples": 73,
+      "fullCaptures": 2,
+      "captureFailures": 0,
+      "sampleCallbackMs": {
+        "count": 73,
+        "p50": 3.676,
+        "p95": 6.191,
+        "p99": 7.815,
+        "max": 7.815
+      },
+      "sampleNativeMs": {
+        "count": 73,
+        "p50": 3.656404,
+        "p95": 6.164878,
+        "p99": 7.800737,
+        "max": 7.800737
+      },
+      "fullCallbackMs": {
+        "count": 2,
+        "p50": 12.61,
+        "p95": 12.869,
+        "p99": 12.869,
+        "max": 12.869
+      },
+      "wholeProcessCpuPercentOneCore": 207.4794481262548,
+      "rssKiB": [
+        1053204,
+        1052932
+      ],
+      "alsaStates": [
+        "state: RUNNING",
+        "state: RUNNING"
+      ]
+    }
+  ],
+  "recovery": {
+    "capacityRejectedNinth": true,
+    "evictedCursorResync": true,
+    "healthyIndependentReadback": true,
+    "restartInvalidatedCursor": true,
+    "naturalExpiryResync": true,
+    "pidUnchanged": true,
+    "stopMs": 57.766172976698726,
+    "commandLatencyMs": 53.946922009345144,
+    "midPressureCommandMs": 95.63357901060954
+  },
+  "slowClients": [
+    {
+      "closed": true,
+      "receivedBytes": 2315747
+    },
+    {
+      "closed": true,
+      "receivedBytes": 2315747
+    },
+    {
+      "closed": true,
+      "receivedBytes": 2315747
+    },
+    {
+      "closed": true,
+      "receivedBytes": 2315747
+    },
+    {
+      "closed": true,
+      "receivedBytes": 2315747
+    },
+    {
+      "closed": true,
+      "receivedBytes": 2315747
+    },
+    {
+      "closed": true,
+      "receivedBytes": 2315747
+    }
+  ],
+  "snapshotToSubscriptionRaces": 12,
+  "manual": {
+    "cases": [
+      {
+        "kind": "muted",
+        "value": "true",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 8
+      },
+      {
+        "kind": "soloed",
+        "value": "true",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 8
+      },
+      {
+        "kind": "recordArmed",
+        "value": "false",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 8
+      },
+      {
+        "kind": "count",
+        "value": "9",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 9
+      },
+      {
+        "kind": "name",
+        "value": "W",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 9
+      },
+      {
+        "kind": "order",
+        "value": "7",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 9
+      },
+      {
+        "kind": "count",
+        "value": "8",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 8
+      },
+      {
+        "kind": "selection",
+        "value": "2",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 8
+      },
+      {
+        "kind": "sequence",
+        "value": "3",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 8
+      },
+      {
+        "kind": "sequence",
+        "value": "4",
+        "passed": true,
+        "independentReadback": true,
+        "originalTrackIdsAndGenerationsPreserved": true,
+        "trackCount": 8
+      }
+    ],
+    "passed": true
+  },
+  "restoration": {
+    "inventoryAndFlagsRestored": true,
+    "mixersRestored": true,
+    "contextSettingsAndAutomationRestored": true,
+    "sequenceRestored": true,
+    "zeroPlayheadRestored": true,
+    "pidUnchanged": true,
+    "temporaryTrackRemoved": true,
+    "mpcRestarted": false,
+    "projectSavedOrLoaded": false,
+    "screenRestored": "Mixer Volume",
+    "passed": true
+  },
+  "isolatedArmFixtures": [
+    {
+      "fixture": "native_fixture",
+      "passed": true,
+      "outputLines": 1
+    },
+    {
+      "fixture": "executor_fixture",
+      "passed": true,
+      "outputLines": 1
+    },
+    {
+      "fixture": "identity_fixture",
+      "passed": true,
+      "outputLines": 1
+    },
+    {
+      "fixture": "inventory_fixture",
+      "passed": true,
+      "outputLines": 1
+    },
+    {
+      "fixture": "observation_fixture",
+      "passed": true,
+      "outputLines": 1
+    },
+    {
+      "fixture": "commands_fixture",
+      "passed": true,
+      "outputLines": 327
+    },
+    {
+      "fixture": "mixer_fixture",
+      "passed": true,
+      "outputLines": 78
+    },
+    {
+      "fixture": "watch_fixture",
+      "passed": true,
+      "outputLines": 1
+    }
+  ],
+  "measurementLimits": [
+    "Whole-process CPU/RSS are descriptive, without API-only attribution; RSS endpoints are not peak measurements.",
+    "ALSA state samples do not exclude intervening underruns; no reliable xrun counter or acoustic observation was available.",
+    "Playback audio volume varies between samples; only bracket-stable mixer fields were compared during playback, with complete mixer readback after stopping.",
+    "Native callback timing covers publication/fanout, excluding final capture destruction and lock release.",
+    "This workload qualifies eight subscribers on eight tracks. The 136-track structural bound and automation-rate delivery remain unqualified.",
+    "Project replacement/address reuse are tested in host and isolated ARM fixtures; the loaded instrument project was not replaced or reloaded."
+  ],
+  "idleComparison": [
+    {
+      "phase": "stopped_api_a",
+      "seconds": 5.175279558985494,
+      "wholeProcessCpuPercentOneCore": 79.99567854864947,
+      "rssKiB": [
+        1036816,
+        1032816
+      ],
+      "nativeCaptureCount": 0
+    },
+    {
+      "phase": "ready_api_a",
+      "seconds": 5.32200640096562,
+      "wholeProcessCpuPercentOneCore": 81.73609109546993,
+      "rssKiB": [
+        1040188,
+        1040188
+      ],
+      "nativeCaptureCount": 0
+    },
+    {
+      "phase": "ready_api_b",
+      "seconds": 5.443221537978388,
+      "wholeProcessCpuPercentOneCore": 81.01819794088104,
+      "rssKiB": [
+        1040188,
+        1043192
+      ],
+      "nativeCaptureCount": 0
+    },
+    {
+      "phase": "stopped_api_b",
+      "seconds": 5.359324243967421,
+      "wholeProcessCpuPercentOneCore": 80.23399600873522,
+      "rssKiB": [
+        1036816,
+        1038088
+      ],
+      "nativeCaptureCount": 0
+    }
+  ],
+  "finalBuild": {
+    "version": "0.12.0",
+    "watchAvailable": true,
+    "qualifiedAcknowledgement": true,
+    "replayVerified": true,
+    "independentReadback": true,
+    "restoredReadback": true,
+    "binarySha256": {
+      "builddir/arm/native-api/mpc-api": "a69af982a8908a571569e8a773d2c079bb14f6dd87061f5d9a90d18878de7e5f",
+      "builddir/arm/native-api/mpc_native_host.so": "e81a33df7c5f9f81d12bc96805a0d6438e7bf5f4c00bce83cf40c46d5c421c99",
+      "builddir/arm/tools/watch_lab.so": "9419c37f01c46f9913e623bce3cbd8a1f7839f548e088bc52001f57ce65c4bed"
+    },
+    "passed": true
+  },
+  "cleanup": {
+    "measuredHost": {
+      "pidUnchanged": true,
+      "labUnloaded": true,
+      "deviceBundleRemoved": true
+    },
+    "finalHost": {
+      "pidUnchanged": true,
+      "labUnloaded": true,
+      "deviceBundleRemoved": true
+    },
+    "installedHost": {
+      "ready": true,
+      "version": "0.10.0",
+      "pidUnchanged": true,
+      "independentBaselineFlagsMatched": true,
+      "temporaryMappingsRemoved": true
+    }
+  }
+}

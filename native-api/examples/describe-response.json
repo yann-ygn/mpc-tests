@@ -4,7 +4,7 @@
   "instanceId": "run_3a419566592e9f9b96fcb50f009063e6",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.10.0"
+    "version": "0.12.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -761,7 +761,17 @@
     },
     "watch": {
       "available": false,
-      "reason": "NOT_IMPLEMENTED"
+      "reason": "NOT_IMPLEMENTED",
+      "maxSubscribers": 8,
+      "replayCapacity": 64,
+      "replayBytes": 4194304,
+      "replayRetentionMs": 30000,
+      "sampleIntervalMs": 100,
+      "samplePageTracks": 16,
+      "metadataAuditMs": 5000,
+      "heartbeatMs": 1000,
+      "testedTracks": 8,
+      "maximumDensityQualified": false
     },
     "set_volume": {
       "available": false,

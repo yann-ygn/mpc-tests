@@ -45,4 +45,24 @@ if host_machine.cpu_family() == 'arm'
     {'binary': test_payload},
     {'binary': native_bridge, 'exports': bridge_exports, 'needed': 'libmpc_native.so'},
   ]
+
+  watch_lab = shared_library(
+    'watch_lab', 'mpc_watch_lab.c',
+    files('../native-api/src/host.c', '../native-api/src/host_paths.c'),
+    service_sources, profiles[0],
+    name_prefix: '',
+    include_directories: [root_inc, adapter_inc, api_inc],
+    c_args: native_args,
+    override_options: native_options,
+    gnu_symbol_visibility: 'hidden',
+    dependencies: [dl_dep, threads_dep],
+    link_with: elf_id,
+    link_args: [
+      '-L' + meson.current_build_dir(), '-lmpc_native',
+      '-Wl,--version-script=' + bridge_exports[0].full_path(),
+    ],
+    link_depends: [lab_adapter, bridge_exports],
+    build_rpath: '$ORIGIN',
+  )
+  elf_checks += [{'binary': watch_lab, 'exports': bridge_exports, 'needed': 'libmpc_native.so'}]
 endif

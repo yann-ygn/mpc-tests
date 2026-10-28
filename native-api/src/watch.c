@@ -468,7 +468,7 @@ char *api_watch_next(struct api_subscription *s) {
       uint64_t acknowledged = s->ticket ? p->full_revision : s->revision;
       f = frame(p, "ack", acknowledged, &out, &bytes);
       if (f)
-        fprintf(f, ",\"resumed\":%s,\"qualified\":false", s->ticket ? "false" : "true");
+        fprintf(f, ",\"resumed\":%s,\"qualified\":true", s->ticket ? "false" : "true");
       s->stage = 1;
     }
   } else if (s->revision < p->revision) {

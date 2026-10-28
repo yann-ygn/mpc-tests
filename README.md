@@ -17,9 +17,10 @@ reports timing and tested limits. Command observations use a [lightweight flag s
 authoritative full reads retain their coverage. See [the service](native-api/README.md),
 [the native adapter](native-api/adapter/README.md)
 and [privtap](privtap/README.md) for their interfaces and limitations.
-US #33 implements experimental [Unix watch/replay](native-api/WATCH.md) with a shared
-controls producer and retained snapshot cursors. Discovery remains gated pending
-device delivery/load qualification; HTTP and SDKs are separate stories.
+US #33 implements [qualified Unix watch/replay](native-api/WATCH.md) with a shared
+controls producer and retained snapshot cursors. Eight-subscriber device delivery,
+replay and load evidence is in [the qualification report](findings/native-watch.md);
+HTTP and SDKs are separate stories.
 US #21 adds the [persistent addin package](native-api/INSTALL.md), including startup,
 health, stop/start and recovery. Build it with `uv run --no-sync python native-api/package.py`;
 installation requires saved work and approval for an MPC restart.
@@ -96,6 +97,7 @@ The service's Python integration tests run in the host build only.
 | privtap fixtures | `privtap/tests/{test_protocol,test_privtap,libfakeasound.so}` |
 | Memory/web helpers | `tools/{mem_probe,ipc_bridge}` |
 | ARM-only lab bundle | `tools/{hotload,native_client,native_bridge.so,libmpc_native.so,test_payload.so}` |
+| ARM-only temporary watch host | `tools/watch_lab.so` |
 
 Firmware headers are generated from the validated state/control profile pair.
 Changes to either profile, the generator or its validator rebuild their consumers.

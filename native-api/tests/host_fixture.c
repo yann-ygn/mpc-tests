@@ -143,6 +143,16 @@ static int exiting(void *unused) {
   return stopping;
 }
 
+static void observed(
+  void *unused, bool full, enum mpc_native_error error, const struct mpc_executor_result *result) {
+  (void)unused;
+  assert(!ui); /* Diagnostics never serialize or perform I/O on the native UI. */
+  if (!error) {
+    assert(result->state == MPC_EXECUTOR_COMPLETED);
+    assert(full ? result->snapshot != NULL : result->flags != NULL);
+  }
+}
+
 static enum mpc_native_error start(void *unused, struct mpc_executor **out) {
   (void)unused;
   if (!access(gate, F_OK))
@@ -169,8 +179,12 @@ static void cancel(void *unused) {
 
 static void *owner(void *unused) {
   (void)unused;
-  struct mpc_host_ops ops =
-    {.discovery_root = root, .open = start, .cancel_start = cancel, .exiting = exiting};
+  struct mpc_host_ops ops = {
+    .discovery_root = root,
+    .open = start,
+    .cancel_start = cancel,
+    .exiting = exiting,
+    .observed = observed};
   if (commands_enabled)
     ops.command_policy = (struct mpc_command_policy){NULL, qualify};
   ops.native_command_policy = native_policy;

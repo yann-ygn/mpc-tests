@@ -62,7 +62,7 @@
           "type": "boolean"
         },
         "qualified": {
-          "const": false
+          "type": "boolean"
         }
       }
     },

@@ -1,16 +1,19 @@
 # Local watch and reconnect (US #33)
 
-The embedded C host implements experimental `watch` over its private Unix
+The embedded C host implements qualified `watch` over its private Unix
 socket. HTTP, MCP and client SDKs are separate delivery stories. There is no
 Python runtime in the service. The standalone discovery/lab attachment has no
 incremental sampling backend and rejects watch with `NOT_READY`.
 
-Device qualification is pending. `describe.capabilities.watch.available` remains
-`false`, with `DEVICE_QUALIFICATION_PENDING` when the embedded observation
-backend is ready. Explicit Unix watch requests can exercise the implementation;
-their acknowledgements carry `qualified: false`. Host tests and an ARM build do
-not qualify device latency, load, playback or audio behavior. Nothing in this
-change installs or restarts the instrument.
+Version 0.12.0 advertises watch when the authoritative embedded observation
+backend is ready. Acknowledgements carry `qualified: true`; discovery reports
+the configured replay/sampling limits, eight subscribers, eight tested tracks
+and `maximumDensityQualified: false`. Device qualification covers stopped and
+ordinary sequence playback on six plugin and two audio tracks, with recording
+Off and Automation Read. See the [measurements and evidence](../findings/native-watch.md).
+The installed 0.10.0 host requires a separately approved upgrade/restart to
+acquire this implementation. Qualification used a temporary host without an
+addin install, MPC restart, or project save/load.
 
 ## Start and consume
 
@@ -83,6 +86,10 @@ recovery requires a fresh baseline. Instance changes invalidate old references
 and cursors. Stop/start and service/device restart create a new instance. Same-
 project track reorder/add/remove, selection/sequence/scope changes and family
 changes reconcile with a full snapshot before further controls are published.
+An expensive UI operation can also expire a queued sampling deadline and
+explicitly require resync. Temporary-track creation exercised this path on the
+device; a fresh snapshot recovered the updated inventory with original IDs
+preserved. Consumers must implement resync even for same-project edits.
 
 To unsubscribe, send this on the streaming connection:
 
@@ -148,12 +155,13 @@ connection; it does not block other subscribers, command handlers or the UI.
 The host joins the service and publisher before retiring the backend/executor.
 The executor continues to own detached running callbacks until its normal drain.
 
-## Local verification and remaining qualification
+## Verification and qualification
 
 Local verification on 2026-10-27 passes all 23 host Meson entries, all 18 native
 API entries under ASan/UBSan, and the ARM build with ELF deployment guards.
-The 14 new wire tests use an isolated synthetic UI; ARM binaries were built
-but not executed, and the instrument was not accessed.
+All eight isolated ARM fixtures also execute on the device. The 14 new wire
+tests use an isolated synthetic UI; final device qualification completed on
+2026-10-28, with the loaded session fully restored.
 
 `watch_fixture` exercises ordered snapshot/control publication, unchanged-sample
 suppression, ring and time expiry, topology rejection, project-generation
@@ -163,9 +171,12 @@ UI for snapshot/subscription races, manual/API edits, replay/reconnect, schema
 examples, rename/reorder, stale/future sessions, partial-input validation,
 subscriber pressure, healthy fanout, paused UI, unsubscribe and stop/start.
 
-Before advertising watch as available, measure real delivery and reconnect
-p50/p95/p99/max, CPU/RSS and idle overhead, supported subscriber/project density,
-UI callback cost and playback/audio-underrun observations on declared MPC
-projects. Compare delivery with independent native readback and execute the ARM
-fixtures in isolation. Publish sanitized evidence and its measurement limits.
-These device checks remain part of #33; HTTP and SDK work is not a dependency.
+The [sanitized proof](../findings/native-watch-proof-20261028.json) contains 96
+measured updates, 24 replay/reconnect cases, independent readback, seven stalled
+subscribers, explicit replay/lease expiry, metadata/controller edits, and API
+stop/start. Update p95 is 203.893 ms and reconnect p95 61.656 ms through an SSH
+Unix forward. One and eight subscribers execute the same number of native
+samples; cold/expired-lease idle windows execute none. ALSA RUNNING samples do
+not establish the absence of intervening underruns; no acoustic or reliable
+xrun-counter measurement is claimed. Maximum-density and automation-rate
+delivery remain unqualified. HTTP and SDK work is not a dependency.

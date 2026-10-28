@@ -7,5 +7,5 @@
   "cursor": "run_f74634ddf5c68a8e1220ca2decaccd44:1",
   "type": "ack",
   "resumed": false,
-  "qualified": false
+  "qualified": true
 }

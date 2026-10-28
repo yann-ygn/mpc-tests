@@ -64,7 +64,7 @@ class WireCommandTests(HostHarness):
         self.assertEqual(limits["queueCapacity"], 16)
         self.assertEqual(limits["receiptCapacity"], 128)
         self.assertEqual(limits["requestRetentionMs"], 600000)
-        self.assertFalse(self.description["capabilities"]["watch"]["available"])
+        self.assertTrue(self.description["capabilities"]["watch"]["available"])
         for op in ("set_mute", "set_solo", "set_record_armed"):
             with self.subTest(op=op):
                 self.assertTrue(self.description["capabilities"][op]["available"])

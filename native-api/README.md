@@ -5,8 +5,9 @@ The implementation of the [accepted 0.1 contract](../findings/native-api-contrac
 authoritative attachment, state queries capture current native objects through the UI executor.
 The [persistent addin](INSTALL.md) also binds `set_mute`, `set_solo`, `set_record_armed` and `get_command`
 to the retained [flag handlers](adapter/COMMANDS.md), with Unix peer authentication and a native live
-mode/settings policy. [Local watch/replay](WATCH.md) is implemented experimentally;
-discovery keeps it unavailable pending device qualification. The standalone binary can discover and read through
+mode/settings policy. [Local watch/replay](WATCH.md) is device-qualified for eight
+subscribers on the declared eight-track workload and advertised when its embedded
+backend is ready. The standalone binary can discover and read through
 a temporary lab attachment; it cannot forward commands to the lab's diagnostic socket.
 See [state qualification](../findings/native-state.md) and [command service qualification](../findings/native-service.md).
 

@@ -266,13 +266,24 @@ char *api_respond(
   for (size_t i = 0; i < sizeof operations / sizeof *operations; i++) {
     fputc(',', output);
     api_quoted(output, operations[i]);
-    int available = i < 4 && discovery.commands_ready;
+    int available = i == 4 ? api->watch && discovery.state_ready : discovery.commands_ready;
     fprintf(output, ":{\"available\":%s,\"reason\":", available ? "true" : "false");
-    api_quoted(
-      output,
-      available                                         ? NULL
-        : i == 4 && api->watch && discovery.state_ready ? "DEVICE_QUALIFICATION_PENDING"
-                                                        : discovery.unavailable_reason);
+    api_quoted(output, available ? NULL : discovery.unavailable_reason);
+    if (i == 4)
+      fprintf(
+        output,
+        ",\"maxSubscribers\":%u,\"replayCapacity\":%u,\"replayBytes\":%u,"
+        "\"replayRetentionMs\":%u,\"sampleIntervalMs\":%u,\"samplePageTracks\":%u,"
+        "\"metadataAuditMs\":%u,\"heartbeatMs\":%u,\"testedTracks\":8,"
+        "\"maximumDensityQualified\":false",
+        API_WATCH_SUBSCRIBERS,
+        API_WATCH_REPLAY,
+        API_WATCH_REPLAY_BYTES,
+        API_WATCH_RETENTION_MS,
+        API_WATCH_SAMPLE_MS,
+        16u,
+        API_WATCH_AUDIT_MS,
+        API_WATCH_HEARTBEAT_MS);
     if (i <= 2) {
       fputs(",\"trackTypes\":[", output);
       bool comma = false;

@@ -3,7 +3,7 @@
 Implemented on `us-32-local-command-service`, 2026-10-26, host package 0.2.0 / public API 0.1.
 The embedded host exposes strict Unix `set_mute`, `set_solo`, `set_record_armed` and `get_command`
 operations through the existing managed handlers. Discovery and authoritative state reads remain shared
-with the standalone service. Streaming remains #33.
+with the standalone service. [US #33 adds qualified Unix streaming](native-watch.md).
 
 ## Admission and delivery
 

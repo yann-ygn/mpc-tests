@@ -367,13 +367,14 @@ originating capture. Discovery's one-job limit counts native execution, not
 coalesced deliveries.
 
 There is no autonomous polling or automatic full-snapshot fallback: implicit
-fallback frequency is zero. US #33 should initialize/resync with GET_STATE,
-reconcile metadata on topology changes, and run a single shared producer rather
-than one producer per subscriber. The qualified device workload uses one 10 Hz
+fallback frequency is zero. The [US #33 publisher](../WATCH.md) initializes/resyncs
+with GET_STATE, reconciles metadata on topology changes, and runs one shared
+producer. The qualified device workload uses one 100 ms producer and eight tracks.
+The earlier flags-only workload uses one 10 Hz
 producer and eight tracks. At the 136-track structural bound, nine 16-track pages
 would require nine captures; that refresh rate/density is not device-qualified.
-Watch replay, reconnect, delivery backpressure and subscriber scheduling remain
-US #33. Authoritative GET_STATE/recovery snapshots retain their full coverage.
+Watch replay, reconnect, delivery backpressure and subscriber scheduling are
+implemented by #33. Authoritative GET_STATE/recovery snapshots retain their full coverage.
 See [measurements and budgets](../../findings/native-ui-cost.md).
 
 ## Mixer layouts (US #39)

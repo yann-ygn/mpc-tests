@@ -112,6 +112,54 @@ static void replay_tests(void) {
 
 static atomic_uint full_count, sample_count, manual_mute;
 
+static void paging_tests(void) {
+  struct api_watch *p = calloc(1, sizeof *p);
+  struct mpc_state_snapshot *s = malloc(sizeof *s);
+  assert(p && s);
+  initialize(p);
+  baseline(s);
+  s->track_count = 17;
+  for (unsigned i = 1; i < 17; i++) {
+    s->tracks[i] = s->tracks[0];
+    s->tracks[i].identity.id = i + 1;
+    s->tracks[i].identity.index = i;
+    s->tracks[i].collection_index = i;
+  }
+  strcpy(s->tracks[16].type, "audio");
+  s->tracks[16].collection = MPC_STATE_AUDIO;
+  s->tracks[16].collection_index = 0;
+  assert(api_valid_snapshot(s, instance_id));
+  assert(!snapshot(p, s));
+  struct mpc_command_observation o = {
+    .project = 1,
+    .generation = 1,
+    .topology_epoch = 1,
+    .captured_ms = 2,
+    .total_tracks = 17,
+    .track_count = 16};
+  for (unsigned i = 0; i < 16; i++)
+    o.tracks[i] = (struct mpc_command_track){.id = i + 1,
+                                             .generation = 1,
+                                             .known = MPC_STATE_REQUESTED,
+                                             .family = MPC_NATIVE_PLUGIN,
+                                             .muted = 1};
+  assert(!controls(p, &o) && p->offset == 16 && p->revision == 2);
+  assert(controls(p, &o) == -1); /* A duplicated/omitted page cannot claim coverage. */
+  o.offset = 16;
+  o.track_count = 1;
+  o.tracks[0] = (struct mpc_command_track){.id = 17,
+                                           .generation = 1,
+                                           .known = MPC_STATE_REQUESTED,
+                                           .family = MPC_NATIVE_AUDIO,
+                                           .muted = 1};
+  assert(!controls(p, &o) && !p->offset && p->revision == 3);
+  assert(p->state.tracks[16].muted && p->state.tracks[0].muted);
+  assert(!p->full_state.tracks[0].muted); /* Never relabel a partial merge as a fresh full read. */
+  dispose(p);
+  free(s);
+  free(p);
+}
+
 static int fake_state(void *unused, const char *instance, struct mpc_state_snapshot *s) {
   (void)unused;
   assert(!strcmp(instance, instance_id));
@@ -179,6 +227,7 @@ static void producer_tests(void) {
 
 int main(void) {
   replay_tests();
+  paging_tests();
   producer_tests();
   puts("watch replay, expiry, context fencing and shared producer passed");
   return 0;

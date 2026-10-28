@@ -345,8 +345,9 @@ permission to retry an operation whose execution began.
 
 ## Subscriptions and transports
 
-The [#33 local implementation](../native-api/WATCH.md) supplies experimental Unix watch;
-advertise it unavailable until device delivery/load qualification is complete. Subscribe from a retained snapshot revision using
+The [#33 local implementation](../native-api/WATCH.md) supplies device-qualified Unix watch
+for the [declared workload](native-watch.md). Advertise it when its authoritative
+embedded observation backend is ready. Subscribe from a retained snapshot revision using
 a bounded replay cursor. Subscription setup must bridge the snapshot-to-watch interval or explicitly require a
 fresh snapshot. Events carry instance/project context and ordered service revisions. A gap/expired cursor produces
 `resync_required`; a new instance invalidates old handles. These are observed state changes, not a lossless native

@@ -5,7 +5,7 @@
 #include "mpc_commands.h"
 
 #define MPC_HOST_DIRECTORY "/tmp/mpc-native-api"
-#define MPC_HOST_VERSION "0.11.0"
+#define MPC_HOST_VERSION "0.12.0"
 
 /* Internal dependency boundary, also used by the isolated lifecycle fixture. */
 struct mpc_host_ops {
@@ -16,6 +16,9 @@ struct mpc_host_ops {
   int (*exiting)(void *);
   struct mpc_command_policy command_policy;
   bool native_command_policy;
+  /* Optional off-UI diagnostics used by the temporary qualification host. */
+  const char *thread_name;
+  void (*observed)(void *, bool full, enum mpc_native_error, const struct mpc_executor_result *);
 };
 
 int mpc_host_run(const char *installation, const char *runtime, const struct mpc_host_ops *);

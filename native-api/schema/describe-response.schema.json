@@ -719,7 +719,7 @@
               "$ref": "#/$defs/capability"
             },
             "watch": {
-              "$ref": "#/$defs/capability"
+              "$ref": "#/$defs/watchCapability"
             },
             "set_volume": {
               "$ref": "#/$defs/capability"
@@ -860,6 +860,70 @@
           }
         }
       }
+    },
+    "watchCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "reason",
+        "maxSubscribers",
+        "replayCapacity",
+        "replayBytes",
+        "replayRetentionMs",
+        "sampleIntervalMs",
+        "samplePageTracks",
+        "metadataAuditMs",
+        "heartbeatMs",
+        "testedTracks",
+        "maximumDensityQualified"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maxSubscribers": {
+          "const": 8
+        },
+        "replayCapacity": {
+          "const": 64
+        },
+        "replayBytes": {
+          "const": 4194304
+        },
+        "replayRetentionMs": {
+          "const": 30000
+        },
+        "sampleIntervalMs": {
+          "const": 100
+        },
+        "samplePageTracks": {
+          "const": 16
+        },
+        "metadataAuditMs": {
+          "const": 5000
+        },
+        "heartbeatMs": {
+          "const": 1000
+        },
+        "testedTracks": {
+          "const": 8
+        },
+        "maximumDensityQualified": {
+          "const": false
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/capability"
+        }
+      ]
     }
   },
   "description": "Automation Read qualifies native mute/solo/volume manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Pan/sends/inserts remain Off-only."

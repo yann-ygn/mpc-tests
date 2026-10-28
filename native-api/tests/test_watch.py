@@ -71,6 +71,7 @@ class WatchTests(HostHarness):
         ack = self.frame(reader)
         self.assertEqual(ack["type"], "ack")
         self.assertFalse(ack["resumed"])
+        self.assertTrue(ack["qualified"])
         state = self.frame(reader)
         self.assertEqual(state["type"], "snapshot")
         self.assertEqual(state["revision"], state["state"]["revision"])
@@ -113,10 +114,10 @@ class WatchTests(HostHarness):
             cli.terminate()
             cli.communicate(timeout=3)
         description = self.public()
-        self.assertFalse(description["capabilities"]["watch"]["available"])
-        self.assertEqual(
-            description["capabilities"]["watch"]["reason"], "DEVICE_QUALIFICATION_PENDING"
-        )
+        self.assertTrue(description["capabilities"]["watch"]["available"])
+        self.assertIsNone(description["capabilities"]["watch"]["reason"])
+        self.assertEqual(description["capabilities"]["watch"]["maxSubscribers"], 8)
+        self.assertFalse(description["capabilities"]["watch"]["maximumDensityQualified"])
 
     def test_schema_examples(self):
         request_schema = json.loads((SCHEMAS / "watch-request.schema.json").read_text())
