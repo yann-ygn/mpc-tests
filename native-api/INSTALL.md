@@ -6,10 +6,13 @@ addin. It supports MPC Key 37, MPC 3.9.1.2, exact GNU build ID
 Mute also requires a matching explicit global/active-sequence scope (US #48). Consult `describe` for command availability and limits, and the
 [service guide](README.md#send-flag-commands) for request and receipt semantics.
 
-Development version 0.13.0 adds actual Read pan writes through the existing
+Version 0.13.0 adds actual Read pan writes through the existing
 native filter and notifying setter, with pan-specific filter/source fences.
-See [pan qualification](../findings/native-automation-read-pan.md). Installed
-availability remains 0.12.0 until a separately approved installation/restart.
+See [pan qualification](../findings/native-automation-read-pan.md). The owner-requested
+0.13.0 installation and MPC restart completed on 2026-10-28. Installed Read pan
+for selected plugin and unselected audio tracks, watch/replay, receipts and
+lifecycle checks pass; the saved session, configuration, identity and other
+addins are preserved. See [installed evidence](../findings/native-pan-installed-20261028.json).
 
 Version 0.12.0 adds [qualified Unix watch/replay](WATCH.md), a shared observation
 publisher and retained snapshot cursors. Eight subscribers on the declared
@@ -24,7 +27,7 @@ live native source ownership, active-sequence Clip associations and Single solo
 peer checks. Later automation can supersede manual values; completion remains
 readback-based and bounded. Pan/sends/inserts remain Off-only. See
 [qualification and source restrictions](../findings/native-automation-read-writes.md).
-These Read writes are included in the installed 0.12.0 host.
+The 0.12.0 host also included these Read writes.
 
 Version 0.10.0 adds desired-state volume, pan, sends and rack/slot enable controls
 for qualified plugin/drum/keygroup/audio tracks under Automation Off. Mixer

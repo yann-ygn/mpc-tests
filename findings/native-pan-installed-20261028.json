@@ -1,0 +1,152 @@
+{
+  "story": 54,
+  "version": "0.13.0",
+  "ownerRequestedInstallation": true,
+  "requiredRestartAuthorizedByInstallationRequest": true,
+  "previousVersion": "0.12.0",
+  "packageSha256": "8af5a14ede4ae036c9229a48acd5c1ddc391cc602bafd6da3d3b7aa865e341e6",
+  "transferredPayloadChecksumsVerified": true,
+  "mpcRestarted": true,
+  "status": "ready",
+  "nativeError": "OK",
+  "deviceIdentityPreserved": true,
+  "configurationPreserved": true,
+  "identityFilePreserved": true,
+  "preloadListPreserved": true,
+  "sourceRevision": "70ff03fb9843f17968d1a7ae076d9756cd6959c6",
+  "sourceSha256": "f057342e814bba4df5cf6c9aa3d8695d6af4db8e48135f538479e900aff8b7e9",
+  "workingTreeDirty": false,
+  "artifactSha256": {
+    "mpc-api": "5f1f4f439a4c489b2aba09957d1ba45e4716f14249709eb38fecb8c0c2473b45",
+    "mpc_native_host.so": "9f971952440ab3480e3cf34300e6905c801ce442d15382cc14c0b5c1cbca0749"
+  },
+  "installedArtifactHashesMatch": true,
+  "coexistence": {
+    "privtap.so": true,
+    "mpc_remote": true,
+    "mpc_native_host.so": true
+  },
+  "temporaryInstallerFilesRemoved": true,
+  "date": "2026-10-28",
+  "backup": {
+    "path": "/storage/MPC Documents/Projects/Claude Experiments/US54 Install Backup.xpj",
+    "sha256": "993cddb071ee31128d8b9c47aea33fb5a235d8e25fe05d44c041c15a4b64e543",
+    "verifiedBeforeRestart": true,
+    "unchangedAfterTests": true,
+    "preInstallSessionPreservedBySave": true,
+    "preExistingProjectNotOverwritten": true
+  },
+  "checks": {
+    "watchDiscoveryAvailable": true,
+    "allFiveReadProjectionsAndSchemas": true,
+    "loadedBackupMatchesPreInstallSession": true,
+    "qualifiedFreshSnapshot": true,
+    "watchFramesMatchSchemas": true,
+    "activeWatchDrainsOnHostStop": true,
+    "instanceRotatedAndOldCursorRequiresResync": true,
+    "oldReceiptUnavailableAfterHostRestart": true,
+    "freshWatchRecoversAndUnsubscribes": true,
+    "allPreInstallTrackAndBusFlagsRestored": true,
+    "allMixerValuesAndAutomationRestored": true,
+    "selectionSequenceContextAndZeroPlayheadRestored": true,
+    "backupBytesUnchanged": true,
+    "privateSocketModes": true,
+    "mpcPidStableDuringHostLifecycle": true
+  },
+  "commands": [
+    {
+      "op": "set_mute",
+      "targetIndex": 2,
+      "family": "plugin",
+      "automation": "Read",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "independentReadMatched": true,
+      "watchChangeObserved": true,
+      "replayMatched": true,
+      "retainedRetryAndLookupMatched": true,
+      "noOpAndConflictSkippedNative": true
+    },
+    {
+      "op": "set_solo",
+      "targetIndex": 2,
+      "family": "plugin",
+      "automation": "Read",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model",
+        "audio_copy"
+      ],
+      "independentReadMatched": true,
+      "watchChangeObserved": true,
+      "replayMatched": true,
+      "retainedRetryAndLookupMatched": true,
+      "noOpAndConflictSkippedNative": true
+    },
+    {
+      "op": "set_volume",
+      "targetIndex": 2,
+      "family": "plugin",
+      "automation": "Read",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "independentReadMatched": true,
+      "watchChangeObserved": true,
+      "replayMatched": true,
+      "retainedRetryAndLookupMatched": true,
+      "noOpAndConflictSkippedNative": true
+    },
+    {
+      "op": "set_pan",
+      "targetIndex": 2,
+      "family": "plugin",
+      "automation": "Read",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "independentReadMatched": true,
+      "watchChangeObserved": true,
+      "replayMatched": true,
+      "retainedRetryAndLookupMatched": true,
+      "noOpAndConflictSkippedNative": true
+    },
+    {
+      "op": "set_pan",
+      "targetIndex": 4,
+      "family": "audio",
+      "automation": "Read",
+      "status": "applied",
+      "nativeInvoked": true,
+      "verification": [
+        "model"
+      ],
+      "independentReadMatched": true,
+      "watchChangeObserved": true,
+      "replayMatched": true,
+      "retainedRetryAndLookupMatched": true,
+      "noOpAndConflictSkippedNative": true
+    }
+  ],
+  "userTracks": 8,
+  "buses": 28,
+  "finalRestoration": {
+    "allCapturedTrackAndBusFlags": true,
+    "allCapturedMixerValues": true,
+    "automationAndSettingsContext": true,
+    "selectionAndSequence": true,
+    "zeroPlayhead": true,
+    "menuOverMixerVolume": true,
+    "mpcPidStableAfterInstallation": true
+  },
+  "installedReadPan": true,
+  "passed": true
+}

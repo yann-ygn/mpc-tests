@@ -31,8 +31,8 @@ before running experiments.
   needs `-n N`. The root filesystem is read-only; addins live in `/data/mpc-addins/`.
 - The MPC Remote addin (`/data/mpc-addins/remote`, 1.0.3) serves HTTP and MCP on port 6720 (`/tap`, `/button`,
   `/screen.png`). The `mpc` MCP server is the same addin. `privtap/profiles/` keeps a copy of its `buttons.conf`.
-- MPC Native API 0.12.0 is installed and ready (owner-requested #33 upgrade, 2026-10-28).
-  Earlier story entries below record historical installed versions; see `findings/native-watch-installed-20261028.json` for the current verification.
+- MPC Native API 0.13.0 is installed and ready (owner-requested #54 upgrade, 2026-10-28).
+  Earlier story entries below record historical installed versions; see `findings/native-pan-installed-20261028.json` for the current verification.
 - privtap's settings: `/data/mpc-addins/privtap/privtap.conf`. Keep `identity=` empty except during an experiment:
   as another model, the Key 37's LEDs show the wrong states.
 - Settings backup taken before identity experiments: `/data/claude-backup-20261023-settings.tar`.
@@ -318,4 +318,18 @@ before running experiments.
   0.12.0 resumed ready with independent reads/schema checks; Read pan remains
   unavailable there. No project save/load or MPC restart. See
   `findings/native-automation-read-pan.md` and its sanitized proof. Installing
-  0.13.0 still requires owner approval under the device-work rule above.
+  0.13.0 was subsequently installed at the owner's request, as verified below.
+
+- Owner-requested 0.13.0 installation (#54 follow-up, 2026-10-28) completed from
+  clean source `70ff03f`. The session was saved as a fresh `Claude Experiments/US54
+  Install Backup.xpj` before the required MPC restart and reopened afterward.
+  Package/installed hashes, configuration, persistent identity and preload order
+  match, with privtap/Remote preserved. Installed actual Read pan writes pass on
+  selected plugin and unselected audio targets, independent readback, watch/replay,
+  retained retry/lookup, no-ops and conflicts; Read mute/solo/volume regressions pass.
+  All five reads/schema checks, active-watch stop/drain, new-instance resync and
+  recovery pass. All captured original flags, mixer values, Read modes, settings,
+  selection, sequence, zero playhead and Menu over Mixer Volume are restored;
+  backup bytes are unchanged. Installed 0.13.0 is ready/OK. See
+  `findings/native-pan-installed-20261028.json`. Future installs/restarts still
+  require owner approval.

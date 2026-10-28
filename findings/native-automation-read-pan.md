@@ -1,10 +1,10 @@
 # Pan under Automation Read (US #54)
 
 Version 0.13.0 adds native `set_pan` writes under Read for plugin, drum,
-keygroup and audio tracks. Installed 0.12.0 remains unchanged and does not
-support Read pan. Implementation and device qualification are recorded in the
-[sanitized proof](native-automation-read-pan-proof-20261028.json). Installation
-remains a separate owner-approved operation.
+keygroup and audio tracks. The owner-requested 0.13.0 installation is verified;
+the earlier 0.12.0 host did not support Read pan. Implementation and device
+qualification are recorded in the [sanitized proof](native-automation-read-pan-proof-20261028.json).
+The subsequent installation has its own [verification record](native-pan-installed-20261028.json).
 
 Pan retains global scope and its complete track reference and mixer generation.
 Units are finite normalized 0–1: left 0, centre 0.5, right 1. Receipts retain the
@@ -150,7 +150,28 @@ pan lane, were removed. Menu over Mixer Volume and its original viewport were
 restored. Both temporary labs drained, unloaded and removed their device files.
 MPC's PID is unchanged; no project was saved or loaded and MPC was not restarted.
 
-Installed 0.12.0 resumed ready. Discovery plus all five read projections pass
-schemas and independent flag/mixer readback. Installed discovery and per-track
-operations still reject Read pan, as expected. This qualification does not install
-0.13.0; the NODELETE host upgrade requires separately approved saving/restart.
+At the end of implementation qualification, installed 0.12.0 resumed ready.
+Discovery and all five read projections passed schemas and independent flag/mixer
+readback; Read pan remained unavailable in that older host. The subsequent
+owner-requested 0.13.0 installation is recorded below.
+
+## Owner-requested installation, 2026-10-28
+
+Package 0.13.0 from clean source `70ff03f` is installed and ready after the
+authorized MPC restart. A new `Claude Experiments/US54 Install Backup.xpj` was
+saved, independently verified and reopened; no pre-existing project was
+overwritten. Package and installed artifact hashes match. Configuration,
+persistent identity, preload ordering, privtap and Remote are preserved.
+
+Actual installed Read pan writes pass on the selected plugin and an unselected
+audio track, including independent readback, watch changes, retained replay,
+retry/get_command, no-ops and expected conflicts. Read mute/solo/volume regressions
+pass too. All five read projections match independent flag/mixer observations
+and schemas. Active-watch stop/drain, API instance rotation, old-cursor resync,
+old-receipt unavailability and fresh watch recovery/unsubscribe pass.
+
+All captured track/bus flags, mixer values, Read modes, settings/context,
+selection, sequence, zero playhead and Menu over Mixer Volume are restored. The
+backup bytes remain unchanged. Installed host is ready/OK; see the
+[sanitized installation evidence](native-pan-installed-20261028.json). Future
+installs/restarts still require owner approval.
