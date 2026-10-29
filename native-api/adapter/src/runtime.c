@@ -91,6 +91,36 @@ navigate(void *data, unsigned op, uintptr_t function, uintptr_t receiver, int64_
   return MPC_NATIVE_OK;
 }
 
+static enum mpc_native_error
+track_edit(void *data, unsigned kind, uintptr_t function, uintptr_t receiver, double value) {
+  (void)data;
+  switch (kind) {
+  case MPC_EDIT_UINT:
+    ((void (*)(void *, uint32_t))function)((void *)receiver, (uint32_t)value);
+    break;
+  case MPC_EDIT_INT:
+    ((void (*)(void *, int))function)((void *)receiver, (int)value);
+    break;
+  case MPC_EDIT_FLOAT:
+    ((void (*)(void *, float))function)((void *)receiver, (float)value);
+    break;
+  case MPC_EDIT_INT_REFERENCE: {
+    int channel = (int)value;
+    ((void (*)(void *, const int *))function)((void *)receiver, &channel);
+    break;
+  }
+  case MPC_EDIT_BOOL:
+    ((void (*)(void *, bool))function)((void *)receiver, value != 0);
+    break;
+  case MPC_EDIT_BYTE:
+    ((void (*)(void *, unsigned char))function)((void *)receiver, (unsigned char)value);
+    break;
+  default:
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  }
+  return MPC_NATIVE_OK;
+}
+
 static enum mpc_native_error mixer_set(
   void *data, unsigned op, uintptr_t function, uintptr_t receiver, unsigned index, double value) {
   (void)data;
@@ -378,6 +408,7 @@ mpc_native_open(const struct mpc_native_hooks *hooks, struct mpc_native_adapter 
     .setter = setter,
     .filter = filter,
     .mixer_set = mixer_set,
+    .track_edit = track_edit,
     .navigate = navigate,
     .float_filter = float_filter,
     .post = post,

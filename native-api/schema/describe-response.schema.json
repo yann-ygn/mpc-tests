@@ -683,7 +683,25 @@
             "set_pan",
             "set_send_level",
             "set_insert_rack_enabled",
-            "set_insert_enabled"
+            "set_insert_enabled",
+            "set_track_colour",
+            "set_track_transpose",
+            "set_track_velocity_scale",
+            "set_midi_output_channel",
+            "set_midi_bank_enabled",
+            "set_midi_bank_msb",
+            "set_midi_bank_lsb",
+            "set_midi_program_enabled",
+            "set_midi_program",
+            "rename_track",
+            "create_track",
+            "copy_track",
+            "remove_track",
+            "set_midi_input_port",
+            "set_midi_output_port",
+            "set_midi_input_channel",
+            "set_cv_port",
+            "set_gate_port"
           ],
           "properties": {
             "describe": {
@@ -756,6 +774,60 @@
             },
             "set_sequence_bpm": {
               "$ref": "#/$defs/navigationCapability"
+            },
+            "set_track_colour": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "set_track_transpose": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "set_track_velocity_scale": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "set_midi_output_channel": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "set_midi_bank_enabled": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "set_midi_bank_msb": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "set_midi_bank_lsb": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "set_midi_program_enabled": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "set_midi_program": {
+              "$ref": "#/$defs/trackSetupCapability"
+            },
+            "rename_track": {
+              "$ref": "#/$defs/capability"
+            },
+            "create_track": {
+              "$ref": "#/$defs/capability"
+            },
+            "copy_track": {
+              "$ref": "#/$defs/capability"
+            },
+            "remove_track": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_midi_input_port": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_midi_output_port": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_midi_input_channel": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_cv_port": {
+              "$ref": "#/$defs/capability"
+            },
+            "set_gate_port": {
+              "$ref": "#/$defs/capability"
             }
           },
           "additionalProperties": {
@@ -838,7 +910,7 @@
               "const": 128
             },
             "snapshotAbiVersion": {
-              "const": 6
+              "const": 7
             },
             "maxJobsPerUiCallback": {
               "enum": [
@@ -1036,6 +1108,77 @@
           }
         }
       ]
+    },
+    "trackSetupCapability": {
+      "type": "object",
+      "required": [
+        "available",
+        "reason",
+        "families",
+        "verification",
+        "conditions",
+        "minimum",
+        "maximum",
+        "unit",
+        "requestReplay",
+        "undo",
+        "outputVerified"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "families": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "verification": {
+          "const": [
+            "model"
+          ]
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "maximum": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "requestReplay": {
+          "const": "retained_result"
+        },
+        "undo": {
+          "const": "not_registered"
+        },
+        "outputVerified": {
+          "type": "boolean"
+        },
+        "expectedComparison": {
+          "enum": [
+            "exact",
+            "binary32_exact"
+          ]
+        }
+      }
     }
   },
   "description": "Automation Read qualifies native mute/solo/volume/pan manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Sends/inserts remain Off-only."

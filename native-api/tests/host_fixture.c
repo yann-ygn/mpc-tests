@@ -1,5 +1,6 @@
 #include "mixer_fixture_backend.h"
 #include "host.h"
+#include "mpc_family_profile.h"
 
 #include <signal.h>
 #include <stdatomic.h>
@@ -94,6 +95,44 @@ static enum mpc_native_error wire_mixer_set(
 }
 
 static enum mpc_native_error
+wire_track_edit(void *data, unsigned kind, uintptr_t function, uintptr_t receiver, double value) {
+  (void)data;
+  assert(ui);
+  static const unsigned properties[] = {0x5f0, 0x4a4, 0x5c4, 0x3d0, 8, 0x34, 0x60, 0x8c, 0xb8};
+  static const unsigned setters[] =
+    {0xe5243c, 0xe4fb24, 0xe5af48, 0x1462c7c, 0xe298bc, 0x1ac2e0c, 0x1ac2e0c, 0xe298bc, 0x1ac2e0c};
+  static const unsigned kinds[] = {0, 1, 2, 3, 4, 5, 5, 4, 5};
+  unsigned field;
+  uint32_t track = 0;
+  for (field = 0; field < MPC_TRACK_SETUP_FIELDS; field++) {
+    if (receiver == TRACK + properties[field])
+      track = TRACK;
+    if (receiver == TRACK2 + properties[field])
+      track = TRACK2;
+    if (track)
+      break;
+  }
+  assert(
+    track && field < MPC_TRACK_SETUP_FIELDS && function == IMAGE + setters[field] &&
+    kind == kinds[field]);
+  fixture.native.setters++;
+  uint32_t raw = (int32_t)value;
+  if (kind == 2) {
+    float number = value;
+    memcpy(&raw, &number, 4);
+  }
+  if (!marker("setup-diverged"))
+    memcpy(fixture.native.objects + receiver + 0x28 - OBJECTS, &raw, kind >= 4 ? 1 : 4);
+  if (marker("setup-replace-after-set"))
+    select_project(&fixture, PROJECT2);
+  if (marker("setup-family-after-set"))
+    put32(&fixture.native, PROGRAM, IMAGE + mpc_family_by_type("audio")->vtable);
+  if (marker("setup-context-after-set"))
+    put32(&fixture.native, POLICY_MODE + native_command_context.modeValue, 999);
+  return MPC_NATIVE_OK;
+}
+
+static enum mpc_native_error
 wire_navigate(void *data, unsigned op, uintptr_t function, uintptr_t receiver, int64_t value) {
   (void)data;
   assert(ui);
@@ -134,6 +173,11 @@ wire_navigate(void *data, unsigned op, uintptr_t function, uintptr_t receiver, i
 static int wire_read(void *data, uintptr_t address, void *output, size_t bytes) {
   if (ui && marker("manual-mute"))
     put_bool(&fixture.native, PROGRAM + native_bindings[0].requested, true);
+  if (ui && address == TRACK + 0x618 && bytes == 4 && marker("manual-setup")) {
+    uint32_t colour = 37;
+    memcpy(output, &colour, 4);
+    return 0;
+  }
   if (ui && marker("manual-pan"))
     mixer_float(&fixture.native, PROGRAM + MIXER_PAN_VALUE, .25f);
   const struct native_command_context_layout *p = &native_command_context;
@@ -236,6 +280,7 @@ static enum mpc_native_error start(void *unused, struct mpc_executor **out) {
   backend.setter = wire_setter;
   backend.float_filter = wire_float_filter;
   backend.mixer_set = wire_mixer_set;
+  backend.track_edit = wire_track_edit;
   backend.navigate = wire_navigate;
   backend.on_ui_thread = on_identity_ui;
   backend.post = enqueue;
@@ -277,11 +322,14 @@ int main(int argc, char **argv) {
   snprintf(gate, sizeof gate, "%s/gate", installation);
   snprintf(pause_ui, sizeof pause_ui, "%s/pause-ui", installation);
   state_init(&fixture);
-  navigation_enabled = !strcmp(argv[4], "navigation-commands");
+  navigation_enabled =
+    !strcmp(argv[4], "navigation-commands") || !strcmp(argv[4], "setup-commands");
   native_policy =
     navigation_enabled || !strcmp(argv[4], "native-commands") || !strcmp(argv[4], "mixer-commands");
   if (!strcmp(argv[4], "mixer-commands"))
     mixer_init(&fixture.native, PROGRAM, OBJECTS + 0x30000);
+  if (!strcmp(argv[4], "setup-commands"))
+    put32(&fixture.native, PROGRAM, IMAGE + mpc_family_by_type("midi")->vtable);
   commands_enabled = native_policy || !strcmp(argv[4], "commands");
   if (native_policy) {
     policy_init(&fixture);

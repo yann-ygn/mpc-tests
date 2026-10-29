@@ -21,6 +21,9 @@ US #33 implements [qualified Unix watch/replay](native-api/WATCH.md) with a shar
 controls producer and retained snapshot cursors. Eight-subscriber device delivery,
 replay and load evidence is in [the qualification report](findings/native-watch.md);
 HTTP and SDKs are separate stories.
+US #41 adds [stopped track metadata and MIDI bank/program settings](findings/native-track-setup.md),
+with retained desired-state commands and typed setup observations. Native rename, lifecycle,
+port enumeration and CV/gate setters remain unqualified in this initial subset.
 US #21 adds the [persistent addin package](native-api/INSTALL.md), including startup,
 health, stop/start and recovery. Build it with `uv run --no-sync python native-api/package.py`;
 installation requires saved work and approval for an MPC restart.

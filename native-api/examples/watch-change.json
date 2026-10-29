@@ -31,7 +31,7 @@
       "generation": "2",
       "kind": "track",
       "index": 0,
-      "name": "Live \"é\"\n",
+      "name": "Live \"\u00e9\"\n",
       "collection": "midi_triggered",
       "uiIndex": 0,
       "type": "plugin",
@@ -48,7 +48,13 @@
       "silenced": false,
       "unsupportedFields": [
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "plugin",
@@ -189,6 +195,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": 65408,
+        "transposeSemitones": 0,
+        "velocityScale": 1,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     }
   ]

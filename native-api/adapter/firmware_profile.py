@@ -281,6 +281,23 @@ def validate(state, control):
         for n, r in required_navigation.items()
     ):
         raise ValueError("Missing navigation call fingerprints")
+    required_setup = {
+        "trackSetupColourSetter": 0xE5243C,
+        "trackSetupIntSetter": 0xE4FB24,
+        "trackSetupChannelSetter": 0x1462C7C,
+        "trackSetupByteSetter": 0x1AC2E0C,
+        "trackSetupColourBinding": 0x287061C,
+        "trackSetupTransposeBinding": 0x286FD4C,
+        "trackSetupVelocityBinding": 0x286CDF0,
+        "trackSetupOutputChannelBinding": 0x286F92C,
+        "trackSetupBankBinding": 0x286D754,
+        "trackSetupMsbBinding": 0x286E7B8,
+        "trackSetupLsbBinding": 0x286E9C0,
+        "trackSetupProgramEnabledBinding": 0x286D95C,
+        "trackSetupProgramBinding": 0x286EBC8,
+    }
+    if any(not any(f["rva"] == r for f in control["functions"]) for r in required_setup.values()):
+        raise ValueError("Missing track setup call fingerprints")
     fingerprints = {}
     names = set()
     for function in control["functions"]:

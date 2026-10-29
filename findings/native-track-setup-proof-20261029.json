@@ -1,0 +1,187 @@
+{
+  "story": 41,
+  "date": "2026-10-29",
+  "device": {
+    "model": "MPC Key 37",
+    "firmware": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "implementation": {
+    "branch": "us-41-track-metadata-routing",
+    "packageVersion": "0.15.0",
+    "commandAbi": 9,
+    "executorAbi": 11,
+    "snapshotAbi": 7,
+    "primitiveAbi": 2,
+    "observationAbi": 2,
+    "stateProtocol": "STATE_V7",
+    "nativeSetters": "notifying properties; one invocation per command; model-only completion"
+  },
+  "matrix": {
+    "rows": 910,
+    "statuses": {
+      "applied": 756,
+      "rejected": 154
+    },
+    "nativeInvocations": 546,
+    "screens": [
+      "main",
+      "mixer_volume",
+      "mixer_pan_volume",
+      "mixer_sends",
+      "mixer_effects",
+      "mixer_io",
+      "track_mute"
+    ],
+    "families": [
+      "plugin",
+      "drum",
+      "midi",
+      "cv",
+      "audio",
+      "keygroup"
+    ],
+    "independentReadback": true,
+    "perValueRestore": true,
+    "retainedReplayMatched": true,
+    "fullBaselineRestored": true,
+    "totalMsP95": 24,
+    "uiCallbackUsP95": 11277,
+    "uiCallbackUsMax": 11599,
+    "performanceQualification": false
+  },
+  "finalPolicyBuild": {
+    "automationReadPositiveRows": 18,
+    "automationOffPositiveRows": 18,
+    "negativeRows": {
+      "write-gate": {
+        "rows": 9,
+        "errors": {
+          "AUTOMATION_UNQUALIFIED": 9
+        },
+        "nativeInvocations": 0
+      },
+      "playing-gate": {
+        "rows": 9,
+        "errors": {
+          "PLAYBACK_CONTEXT_UNQUALIFIED": 9
+        },
+        "nativeInvocations": 0
+      },
+      "record-gate": {
+        "rows": 9,
+        "errors": {
+          "RECORDING_UNQUALIFIED": 9
+        },
+        "nativeInvocations": 0
+      },
+      "grid-gate": {
+        "rows": 9,
+        "errors": {
+          "NOT_READY": 9
+        },
+        "nativeInvocations": 0
+      }
+    },
+    "trackEditPopupRejectedBeforeInvocation": true,
+    "numericKeypadOverlay": "engine popup enum stayed clear; nine commands applied; no general UI editing lock promised"
+  },
+  "midi": {
+    "endpoint": "MPC Remote In (internal ALSA)",
+    "programsObserved": [
+      0,
+      127
+    ],
+    "bankMsbObserved": 37,
+    "bankLsbObserved": 91,
+    "channelsObserved": [
+      16,
+      1
+    ],
+    "channelChangeSideEffect": "CC123 on previous channel",
+    "bankChangeSideEffects": [
+      "CC0",
+      "CC32",
+      "enabled program change"
+    ],
+    "retainedRetriesNoDuplicateMessages": true,
+    "listenerInjectionControlPassed": true,
+    "liveNoteThruObserved": false,
+    "externalConnectorOutputVerified": false,
+    "cvGateHardwareAvailable": true,
+    "cvGateOutputVerified": false
+  },
+  "lifecycle": {
+    "uiRenamePreservesIdentity": true,
+    "uiReorderPreservesIdentity": true,
+    "uiDuplicateNewIdentity": true,
+    "nativeEditUsingPreDuplicateHandleApplied": true,
+    "uiUndoRemovedDuplicateAndPreservedNativeColour": true,
+    "uiDeleteRetiresIdentity": true,
+    "deletedHandleError": "TARGET_NOT_FOUND",
+    "uiCreateNewIdentity": true,
+    "deviceAddressReuseObserved": false,
+    "forcedAddressReuseHostFixturePassed": true,
+    "projectReloadOldHandleError": "STALE_PROJECT",
+    "rejectedSettersInvoked": false,
+    "publicLifecycleCommandsAvailable": false
+  },
+  "verification": {
+    "hostMesonEntries": 25,
+    "asanUbsanEntries": 20,
+    "isolatedArmFixtures": 8,
+    "armDeploymentGuardsPassed": true,
+    "deviceRequestReceiptSchemaPairs": 1001,
+    "watchSetupSnapshotAndRetainedReplayHostPassed": true
+  },
+  "restoration": {
+    "backupSha256": "9c83962854b6152650097a29035b9077b56bca44ef3d7877ded660ca68308231",
+    "backupHashUnchanged": true,
+    "backupReloaded": true,
+    "allCapturedTrackAndBusFlagsRestored": true,
+    "allCapturedMixerValuesRestored": true,
+    "automationAndCommandContextRestored": true,
+    "selectionAndSequenceRestored": true,
+    "transport": {
+      "playing": false,
+      "recordMode": 0,
+      "pulse": 0,
+      "countInEnabled": true,
+      "trackIndex": 0,
+      "sequenceIndex": 0,
+      "sequenceBpm": 120.0,
+      "masterBpm": 120.0,
+      "masterTempoEnabled": false
+    },
+    "allOtherPersistedSettingsUnchanged": true,
+    "expectedSettingsDifferences": {
+      "recentProjectHistoryUpdated": true,
+      "addedDiscoveredMidiEndpoints": [
+        "MPC Remote Out",
+        "MPC Remote In"
+      ],
+      "existingMidiConfigurationsUnchanged": true
+    },
+    "mpcRestarted": false,
+    "temporaryBridgeDrainedAndUnloaded": true,
+    "temporaryFilesRemoved": true,
+    "installedVersion": "0.13.0",
+    "installedReadsPassed": [
+      "describe",
+      "get_state",
+      "list_tracks",
+      "current_track",
+      "current_sequence",
+      "recovery_snapshot"
+    ],
+    "installedReady": true
+  },
+  "unqualified": [
+    "rename/create/copy/remove public commands",
+    "MIDI input/output port and input-channel setters",
+    "CV/gate setters and physical signals",
+    "external MIDI note output and live note thru",
+    "audio processing effect of transpose/velocity",
+    "maximum density or automation-rate performance"
+  ]
+}

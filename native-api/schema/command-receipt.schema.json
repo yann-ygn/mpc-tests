@@ -1546,6 +1546,681 @@
         }
       ],
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "apiVersion",
+        "requestId",
+        "instanceId",
+        "status",
+        "execution",
+        "target",
+        "op",
+        "value",
+        "changed",
+        "nativeInvoked",
+        "verification",
+        "observedChanges",
+        "error",
+        "timing"
+      ],
+      "properties": {
+        "apiVersion": {
+          "const": "0.1"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "instanceId": {
+          "type": "string",
+          "pattern": "^run_[0-9a-f]{32}$"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "applied",
+            "rejected",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "execution": {
+          "enum": [
+            "not_started",
+            "started",
+            "completed"
+          ]
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "instanceId",
+            "projectId",
+            "trackId"
+          ],
+          "properties": {
+            "instanceId": {
+              "type": "string",
+              "pattern": "^run_[0-9a-f]{32}$"
+            },
+            "projectId": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "trackId": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "op": {
+          "enum": [
+            "set_track_colour",
+            "set_track_transpose",
+            "set_track_velocity_scale",
+            "set_midi_output_channel",
+            "set_midi_bank_enabled",
+            "set_midi_bank_msb",
+            "set_midi_bank_lsb",
+            "set_midi_program_enabled",
+            "set_midi_program"
+          ]
+        },
+        "value": {
+          "type": [
+            "boolean",
+            "number"
+          ]
+        },
+        "changed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "nativeInvoked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "verification": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "by",
+            "requestedValue",
+            "audioSideValue",
+            "observedAt"
+          ],
+          "properties": {
+            "by": {
+              "const": [
+                "model"
+              ]
+            },
+            "requestedValue": {
+              "type": [
+                "boolean",
+                "number"
+              ]
+            },
+            "audioSideValue": {
+              "type": "null"
+            },
+            "observedAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            }
+          },
+          "additionalProperties": false
+        },
+        "observedChanges": {
+          "type": "array",
+          "maxItems": 3000,
+          "items": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "path",
+              "before",
+              "after"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*$"
+              },
+              "trackId": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*$"
+              },
+              "path": {
+                "type": "string"
+              },
+              "before": {
+                "type": [
+                  "boolean",
+                  "number",
+                  "string",
+                  "null"
+                ]
+              },
+              "after": {
+                "type": [
+                  "boolean",
+                  "number",
+                  "string",
+                  "null"
+                ]
+              },
+              "muteContext": {
+                "$ref": "#/$defs/muteContext"
+              }
+            }
+          }
+        },
+        "error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "code",
+            "message",
+            "details"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "message": {
+              "type": "string"
+            },
+            "details": {
+              "type": "object",
+              "required": [
+                "execution"
+              ]
+            }
+          }
+        },
+        "timing": {
+          "type": "object",
+          "description": "Monotonic durations in milliseconds except cumulative UI work in microseconds; no sample or acoustic timing guarantee. Null means the stage has not completed.",
+          "required": [
+            "queueMs",
+            "dispatchMs",
+            "verificationMs",
+            "totalMs",
+            "uiWorkUs",
+            "verificationPasses"
+          ],
+          "properties": {
+            "queueMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "dispatchMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "verificationMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "totalMs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "uiWorkUs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "verificationPasses": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maxUiCallbackUs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stagesUs": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "verificationUiUs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "observationCoverage": {
+          "type": "object",
+          "required": [
+            "before",
+            "after"
+          ],
+          "properties": {
+            "before": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "kind",
+                "offset",
+                "count",
+                "totalTracks",
+                "topologyEpoch",
+                "durationUs"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "user_track_flags"
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "totalTracks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "topologyEpoch": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*$"
+                },
+                "durationUs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "flags",
+                      "mixer"
+                    ]
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "after": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "kind",
+                "offset",
+                "count",
+                "totalTracks",
+                "topologyEpoch",
+                "durationUs"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "user_track_flags"
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "totalTracks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 136
+                },
+                "topologyEpoch": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*$"
+                },
+                "durationUs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "flags",
+                      "mixer"
+                    ]
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "applied"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution": {
+                "const": "completed"
+              },
+              "changed": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": "null"
+              },
+              "verification": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "cancelled"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution": {
+                "const": "not_started"
+              },
+              "nativeInvoked": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_track_colour"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16777215
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 16777215
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_track_transpose"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": -24,
+                "maximum": 24
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "integer",
+                    "minimum": -24,
+                    "maximum": 24
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_track_velocity_scale"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0.009999999776482582,
+                "maximum": 2
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "number",
+                    "minimum": 0.009999999776482582,
+                    "maximum": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_midi_output_channel"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 16
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_midi_bank_enabled"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "boolean"
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_midi_bank_msb"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 127
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_midi_bank_lsb"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 127
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_midi_program_enabled"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "boolean"
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "set_midi_program"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              },
+              "verification": {
+                "properties": {
+                  "requestedValue": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 127
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
     }
   ]
 }

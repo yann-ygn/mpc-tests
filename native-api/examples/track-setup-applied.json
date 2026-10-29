@@ -1,0 +1,42 @@
+{
+  "apiVersion": "0.1",
+  "requestId": "set_0_0",
+  "instanceId": "run_0123456789abcdef0123456789abcdef",
+  "status": "applied",
+  "execution": "completed",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "op": "set_track_transpose",
+  "value": -12,
+  "changed": true,
+  "nativeInvoked": true,
+  "verification": {
+    "by": [
+      "model"
+    ],
+    "requestedValue": -12,
+    "audioSideValue": null,
+    "observedAt": null
+  },
+  "observedChanges": [
+    {
+      "projectId": "1",
+      "trackId": "2",
+      "path": "tracks.2.setup.transposeSemitones",
+      "before": 0,
+      "after": -12
+    }
+  ],
+  "timing": {
+    "queueMs": 1,
+    "dispatchMs": 0,
+    "verificationMs": 0,
+    "totalMs": 1,
+    "uiWorkUs": 128,
+    "verificationPasses": 0
+  },
+  "error": null
+}

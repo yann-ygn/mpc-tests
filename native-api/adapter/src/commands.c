@@ -69,6 +69,7 @@ static bool canonical(const struct mpc_command_request *a, const struct mpc_comm
     !memcmp(a->sequence.instance_id, b->sequence.instance_id, 37) &&
     !memcmp(a->target.instance_id, b->target.instance_id, 37) && a->value == b->value &&
     a->has_expected == b->has_expected && (!a->has_expected || a->expected == b->expected) &&
+    a->edit.value == b->edit.value && (!a->has_expected || a->edit.expected == b->edit.expected) &&
     a->pulse == b->pulse && a->bpm == b->bpm && a->start_within_ms == b->start_within_ms &&
     a->mixer.generation == b->mixer.generation && a->mixer.index == b->mixer.index &&
     a->mixer.value == b->mixer.value &&
@@ -96,6 +97,13 @@ static const struct mpc_command_track *target_track(const struct mpc_command_rec
 }
 static bool verified(const struct mpc_command_receipt *receipt) {
   unsigned property = receipt->request.operation;
+  if (mpc_command_track_edit(property)) {
+    unsigned field = property - MPC_COMMAND_TRACK_COLOUR;
+    return (receipt->setup_after.known & (1u << field)) &&
+      receipt->setup_after.values[field] ==
+      (field == MPC_TRACK_VELOCITY ? (double)(float)receipt->request.edit.value
+                                   : receipt->request.edit.value);
+  }
   if (property >= MPC_COMMAND_PLAY) {
     const struct mpc_navigation_state *state = &receipt->navigation_after;
     if (!state->known)
@@ -207,6 +215,7 @@ static void advance(struct mpc_commands *commands, struct record *record) {
       .mixer = receipt->request.mixer,
       .pulse = receipt->request.pulse,
       .bpm = receipt->request.bpm,
+      .edit = receipt->request.edit,
       .queue_timeout_ms =
         record->verifying ? MPC_COMMAND_VERIFICATION_MS : (unsigned)(record->start_deadline - now),
       .command_property = receipt->request.operation,
@@ -279,6 +288,9 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     if (!record->verifying)
       receipt->navigation_before = result.command->navigation_before;
     receipt->navigation_after = result.command->navigation_after;
+    if (!record->verifying)
+      receipt->setup_before = result.command->setup_before;
+    receipt->setup_after = result.command->setup_after;
     if (result.command->before_known && !record->verifying) {
       receipt->before = result.command->before;
       receipt->before_known = true;
@@ -475,7 +487,7 @@ enum mpc_native_error mpc_commands_submit(
   if (
     !identifier(input->request_id) || !instance(input->target.instance_id) ||
     !input->target.project || (input->operation < MPC_COMMAND_PLAY && !input->target.track) ||
-    (unsigned)input->operation > MPC_COMMAND_SEQUENCE_BPM ||
+    (unsigned)input->operation > MPC_COMMAND_MIDI_PROGRAM ||
     input->start_within_ms > MPC_COMMAND_MAX_START_MS)
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (

@@ -6,7 +6,7 @@
 #include "mpc_state.h"
 #include "mpc_observation.h"
 
-#define MPC_COMMANDS_ABI 8u
+#define MPC_COMMANDS_ABI 9u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u
@@ -34,8 +34,24 @@ enum mpc_command_operation {
   MPC_COMMAND_LOCATE,
   MPC_COMMAND_SELECT_TRACK,
   MPC_COMMAND_SELECT_SEQUENCE,
-  MPC_COMMAND_SEQUENCE_BPM
+  MPC_COMMAND_SEQUENCE_BPM,
+  MPC_COMMAND_TRACK_COLOUR,
+  MPC_COMMAND_TRACK_TRANSPOSE,
+  MPC_COMMAND_TRACK_VELOCITY,
+  MPC_COMMAND_MIDI_OUTPUT_CHANNEL,
+  MPC_COMMAND_MIDI_BANK_ENABLED,
+  MPC_COMMAND_MIDI_BANK_MSB,
+  MPC_COMMAND_MIDI_BANK_LSB,
+  MPC_COMMAND_MIDI_PROGRAM_ENABLED,
+  MPC_COMMAND_MIDI_PROGRAM
 };
+static inline bool mpc_command_track_edit(unsigned op) {
+  return op >= MPC_COMMAND_TRACK_COLOUR && op <= MPC_COMMAND_MIDI_PROGRAM;
+}
+static inline bool mpc_command_track_target(unsigned op) {
+  return op == MPC_COMMAND_SELECT_TRACK || mpc_command_track_edit(op);
+}
+
 enum mpc_command_status {
   MPC_COMMAND_ACCEPTED,
   MPC_COMMAND_APPLIED,
@@ -65,6 +81,7 @@ struct mpc_command_request {
   struct mpc_mixer_request mixer;
   /* Absolute native pulses; LOCATE only. No relative or toggle operations. */
   int64_t pulse;
+  struct mpc_track_edit edit;
   double bpm; /* SEQUENCE_BPM only: stored sequence BPM, independent of effective tempo. */
   /* Observation revisions cannot be transaction preconditions. Reject before
    * acceptance rather than silently ignoring a caller's requested safeguard. */
@@ -114,6 +131,7 @@ struct mpc_command_receipt {
   bool before_known, after_known;
   struct mpc_command_observation before, after;
   struct mpc_navigation_state navigation_before, navigation_after;
+  struct mpc_track_setup setup_before, setup_after;
   /* Monotonic milliseconds, private to the authority's lifetime. Wire timings
    * are durations, never wall-clock or audio/sample scheduling timestamps.
    * Zero means the corresponding stage has not been observed. */

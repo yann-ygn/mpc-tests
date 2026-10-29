@@ -2,6 +2,7 @@
 #include "watch.h"
 #include "mpc_native.h"
 #include "mpc_mixer_wire.h"
+#include "mpc_track_setup_wire.h"
 #include "mpc_family_profile.h"
 
 #include <inttypes.h>
@@ -127,10 +128,13 @@ int api_valid_snapshot(const struct mpc_state_snapshot *s, const char *instance)
     const struct mpc_state_track *t = normal ? &s->tracks[i] : &s->buses[i - s->track_count];
     if (
       !valid_text(t->name, sizeof t->name) || !valid_text(t->type, sizeof t->type) ||
-      !valid_mixer(&t->mixer, normal) || !known_track_type(t->type) ||
-      (t->known & ~mpc_family_by_type(t->type)->fields) || !t->type[0] || t->muted > 1 ||
-      t->soloed > 1 || t->record_armed > 1 || t->audio_soloed > 1 || t->audio_record_armed > 1 ||
-      t->silenced > 1 || t->identity.index != (normal ? i : i - s->track_count) ||
+      !valid_mixer(&t->mixer, normal) || !mpc_track_setup_valid(&t->setup) ||
+      (!normal && t->setup.known) ||
+      (t->setup.known & ~mpc_track_setup_fields(mpc_family_by_type(t->type)->family)) ||
+      !known_track_type(t->type) || (t->known & ~mpc_family_by_type(t->type)->fields) ||
+      !t->type[0] || t->muted > 1 || t->soloed > 1 || t->record_armed > 1 || t->audio_soloed > 1 ||
+      t->audio_record_armed > 1 || t->silenced > 1 ||
+      t->identity.index != (normal ? i : i - s->track_count) ||
       (normal && (!t->identity.id || !t->identity.generation)) ||
       (!normal && (t->known || t->identity.id || t->identity.generation)))
       return 0;
@@ -276,6 +280,8 @@ void api_track_json(
   nullable_bool(f, t->known & MPC_STATE_SILENCED, t->silenced);
   fputs(",\"mixer\":", f);
   mpc_mixer_json(f, &t->mixer);
+  fputs(",\"setup\":", f);
+  mpc_track_setup_json(f, &t->setup);
   fputs(",\"unsupportedFields\":", f);
   static const char *fields[] = {
     "requested.muted",
@@ -293,6 +299,13 @@ void api_track_json(
       if (comma)
         fputc(',', f);
       api_quoted(f, fields[i]);
+      comma = true;
+    }
+  for (unsigned i = 0; i < MPC_TRACK_SETUP_FIELDS; i++)
+    if (!(t->setup.known & (1u << i))) {
+      if (comma)
+        fputc(',', f);
+      fprintf(f, "\"setup.%s\"", mpc_track_setup_names[i]);
       comma = true;
     }
   fputs("],\"flagSupport\":", f);

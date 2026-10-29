@@ -46,6 +46,15 @@ struct mpc_native_project_watch {
 
 /* Backend injection is private to the isolated fixture, absent from the DSO's
  * exports. Production always supplies runtime.c's read-only memory backend. */
+enum mpc_native_edit_kind {
+  MPC_EDIT_UINT,
+  MPC_EDIT_INT,
+  MPC_EDIT_FLOAT,
+  MPC_EDIT_INT_REFERENCE,
+  MPC_EDIT_BOOL,
+  MPC_EDIT_BYTE
+};
+
 struct mpc_native_io {
   void *userdata;
   uintptr_t image;
@@ -64,6 +73,7 @@ struct mpc_native_io {
   enum mpc_native_error (*project_watch)(void *, uint32_t, struct mpc_native_project_watch *);
   enum mpc_native_error (*project_unwatch)(void *, struct mpc_native_project_watch *, bool);
   enum mpc_native_error (*navigate)(void *, unsigned, uintptr_t, uintptr_t, int64_t);
+  enum mpc_native_error (*track_edit)(void *, unsigned, uintptr_t, uintptr_t, double);
   void (*destroy)(void *);
 };
 
@@ -139,6 +149,11 @@ unsigned mpc_mixer_field(unsigned, unsigned);
 bool mpc_mixer_numeric(unsigned);
 bool mpc_mixer_value(const struct mpc_mixer_state *, unsigned, unsigned, double *);
 bool mpc_mixer_request_valid(unsigned, const struct mpc_mixer_request *, bool);
+
+enum mpc_native_error
+mpc_track_setup_read(struct mpc_native_adapter *, uint32_t, unsigned, struct mpc_track_setup *);
+enum mpc_native_error
+mpc_track_setup_invoke(struct mpc_native_adapter *, uint32_t, unsigned, double, bool *);
 
 struct mpc_command_request;
 bool mpc_navigation_request_valid(const struct mpc_command_request *);

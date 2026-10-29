@@ -184,7 +184,8 @@ char *api_respond(
     !strcmp(op, "set_insert_rack_enabled") || !strcmp(op, "set_insert_enabled") ||
     !strcmp(op, "play") || !strcmp(op, "stop") || !strcmp(op, "play_start") ||
     !strcmp(op, "locate") || !strcmp(op, "select_track") || !strcmp(op, "select_sequence") ||
-    !strcmp(op, "set_sequence_bpm") || !strcmp(op, "get_command")) {
+    !strcmp(op, "set_sequence_bpm") || mpc_command_track_edit(parsed.command.operation) ||
+    !strcmp(op, "get_command")) {
     if (!discovery.commands_ready)
       return api_error("NOT_READY", "Command authority is unavailable; consult describe");
     return command_reply(api, caller, &parsed, delivery);
@@ -394,6 +395,74 @@ char *api_respond(
         ",\"tempoScope\":\"stored_sequence_bpm\",\"effectiveTempoKnown\":false,"
         "\"minimum\":20,\"maximum\":999,\"quantization\":\"ieee_binary32\"",
         output);
+    fputc('}', output);
+  }
+  static const char *setup_ops[] = {
+    "set_track_colour",
+    "set_track_transpose",
+    "set_track_velocity_scale",
+    "set_midi_output_channel",
+    "set_midi_bank_enabled",
+    "set_midi_bank_msb",
+    "set_midi_bank_lsb",
+    "set_midi_program_enabled",
+    "set_midi_program"};
+  static const double setup_min[] = {0, -24, (double)0.01f, 0, 0, 0, 0, 0, 0};
+  static const double setup_max[] = {16777215, 24, 2, 16, 1, 127, 127, 1, 127};
+  static const char *units[] = {
+    "rgb24",
+    "semitones",
+    "velocity_multiplier",
+    "midi_channel_or_follow",
+    "boolean",
+    "midi_7bit",
+    "midi_7bit",
+    "boolean",
+    "midi_7bit"};
+  for (unsigned i = 0; i < MPC_TRACK_SETUP_FIELDS; i++) {
+    fputc(',', output);
+    api_quoted(output, setup_ops[i]);
+    fprintf(output, ":{\"available\":%s,\"reason\":", discovery.commands_ready ? "true" : "false");
+    api_quoted(output, discovery.commands_ready ? NULL : discovery.unavailable_reason);
+    fputs(",\"families\":[", output);
+    if (i < 3)
+      fputs("\"plugin\",\"drum\",\"keygroup\",\"midi\",\"cv\"", output);
+    else
+      fputs("\"midi\"", output);
+    if (i == 0)
+      fputs(",\"audio\"", output);
+    fprintf(
+      output,
+      "],\"verification\":[\"model\"],\"conditions\":[\"stopped\",\"recording_off\","
+      "\"sequence_mode\",\"stable_view\",\"main_mixer_or_track_mute\",\"engine_popup_clear_or_"
+      "menu\","
+      "\"current_track_incarnation\",\"local_transport_source\",\"native_transport_queue_idle\","
+      "\"target_automation_off_or_read\"],"
+      "\"minimum\":%.17g,\"maximum\":%.17g,\"unit\":\"%s\",\"requestReplay\":\"retained_result\","
+      "\"undo\":\"not_registered\",\"outputVerified\":false,\"expectedComparison\":\"%s\"}",
+      setup_min[i],
+      setup_max[i],
+      units[i],
+      i == 2 ? "binary32_exact" : "exact");
+  }
+  static const char *setup_unavailable[] = {
+    "rename_track",
+    "create_track",
+    "copy_track",
+    "remove_track",
+    "set_midi_input_port",
+    "set_midi_output_port",
+    "set_midi_input_channel",
+    "set_cv_port",
+    "set_gate_port"};
+  for (unsigned i = 0; i < sizeof setup_unavailable / sizeof *setup_unavailable; i++) {
+    fputc(',', output);
+    api_quoted(output, setup_unavailable[i]);
+    fputs(":{\"available\":false,\"reason\":", output);
+    api_quoted(
+      output,
+      discovery.unavailable_reason && !discovery.commands_ready ? discovery.unavailable_reason
+                                                                : "NOT_QUALIFIED");
     fputc('}', output);
   }
   fprintf(

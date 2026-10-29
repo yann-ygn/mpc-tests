@@ -361,3 +361,25 @@ and sequence BPM. `verification.by` is model only, without acoustic or sample
 scheduling guarantees. Flag/mixer side effects remain in `observedChanges`.
 Transport observations are full-snapshot/receipt fields; the lightweight watch
 change sampler still covers flags and mixer values, not a playhead stream.
+
+
+## Track setup
+
+US #41 appends nine `MPC_COMMAND_TRACK_*` / `MPC_COMMAND_MIDI_*` operations.
+Populate `request.edit.value` and, when `has_expected` is true,
+`request.edit.expected`; booleans use 0/1 in this typed C request. Leave the
+flag `value`/`expected`, mixer fields, pulse, BPM, mute scope and sequence zero.
+The target is the same full instance/project/Track reference as flag commands.
+
+`mpc_track_setup.h` defines field indices and pointer-free setup observations.
+Snapshot rows contain a known mask plus values in that declared field order.
+Receipts retain setup before/after samples and expose model-only verification
+and observed differences. Binary32 comparison applies only to velocity scale.
+Native no-ops skip the setter, expected values precede no-op detection, and
+post-invocation identity/type/context loss retains uncertainty. Setup values
+are not automation events and no undo action is registered by these handlers.
+
+Use the stopped, live production qualification; only Automation Off/Read is
+qualified. See [units, families, signatures and lifecycle limits](../../findings/native-track-setup.md).
+The implementation uses executor ABI 11, commands ABI 9, state ABI 7 / STATE_V7;
+primitive ABI 2 and observations ABI 2 are unchanged.

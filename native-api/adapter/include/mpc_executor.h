@@ -9,7 +9,7 @@
 /* Trusted in-process interface, separate from the public command protocol. All
  * client calls are for non-realtime threads. Only the resolver runs on the UI
  * thread. The executor owns its adapter, scheduler and copied requests. */
-#define MPC_EXECUTOR_ABI 10u
+#define MPC_EXECUTOR_ABI 11u
 #define MPC_EXECUTOR_MAX_JOBS 128u
 #define MPC_EXECUTOR_SAMPLE_TRACKS 16u
 #define MPC_EXECUTOR_SAMPLE_FANOUT 16u
@@ -54,6 +54,7 @@ enum mpc_executor_operation {
   MPC_EXECUTOR_COMMAND_ARM,
   MPC_EXECUTOR_COMMAND_OBSERVE,
   MPC_EXECUTOR_COMMAND_MIXER,
+  /* Transport, identity selection and stopped track-setup edits. */
   MPC_EXECUTOR_COMMAND_NAVIGATION
 };
 
@@ -66,6 +67,7 @@ struct mpc_executor_request {
   struct mpc_mixer_request mixer;
   int64_t pulse;
   double bpm;
+  struct mpc_track_edit edit;
   /* Optional acceptance-relative queue deadline, at most MAX_WAIT_MS. Zero
    * leaves it unset. The UI callback checks it before starting model access. */
   unsigned queue_timeout_ms;

@@ -260,6 +260,8 @@ static inline void init(struct identity_fixture *fixture) {
   put32(native, OBJECTS + NATIVE_SELECTED_TRACK, TRACK);
   put32(native, OBJECTS + NATIVE_SELECTED_SEQUENCE, SEQUENCE);
   memcpy(native->objects + PROJECT2 - OBJECTS, native->objects, 0x1000);
+  float velocity_scale = 1;
+  memcpy(native->objects + TRACK + 0x5ec - OBJECTS, &velocity_scale, 4);
   memcpy(native->objects + TRACK2 - OBJECTS, native->objects + TRACK - OBJECTS, 0x2000);
   /* The tests use typed reads of TRACK2; setters only target TRACK. */
 }

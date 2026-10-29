@@ -607,6 +607,71 @@
       "name": "navigationAsyncLocate",
       "rva": 29068832,
       "prefixHex": "f0426de118a08de502a0a0e160219fe50350a0e15c319fe5f860cde1f081cde1"
+    },
+    {
+      "name": "trackSetupColourSetter",
+      "rva": 15017020,
+      "prefixHex": "d4219fe5d4319fe5f0426de1f860cde1f081cde118a08de51ce08de5109080e2"
+    },
+    {
+      "name": "trackSetupIntSetter",
+      "rva": 15006500,
+      "prefixHex": "d4219fe5d4319fe5f0426de1f860cde1f081cde118a08de51ce08de5109080e2"
+    },
+    {
+      "name": "trackSetupChannelSetter",
+      "rva": 21376124,
+      "prefixHex": "d8219fe5d8319fe5f0426de1f860cde1f081cde118a08de51ce08de5109080e2"
+    },
+    {
+      "name": "trackSetupByteSetter",
+      "rva": 28061196,
+      "prefixHex": "d4219fe5d4319fe5f0426de1f860cde1f081cde118a08de51ce08de5109080e2"
+    },
+    {
+      "name": "trackSetupColourBinding",
+      "rva": 42403356,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c4219fe5c4319fe510808de514e08de5"
+    },
+    {
+      "name": "trackSetupTransposeBinding",
+      "rva": 42401100,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c8219fe5c8319fe510808de514e08de5"
+    },
+    {
+      "name": "trackSetupVelocityBinding",
+      "rva": 42388976,
+      "prefixHex": "d8219fe5d8319fe5f4416de1604090e5f860cde110e08de5028b2dedc4719fe5"
+    },
+    {
+      "name": "trackSetupOutputChannelBinding",
+      "rva": 42400044,
+      "prefixHex": "f8416de10240a0e1dc219fe5dc319fe5f860cde110808de514e08de5606090e5"
+    },
+    {
+      "name": "trackSetupBankBinding",
+      "rva": 42391380,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c4219fe5c4319fe510808de514e08de5"
+    },
+    {
+      "name": "trackSetupMsbBinding",
+      "rva": 42395576,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c4219fe5c4319fe510808de514e08de5"
+    },
+    {
+      "name": "trackSetupLsbBinding",
+      "rva": 42396096,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c4219fe5c4319fe510808de514e08de5"
+    },
+    {
+      "name": "trackSetupProgramEnabledBinding",
+      "rva": 42391900,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c4219fe5c4319fe510808de514e08de5"
+    },
+    {
+      "name": "trackSetupProgramBinding",
+      "rva": 42396616,
+      "prefixHex": "f8416de1604090e5f860cde10260a0e1c4219fe5c4319fe510808de514e08de5"
     }
   ],
   "bindings": [

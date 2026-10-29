@@ -112,7 +112,13 @@
       "silenced": false,
       "unsupportedFields": [
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "plugin",
@@ -253,6 +259,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": 65408,
+        "transposeSemitones": 0,
+        "velocityScale": 1,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -281,7 +298,13 @@
       "silenced": false,
       "unsupportedFields": [
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "drum",
@@ -422,6 +445,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": 65408,
+        "transposeSemitones": 0,
+        "velocityScale": 1,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -450,7 +484,13 @@
       "silenced": false,
       "unsupportedFields": [
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "keygroup",
@@ -591,6 +631,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": 65408,
+        "transposeSemitones": 0,
+        "velocityScale": 1,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -625,7 +676,16 @@
         "audioSide.recordArmed",
         "silenced",
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.colour",
+        "setup.transposeSemitones",
+        "setup.velocityScale",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "clip",
@@ -739,6 +799,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": null,
+        "transposeSemitones": null,
+        "velocityScale": null,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -909,6 +980,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": 65408,
+        "transposeSemitones": 0,
+        "velocityScale": 1,
+        "midiOutputChannel": 0,
+        "midiBankEnabled": false,
+        "midiBankMsb": 0,
+        "midiBankLsb": 0,
+        "midiProgramEnabled": false,
+        "midiProgram": 0
       }
     },
     {
@@ -940,7 +1022,13 @@
         "audioSide.recordArmed",
         "silenced",
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "cv",
@@ -1079,6 +1167,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": 65408,
+        "transposeSemitones": 0,
+        "velocityScale": 1,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -1113,7 +1212,16 @@
         "audioSide.recordArmed",
         "silenced",
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.colour",
+        "setup.transposeSemitones",
+        "setup.velocityScale",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "unknown",
@@ -1227,6 +1335,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": null,
+        "transposeSemitones": null,
+        "velocityScale": null,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -1255,7 +1374,15 @@
       "silenced": false,
       "unsupportedFields": [
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.transposeSemitones",
+        "setup.velocityScale",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "audio",
@@ -1396,6 +1523,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": 65408,
+        "transposeSemitones": null,
+        "velocityScale": null,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     }
   ],
@@ -1428,7 +1566,16 @@
         "audioSide.recordArmed",
         "silenced",
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.colour",
+        "setup.transposeSemitones",
+        "setup.velocityScale",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "input",
@@ -1542,6 +1689,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": null,
+        "transposeSemitones": null,
+        "velocityScale": null,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -1572,7 +1730,16 @@
         "audioSide.recordArmed",
         "silenced",
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.colour",
+        "setup.transposeSemitones",
+        "setup.velocityScale",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "output",
@@ -1686,6 +1853,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": null,
+        "transposeSemitones": null,
+        "velocityScale": null,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -1716,7 +1894,16 @@
         "audioSide.recordArmed",
         "silenced",
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.colour",
+        "setup.transposeSemitones",
+        "setup.velocityScale",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "master-output",
@@ -1830,6 +2017,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": null,
+        "transposeSemitones": null,
+        "velocityScale": null,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -1860,7 +2058,16 @@
         "audioSide.recordArmed",
         "silenced",
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.colour",
+        "setup.transposeSemitones",
+        "setup.velocityScale",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "return",
@@ -1974,6 +2181,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": null,
+        "transposeSemitones": null,
+        "velocityScale": null,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     },
     {
@@ -2004,7 +2222,16 @@
         "audioSide.recordArmed",
         "silenced",
         "audioSide.muted",
-        "audioActivity"
+        "audioActivity",
+        "setup.colour",
+        "setup.transposeSemitones",
+        "setup.velocityScale",
+        "setup.midiOutputChannel",
+        "setup.midiBankEnabled",
+        "setup.midiBankMsb",
+        "setup.midiBankLsb",
+        "setup.midiProgramEnabled",
+        "setup.midiProgram"
       ],
       "flagSupport": {
         "family": "submix",
@@ -2118,6 +2345,17 @@
         ],
         "verification": [],
         "audioCompletionKnown": false
+      },
+      "setup": {
+        "colour": null,
+        "transposeSemitones": null,
+        "velocityScale": null,
+        "midiOutputChannel": null,
+        "midiBankEnabled": null,
+        "midiBankMsb": null,
+        "midiBankLsb": null,
+        "midiProgramEnabled": null,
+        "midiProgram": null
       }
     }
   ],

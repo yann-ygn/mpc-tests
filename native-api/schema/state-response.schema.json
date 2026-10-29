@@ -251,7 +251,8 @@
         "uiIndex",
         "collection",
         "flagSupport",
-        "mixer"
+        "mixer",
+        "setup"
       ],
       "properties": {
         "ref": {
@@ -394,6 +395,91 @@
         },
         "mixer": {
           "$ref": "#/$defs/mixer"
+        },
+        "setup": {
+          "type": "object",
+          "required": [
+            "colour",
+            "transposeSemitones",
+            "velocityScale",
+            "midiOutputChannel",
+            "midiBankEnabled",
+            "midiBankMsb",
+            "midiBankLsb",
+            "midiProgramEnabled",
+            "midiProgram"
+          ],
+          "properties": {
+            "colour": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 16777215
+            },
+            "transposeSemitones": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": -24,
+              "maximum": 24
+            },
+            "velocityScale": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0.009999999776482582,
+              "maximum": 2
+            },
+            "midiOutputChannel": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 16
+            },
+            "midiBankEnabled": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "midiBankMsb": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 127
+            },
+            "midiBankLsb": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 127
+            },
+            "midiProgramEnabled": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "midiProgram": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 127
+            }
+          },
+          "additionalProperties": false
         }
       },
       "allOf": [

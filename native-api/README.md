@@ -162,7 +162,7 @@ See [the native inventory map and device evidence](../findings/native-track-inve
 
 The combined API limit is 136 user tracks (128 MIDI-triggered and 8 audio), 128 master
 objects and 128 sequence slots. Discovery advertises these inventory limits and
-`snapshotAbiVersion: 6`. The private transfer requires `STATE_V6`; older attachments
+`snapshotAbiVersion: 7`. The private transfer requires `STATE_V7`; older attachments
 remain incompatible. No cached or partial list is published as a complete capture.
 
 Plugin, drum, keygroup and audio tracks expose independently qualified requested flags,
@@ -376,3 +376,43 @@ The [navigation request](examples/navigation-request.json) and
 shape. Native `recording` means playing with a nonzero record mode, including
 pending count-in. Modes 1/2 distinguish active Record/Overdub from pending 3/4;
 it does not report whether an audio buffer or event was written.
+
+
+## Track setup (0.15.0 / US #41)
+
+`set_track_colour`, `set_track_transpose` and `set_track_velocity_scale` edit
+qualified user-track metadata. MIDI tracks also support
+`set_midi_output_channel`, `set_midi_bank_enabled`, `set_midi_bank_msb`,
+`set_midi_bank_lsb`, `set_midi_program_enabled` and `set_midi_program`.
+Each accepts the full Track `target`, a typed `value`, optional
+`expected: {"value": ...}`, and the existing retention/deadline/wait arguments.
+Do not provide a sequence, mute scope or mixer generation.
+
+```json
+{"apiVersion":"0.1","op":"set_track_transpose","requestId":"transpose-1","target":{"instanceId":"run_0123456789abcdef0123456789abcdef","projectId":"1","trackId":"2"},"value":-12,"expected":{"value":0},"waitMs":1000}
+```
+
+Transpose is −24..24 semitones; velocity is a 0.01..2 multiplier (UI 1%..200%),
+with binary32 expected/no-op comparisons. Colour is integer RGB24. MIDI output
+channel is 1..16 with 0 following input, and bank/program numbers are 0..127.
+Enables are JSON booleans. `describe` supplies family, range and unit metadata.
+Only colour is qualified on audio tracks. All operations require stopped
+sequence mode, recording Off, Main/Mixer/Track Mute, a stable view, the native engine popup field clear or Menu, local transport
+and target Automation Off/Read. Native keypads/Track Settings may leave that
+engine field clear; this qualification does not provide a UI-edit lock.
+
+All five read projections expose nullable `setup` fields. Watch includes them
+in full snapshots and replay at the existing metadata audit interval; they
+are not part of the lightweight controls sampler. Receipts verify the model
+and report setup differences. No UndoManager action or physical MIDI/CV output
+completion is promised. Changing/enabling MIDI bank/program settings may emit
+messages; a retained retry never invokes the setter twice.
+
+Rename/create/copy/remove, MIDI port/input-channel and CV/gate setters report
+`NOT_QUALIFIED`. Key 37 CV/gate hardware is present; native filter and physical
+output qualification remain outstanding. See the [full subset, native paths,
+lifecycle evidence and limits](../findings/native-track-setup.md).
+
+Rebuild C callers for command ABI 9, executor ABI 11 and snapshot ABI 7 /
+`STATE_V7`. Primitive and observation ABI remain 2. Package 0.15.0 is built
+locally; an addin install/restart requires a separate owner request.

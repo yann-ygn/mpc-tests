@@ -119,6 +119,30 @@ class WatchTests(HostHarness):
         self.assertEqual(description["capabilities"]["watch"]["maxSubscribers"], 8)
         self.assertFalse(description["capabilities"]["watch"]["maximumDensityQualified"])
 
+    def test_track_setup_publishes_full_snapshot_and_retained_replay(self):
+        client, reader, first = self.start()
+        command = {
+            "apiVersion": "0.1",
+            "op": "set_track_colour",
+            "requestId": "watch-colour",
+            "target": first["state"]["tracks"][0]["ref"],
+            "value": 0x123456,
+            "waitMs": 1000,
+        }
+        receipt = self.call(json.dumps(command).encode() + b"\n", self.api)
+        self.assertEqual(receipt["status"], "applied", receipt)
+        state = self.public("get_state")
+        update = self.until(reader, "snapshot")
+        self.assertEqual(update["state"]["tracks"][0]["setup"]["colour"], 0x123456)
+        self.assertEqual(update["revision"], state["revision"])
+        replay_client, replay = self.stream(first["cursor"])
+        self.assertTrue(self.frame(replay)["resumed"])
+        self.assertEqual(self.until(replay, "snapshot"), update)
+        replay_client.sendall(b'{"apiVersion":"0.1","op":"unwatch"}\n')
+        self.assertEqual(self.until(replay, "terminated")["reason"], "UNSUBSCRIBED")
+        client.sendall(b'{"apiVersion":"0.1","op":"unwatch"}\n')
+        self.assertEqual(self.until(reader, "terminated")["reason"], "UNSUBSCRIBED")
+
     def test_schema_examples(self):
         request_schema = json.loads((SCHEMAS / "watch-request.schema.json").read_text())
         for name in ["watch-request", "watch-resume-request", "unwatch-request"]:

@@ -1,6 +1,7 @@
 #include "private.h"
 #include "command_private.h"
 #include "mpc_family_profile.h"
+#include "mpc_adapter_profile.h"
 
 #include <errno.h>
 #include <math.h>
@@ -166,6 +167,48 @@ static enum mpc_native_error revalidate(void *data, const struct mpc_native_targ
                                                             : MPC_NATIVE_OK;
 }
 
+static enum mpc_native_error setup_capture(
+  struct mpc_executor *executor,
+  struct mpc_command_native_result *out,
+  unsigned op,
+  struct mpc_track_setup *setup) {
+  struct mpc_native_target target;
+  enum mpc_native_error error = resolve_target(executor, &executor->identity, &target);
+  if (error)
+    return error;
+  uint32_t vtable;
+  if (executor->adapter->io.read(executor->adapter->io.userdata, target.program, &vtable, 4))
+    return MPC_NATIVE_READ_FAILED;
+  if (
+    out->context.target_program &&
+    (out->context.target_program != target.program || out->context.target_vtable != vtable))
+    return MPC_NATIVE_STALE_TARGET;
+  uint32_t automation;
+  if (executor->adapter->io.read(
+        executor->adapter->io.userdata,
+        target.program + native_command_context.programAutomation,
+        &automation,
+        sizeof automation))
+    return MPC_NATIVE_READ_FAILED;
+  if (automation > 1)
+    return MPC_NATIVE_AUTOMATION_UNQUALIFIED;
+  if (out->context.target_program && out->context.automation != automation)
+    return MPC_NATIVE_STATE_UNSTABLE;
+  out->context.automation = automation;
+  unsigned family = MPC_NATIVE_UNKNOWN;
+  for (unsigned i = 1; i < sizeof mpc_family_matrix / sizeof *mpc_family_matrix; i++)
+    if (vtable == executor->adapter->io.image + mpc_family_matrix[i].vtable)
+      family = mpc_family_matrix[i].family;
+  error = mpc_track_setup_read(executor->adapter, target.track, family, setup);
+  if (error)
+    return error;
+  if (!(setup->known & (1u << (op - MPC_COMMAND_TRACK_COLOUR))))
+    return MPC_NATIVE_UNSUPPORTED_TRACK_TYPE;
+  out->context.target_program = target.program;
+  out->context.target_vtable = vtable;
+  return MPC_NATIVE_OK;
+}
+
 static struct mpc_executor_result navigation_execute(
   struct mpc_executor *executor,
   const struct mpc_executor_request *input,
@@ -245,7 +288,28 @@ static struct mpc_executor_result navigation_execute(
     result.error = MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED;
     goto done;
   }
-  bool noop = input->command_property == MPC_COMMAND_PLAY ? state.playing != 0
+  bool editing = mpc_command_track_edit(input->command_property);
+  bool setup_noop = false;
+  if (editing) {
+    result.error = setup_capture(executor, out, input->command_property, &out->setup_after);
+    if (result.error)
+      goto done;
+    if (writing) {
+      out->setup_before = out->setup_after;
+      unsigned field = input->command_property - MPC_COMMAND_TRACK_COLOUR;
+      double value = out->setup_after.values[field];
+      double desired = field == MPC_TRACK_VELOCITY ? (float)input->edit.value : input->edit.value;
+      double expected =
+        field == MPC_TRACK_VELOCITY ? (float)input->edit.expected : input->edit.expected;
+      if (input->has_expected && value != expected) {
+        result.error = MPC_NATIVE_PRECONDITION_FAILED;
+        goto done;
+      }
+      setup_noop = value == desired;
+    }
+  }
+  bool noop = editing                                     ? setup_noop
+    : input->command_property == MPC_COMMAND_PLAY         ? state.playing != 0
     : input->command_property == MPC_COMMAND_STOP         ? !state.playing
     : input->command_property == MPC_COMMAND_SEQUENCE_BPM ? state.sequence_bpm == (float)input->bpm
     : input->command_property == MPC_COMMAND_LOCATE       ? state.pulse == input->pulse
@@ -258,11 +322,44 @@ static struct mpc_executor_result navigation_execute(
     goto done;
   }
   if (writing && !noop) {
-    if (!executor->adapter->io.navigate) {
+    if (!editing && !executor->adapter->io.navigate) {
       result.error = MPC_NATIVE_NOT_READY;
       goto done;
     }
-    if (input->command_property == MPC_COMMAND_PLAY_START) {
+    if (editing) {
+      /* Re-resolve immediately before the sole notifying call. No index or
+       * pointer from the request or an earlier capture becomes write authority. */
+      result.error = mpc_identity_navigation(
+        executor->registry,
+        &identity,
+        input->command_property,
+        false,
+        &current,
+        &state,
+        &checked);
+      if (!result.error && (memcmp(&before, &current, sizeof before) || target != checked))
+        result.error = MPC_NATIVE_STATE_UNSTABLE;
+      if (!result.error)
+        result.error = setup_capture(executor, out, input->command_property, &out->setup_after);
+      if (!result.error) {
+        unsigned field = input->command_property - MPC_COMMAND_TRACK_COLOUR;
+        double value = out->setup_after.values[field];
+        double expected =
+          field == MPC_TRACK_VELOCITY ? (float)input->edit.expected : input->edit.expected;
+        double desired = field == MPC_TRACK_VELOCITY ? (float)input->edit.value : input->edit.value;
+        if (input->has_expected && value != expected)
+          result.error = MPC_NATIVE_PRECONDITION_FAILED;
+        noop = value == desired;
+        out->setup_before = out->setup_after;
+      }
+      if (!result.error && !noop)
+        result.error = mpc_track_setup_invoke(
+          executor->adapter,
+          target,
+          input->command_property - MPC_COMMAND_TRACK_COLOUR,
+          input->edit.value,
+          &result.write.native_invoked);
+    } else if (input->command_property == MPC_COMMAND_PLAY_START) {
       /* First enqueue locate. A later, fenced UI pass may enqueue play only
        * after native queue drain and an exact zero-pulse stopped readback. */
       result.error = mpc_navigation_invoke(
@@ -337,6 +434,11 @@ static struct mpc_executor_result navigation_execute(
   out->readbacks_consistent = mpc_navigation_idle(executor->adapter, &current) &&
     (input->command_property != MPC_COMMAND_PLAY_START || out->context.navigation_step == 2);
   out->context.navigation = current;
+  if (editing) {
+    result.error = setup_capture(executor, out, input->command_property, &out->setup_after);
+    if (result.error)
+      goto done;
+  }
   result.error = mpc_identity_flags(executor->registry, 0, MPC_IDENTITY_MAX_TRACKS, 0, &out->after);
   out->after_known = !result.error;
 done:
@@ -958,7 +1060,7 @@ enum mpc_native_error mpc_executor_command_submit(
     ((request->operation == MPC_EXECUTOR_COMMAND_OBSERVE ||
       request->operation == MPC_EXECUTOR_COMMAND_MIXER ||
       request->operation == MPC_EXECUTOR_COMMAND_NAVIGATION) &&
-     request->command_property > MPC_COMMAND_SEQUENCE_BPM))
+     request->command_property > MPC_COMMAND_MIDI_PROGRAM))
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (
     (request->operation == MPC_EXECUTOR_COMMAND_NAVIGATION &&
@@ -971,13 +1073,29 @@ enum mpc_native_error mpc_executor_command_submit(
     (request->operation == MPC_EXECUTOR_COMMAND_NAVIGATION ||
      request->operation == MPC_EXECUTOR_COMMAND_OBSERVE) &&
     request->command_property >= MPC_COMMAND_PLAY &&
-    (request->mute_scope || request->desired || request->has_expected || request->expected ||
+    (request->mute_scope || request->desired ||
+     (!mpc_command_track_edit(request->command_property) && request->has_expected) ||
+     request->expected ||
      (request->command_property == MPC_COMMAND_LOCATE
         ? request->pulse < 0 || request->pulse > INT32_MAX
         : request->pulse != 0) ||
      (request->command_property == MPC_COMMAND_SEQUENCE_BPM
         ? !isfinite(request->bpm) || request->bpm < 20 || request->bpm > 999
         : request->bpm != 0)))
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  if (
+    mpc_command_track_edit(request->command_property) &&
+    (!mpc_track_setup_scalar_valid(
+       request->command_property - MPC_COMMAND_TRACK_COLOUR,
+       request->edit.value) ||
+     (request->has_expected &&
+      !mpc_track_setup_scalar_valid(
+        request->command_property - MPC_COMMAND_TRACK_COLOUR,
+        request->edit.expected))))
+    return MPC_NATIVE_INVALID_ARGUMENT;
+  if (
+    !mpc_command_track_edit(request->command_property) &&
+    (request->edit.value || request->edit.expected))
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (request->operation >= MPC_EXECUTOR_COMMAND_MUTE) {
     unsigned property = (request->operation == MPC_EXECUTOR_COMMAND_OBSERVE ||

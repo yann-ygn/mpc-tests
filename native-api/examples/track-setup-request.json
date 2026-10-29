@@ -1,0 +1,16 @@
+{
+  "apiVersion": "0.1",
+  "op": "set_track_transpose",
+  "requestId": "req_solo_1",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "value": -12,
+  "expected": {
+    "value": 0
+  },
+  "startWithinMs": 1000,
+  "waitMs": 500
+}

@@ -297,7 +297,7 @@ US #49 introduced snapshot ABI 4 with a 127824-byte transfer and 344-byte track 
 Its independent six-bit `known` mask replaced the grouped requested bit. US #40 now
 requires **primitive ABI 2, executor ABI 10, command ABI 8 and snapshot ABI 6**:
 140552-byte transfers with 392-byte track rows. Recompile every trusted C caller.
-`STATE_V6` / `MPC_ADAPTER_STATE_V6` reject older transfers; the primitive
+`STATE_V7` / `MPC_ADAPTER_STATE_V6` reject older transfers; the primitive
 attachment tag is `MPC_ADAPTER_V2`. The exported symbol set is unchanged.
 
 The validated firmware profile generates `mpc_family_profile.h` for the adapter,
@@ -393,7 +393,7 @@ US #54 adds actual Read pan writes and pan filter/source fences without changing
 ## US #40 ABI and queue boundary
 
 Current layouts are primitive 2 / executor 10 / command 8 / snapshot 6 /
-observation 2. STATE_V6 rejects older private transfers. Navigation uses the
+observation 2. STATE_V7 rejects older private transfers. Navigation uses the
 application-owned AsyncSequencer through native firmware captures. No adapter
 callback executes on the realtime thread. A pending native counter is part of
 completion evidence; a matching model before native drain is insufficient.
@@ -404,3 +404,12 @@ only. See [COMMANDS.md](COMMANDS.md#transport-and-navigation-us-40) and
 Sequence listener slots 2 and 3 still retire destructive generations. Slot 4
 is the traced BPM metadata notification and preserves a Sequence reference;
 Clear All emits slots 2/3 as well, including unchanged unused sequences.
+
+
+US #41 adds pointer-free `mpc_track_setup.h` observations and nine retained,
+stopped track-setup operations. Recompile for command ABI 9, executor ABI 11
+and snapshot ABI 7 / STATE_V7; primitive and observation ABI remain 2.
+The [setup qualification](../../findings/native-track-setup.md) lists exact
+ranges, families, notifying property signatures and the lifecycle/port/CV
+operations kept unavailable. `tools/mpc_track_setup.py` runs the qualified
+screen matrix through a retained lab with independent batched readback.

@@ -1,6 +1,7 @@
 #include "mpc_commands.h"
 #include "private.h"
 #include "mpc_mixer_wire.h"
+#include "mpc_track_setup_wire.h"
 #include "mpc_family_profile.h"
 
 #include <inttypes.h>
@@ -148,6 +149,30 @@ static void changes(FILE *output, const struct mpc_command_receipt *receipt) {
       fputc('}', output);
       comma = true;
     }
+    if (a->id == receipt->request.target.track) {
+      for (unsigned field = 0; field < MPC_TRACK_SETUP_FIELDS; field++) {
+        double left = receipt->setup_before.values[field],
+               right = receipt->setup_after.values[field];
+        if (
+          !(receipt->setup_before.known & receipt->setup_after.known & (1u << field)) ||
+          left == right)
+          continue;
+        fprintf(
+          output,
+          "%s{\"projectId\":\"%" PRIu64 "\",\"trackId\":\"%" PRIu64 "\",\"path\":\"tracks.%" PRIu64
+          ".setup.%s\",\"before\":",
+          comma ? "," : "",
+          receipt->before.project,
+          a->id,
+          a->id,
+          mpc_track_setup_names[field]);
+        mpc_mixer_scalar_json(output, !mpc_track_setup_boolean(field), left);
+        fputs(",\"after\":", output);
+        mpc_mixer_scalar_json(output, !mpc_track_setup_boolean(field), right);
+        fputc('}', output);
+        comma = true;
+      }
+    }
     if (a->mixer.generation && a->mixer.generation == b->mixer.generation) {
       for (unsigned op = MPC_COMMAND_VOLUME; op <= MPC_COMMAND_INSERT; op++) {
         unsigned count = op == MPC_COMMAND_SEND || op == MPC_COMMAND_INSERT ? 4 : 1;
@@ -213,14 +238,14 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
       receipt->request.has_expected) ||
     (unsigned)receipt->status > MPC_COMMAND_UNKNOWN ||
     (unsigned)receipt->execution > MPC_COMMAND_COMPLETED ||
-    (unsigned)receipt->request.operation > MPC_COMMAND_SEQUENCE_BPM ||
+    (unsigned)receipt->request.operation > MPC_COMMAND_MIDI_PROGRAM ||
     (unsigned)receipt->request.mute_scope > MPC_MUTE_SEQUENCE ||
     (receipt->request.mute_scope == MPC_MUTE_SEQUENCE &&
      (receipt->request.operation != MPC_COMMAND_MUTE ||
       memcmp(receipt->request.sequence.instance_id, receipt->request.target.instance_id, 37) ||
       receipt->request.sequence.project != receipt->request.target.project ||
       !receipt->request.sequence.sequence || !receipt->request.sequence.generation)) ||
-    receipt->navigation_after.known > 1 ||
+    !mpc_track_setup_valid(&receipt->setup_after) || receipt->navigation_after.known > 1 ||
     (receipt->navigation_after.known &&
      (receipt->navigation_after.playing > 1 || receipt->navigation_after.record_mode > 4 ||
       !isfinite(receipt->navigation_after.sequence_bpm) ||
@@ -252,7 +277,16 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     "locate",
     "select_track",
     "select_sequence",
-    "set_sequence_bpm"};
+    "set_sequence_bpm",
+    "set_track_colour",
+    "set_track_transpose",
+    "set_track_velocity_scale",
+    "set_midi_output_channel",
+    "set_midi_bank_enabled",
+    "set_midi_bank_msb",
+    "set_midi_bank_lsb",
+    "set_midi_program_enabled",
+    "set_midi_program"};
   static const char *statuses[] = {"accepted", "applied", "rejected", "cancelled", "unknown"};
   static const char *stages[] = {"not_started", "started", "completed"};
   char *buffer = NULL;
@@ -262,7 +296,13 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     return NULL;
   bool numeric = mpc_mixer_numeric(receipt->request.operation);
   char desired[64];
-  if (numeric)
+  if (mpc_command_track_edit(receipt->request.operation)) {
+    unsigned field = receipt->request.operation - MPC_COMMAND_TRACK_COLOUR;
+    if (mpc_track_setup_boolean(field))
+      strcpy(desired, boolean(receipt->request.edit.value != 0));
+    else
+      snprintf(desired, sizeof desired, "%.17g", receipt->request.edit.value);
+  } else if (numeric)
     snprintf(desired, sizeof desired, "%.17g", receipt->request.mixer.value);
   else if (receipt->request.operation >= MPC_COMMAND_PLAY)
     strcpy(desired, "null");
@@ -298,7 +338,18 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     : NULL;
   bool requested = false;
   unsigned property = receipt->request.operation;
-  if (property >= MPC_COMMAND_PLAY) {
+  if (mpc_command_track_edit(property)) {
+    unsigned field = property - MPC_COMMAND_TRACK_COLOUR;
+    if (receipt->setup_after.known & (1u << field)) {
+      fputs("{\"by\":[\"model\"],\"requestedValue\":", output);
+      mpc_mixer_scalar_json(
+        output,
+        !mpc_track_setup_boolean(field),
+        receipt->setup_after.values[field]);
+      fputs(",\"audioSideValue\":null,\"observedAt\":null}", output);
+    } else
+      fputs("null", output);
+  } else if (property >= MPC_COMMAND_PLAY) {
     if (receipt->navigation_after.known) {
       fprintf(
         output,
@@ -367,7 +418,7 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     if (property == MPC_COMMAND_INSERT)
       fprintf(output, ",\"slotIndex\":%u", receipt->request.mixer.index);
   }
-  if (property >= MPC_COMMAND_PLAY && property != MPC_COMMAND_SELECT_TRACK) {
+  if (property >= MPC_COMMAND_PLAY && !mpc_command_track_target(property)) {
     fputs(",\"sequence\":", output);
     sequence_ref(
       output,

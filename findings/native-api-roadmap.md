@@ -46,7 +46,7 @@ is callable or supported. Each story requires the specified mapping and device v
 |---|---|
 | #39 | Native volume, pan, sends and insert-enable controls — implemented; [findings](native-mixer-controls.md) |
 | #40 | Queued play/stop, stopped Play Start/locate, stored sequence BPM and identity selection — implemented; [qualification and limits](native-transport-navigation.md) |
-| #41 | Validate and add track metadata, lifecycle and MIDI/CV routing |
+| #41 | Stopped colour/transpose/velocity and MIDI channel/bank/program subset; lifecycle/port/CV tracing — [findings](native-track-setup.md) |
 | #42 | Probe clip, scene and song bindings and define the supported API subset |
 | #43 | Probe note-event and automation editing through native model operations |
 | #44 | Probe audio-event, sample-pool and clip-export operations |

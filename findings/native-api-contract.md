@@ -480,3 +480,22 @@ receipt preserves the actual execution stage and uncertainty. There is no event 
 implicit automation-mode switch or repeated verification write. Pan/sends/inserts remain
 Off-only. [Source ownership, precise errors and evidence](native-automation-read-writes.md)
 extend the earlier #51/#39 qualification without changing C layouts or JSON API 0.1.
+
+## Track metadata and routing initial subset (US #41)
+
+[The validated track setup contract](native-track-setup.md) adds RGB colour,
+semitone transpose, velocity multiplier and MIDI output channel/bank/program
+desired-state commands. References, retained retries, dispatch-time expected
+values and bounded model verification follow the existing command contract.
+State exposes `setup.known` and explicit nulls outside each qualified family.
+These global metadata writes require a stopped ordinary sequence, recording Off,
+local clock and target Automation Off/Read on Main/Mixer/Track Mute. Native engine
+popup qualification does not promise a general UI editing lock. No undo action
+is registered; bank/program edits can emit MIDI messages immediately.
+
+Discovery keeps lifecycle, MIDI port/input-channel and CV/gate setters
+unavailable with `NOT_QUALIFIED`; Key 37 CV hardware is present. Physical
+output and audible processing effects remain unqualified. Shared strict schemas
+and typed C entries define this subset; SDK implementations remain separate.
+C clients must rebuild for command 9, executor 11 and snapshot 7 / STATE_V7.
+Primitive and lightweight observation ABIs remain 2.

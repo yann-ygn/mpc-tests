@@ -4,7 +4,7 @@
   "instanceId": "run_3a419566592e9f9b96fcb50f009063e6",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.14.0"
+    "version": "0.15.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -1164,6 +1164,316 @@
       "minimum": 20,
       "maximum": 999,
       "quantization": "ieee_binary32"
+    },
+    "set_track_colour": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "midi",
+        "cv",
+        "audio"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": 0,
+      "maximum": 16777215,
+      "unit": "rgb24",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "exact"
+    },
+    "set_track_transpose": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "midi",
+        "cv"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": -24,
+      "maximum": 24,
+      "unit": "semitones",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "exact"
+    },
+    "set_track_velocity_scale": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "plugin",
+        "drum",
+        "keygroup",
+        "midi",
+        "cv"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": 0.009999999776482582,
+      "maximum": 2,
+      "unit": "velocity_multiplier",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "binary32_exact"
+    },
+    "set_midi_output_channel": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "midi"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": 0,
+      "maximum": 16,
+      "unit": "midi_channel_or_follow",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "exact"
+    },
+    "set_midi_bank_enabled": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "midi"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "unit": "boolean",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "exact"
+    },
+    "set_midi_bank_msb": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "midi"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": 0,
+      "maximum": 127,
+      "unit": "midi_7bit",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "exact"
+    },
+    "set_midi_bank_lsb": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "midi"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": 0,
+      "maximum": 127,
+      "unit": "midi_7bit",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "exact"
+    },
+    "set_midi_program_enabled": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "midi"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "unit": "boolean",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "exact"
+    },
+    "set_midi_program": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED",
+      "families": [
+        "midi"
+      ],
+      "verification": [
+        "model"
+      ],
+      "conditions": [
+        "stopped",
+        "recording_off",
+        "sequence_mode",
+        "stable_view",
+        "main_mixer_or_track_mute",
+        "engine_popup_clear_or_menu",
+        "current_track_incarnation",
+        "local_transport_source",
+        "native_transport_queue_idle",
+        "target_automation_off_or_read"
+      ],
+      "minimum": 0,
+      "maximum": 127,
+      "unit": "midi_7bit",
+      "requestReplay": "retained_result",
+      "undo": "not_registered",
+      "outputVerified": false,
+      "expectedComparison": "exact"
+    },
+    "rename_track": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "create_track": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "copy_track": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "remove_track": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "set_midi_input_port": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "set_midi_output_port": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "set_midi_input_channel": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "set_cv_port": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
+    },
+    "set_gate_port": {
+      "available": false,
+      "reason": "NOT_IMPLEMENTED"
     }
   },
   "limits": {
@@ -1183,7 +1493,7 @@
     "maxMidiTracks": 128,
     "maxAudioTracks": 8,
     "maxBuses": 128,
-    "snapshotAbiVersion": 6,
+    "snapshotAbiVersion": 7,
     "maxJobsPerUiCallback": null
   }
 }

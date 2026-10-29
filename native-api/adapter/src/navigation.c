@@ -6,13 +6,21 @@
 #include <math.h>
 
 bool mpc_navigation_request_valid(const struct mpc_command_request *r) {
+  if (!mpc_command_track_edit(r->operation) && (r->edit.value || r->edit.expected))
+    return false;
+  if (
+    mpc_command_track_edit(r->operation) &&
+    (!mpc_track_setup_scalar_valid(r->operation - MPC_COMMAND_TRACK_COLOUR, r->edit.value) ||
+     (r->has_expected &&
+      !mpc_track_setup_scalar_valid(r->operation - MPC_COMMAND_TRACK_COLOUR, r->edit.expected))))
+    return false;
   if ((unsigned)r->operation < MPC_COMMAND_PLAY)
     return !r->pulse && !r->bpm;
   if (
-    (unsigned)r->operation > MPC_COMMAND_SEQUENCE_BPM || r->mute_scope || r->value ||
-    r->has_expected || r->expected)
+    (unsigned)r->operation > MPC_COMMAND_MIDI_PROGRAM || r->mute_scope || r->value ||
+    (!mpc_command_track_edit(r->operation) && r->has_expected) || r->expected)
     return false;
-  bool track = r->operation == MPC_COMMAND_SELECT_TRACK;
+  bool track = mpc_command_track_target(r->operation);
   if (
     (track ? !r->target.track : r->target.track != 0) ||
     (r->operation == MPC_COMMAND_LOCATE ? r->pulse < 0 || r->pulse > INT32_MAX : r->pulse != 0) ||
@@ -148,6 +156,13 @@ bool mpc_navigation_idle(struct mpc_native_adapter *a, const struct mpc_navigati
 }
 
 enum mpc_native_error mpc_navigation_qualify(const struct mpc_navigation_context *c, unsigned op) {
+  if (
+    mpc_command_track_edit(op) &&
+    (c->mode != native_command_context.mainMode && c->mode != native_command_context.mixerMode &&
+     c->mode != native_command_context.trackMuteMode))
+    return MPC_NATIVE_NOT_READY;
+  if (mpc_command_track_edit(op) && c->playing)
+    return MPC_NATIVE_PLAYBACK_CONTEXT_UNQUALIFIED;
   if (!c->controller || !c->transport_ready || !c->async || !c->async_queue)
     return MPC_NATIVE_NOT_READY;
   if (c->time_source)

@@ -786,6 +786,13 @@ static enum mpc_native_error state_track(
       strcpy(output->type, native_program_types[i].name);
   enum mpc_native_error error = flag_track(registry, address, *program, normal, output);
   if (!error && normal) {
+    error = mpc_track_setup_read(
+      registry->adapter,
+      address,
+      mpc_family_by_type(output->type)->family,
+      &output->setup);
+    if (error)
+      return error;
     for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
       struct entry *entry = &registry->tracks[i];
       if (entry->address == address)
@@ -1184,7 +1191,7 @@ enum mpc_native_error mpc_identity_navigation(
     return MPC_NATIVE_STALE_PROJECT;
   identity->project_generation = registry->generation;
   *target = 0;
-  if (op == MPC_COMMAND_SELECT_TRACK) {
+  if (mpc_command_track_target(op)) {
     for (unsigned i = 0; i < MPC_IDENTITY_MAX_TRACKS; i++) {
       struct entry *entry = &registry->tracks[i];
       if (

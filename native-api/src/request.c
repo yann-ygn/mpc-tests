@@ -133,7 +133,7 @@ static int scalar(struct parser *p, bool *boolean_out, double *number_out, bool 
   double value = strtod_l(buffer, &end, numeric_locale);
   int conversion_error = errno;
   freelocale(numeric_locale);
-  if (*end || conversion_error || !isfinite(value) || value < 0 || value > 999)
+  if (*end || conversion_error || !isfinite(value))
     return -1;
   *number_out = value;
   return 0;
@@ -462,6 +462,43 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     if (out->command.operation == MPC_COMMAND_SEQUENCE_BPM)
       required |= BPM;
     allowed = required | START | WAIT;
+  } else if (
+    !strcmp(out->op, "set_track_colour") || !strcmp(out->op, "set_track_transpose") ||
+    !strcmp(out->op, "set_track_velocity_scale") || !strcmp(out->op, "set_midi_output_channel") ||
+    !strcmp(out->op, "set_midi_bank_enabled") || !strcmp(out->op, "set_midi_bank_msb") ||
+    !strcmp(out->op, "set_midi_bank_lsb") || !strcmp(out->op, "set_midi_program_enabled") ||
+    !strcmp(out->op, "set_midi_program")) {
+    static const char *names[] = {
+      "set_track_colour",
+      "set_track_transpose",
+      "set_track_velocity_scale",
+      "set_midi_output_channel",
+      "set_midi_bank_enabled",
+      "set_midi_bank_msb",
+      "set_midi_bank_lsb",
+      "set_midi_program_enabled",
+      "set_midi_program"};
+    unsigned field;
+    for (field = 0; field < MPC_TRACK_SETUP_FIELDS; field++)
+      if (!strcmp(out->op, names[field]))
+        break;
+    out->command.operation = MPC_COMMAND_TRACK_COLOUR + field;
+    bool boolean_field = mpc_track_setup_boolean(field);
+    if (
+      !out->command.target.track || value_numeric == boolean_field ||
+      ((seen & EXPECTED) && expected_numeric == boolean_field))
+      return -1;
+    out->command.edit.value = boolean_field ? out->command.value : out->command.mixer.value;
+    out->command.edit.expected =
+      boolean_field ? out->command.expected : out->command.mixer.expected;
+    out->command.value = out->command.expected = false;
+    memset(&out->command.mixer, 0, sizeof out->command.mixer);
+    if (
+      !mpc_track_setup_scalar_valid(field, out->command.edit.value) ||
+      ((seen & EXPECTED) && !mpc_track_setup_scalar_valid(field, out->command.edit.expected)))
+      return -1;
+    required |= ID | TARGET | VALUE;
+    allowed = required | EXPECTED | START | WAIT;
   } else if (!strcmp(out->op, "watch")) {
     allowed |= CURSOR;
   } else if (!strcmp(out->op, "get_command")) {
@@ -472,11 +509,15 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     return -1;
   bool numeric =
     out->command.operation >= MPC_COMMAND_VOLUME && out->command.operation <= MPC_COMMAND_SEND;
-  if ((seen & VALUE) && (numeric != value_numeric || (numeric && out->command.mixer.value > 1)))
+  if (
+    !mpc_command_track_edit(out->command.operation) && (seen & VALUE) &&
+    (numeric != value_numeric ||
+     (numeric && (out->command.mixer.value < 0 || out->command.mixer.value > 1))))
     return -1;
   if (
-    (seen & EXPECTED) &&
-    (numeric != expected_numeric || (numeric && out->command.mixer.expected > 1)))
+    !mpc_command_track_edit(out->command.operation) && (seen & EXPECTED) &&
+    (numeric != expected_numeric ||
+     (numeric && (out->command.mixer.expected < 0 || out->command.mixer.expected > 1))))
     return -1;
   return (seen & required) != required || (seen & ~allowed) ? -1 : 0;
 }

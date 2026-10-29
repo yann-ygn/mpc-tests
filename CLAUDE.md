@@ -357,3 +357,23 @@ before running experiments.
   (over Track View) is restored. Labs unloaded and installed 0.13.0 resumed ready;
   0.14.0 is not installed. See `findings/native-transport-navigation.md` and its
   sanitized proof. The US40 backup/disposable copies remain in Claude Experiments.
+
+- US #41, branch `us-41-track-metadata-routing`: package 0.15.0 adds nine native
+  retained track-setup commands: colour, transpose, velocity multiplier and MIDI
+  output channel/bank/program fields. Six families qualify colour; audio excludes
+  transpose/velocity; MIDI routing fields qualify only MIDI. Stopped ordinary
+  sequences, recording Off, local clock, Main/Mixer/Track Mute and Automation
+  Off/Read are required. Completion is model-only; setters do not register Undo.
+  Command 9 / executor 11 / snapshot 7 and STATE_V7 require C clients to rebuild;
+  primitive/observation remain 2. All 25 host, 20 ASan/UBSan and eight isolated ARM
+  entries pass. Device proof covers 910 matrix rows, 36 final Off/Read positives,
+  36 context rejections, rename/reorder/duplicate/delete/create identity handling,
+  old-project rejection, Undo behavior and internal ALSA bank/program output.
+  Lifecycle, MIDI ports/input channel and CV/gate setters remain NOT_QUALIFIED;
+  CV hardware exists, physical output and note-thru remain unqualified.
+  The approved backup was reloaded without restart; captured flags/mixers,
+  automation, selection, sequence, zero playhead and Main are restored. Backup
+  bytes and all other settings match; recent history and two discovered Remote
+  MIDI endpoints are the documented settings differences. Lab drained/unloaded,
+  temporary files removed and installed 0.13.0 resumed ready. No upgrade was
+  performed. See `findings/native-track-setup.md` and its sanitized proof.

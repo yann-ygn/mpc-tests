@@ -183,3 +183,9 @@ samples; cold/expired-lease idle windows execute none. ALSA RUNNING samples do
 not establish the absence of intervening underruns; no acoustic or reliable
 xrun-counter measurement is claimed. Maximum-density and automation-rate
 delivery remain unqualified. HTTP and SDK work is not a dependency.
+
+
+Track setup fields added by US #41 are metadata. They appear in full snapshots
+and retained snapshot replay, at the existing metadata reconciliation interval.
+A fresh public read publishes them immediately. The lightweight 100 ms controls
+sample still covers flags and mixer values; it does not claim setup coverage.
