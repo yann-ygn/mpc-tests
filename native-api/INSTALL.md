@@ -6,6 +6,14 @@ addin. It supports MPC Key 37, MPC 3.9.1.2, exact GNU build ID
 Mute also requires a matching explicit global/active-sequence scope (US #48). Consult `describe` for command availability and limits, and the
 [service guide](README.md#send-flag-commands) for request and receipt semantics.
 
+Version 0.15.0 adds [track metadata and MIDI setup commands](../findings/native-track-setup.md),
+following the 0.14.0 transport/navigation extension. The owner-requested installation
+and MPC restart completed on 2026-10-29 with explicit permission to discard the
+loaded project. Installed commands, independent readback, schemas, retained receipts,
+watch/replay and host lifecycle checks pass. Configuration, persistent identity
+and other addins are preserved; 0.15.0 is ready/OK. See
+[installed evidence](../findings/native-track-setup-installed-20261029.json).
+
 Version 0.13.0 adds actual Read pan writes through the existing
 native filter and notifying setter, with pan-specific filter/source fences.
 See [pan qualification](../findings/native-automation-read-pan.md). The owner-requested
@@ -64,8 +72,8 @@ the same shared addin installer as privtap: set `MPC_VST_PLUGINS` to an
 No device is contacted. Outputs:
 
 ```text
-build/native-api/packages/mpc-native-api-0.13.0/
-build/native-api/packages/mpc-native-api-0.13.0.tar.gz
+build/native-api/packages/mpc-native-api-0.15.0/
+build/native-api/packages/mpc-native-api-0.15.0.tar.gz
 ```
 
 `PACKAGE.json` records the source revision and source-content SHA-256, dirty
@@ -83,14 +91,14 @@ on an externally loaded adapter or a workstation library path.
 
 ## Install
 
-**Save the instrument's project and obtain the owner's approval before installing
-or restarting MPC.** Installing, upgrading and removing a loaded addin require an
+**Save the instrument's project or obtain explicit permission to discard it, and
+obtain the owner's approval before installing or restarting MPC.** Installing, upgrading and removing a loaded addin require an
 MPC restart to retire its code. No reboot is normally necessary.
 
 Copy the directory to the device, verify the checksums there, then install:
 
 ```sh
-cd /tmp/mpc-native-api-0.13.0
+cd /tmp/mpc-native-api-0.15.0
 sha256sum -c SHA256SUMS
 sh install.sh -y
 ```

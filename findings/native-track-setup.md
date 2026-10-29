@@ -2,9 +2,9 @@
 
 MPC Key 37, MPC 3.9.1.2, GNU build
 `8371199f945ecc40f79cb19c17ff5de72810a91c`, 2026-10-29.
-Package 0.15.0. Installation is separate from qualification; the installed host
-remains 0.13.0. Sanitized qualification is recorded in
-`native-track-setup-proof-20261029.json`.
+Package 0.15.0. Sanitized implementation qualification is recorded in
+`native-track-setup-proof-20261029.json`. The subsequent owner-requested 0.15.0
+installation is verified in [installed evidence](native-track-setup-installed-20261029.json).
 
 ## Supported initial subset
 
@@ -189,3 +189,17 @@ Command ABI 9, executor ABI 11 and snapshot ABI 7 / `STATE_V7` require C clients
 to rebuild. Primitive ABI 2 and observation ABI 2 remain unchanged. Client SDK
 implementation remains in the separate SDK stories; the typed C interface and
 shared JSON schemas carry this subset now.
+
+## Owner-requested installation
+
+0.15.0 was installed from clean source `8c3e664` on 2026-10-29 with explicit
+authorization to discard the loaded project and restart MPC. Configuration,
+persistent identity, preload order and other addins were preserved; installed
+artifact hashes match the package. All nine commands pass installed MIDI writes,
+independent readback, retained retry/lookup, no-op and conflict checks. The three
+shared properties also pass on an unselected plugin. All five read projections
+and schemas, setup watch/replay, active-stream drain, stop/start identity rotation
+and recovery pass. Test values were restored and the temporary MIDI track removed.
+The host is ready/OK in a fresh untitled project, Main, plugin selected, stopped
+at zero, recording Off, sequence 01 at 120 BPM. No project file was saved or
+overwritten. A full device reboot was unnecessary.

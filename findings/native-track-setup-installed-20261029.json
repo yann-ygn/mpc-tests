@@ -1,0 +1,182 @@
+{
+  "story": 41,
+  "version": "0.15.0",
+  "ownerRequestedInstallation": true,
+  "requiredRestartAuthorizedByInstallationRequest": true,
+  "savedProjectRequired": false,
+  "loadedProjectDiscardAuthorized": true,
+  "previousVersion": "0.13.0",
+  "packageSha256": "b11016eb866c350a88ee3a0beef47efd5a9797fa9e33c0f3692fd1e237fa9ff6",
+  "transferredPayloadChecksumsVerified": true,
+  "mpcRestarted": true,
+  "status": "ready",
+  "nativeError": "OK",
+  "deviceIdentityPreserved": true,
+  "configurationPreserved": true,
+  "identityFilePreserved": true,
+  "preloadListPreserved": true,
+  "sourceRevision": "8c3e66489ca0de02277e7d9b894cd0e139449108",
+  "sourceSha256": "10eed1aacfbf209da18ca882ca2493756703b2b22a69041bb0d9a54af3f2557c",
+  "workingTreeDirty": false,
+  "artifactSha256": {
+    "mpc-api": "ee3b3fe05b065c1e8eee660e0079936415366ebf5ba3e400a114262a45d5e2eb",
+    "mpc_native_host.so": "ecc42a49484877589db0bff00d9efb80a3362c78b8b20e6fe57c977dea667506"
+  },
+  "installedArtifactHashesMatch": true,
+  "coexistence": {
+    "privtap.so": true,
+    "mpc_remote": true,
+    "mpc_native_host.so": true
+  },
+  "temporaryInstallerFilesRemoved": true,
+  "passed": true,
+  "date": "2026-10-29",
+  "installedChecks": {
+    "date": "2026-10-29",
+    "version": "0.15.0",
+    "commands": [
+      {
+        "op": "set_track_colour",
+        "family": "plugin",
+        "selected": false,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_track_transpose",
+        "family": "plugin",
+        "selected": false,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_track_velocity_scale",
+        "family": "plugin",
+        "selected": false,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_track_colour",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_track_transpose",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_track_velocity_scale",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_midi_output_channel",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_midi_bank_enabled",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_midi_bank_msb",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_midi_bank_lsb",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_midi_program_enabled",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      },
+      {
+        "op": "set_midi_program",
+        "family": "midi",
+        "selected": true,
+        "nativeApplied": true,
+        "independentReadback": true,
+        "retainedRetryAndLookup": true,
+        "noOpAndConflict": true
+      }
+    ],
+    "checks": {
+      "fiveReadProjectionsSchemasAndIndependentMetadata": true,
+      "setupWatchAndRetainedReplay": true,
+      "allSetupValuesRestored": true,
+      "activeWatchDrain": true,
+      "hostStopStartIdentityRotation": true,
+      "oldCursorResync": true,
+      "oldReceiptUnavailable": true,
+      "freshWatchRecovery": true,
+      "nativeContextAndValuesRestored": true
+    },
+    "passed": true
+  },
+  "final": {
+    "status": "ready",
+    "nativeError": "OK",
+    "version": "0.15.0",
+    "session": "fresh untitled project; prior loaded project discarded with explicit permission",
+    "temporaryMidiTrackRemoved": true,
+    "initialUntitledSessionValuesRestored": true,
+    "selectedTrackIndex": 0,
+    "transport": {
+      "playing": false,
+      "recordMode": 0,
+      "pulse": 0,
+      "countInEnabled": true,
+      "trackIndex": 0,
+      "sequenceIndex": 0,
+      "sequenceBpm": 120.0,
+      "masterBpm": 120.0,
+      "masterTempoEnabled": false
+    },
+    "projectFilesSavedOrOverwritten": false,
+    "fullDeviceRebootRequired": false
+  }
+}

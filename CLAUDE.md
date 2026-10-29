@@ -31,8 +31,8 @@ before running experiments.
   needs `-n N`. The root filesystem is read-only; addins live in `/data/mpc-addins/`.
 - The MPC Remote addin (`/data/mpc-addins/remote`, 1.0.3) serves HTTP and MCP on port 6720 (`/tap`, `/button`,
   `/screen.png`). The `mpc` MCP server is the same addin. `privtap/profiles/` keeps a copy of its `buttons.conf`.
-- MPC Native API 0.13.0 is installed and ready (owner-requested #54 upgrade, 2026-10-28).
-  Earlier story entries below record historical installed versions; see `findings/native-pan-installed-20261028.json` for the current verification.
+- MPC Native API 0.15.0 is installed and ready (owner-requested #41 upgrade, 2026-10-29).
+  Earlier story entries below record historical installed versions; see `findings/native-track-setup-installed-20261029.json` for the current verification.
 - privtap's settings: `/data/mpc-addins/privtap/privtap.conf`. Keep `identity=` empty except during an experiment:
   as another model, the Key 37's LEDs show the wrong states.
 - Settings backup taken before identity experiments: `/data/claude-backup-20261023-settings.tar`.
@@ -377,3 +377,18 @@ before running experiments.
   MIDI endpoints are the documented settings differences. Lab drained/unloaded,
   temporary files removed and installed 0.13.0 resumed ready. No upgrade was
   performed. See `findings/native-track-setup.md` and its sanitized proof.
+
+- Owner-requested 0.15.0 installation (#41 follow-up, 2026-10-29) completed from
+  clean source `8c3e664`. The owner explicitly authorized discarding the loaded
+  project and restarting MPC; no additional project save was made. Package and
+  installed artifact hashes match. Configuration, persistent device identity,
+  preload order and privtap/Remote are preserved. All nine new setup operations
+  pass installed writes, independent readback, retained retry/lookup, no-op and
+  conflict checks on MIDI; colour/transpose/velocity also pass on an unselected
+  plugin (12 operation/family cases). Five reads and schemas, metadata watch/
+  replay, active-watch drain, host stop/start instance rotation, old-cursor resync
+  and fresh recovery pass. Values restored and temporary MIDI track removed;
+  fresh untitled project is on Main, plugin selected, stopped at zero, recording
+  Off, sequence 01 at 120 BPM. Installed 0.15.0 is ready/OK. See
+  `findings/native-track-setup-installed-20261029.json`. Future installations or
+  restarts still require the owner's authorization.
