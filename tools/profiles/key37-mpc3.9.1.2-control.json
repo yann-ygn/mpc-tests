@@ -712,6 +712,31 @@
       "name": "pluginIdentityElectricDescriptor",
       "rva": 33589920,
       "prefixHex": "f0416de10140a0e10050a0e1391e80e20400a0e10ce08de508608de5a574a4eb"
+    },
+    {
+      "name": "pluginIdentityVstDescriptor",
+      "rva": 9278836,
+      "prefixHex": "84239fe584339fe5f0426de11ce08de5f860cde1f081cde118a08de586df4de2"
+    },
+    {
+      "name": "pluginIdentityVstPathUid",
+      "rva": 9279040,
+      "prefixHex": "d01096e5180084e2081081e2c13101ebcc3096e5000053e30200000a480093e5"
+    },
+    {
+      "name": "pluginIdentityVstFormat",
+      "rva": 9279136,
+      "prefixHex": "60129fe50500a0e1f822c4e101108fe09a1e02eb0510a0e1080084e2db3401eb"
+    },
+    {
+      "name": "pluginIdentityUidCopy",
+      "rva": 38806520,
+      "prefixHex": "c8e09de5f082c3e1d08ccde10c009de5f882c3e100ec84e504ccc4e5020bc2ed"
+    },
+    {
+      "name": "pluginIdentityUidRead",
+      "rva": 38783860,
+      "prefixHex": "013a85e2001c93e5072b85e2020bd2edbd2e83e20600a0e138108de5041cd3e5"
     }
   ],
   "bindings": [
@@ -1118,6 +1143,10 @@
     "descriptionName": 7120,
     "descriptionFormat": 7128,
     "descriptionIdentifier": 7144,
-    "supportedFormat": "MPC"
+    "descriptionUid": 7168,
+    "supportedFormats": [
+      "MPC",
+      "VST"
+    ]
   }
 }

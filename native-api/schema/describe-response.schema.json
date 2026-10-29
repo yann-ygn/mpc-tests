@@ -947,7 +947,8 @@
             "instanceIdentity",
             "presets",
             "parameters",
-            "productIdScope"
+            "productIdScope",
+            "productIdScopes"
           ],
           "properties": {
             "available": {
@@ -966,7 +967,8 @@
             },
             "formats": {
               "const": [
-                "MPC"
+                "MPC",
+                "VST"
               ]
             },
             "fields": {
@@ -985,7 +987,13 @@
               "const": false
             },
             "productIdScope": {
-              "const": "native_format_catalog"
+              "const": "per_format"
+            },
+            "productIdScopes": {
+              "const": {
+                "MPC": "native_format_catalog",
+                "VST": "native_library_path_and_uid"
+              }
             }
           }
         }

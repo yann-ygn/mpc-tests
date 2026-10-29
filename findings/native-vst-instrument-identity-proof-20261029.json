@@ -1,0 +1,268 @@
+{
+  "story": 57,
+  "date": "2026-10-29",
+  "firmwareBuildId": "8371199f945ecc40f79cb19c17ff5de72810a91c",
+  "availability": {
+    "implemented": "0.17.0",
+    "deviceQualified": [
+      "MPC",
+      "VST"
+    ],
+    "installed": "0.16.0",
+    "installedFormats": [
+      "MPC"
+    ],
+    "upgradePerformed": false
+  },
+  "contract": {
+    "productId": "VST:<unsigned descriptor UID as eight lowercase hex digits>:<exact native absolute library path>",
+    "scopes": {
+      "MPC": "native_format_catalog",
+      "VST": "native_library_path_and_uid"
+    },
+    "textStorageBytes": 256,
+    "vstPathMaximumUtf8Bytes": 242,
+    "silentTruncation": false,
+    "instanceIdentity": false,
+    "abiChanged": false,
+    "snapshotAbi": 8,
+    "executorAbi": 12,
+    "commandAbi": 9,
+    "observationAbi": 2,
+    "primitiveAbi": 2,
+    "attachment": "STATE_V8"
+  },
+  "nativeTrace": {
+    "descriptionUidOffset": "0x1c00",
+    "newFingerprints": [
+      "0x8d9574",
+      "0x8d9640",
+      "0x8d96a0",
+      "0x25023f8",
+      "0x24fcb74"
+    ],
+    "independentVstPath": "instance +0xd0 -> module +8 -> native library string",
+    "independentVstUid": "instance +0xcc -> AEffect +0x48",
+    "programInstanceDescriptorAgreement": true,
+    "borrowedPluginPointerEscapes": false,
+    "highRatePluginScanAdded": false
+  },
+  "checks": {
+    "hostMesonPassed": 27,
+    "asanUbsanNativeApiPassed": 22,
+    "isolatedArm": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 327
+      },
+      {
+        "fixture": "mixer_fixture",
+        "passed": true,
+        "outputLines": 78
+      },
+      {
+        "fixture": "watch_fixture",
+        "passed": true,
+        "outputLines": 1
+      }
+    ],
+    "finalAttachmentValidatorHostSanitizerArmPassed": true,
+    "formatCheckPassed": true,
+    "armElfExportAndGlibcGuardsPassed": true
+  },
+  "nativeFixtureCases": [
+    "mixed MPC and VST",
+    "two products sharing a wrapper",
+    "one product in two Programs",
+    "display-name independence",
+    "unsigned UID endpoints",
+    "VST unavailable and unassigned",
+    "unknown format",
+    "maximum ID length and overflow",
+    "invalid UTF-8",
+    "unbounded format storage",
+    "MPC to VST and back during capture",
+    "UID-only mutation during capture",
+    "existing Program destruction/address reuse",
+    "controls sampler performs no plugin reads"
+  ],
+  "device": {
+    "disposableProjectApproved": true,
+    "canonicalUserTrackCountOriginal": 9,
+    "canonicalUserTrackCountWithTemporaryPlugin": 10,
+    "products": [
+      {
+        "uiIndex": 1,
+        "displayName": "TubeSynth",
+        "format": "MPC",
+        "fileOrIdentifier": "MPC:TubeSynth",
+        "descriptorUid": "54625379",
+        "productId": "MPC:TubeSynth"
+      },
+      {
+        "uiIndex": 2,
+        "displayName": "Hype",
+        "format": "MPC",
+        "fileOrIdentifier": "MPC:Hype",
+        "descriptorUid": "536d5379",
+        "productId": "MPC:Hype"
+      },
+      {
+        "uiIndex": 4,
+        "displayName": "Midimix Editor",
+        "format": "VST",
+        "fileOrIdentifier": "/storage/Synths/ygn - VST - Midimix Editor/midimix_editor.so",
+        "descriptorUid": "4d6d4564",
+        "productId": "VST:4d6d4564:/storage/Synths/ygn - VST - Midimix Editor/midimix_editor.so"
+      },
+      {
+        "uiIndex": 9,
+        "displayName": "Torpedo Control",
+        "format": "VST",
+        "fileOrIdentifier": "/storage/Synths/ygn - VST - Torpedo Control/torpedo_control.so",
+        "descriptorUid": "54704c76",
+        "productId": "VST:54704c76:/storage/Synths/ygn - VST - Torpedo Control/torpedo_control.so"
+      }
+    ],
+    "mainPluginFieldsObserved": [
+      "Hype",
+      "Midimix Editor",
+      "Torpedo Control"
+    ],
+    "independentLoadedInstanceDescriptorsMatched": true,
+    "allFourProjectionsAndSchemasMatched": true,
+    "differentVstProductIds": true,
+    "duplicateMidimixInstancesShareProductId": true,
+    "saveReload": {
+      "allInstrumentMetadataStable": true,
+      "projectGenerationRetired": true,
+      "twoVstProductsAndMpcStable": true
+    }
+  },
+  "watch": {
+    "metadataAuditIntervalMs": 5000,
+    "hostAuditAndRetainedVstReplayPassed": true,
+    "deviceBrowsingReplacementAttempts": 2,
+    "subscribersPerAttempt": 8,
+    "bothAttemptsRequiredResync": true,
+    "secondAttemptReasons": [
+      "CONTINUITY_LOST"
+    ],
+    "recovery": {
+      "recoveryPassed": true,
+      "freshSubscribers": 8,
+      "replayResumed": true,
+      "instrumentMetadataMatched": true,
+      "trackCount": 10,
+      "validatedFrames": 33
+    },
+    "uninterruptedNativeLoadLatencyQualified": false
+  },
+  "completedCallbackMeasurements": {
+    "full": {
+      "completed": 112,
+      "p95Ms": 18.555,
+      "maxMs": 27.459
+    },
+    "controls": {
+      "completed": 2925,
+      "p95Ms": 4.821,
+      "maxMs": 9.51
+    },
+    "failed": [
+      {
+        "full": false,
+        "nativeError": 15
+      },
+      {
+        "full": false,
+        "nativeError": 15
+      },
+      {
+        "full": false,
+        "nativeError": 15
+      },
+      {
+        "full": true,
+        "nativeError": 15
+      }
+    ]
+  },
+  "finalArmArtifactSmoke": {
+    "uploadedHashesMatchBuildArtifacts": true,
+    "artifactSha256": {
+      "libmpc_native.so": "976e880be9e84244f54ad8bda74af12473b41f61f9b5d05da6d5a3f2db6f652f",
+      "watch_lab.so": "541d75dba9ba098a20fd876a45af84809996561429ae492d108fe868022f5336",
+      "mpc-api": "11ef5c89c21f7b296e89995eb64d7331748f268f89b84dabf7d7481086a204bd"
+    },
+    "sixDiscoveryReadOperationsPassed": true,
+    "allResponseSchemasPassed": true,
+    "restoredMidimixVstIdentityAvailable": true
+  },
+  "restoration": {
+    "backupReloaded": true,
+    "backupHashUnchanged": true,
+    "nativeFlagsInventorySelectionSequencesRestored": true,
+    "mixersAndAutomationRestored": true,
+    "independentInstrumentsRestored": true,
+    "contextRestored": true,
+    "pidUnchanged": true,
+    "canonicalUserTracks": 9,
+    "legacyMidiTriggeredTracks": 8,
+    "originalMixerPanVolumeScreenRestored": true,
+    "zeroPlayhead": true,
+    "temporaryTrackAbsentFromRestoredProject": true,
+    "qualifiedHostCleanup": {
+      "pidUnchanged": true,
+      "labUnloaded": true,
+      "deviceBundleRemoved": true
+    },
+    "finalHostCleanup": {
+      "pidUnchanged": true,
+      "labUnloaded": true,
+      "deviceBundleRemoved": true
+    },
+    "installedReady": true,
+    "installedSixOperationsPassed": true,
+    "installedResponseSchemasPassed": true,
+    "installedVstStillUnsupported": true,
+    "mpcRestarted": false,
+    "addinInstalled": false,
+    "backupSha256": "12313c39e75982eb2d0cd7220e8b63beb7620df84b1c1d66205948ba94576de7",
+    "backupAndDisposableRetainedUnderClaudeExperiments": true
+  },
+  "limits": [
+    "Identity is scoped to native library path and descriptor UID, not a global vendor UUID or binary version",
+    "Restart/reinstall/update stability is conditional on unchanged native path and UID; those physical actions were not performed",
+    "Independent device reader qualifies nonzero AEffect unique IDs for the tested wrapper products; native zero-ID fallback hashing is not independently executed",
+    "Unknown formats, instance IDs, presets and parameters remain unsupported",
+    "Native plugin browsing/loading and project transitions may cancel bounded captures and require watch resync",
+    "Measurements cover the declared mixed nine/ten-track workload and completed callbacks only; maximum density and marginal VST scan cost are unqualified"
+  ]
+}

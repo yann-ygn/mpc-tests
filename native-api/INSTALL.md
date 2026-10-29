@@ -6,8 +6,11 @@ addin. It supports MPC Key 37, MPC 3.9.1.2, exact GNU build ID
 Mute also requires a matching explicit global/active-sequence scope (US #48). Consult `describe` for command availability and limits, and the
 [service guide](README.md#send-flag-commands) for request and receipt semantics.
 
-Version 0.16.0 adds [read-only assigned instrument identity](../findings/native-plugin-identity.md).
-It is built locally and is not installed. The installed host remains 0.15.0.
+Version 0.17.0 adds [VST instrument identity](../findings/native-vst-instrument-identity.md)
+through native library path and descriptor UID. It is built locally, not installed.
+The installed host is 0.16.0, which exposes [MPC-format instrument identity](../findings/native-plugin-identity.md)
+and keeps VST instruments unsupported. Installing a package remains a separate
+owner-authorized action.
 
 Version 0.15.0 adds [track metadata and MIDI setup commands](../findings/native-track-setup.md),
 following the 0.14.0 transport/navigation extension. The owner-requested installation

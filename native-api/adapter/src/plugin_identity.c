@@ -1,6 +1,8 @@
 #include "private.h"
 #include "mpc_adapter_profile.h"
 
+#include <inttypes.h>
+#include <stdio.h>
 #include <string.h>
 
 static int read32(struct mpc_native_adapter *a, uint32_t address, uint32_t *out) {
@@ -86,13 +88,31 @@ enum mpc_native_error mpc_plugin_read(
   char format[MPC_PLUGIN_TEXT_BYTES] = {0};
   if (text(a, fence->format, format))
     return MPC_NATIVE_READ_FAILED;
-  if (strcmp(format, "MPC")) {
+  if (strcmp(format, "MPC") && strcmp(format, "VST")) {
     out->status = MPC_PLUGIN_UNSUPPORTED;
     return MPC_NATIVE_OK;
   }
-  if (
-    text(a, fence->name, out->display_name) || text(a, fence->product, out->product_id) ||
-    !out->display_name[0] || strncmp(out->product_id, "MPC:", 4) || !out->product_id[4])
+  char product[MPC_PLUGIN_TEXT_BYTES] = {0};
+  if (text(a, fence->name, out->display_name) || !out->display_name[0])
+    return MPC_NATIVE_READ_FAILED;
+  if (!strcmp(format, "VST")) {
+    if (
+      read32(a, program + PLUGIN_descriptionUid, &fence->uid) || text(a, fence->product, product) ||
+      product[0] != '/')
+      return MPC_NATIVE_READ_FAILED;
+    /* Exact native library path + descriptor UID. No display name, instance
+     * address, basename reduction, path normalization or silent truncation. */
+    int length = snprintf(
+      out->product_id,
+      sizeof out->product_id,
+      "VST:%08" PRIx32 ":%s",
+      fence->uid,
+      product);
+    if (length < 0 || (size_t)length >= sizeof out->product_id)
+      return MPC_NATIVE_READ_FAILED;
+  } else if (
+    text(a, fence->product, out->product_id) || strncmp(out->product_id, "MPC:", 4) ||
+    !out->product_id[4])
     return MPC_NATIVE_READ_FAILED;
   out->status = MPC_PLUGIN_AVAILABLE;
   return MPC_NATIVE_OK;

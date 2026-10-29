@@ -534,7 +534,8 @@ def validate(state, control):
         "descriptionName": 0x1BD0,
         "descriptionFormat": 0x1BD8,
         "descriptionIdentifier": 0x1BE8,
-        "supportedFormat": "MPC",
+        "descriptionUid": 0x1C00,
+        "supportedFormats": ["MPC", "VST"],
     }:
         raise ValueError("Unqualified instrument identity layout")
     plugin_functions = {
@@ -545,6 +546,11 @@ def validate(state, control):
         "pluginIdentityInstanceRead": 0x24F8BFC,
         "pluginIdentityAssignment": 0x2502540,
         "pluginIdentityInstanceDescriptor": 0x226AC00,
+        "pluginIdentityVstDescriptor": 0x8D9574,
+        "pluginIdentityVstPathUid": 0x8D9640,
+        "pluginIdentityVstFormat": 0x8D96A0,
+        "pluginIdentityUidCopy": 0x25023F8,
+        "pluginIdentityUidRead": 0x24FCB74,
     }
     if any(
         not any(f["name"] == name and f["rva"] == rva for f in control["functions"])

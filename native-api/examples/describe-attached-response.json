@@ -4,7 +4,7 @@
   "instanceId": "run_f74634ddf5c68a8e1220ca2decaccd44",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.16.0"
+    "version": "0.17.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -1508,7 +1508,8 @@
       "plugin"
     ],
     "formats": [
-      "MPC"
+      "MPC",
+      "VST"
     ],
     "fields": [
       "displayName",
@@ -1517,6 +1518,10 @@
     "instanceIdentity": false,
     "presets": false,
     "parameters": false,
-    "productIdScope": "native_format_catalog"
+    "productIdScope": "per_format",
+    "productIdScopes": {
+      "MPC": "native_format_catalog",
+      "VST": "native_library_path_and_uid"
+    }
   }
 }

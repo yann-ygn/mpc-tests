@@ -25,6 +25,43 @@ static void baseline(struct mpc_state_snapshot *s) {
   s->tracks[0].known = MPC_STATE_REQUESTED;
 }
 
+static void instrument_validation_tests(void) {
+  struct mpc_state_snapshot *s = malloc(sizeof *s);
+  assert(s);
+  baseline(s);
+  s->tracks[0].instrument.status = MPC_PLUGIN_AVAILABLE;
+  strcpy(s->tracks[0].instrument.display_name, "Midimix Editor");
+  const char *valid[] = {
+    "MPC:Hype",
+    "VST:4d6d4564:/storage/Synths/editor.so",
+    "VST:ffffffff:/same-wrapper.so",
+    "VST:00000000:/native-fallback.so"};
+  for (unsigned i = 0; i < sizeof valid / sizeof *valid; i++) {
+    strcpy(s->tracks[0].instrument.product_id, valid[i]);
+    assert(api_valid_snapshot(s, instance_id));
+  }
+  const char *invalid[] = {
+    "MPC:",
+    "VST:",
+    "VST:4d6d4564:relative.so",
+    "VST:4D6D4564:/editor.so",
+    "VST:4g6d4564:/editor.so",
+    "VST:4d6d456:/editor.so",
+    "VST:4d6d45640:/editor.so",
+    "VST3:4d6d4564:/editor.so"};
+  for (unsigned i = 0; i < sizeof invalid / sizeof *invalid; i++) {
+    strcpy(s->tracks[0].instrument.product_id, invalid[i]);
+    assert(!api_valid_snapshot(s, instance_id));
+  }
+  strcpy(s->tracks[0].instrument.product_id, valid[1]);
+  s->tracks[0].instrument.display_name[0] = (char)0x80;
+  assert(!api_valid_snapshot(s, instance_id));
+  strcpy(s->tracks[0].instrument.display_name, "Midimix Editor");
+  memset(s->tracks[0].instrument.product_id, 'a', MPC_PLUGIN_TEXT_BYTES);
+  assert(!api_valid_snapshot(s, instance_id));
+  free(s);
+}
+
 static void initialize(struct api_watch *p) {
   memset(p, 0, sizeof *p);
   pthread_mutex_init(&p->mutex, NULL);
@@ -228,6 +265,7 @@ static void producer_tests(void) {
 }
 
 int main(void) {
+  instrument_validation_tests();
   replay_tests();
   paging_tests();
   producer_tests();

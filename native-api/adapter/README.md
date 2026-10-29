@@ -414,7 +414,7 @@ ranges, families, notifying property signatures and the lifecycle/port/CV
 operations kept unavailable. `tools/mpc_track_setup.py` runs the qualified
 screen matrix through a retained lab with independent batched readback.
 
-## Assigned instrument metadata (US #55)
+## Assigned instrument metadata (US #55 / #57)
 
 Snapshot ABI 8 / `STATE_V8` and executor ABI 12 add the owned, pointer-free
 `mpc_state_track.instrument` (`mpc_plugin_identity.h`). Command ABI 9,
@@ -428,3 +428,9 @@ and unqualified formats. Bounded UTF-8 failures reject the capture. Existing
 Program destruction observers and Track generations fence replacement/reuse;
 a surviving Track retains its reference. See [the ownership trace and device
 qualification](../../findings/native-plugin-identity.md).
+
+US #57 (0.17.0) also qualifies the exact `VST` format, combining its native
+`fileOrIdentifier` path and descriptor UID into `VST:<uid8hex>:<path>`. The private
+capture fence includes the UID; public layouts and ABI versions above remain
+unchanged. Native paths, length bounds, installation-path stability and evidence
+are in [VST instrument identity](../../findings/native-vst-instrument-identity.md).

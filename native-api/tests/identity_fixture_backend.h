@@ -388,4 +388,12 @@ plugin_assignment(struct fixture *f, uint32_t program, const char *name, const c
   strcpy((char *)f->objects + storage + 512 - OBJECTS, "MPC");
 }
 
+static inline void vst_assignment(
+  struct fixture *f, uint32_t program, const char *name, const char *path, uint32_t uid) {
+  plugin_assignment(f, program, name, path);
+  uint32_t storage = OBJECTS + 0x90000 + (program == PROGRAM ? 0 : 0x1000);
+  strcpy((char *)f->objects + storage + 512 - OBJECTS, "VST");
+  put32(f, program + PLUGIN_descriptionUid, uid);
+}
+
 #endif

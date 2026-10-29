@@ -154,7 +154,7 @@ enum mpc_native_error
 mpc_track_setup_read(struct mpc_native_adapter *, uint32_t, unsigned, struct mpc_track_setup *);
 /* Disposable association fence. No plugin pointer is dereferenced or retained. */
 struct mpc_plugin_fence {
-  uint32_t program, vtable, instance, owner, name, product, format;
+  uint32_t program, vtable, instance, owner, name, product, format, uid;
 };
 enum mpc_native_error mpc_plugin_read(
   struct mpc_native_adapter *,

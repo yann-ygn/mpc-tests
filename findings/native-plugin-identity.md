@@ -1,8 +1,10 @@
 # Assigned instrument identity (US #55)
 
 Package 0.16.0 adds read-only instrument product metadata to every authoritative
-user-track projection and watch. Installed availability remains 0.15.0 until an
-owner-authorized upgrade. Qualification evidence is in
+user-track projection and watch. It is now installed; the qualification account
+below records its original temporary-host test against installed 0.15.0.
+[US #57](native-vst-instrument-identity.md) extends the same paths to VST in
+0.17.0, which is not installed. Qualification evidence is in
 [native-plugin-identity-proof-20261029.json](native-plugin-identity-proof-20261029.json).
 
 ## Public contract

@@ -23,8 +23,10 @@ replay and load evidence is in [the qualification report](findings/native-watch.
 HTTP and SDKs are separate stories.
 US #55 adds [assigned instrument identity](findings/native-plugin-identity.md) to
 authoritative state and metadata watch: plugin display name and native `MPC:` product
-identifier, independent of the editable Track name. Package 0.16.0 is implemented;
-the installed 0.15.0 host does not expose these fields.
+identifier, independent of the editable Track name. Package 0.16.0 is installed
+and exposes MPC-format identity.
+US #57 extends it to [VST instruments](findings/native-vst-instrument-identity.md)
+in package 0.17.0, qualified through a temporary host and not installed.
 US #45 publishes [versioned Program/Instrument parameter metadata](findings/native-program-parameters.md)
 and a private lab for six qualified drum-pad controls. Generic public parameter
 writes remain unavailable; plugin and insert parameters need separate qualification.

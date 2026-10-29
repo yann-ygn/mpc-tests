@@ -254,9 +254,11 @@ char *api_respond(
   fputs(",\"reason\":", output);
   api_quoted(output, discovery.state_ready ? NULL : discovery.unavailable_reason);
   fputs(
-    ",\"trackTypes\":[\"plugin\"],\"formats\":[\"MPC\"],"
+    ",\"trackTypes\":[\"plugin\"],\"formats\":[\"MPC\",\"VST\"],"
     "\"fields\":[\"displayName\",\"productId\"],\"instanceIdentity\":false,"
-    "\"presets\":false,\"parameters\":false,\"productIdScope\":\"native_format_catalog\"}",
+    "\"presets\":false,\"parameters\":false,\"productIdScope\":\"per_format\","
+    "\"productIdScopes\":{\"MPC\":\"native_format_catalog\","
+    "\"VST\":\"native_library_path_and_uid\"}}",
     output);
   fputs(",\"flagFamilies\":[", output);
   if (!strcmp(discovery.profile, "matched"))

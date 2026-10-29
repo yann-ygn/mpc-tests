@@ -417,13 +417,13 @@ Rebuild C callers for command ABI 9, executor ABI 11 and snapshot ABI 7 /
 `STATE_V7`. Primitive and observation ABI remain 2. Package 0.15.0 is built
 locally; an addin install/restart requires a separate owner request.
 
-## Assigned instrument identity (0.16.0 / US #55)
+## Assigned instrument identity (0.17.0 / US #55 and #57)
 
 All four track state projections and watch carry an `instrument` object with
 separate `displayName` and native `productId`, availability `status`/`reason`,
 and explicit null `instanceId`. The name and identifier come from the assigned
-plugin's native descriptor, independently of its Track name. Only the `MPC`
-format on plugin tracks qualifies; non-plugin tracks and unavailable/unassigned
+plugin's native descriptor, independently of its Track name. The `MPC` and native `VST`
+formats on plugin tracks qualify; non-plugin tracks and unavailable/unassigned
 instruments have explicit null fields. Discovery's `instrumentIdentity` reports
 this scope; preset and arbitrary parameter control remain separate.
 
@@ -431,12 +431,16 @@ Instrument changes follow the shared five-second metadata audit. Controls sample
 retain that metadata baseline; they do not scan plugins. Native loading can cause
 the existing bounded UI read to lose continuity, requiring a recovery snapshot and
 fresh subscription. Retained replay never stitches across such a resync.
-See [native paths, product identifier scope and qualification](../findings/native-plugin-identity.md).
+See [MPC native paths and qualification](../findings/native-plugin-identity.md)
+and [VST path/UID scope and qualification](../findings/native-vst-instrument-identity.md).
+Discovery lists both formats and their separate `productIdScopes`; VST IDs include
+the descriptor UID and exact native library path.
 
 Rebuild C callers for executor ABI 12 and snapshot ABI 8 / `STATE_V8`.
 Primitive 2, commands 9 and observations 2 retain their layouts. The track row is
-992 bytes and the transfer is 298,952 bytes. Package 0.16.0 is built locally;
-installed 0.15.0 has no assigned instrument metadata.
+992 bytes and the transfer is 298,952 bytes. Package 0.17.0 retains these layouts
+and is built locally;
+installed 0.16.0 exposes MPC-format metadata and reports VST as unsupported.
 
 ## Program parameter metadata research (US #45)
 

@@ -31,8 +31,8 @@ before running experiments.
   needs `-n N`. The root filesystem is read-only; addins live in `/data/mpc-addins/`.
 - The MPC Remote addin (`/data/mpc-addins/remote`, 1.0.3) serves HTTP and MCP on port 6720 (`/tap`, `/button`,
   `/screen.png`). The `mpc` MCP server is the same addin. `privtap/profiles/` keeps a copy of its `buttons.conf`.
-- MPC Native API 0.15.0 is installed and ready (owner-requested #41 upgrade, 2026-10-29).
-  Earlier story entries below record historical installed versions; see `findings/native-track-setup-installed-20261029.json` for the current verification.
+- MPC Native API 0.16.0 is installed and ready (verified during #57, 2026-10-29).
+  Earlier story entries below record historical installed versions; see `findings/native-vst-instrument-identity-proof-20261029.json` for the latest installed read check.
 - privtap's settings: `/data/mpc-addins/privtap/privtap.conf`. Keep `identity=` empty except during an experiment:
   as another model, the Key 37's LEDs show the wrong states.
 - Settings backup taken before identity experiments: `/data/claude-backup-20261023-settings.tar`.
@@ -438,3 +438,25 @@ before running experiments.
   playhead, Automation Read and Main are restored. Labs and temporary files are
   removed; installed 0.15.0 resumes ready. No project save/load, addin installation
   or MPC restart. See findings/native-program-parameters.md and its sanitized proof.
+
+
+- US #57, branch `us-57-vst-instrument-identity`: package 0.17.0 adds available
+  identity for exact native `VST` instruments through Program descriptor name,
+  library path and UID, with five additional pinned fingerprints. Product IDs are
+  `VST:<uid8hex>:<exact path>`; discovery lists MPC/VST and separate per-format
+  scopes. UID joins the disposable capture fence; C ABI/layouts and STATE_V8 remain
+  unchanged. Full metadata captures/audits own plugin scans. Twenty-seven host,
+  22 ASan/UBSan and eight isolated ARM entries pass, plus final attachment-validator
+  cases. Torpedo Control and Midimix Editor match Main and independent loaded
+  instance/module/AEffect reads; duplicate Midimix instances share one ID. Both
+  VST products and MPC identities survive disposable save/reload. Eight-subscriber
+  browsing/load attempts conservatively resync; recovery and retained reconnect
+  pass. Full callback p95 is 18.555 ms and controls 4.821 ms on the mixed nine/ten
+  track workload; maximum density remains unqualified. The owner-approved backup
+  is reloaded unchanged; original flags/mixers, automation/context, instruments,
+  selection, sequence, zero playhead and Mixer Pan & Volume are restored. Final
+  ARM artifact hashes and six reads/schema checks pass on a fresh temporary host.
+  Both labs drain/unload, device files are removed and installed 0.16.0 resumes
+  ready with six successful reads; VST stays unsupported there. No installation
+  or MPC restart. See findings/native-vst-instrument-identity.md and its sanitized
+  proof. A 0.17.0 upgrade still requires the owner's separate request.

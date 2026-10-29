@@ -384,6 +384,13 @@ int main(int argc, char **argv) {
     if (queued && (stopping || access(pause_ui, F_OK))) {
       if (marker("plugin-replace"))
         plugin_assignment(&fixture.native, PROGRAM, "TubeSynth", "MPC:TubeSynth");
+      if (marker("plugin-vst"))
+        vst_assignment(
+          &fixture.native,
+          PROGRAM,
+          "Midimix Editor",
+          "/storage/Synths/Midimix/editor.so",
+          0x4d6d4564);
       if (marker("plugin-unload"))
         put32(&fixture.native, PROGRAM + PLUGIN_programInstance, 0);
       if (marker("plugin-unassigned")) {

@@ -48,19 +48,46 @@ def capture(session):
             name, product, fmt = (
                 string(session, u32(data, offset)) for offset in (0x68, 0x80, 0x70)
             )
-            row.update(displayName=name, productId=product, format=fmt, loaded=bool(instance))
+            uid = u32(data, 0x98)
+            row.update(
+                displayName=name,
+                fileOrIdentifier=product,
+                format=fmt,
+                descriptorUid=f"{uid:08x}",
+                loaded=bool(instance),
+                productId=f"VST:{uid:08x}:{product}" if fmt == "VST" else product,
+            )
             if instance:
                 table = u32(session.read(instance, 4))
                 getter = u32(session.read(table + 0x120, 4))
                 offset = {0x226AC00: 0x268, 0x2008AA0: 0x390}.get(getter - session.base)
-                if offset is None:
+                if getter - session.base == 0x8D9574:
+                    # Fingerprinted JUCE VST instance, separate from the Program.
+                    # fillInPluginDescription reads module path, name and AEffect UID.
+                    association = session.read(instance + 0xCC, 0x14)
+                    effect, module = u32(association), u32(association, 4)
+                    vst_uid = u32(session.read(effect + 0x48, 4))
+                    if not vst_uid:
+                        raise RuntimeError("Independent VST fallback hash is unqualified")
+                    independent = {
+                        "displayName": string(session, u32(association, 0x10)),
+                        "productId": string(session, u32(session.read(module + 8, 4))),
+                        "format": "VST",
+                    }
+                    if vst_uid != uid:
+                        raise SnapshotChanged("VST AEffect/descriptor UID disagree")
+                    if session.read(instance + 0xCC, 0x14) != association:
+                        raise SnapshotChanged("VST module/effect changed")
+                    row["instanceUid"] = f"{vst_uid:08x}"
+                elif offset is not None:
+                    description = session.read(instance + offset, 0x1C)
+                    independent = {
+                        "displayName": string(session, u32(description)),
+                        "productId": string(session, u32(description, 0x18)),
+                        "format": string(session, u32(description, 8)),
+                    }
+                else:
                     raise RuntimeError("Unqualified instance descriptor implementation")
-                description = session.read(instance + offset, 0x1C)
-                independent = {
-                    "displayName": string(session, u32(description)),
-                    "productId": string(session, u32(description, 0x18)),
-                    "format": string(session, u32(description, 8)),
-                }
                 row["instanceDescriptor"] = independent
                 if independent != {"displayName": name, "productId": product, "format": fmt}:
                     raise SnapshotChanged("Program/instance descriptors disagree")

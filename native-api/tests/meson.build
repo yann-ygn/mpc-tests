@@ -111,6 +111,7 @@ if not meson.is_cross_build()
       python,
       args: ['-m', 'unittest', module, '-v'],
       workdir: meson.current_source_dir(),
+      timeout: module == 'test_watch' ? 60 : 30,
       env: native_test_env,
       depends: [api, adapter, native_fixture, identity_fixture, inventory_fixture, commands_fixture, host_fixture, native_host],
       suite: 'native-api',

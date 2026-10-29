@@ -190,6 +190,41 @@ class WatchTests(HostHarness):
         self.assertEqual(state["tracks"][0]["instrument"]["status"], "unassigned")
         self.assertIsNone(state["tracks"][0]["instrument"]["productId"])
 
+    def test_vst_identity_all_projections_audit_and_retained_replay(self):
+        info = self.public("describe")["instrumentIdentity"]
+        self.assertEqual(info["formats"], ["MPC", "VST"])
+        self.assertEqual(info["productIdScopes"]["VST"], "native_library_path_and_uid")
+        client, reader, first = self.start()
+        (self.install / "plugin-vst").touch()
+        update = self.until(reader, "snapshot")
+        expected = {
+            "status": "available",
+            "reason": None,
+            "displayName": "Midimix Editor",
+            "productId": "VST:4d6d4564:/storage/Synths/Midimix/editor.so",
+            "instanceId": None,
+        }
+        for track in update["state"]["tracks"]:
+            self.assertEqual(track["instrument"], expected)
+        self.assertEqual(first["state"]["tracks"][0]["ref"], update["state"]["tracks"][0]["ref"])
+        replay_client, replay = self.stream(first["cursor"])
+        self.assertTrue(self.frame(replay)["resumed"])
+        self.assertEqual(self.until(replay, "snapshot"), update)
+        for op in ["get_state", "list_tracks", "current_track", "recovery_snapshot"]:
+            state = self.public(op)
+            for track in state.get("tracks", [state.get("track")]):
+                self.assertEqual(track["instrument"], expected)
+        (self.install / "plugin-vst").unlink()
+        (self.install / "plugin-replace").touch()
+        deadline = time.monotonic() + 8
+        while True:
+            replacement = self.until(
+                reader, "snapshot", timeout=max(0.1, deadline - time.monotonic())
+            )
+            if replacement["state"]["tracks"][0]["instrument"]["productId"] == "MPC:TubeSynth":
+                break
+            self.assertLess(time.monotonic(), deadline, "MPC replacement not captured")
+
     def test_instrument_schema_rejects_inconsistent_metadata(self):
         client, reader, original = self.start()
         invalid = [

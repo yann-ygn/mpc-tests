@@ -101,12 +101,26 @@ static void plugin_during_read(struct identity_fixture *f, uintptr_t address) {
     return;
   plugin_reads++;
   if (plugin_mutation && plugin_reads % 2 == 0) {
+    if (plugin_mutation == 4) {
+      uint32_t uid;
+      memcpy(&uid, f->native.objects + PROGRAM - OBJECTS + PLUGIN_descriptionUid, 4);
+      put32(&f->native, PROGRAM + PLUGIN_descriptionUid, uid + 1);
+      return;
+    }
     bool hype = !strcmp((char *)f->native.objects + 0x90000, "Hype");
-    plugin_assignment(
-      &f->native,
-      PROGRAM,
-      hype ? "TubeSynth" : "Hype",
-      hype ? "MPC:TubeSynth" : "MPC:Hype");
+    if (plugin_mutation >= 3 && hype)
+      vst_assignment(
+        &f->native,
+        PROGRAM,
+        "Midimix Editor",
+        "/storage/Synths/Midimix/editor.so",
+        0x4d6d4564);
+    else
+      plugin_assignment(
+        &f->native,
+        PROGRAM,
+        hype ? "TubeSynth" : "Hype",
+        hype ? "MPC:TubeSynth" : "MPC:Hype");
     if (plugin_mutation == 1)
       plugin_mutation = 0;
   }
@@ -141,6 +155,60 @@ static void plugin_tests(void) {
   assert(!strcmp(s->tracks[1].instrument.display_name, "TubeSynth"));
   assert(s->tracks[0].identity.id == track && s->tracks[0].identity.generation == generation);
   free(s);
+  /* One wrapper, distinct products; duplicate product, distinct Programs. */
+  vst_assignment(n, PROGRAM, "Midimix Editor", "/storage/Synths/Midimix/editor.so", 0x4d6d4564);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(
+    !strcmp(s->tracks[0].instrument.product_id, "VST:4d6d4564:/storage/Synths/Midimix/editor.so"));
+  assert(!strcmp(s->tracks[1].instrument.product_id, "MPC:TubeSynth"));
+  free(s);
+  vst_assignment(n, other, "Midimix Editor", "/storage/Synths/Midimix/editor.so", 0x4d6d4564);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(!strcmp(s->tracks[0].instrument.product_id, s->tracks[1].instrument.product_id));
+  free(s);
+  vst_assignment(n, other, "Torpedo Control", "/storage/Synths/Torpedo/control.so", 0x54704374);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(strcmp(s->tracks[0].instrument.product_id, s->tracks[1].instrument.product_id));
+  free(s);
+  /* Unloaded/unassigned keep the same meanings in both formats. */
+  put32(n, PROGRAM + PLUGIN_programInstance, 0);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(s->tracks[0].instrument.status == MPC_PLUGIN_UNAVAILABLE);
+  free(s);
+  vst_assignment(n, PROGRAM, "", "", 0);
+  put32(n, PROGRAM + PLUGIN_programInstance, 0);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(s->tracks[0].instrument.status == MPC_PLUGIN_UNASSIGNED);
+  free(s);
+  vst_assignment(n, PROGRAM, "Midimix Editor", "/storage/Synths/Midimix/editor.so", 0x4d6d4564);
+  /* UID, exact path and display name are independent inputs. */
+  vst_assignment(n, other, "Renamed", "/storage/Synths/Midimix/editor.so", 0x4d6d4564);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(!strcmp(s->tracks[0].instrument.product_id, s->tracks[1].instrument.product_id));
+  free(s);
+  put32(n, other + PLUGIN_descriptionUid, 0xffffffffu);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(
+    !strcmp(s->tracks[1].instrument.product_id, "VST:ffffffff:/storage/Synths/Midimix/editor.so"));
+  free(s);
+  vst_assignment(n, PROGRAM, "Midimix Editor", "relative.so", 1);
+  assert(!state_read(&f, e, MPC_NATIVE_READ_FAILED));
+  vst_assignment(n, PROGRAM, "Midimix Editor", "/", 0);
+  memset(n->objects + 0x90101, 'a', 241);
+  n->objects[0x901f2] = 0;
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(strlen(s->tracks[0].instrument.product_id) == 255);
+  free(s);
+  n->objects[0x901f2] = 'a';
+  n->objects[0x901f3] = 0;
+  assert(!state_read(&f, e, MPC_NATIVE_READ_FAILED));
+  vst_assignment(n, PROGRAM, "Midimix Editor", "/", 1);
+  n->objects[0x90101] = 0x80;
+  assert(!state_read(&f, e, MPC_NATIVE_READ_FAILED));
+  vst_assignment(n, PROGRAM, "Midimix Editor", "/", 1);
+  memset(n->objects + 0x90200, 'a', MPC_PLUGIN_TEXT_BYTES);
+  assert(!state_read(&f, e, MPC_NATIVE_READ_FAILED));
+  plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
   put32(n, PROGRAM + PLUGIN_programInstance, 0);
   s = state_read(&f, e, MPC_NATIVE_OK);
   assert(s->tracks[0].instrument.status == MPC_PLUGIN_UNAVAILABLE);
@@ -152,7 +220,7 @@ static void plugin_tests(void) {
   assert(s->tracks[0].instrument.status == MPC_PLUGIN_UNASSIGNED);
   free(s);
   plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
-  strcpy((char *)n->objects + 0x90200, "VST");
+  strcpy((char *)n->objects + 0x90200, "VST3");
   s = state_read(&f, e, MPC_NATIVE_OK);
   assert(s->tracks[0].instrument.status == MPC_PLUGIN_UNSUPPORTED);
   free(s);
@@ -178,6 +246,16 @@ static void plugin_tests(void) {
   free(s);
   plugin_reads = 0;
   plugin_mutation = 2;
+  assert(!state_read(&f, e, MPC_NATIVE_STATE_UNSTABLE));
+  plugin_mutation = 0;
+  plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
+  plugin_reads = 0;
+  plugin_mutation = 3;
+  assert(!state_read(&f, e, MPC_NATIVE_STATE_UNSTABLE));
+  plugin_mutation = 0;
+  vst_assignment(n, PROGRAM, "Midimix Editor", "/storage/Synths/Midimix/editor.so", 0x4d6d4564);
+  plugin_reads = 0;
+  plugin_mutation = 4;
   assert(!state_read(&f, e, MPC_NATIVE_STATE_UNSTABLE));
   plugin_mutation = 0;
   /* Reusing the Program address cannot retain cached product metadata. */

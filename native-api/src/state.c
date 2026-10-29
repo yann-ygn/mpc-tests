@@ -98,9 +98,21 @@ static int valid_instrument(const struct mpc_state_track *t, int normal) {
     return 0;
   if ((!normal || strcmp(t->type, "plugin")) != (p->status == MPC_PLUGIN_NOT_APPLICABLE))
     return 0;
-  return p->status == MPC_PLUGIN_AVAILABLE
-    ? p->display_name[0] && !strncmp(p->product_id, "MPC:", 4) && p->product_id[4]
-    : !p->display_name[0] && !p->product_id[0];
+  if (p->status != MPC_PLUGIN_AVAILABLE)
+    return !p->display_name[0] && !p->product_id[0];
+  if (!p->display_name[0])
+    return 0;
+  if (!strncmp(p->product_id, "MPC:", 4))
+    return !!p->product_id[4];
+  if (
+    strncmp(p->product_id, "VST:", 4) || strlen(p->product_id) < 14 || p->product_id[12] != ':' ||
+    p->product_id[13] != '/')
+    return 0;
+  for (unsigned i = 4; i < 12; i++)
+    if (!((p->product_id[i] >= '0' && p->product_id[i] <= '9') ||
+          (p->product_id[i] >= 'a' && p->product_id[i] <= 'f')))
+      return 0;
+  return 1;
 }
 
 int api_valid_snapshot(const struct mpc_state_snapshot *s, const char *instance) {
