@@ -143,6 +143,90 @@ class WatchTests(HostHarness):
         client.sendall(b'{"apiVersion":"0.1","op":"unwatch"}\n')
         self.assertEqual(self.until(reader, "terminated")["reason"], "UNSUBSCRIBED")
 
+    def test_instrument_identity_reads_replacement_audit_and_replay(self):
+        for op in ["get_state", "list_tracks", "current_track", "recovery_snapshot"]:
+            state = self.public(op)
+            tracks = state.get("tracks", [state.get("track")])
+            for track in tracks:
+                self.assertNotEqual(track["name"], "Hype")
+                self.assertEqual(
+                    track["instrument"],
+                    {
+                        "status": "available",
+                        "reason": None,
+                        "displayName": "Hype",
+                        "productId": "MPC:Hype",
+                        "instanceId": None,
+                    },
+                )
+        info = self.public("describe")["instrumentIdentity"]
+        self.assertEqual(info["fields"], ["displayName", "productId"])
+        self.assertFalse(info["instanceIdentity"])
+        client, reader, first = self.start()
+        target = first["state"]["tracks"][0]["ref"]
+        started = time.monotonic()
+        (self.install / "plugin-replace").touch()
+        update = self.until(reader, "snapshot")
+        self.assertLess(time.monotonic() - started, 6.5)
+        self.assertEqual(update["state"]["tracks"][0]["ref"], target)
+        self.assertEqual(update["state"]["tracks"][0]["instrument"]["productId"], "MPC:TubeSynth")
+        replay_client, replay = self.stream(first["cursor"])
+        self.assertTrue(self.frame(replay)["resumed"])
+        self.assertEqual(self.until(replay, "snapshot"), update)
+        (self.install / "plugin-unload").touch()
+        state = self.public("get_state")
+        self.assertEqual(
+            state["tracks"][0]["instrument"],
+            {
+                "status": "unavailable",
+                "reason": "PLUGIN_NOT_LOADED",
+                "displayName": None,
+                "productId": None,
+                "instanceId": None,
+            },
+        )
+        (self.install / "plugin-unassigned").touch()
+        state = self.public("get_state")
+        self.assertEqual(state["tracks"][0]["instrument"]["status"], "unassigned")
+        self.assertIsNone(state["tracks"][0]["instrument"]["productId"])
+
+    def test_instrument_schema_rejects_inconsistent_metadata(self):
+        client, reader, original = self.start()
+        invalid = [
+            {
+                "status": "available",
+                "reason": None,
+                "displayName": None,
+                "productId": "MPC:Hype",
+                "instanceId": None,
+            },
+            {
+                "status": "available",
+                "reason": None,
+                "displayName": "Hype",
+                "productId": "Hype",
+                "instanceId": None,
+            },
+            {
+                "status": "unassigned",
+                "reason": "NO_INSTRUMENT_ASSIGNED",
+                "displayName": "Hype",
+                "productId": None,
+                "instanceId": None,
+            },
+            {
+                "status": "not_applicable",
+                "reason": "NOT_PLUGIN_TRACK",
+                "displayName": None,
+                "productId": None,
+                "instanceId": None,
+            },
+        ]
+        for instrument in invalid:
+            frame = json.loads(json.dumps(original))
+            frame["state"]["tracks"][0]["instrument"] = instrument
+            self.assertFalse(self.validator.is_valid(frame), instrument)
+
     def test_schema_examples(self):
         request_schema = json.loads((SCHEMAS / "watch-request.schema.json").read_text())
         for name in ["watch-request", "watch-resume-request", "unwatch-request"]:

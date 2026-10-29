@@ -392,3 +392,26 @@ before running experiments.
   Off, sequence 01 at 120 BPM. Installed 0.15.0 is ready/OK. See
   `findings/native-track-setup-installed-20261029.json`. Future installations or
   restarts still require the owner's authorization.
+
+
+- US #55, branch `us-55-plugin-identity`: package 0.16.0 adds read-only assigned
+  instrument display name and native MPC-format product identifier to all track
+  state projections and metadata watch, independent of editable Track names.
+  Status/reason/nulls cover non-plugin, empty, unavailable and unsupported formats;
+  instance identity, presets and parameters remain unsupported. Native assignment
+  and descriptor paths are fingerprinted; full captures fence Track/Program/plugin
+  ownership and copy bounded UTF-8, with no borrowed instance pointer escaping.
+  Executor 12 / snapshot 8 and STATE_V8 require C callers to rebuild; primitive 2,
+  commands 9 and observations 2 remain unchanged. Plugin scans occur only in full
+  metadata captures, not flag commands or high-rate controls samples.
+  25 host, 20 ASan/UBSan and eight isolated ARM entries pass, including malicious
+  strings/wire transfers, replacement, conversion, address reuse and watch replay.
+  Device Hype/Electric assignments on a temporary fifth Track match Main and the
+  loaded instance's independent descriptor. Eight-subscriber metadata replacement
+  arrives in 4.423–4.664 s and replays correctly. A slow Hype load conservatively
+  resyncs all peers; recovery and fresh replay pass without changing Track refs.
+  Full callback p95 is 15.579 ms (max 27.881); controls p95 3.861 ms. All original
+  state/mixers/setup/buses, inventory, selection, sequence, zero playhead and Main
+  are restored; temporary Track and lab removed. Installed 0.15.0 resumes ready;
+  0.16.0 is not installed. No project save/load or MPC restart. See
+  `findings/native-plugin-identity.md` and its sanitized proof.

@@ -264,6 +264,13 @@
           "midiBankLsb": null,
           "midiProgramEnabled": null,
           "midiProgram": null
+        },
+        "instrument": {
+          "status": "available",
+          "reason": null,
+          "displayName": "Hype",
+          "productId": "MPC:Hype",
+          "instanceId": null
         }
       }
     ],

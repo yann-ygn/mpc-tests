@@ -252,7 +252,8 @@
         "collection",
         "flagSupport",
         "mixer",
-        "setup"
+        "setup",
+        "instrument"
       ],
       "properties": {
         "ref": {
@@ -480,6 +481,9 @@
             }
           },
           "additionalProperties": false
+        },
+        "instrument": {
+          "$ref": "#/$defs/instrument"
         }
       },
       "allOf": [
@@ -523,6 +527,42 @@
               },
               "generation": {
                 "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "track"
+              },
+              "type": {
+                "const": "plugin"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "instrument": {
+                "properties": {
+                  "status": {
+                    "not": {
+                      "const": "not_applicable"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "instrument": {
+                "properties": {
+                  "status": {
+                    "const": "not_applicable"
+                  }
+                }
               }
             }
           }
@@ -1197,6 +1237,139 @@
         }
       },
       "additionalProperties": false
+    },
+    "instrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "displayName",
+        "productId",
+        "instanceId"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not_applicable",
+            "unassigned",
+            "available",
+            "unavailable",
+            "unsupported"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "NOT_PLUGIN_TRACK",
+            "NO_INSTRUMENT_ASSIGNED",
+            null,
+            "PLUGIN_NOT_LOADED",
+            "UNQUALIFIED_PLUGIN_FORMAT"
+          ]
+        },
+        "displayName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "productId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^MPC:",
+          "maxLength": 255,
+          "minLength": 5
+        },
+        "instanceId": {
+          "type": "null"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "status": {
+              "const": "not_applicable"
+            },
+            "reason": {
+              "const": "NOT_PLUGIN_TRACK"
+            },
+            "displayName": {
+              "type": "null"
+            },
+            "productId": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "unassigned"
+            },
+            "reason": {
+              "const": "NO_INSTRUMENT_ASSIGNED"
+            },
+            "displayName": {
+              "type": "null"
+            },
+            "productId": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "available"
+            },
+            "reason": {
+              "const": null
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "productId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "unavailable"
+            },
+            "reason": {
+              "const": "PLUGIN_NOT_LOADED"
+            },
+            "displayName": {
+              "type": "null"
+            },
+            "productId": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "unsupported"
+            },
+            "reason": {
+              "const": "UNQUALIFIED_PLUGIN_FORMAT"
+            },
+            "displayName": {
+              "type": "null"
+            },
+            "productId": {
+              "type": "null"
+            }
+          }
+        }
+      ]
     }
   },
   "description": "Automation Read qualifies native mute/solo/volume/pan manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Sends/inserts remain Off-only."

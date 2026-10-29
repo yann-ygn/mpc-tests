@@ -833,6 +833,7 @@ same_identities(const struct mpc_identity_snapshot *a, const struct mpc_identity
 static enum mpc_native_error
 capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot *output) {
   struct mpc_identity_snapshot before, after;
+  struct mpc_plugin_fence plugins[MPC_IDENTITY_MAX_TRACKS] = {0};
   enum mpc_native_error error = mpc_identity_capture(registry, &before);
   if (error)
     return error;
@@ -889,6 +890,16 @@ capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot 
         program != inventory.programs[i] ||
         strcmp(track->type, program_type(registry, inventory.vtables[i])))
         return MPC_NATIVE_STATE_UNSTABLE;
+      if (ui_index >= 0) {
+        error = mpc_plugin_read(
+          registry->adapter,
+          program,
+          mpc_family_by_type(track->type)->family,
+          &track->instrument,
+          &plugins[ui_index]);
+        if (error)
+          return error;
+      }
     }
     for (unsigned i = 0; i < before.sequence_count; i++) {
       const struct mpc_identity_object *id = &before.sequences[i];
@@ -945,8 +956,35 @@ capture_state(struct mpc_identity_registry *registry, struct mpc_state_snapshot 
     error = mixer_verify(registry, entry, &track->mixer);
     if (error)
       return error;
+    struct mpc_plugin_identity instrument;
+    struct mpc_plugin_fence fence;
+    error = mpc_plugin_read(
+      registry->adapter,
+      plugins[i].program,
+      mpc_family_by_type(track->type)->family,
+      &instrument,
+      &fence);
+    if (error)
+      return error;
+    if (
+      memcmp(&fence, &plugins[i], sizeof fence) ||
+      memcmp(&instrument, &track->instrument, sizeof instrument))
+      return MPC_NATIVE_STATE_UNSTABLE;
+    uint32_t current_program;
+    if (
+      !entry || !alive(&entry->lifetime) ||
+      read32(registry, entry->address + NATIVE_PROGRAM_OFFSET, &current_program))
+      return MPC_NATIVE_STATE_UNSTABLE;
+    if (plugins[i].program && current_program != plugins[i].program)
+      return MPC_NATIVE_STATE_UNSTABLE;
+    error = mixer_verify(registry, entry, &track->mixer);
+    if (error)
+      return error;
   }
-  return MPC_NATIVE_OK;
+  error = mpc_identity_capture(registry, &after);
+  return error                         ? error
+    : same_identities(&before, &after) ? MPC_NATIVE_OK
+                                       : MPC_NATIVE_STATE_UNSTABLE;
 }
 
 enum mpc_native_error

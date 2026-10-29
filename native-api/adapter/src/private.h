@@ -152,6 +152,16 @@ bool mpc_mixer_request_valid(unsigned, const struct mpc_mixer_request *, bool);
 
 enum mpc_native_error
 mpc_track_setup_read(struct mpc_native_adapter *, uint32_t, unsigned, struct mpc_track_setup *);
+/* Disposable association fence. No plugin pointer is dereferenced or retained. */
+struct mpc_plugin_fence {
+  uint32_t program, vtable, instance, owner, name, product, format;
+};
+enum mpc_native_error mpc_plugin_read(
+  struct mpc_native_adapter *,
+  uint32_t,
+  unsigned,
+  struct mpc_plugin_identity *,
+  struct mpc_plugin_fence *);
 enum mpc_native_error
 mpc_track_setup_invoke(struct mpc_native_adapter *, uint32_t, unsigned, double, bool *);
 

@@ -369,7 +369,7 @@ class DescribeTests(unittest.TestCase):
                                 or f"{state['tag']} {state['epoch']} key37-mpc3.9.1.2 {PROFILE['buildId']} VERIFIED\n".encode()
                             )
                             client.sendall(payload)
-                        elif data.startswith(b"STATE_V7 "):
+                        elif data.startswith(b"STATE_V8 "):
                             if state.get("stall_state"):
                                 state["state_idle"].clear()
                                 finished.wait(0.3)
@@ -380,13 +380,13 @@ class DescribeTests(unittest.TestCase):
                             if state.get("empty"):
                                 wire[48:80] = bytes(32)
                                 wire[108:128] = bytes(20)
-                                struct.pack_into("<I4xQ", wire, 161600, 2, 0)
+                                struct.pack_into("<I4xQ", wire, 298880, 2, 0)
                             if state.get("bad_instance"):
                                 wire[8] = ord("x")
                             if state.get("bad_count"):
                                 # Track count follows attempts in the fixed snapshot header.
                                 struct.pack_into("<I", wire, 108, 137)
-                            # ABI 7: retained 128-byte prefix and 472-byte track rows.
+                            # ABI 8: retained 128-byte prefix and 992-byte track rows.
                             if state.get("bad_ui_index"):
                                 struct.pack_into("<I", wire, 128 + 16, 1)
                             if state.get("bad_collection"):
@@ -394,7 +394,7 @@ class DescribeTests(unittest.TestCase):
                             if state.get("bad_collection_index"):
                                 struct.pack_into("<I", wire, 128 + 28, 128)
                             if state.get("duplicate_collection_index"):
-                                struct.pack_into("<I", wire, 128 + 472 + 28, 0)
+                                struct.pack_into("<I", wire, 128 + 992 + 28, 0)
                             if state.get("bad_type"):
                                 wire[128 + 32 + 256] = ord("X")
                             if state.get("partial_fields"):
@@ -402,15 +402,21 @@ class DescribeTests(unittest.TestCase):
                             if state.get("bad_field_mask"):
                                 struct.pack_into("<I", wire, 128 + 312, 64)
                             if state.get("bad_mute_scope"):
-                                struct.pack_into("<I", wire, 161600, 99)
+                                struct.pack_into("<I", wire, 298880, 99)
                             if state.get("bad_sequence_generation"):
-                                struct.pack_into("<Q", wire, 161608, 9999)
+                                struct.pack_into("<Q", wire, 298888, 9999)
                             if state.get("missing_active_sequence"):
                                 struct.pack_into("<Q", wire, 72, 0)
-                                struct.pack_into("<I4xQ", wire, 161600, 1, 0)
+                                struct.pack_into("<I4xQ", wire, 298880, 1, 0)
+                            if state.get("bad_plugin_status"):
+                                struct.pack_into("<I", wire, 128 + 472, 99)
+                            if state.get("bad_plugin_utf8"):
+                                wire[128 + 476] = 0x80
+                            if state.get("bad_plugin_available"):
+                                struct.pack_into("<I", wire, 128 + 472, 2)
                             if state.get("bad_abi"):
                                 struct.pack_into("<I", wire, 0, 99)
-                            payload = struct.pack("<III", 7, len(wire), state.get("error", 0))
+                            payload = struct.pack("<III", 8, len(wire), state.get("error", 0))
                             if not state.get("error"):
                                 payload += wire
                             if state.get("truncate"):
@@ -443,7 +449,7 @@ class DescribeTests(unittest.TestCase):
         wire = subprocess.run(
             [str(fixture), "--snapshot-wire"], check=True, capture_output=True
         ).stdout
-        attachment.update(tag="MPC_ADAPTER_STATE_V7", wire=wire)
+        attachment.update(tag="MPC_ADAPTER_STATE_V8", wire=wire)
 
     def test_snapshot_operations_share_fresh_observations_and_handles(self):
         with self.attachment() as attachment:
@@ -519,6 +525,9 @@ class DescribeTests(unittest.TestCase):
                 "MPC_ADAPTER_STATE_V2",
                 "MPC_ADAPTER_STATE_V3",
                 "MPC_ADAPTER_STATE_V4",
+                "MPC_ADAPTER_STATE_V5",
+                "MPC_ADAPTER_STATE_V6",
+                "MPC_ADAPTER_STATE_V7",
                 "MPC_ADAPTER_V1",
             ):
                 attachment["tag"] = tag
@@ -577,6 +586,9 @@ class DescribeTests(unittest.TestCase):
                 "bad_instance",
                 "bad_count",
                 "bad_abi",
+                "bad_plugin_status",
+                "bad_plugin_utf8",
+                "bad_plugin_available",
                 "bad_mute_scope",
                 "bad_sequence_generation",
                 "missing_active_sequence",

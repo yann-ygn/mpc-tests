@@ -166,3 +166,8 @@ manual-change/subsequent-automation semantics. The original no-op-only restricti
 of #51 and Off-only volume qualification of #39 remain historical baselines.
 Implementation qualification and owner-approved installed availability are tracked
 separately; installation of the 0.11.0 package requires an approved restart.
+
+US #55 adds read-only assigned plugin product identity to shared state/watch,
+independent of editable Track names. See [native-plugin-identity.md](native-plugin-identity.md)
+for the source trace, explicit unsupported instance identity, audit/replay rules
+and implementation/device/installed availability.

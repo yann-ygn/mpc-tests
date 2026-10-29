@@ -499,7 +499,8 @@
         "readableFields",
         "capabilities",
         "limits",
-        "flagFamilies"
+        "flagFamilies",
+        "instrumentIdentity"
       ],
       "properties": {
         "apiVersion": {
@@ -910,13 +911,67 @@
               "const": 128
             },
             "snapshotAbiVersion": {
-              "const": 7
+              "const": 8
             },
             "maxJobsPerUiCallback": {
               "enum": [
                 1,
                 null
               ]
+            }
+          }
+        },
+        "instrumentIdentity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "available",
+            "reason",
+            "trackTypes",
+            "formats",
+            "fields",
+            "instanceIdentity",
+            "presets",
+            "parameters",
+            "productIdScope"
+          ],
+          "properties": {
+            "available": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "trackTypes": {
+              "const": [
+                "plugin"
+              ]
+            },
+            "formats": {
+              "const": [
+                "MPC"
+              ]
+            },
+            "fields": {
+              "const": [
+                "displayName",
+                "productId"
+              ]
+            },
+            "instanceIdentity": {
+              "const": false
+            },
+            "presets": {
+              "const": false
+            },
+            "parameters": {
+              "const": false
+            },
+            "productIdScope": {
+              "const": "native_format_catalog"
             }
           }
         }

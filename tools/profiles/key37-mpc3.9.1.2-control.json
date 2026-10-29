@@ -672,6 +672,46 @@
       "name": "trackSetupProgramBinding",
       "rva": 42396616,
       "prefixHex": "f8416de1604090e5f860cde10260a0e1c4219fe5c4319fe510808de514e08de5"
+    },
+    {
+      "name": "pluginIdentityDescriptionFromInstance",
+      "rva": 9099852,
+      "prefixHex": "002095e55020c0f21000c0f20030a0e30410a0e10500a0e1202192e5303084e5"
+    },
+    {
+      "name": "pluginIdentityAssignmentDescription",
+      "rva": 38806404,
+      "prefixHex": "6fbd86e20c109de510b08be20b00a0e16f8e90eb1c109de504008be26c8e90eb"
+    },
+    {
+      "name": "pluginIdentityAssignmentProduct",
+      "rva": 38806484,
+      "prefixHex": "0510a0e118008be25d8e90ebd88bcde1340bddedbd3e84e2ccc0dde5032b84e2"
+    },
+    {
+      "name": "pluginIdentityDescriptionCopy",
+      "rva": 38783724,
+      "prefixHex": "6f4d80e2104084e208608de20050a0e10410a0e10600a0e10c708de2003093e5"
+    },
+    {
+      "name": "pluginIdentityInstanceRead",
+      "rva": 38767612,
+      "prefixHex": "010a80e2680b90e5000050e20100a0131eff2fe1010a80e2980b90e5000050e2"
+    },
+    {
+      "name": "pluginIdentityAssignment",
+      "rva": 38806848,
+      "prefixHex": "5b1900eb38309de588808de23c108de20800a0e180508de584308de5753fa5eb"
+    },
+    {
+      "name": "pluginIdentityInstanceDescriptor",
+      "rva": 36088832,
+      "prefixHex": "f0416de10140a0e10050a0e19a1f80e20400a0e10ce08de508608de54dec9aeb"
+    },
+    {
+      "name": "pluginIdentityElectricDescriptor",
+      "rva": 33589920,
+      "prefixHex": "f0416de10140a0e10050a0e1391e80e20400a0e10ce08de508608de5a574a4eb"
     }
   ],
   "bindings": [
@@ -1070,5 +1110,14 @@
     "asyncSequencer": 64,
     "asyncQueue": 8,
     "asyncPending": 12
+  },
+  "pluginIdentity": {
+    "schemaVersion": 1,
+    "programInstance": 7016,
+    "programOwner": 7020,
+    "descriptionName": 7120,
+    "descriptionFormat": 7128,
+    "descriptionIdentifier": 7144,
+    "supportedFormat": "MPC"
   }
 }

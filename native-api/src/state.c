@@ -90,6 +90,19 @@ static int valid_mixer(const struct mpc_mixer_state *m, int normal) {
   return 1;
 }
 
+static int valid_instrument(const struct mpc_state_track *t, int normal) {
+  const struct mpc_plugin_identity *p = &t->instrument;
+  if (
+    p->status > MPC_PLUGIN_UNSUPPORTED || !valid_text(p->display_name, sizeof p->display_name) ||
+    !valid_text(p->product_id, sizeof p->product_id))
+    return 0;
+  if ((!normal || strcmp(t->type, "plugin")) != (p->status == MPC_PLUGIN_NOT_APPLICABLE))
+    return 0;
+  return p->status == MPC_PLUGIN_AVAILABLE
+    ? p->display_name[0] && !strncmp(p->product_id, "MPC:", 4) && p->product_id[4]
+    : !p->display_name[0] && !p->product_id[0];
+}
+
 int api_valid_snapshot(const struct mpc_state_snapshot *s, const char *instance) {
   if (
     s->abi_version != MPC_STATE_ABI || s->struct_bytes != sizeof *s ||
@@ -128,8 +141,8 @@ int api_valid_snapshot(const struct mpc_state_snapshot *s, const char *instance)
     const struct mpc_state_track *t = normal ? &s->tracks[i] : &s->buses[i - s->track_count];
     if (
       !valid_text(t->name, sizeof t->name) || !valid_text(t->type, sizeof t->type) ||
-      !valid_mixer(&t->mixer, normal) || !mpc_track_setup_valid(&t->setup) ||
-      (!normal && t->setup.known) ||
+      !valid_mixer(&t->mixer, normal) || !valid_instrument(t, normal) ||
+      !mpc_track_setup_valid(&t->setup) || (!normal && t->setup.known) ||
       (t->setup.known & ~mpc_track_setup_fields(mpc_family_by_type(t->type)->family)) ||
       !known_track_type(t->type) || (t->known & ~mpc_family_by_type(t->type)->fields) ||
       !t->type[0] || t->muted > 1 || t->soloed > 1 || t->record_armed > 1 || t->audio_soloed > 1 ||
@@ -266,6 +279,24 @@ void api_track_json(
     fputs("null", f);
   fputs(",\"type\":", f);
   api_quoted(f, strcmp(t->type, "unknown") ? t->type : NULL);
+  static const char *plugin_status[] =
+    {"not_applicable", "unassigned", "available", "unavailable", "unsupported"};
+  static const char *plugin_reason[] = {
+    "NOT_PLUGIN_TRACK",
+    "NO_INSTRUMENT_ASSIGNED",
+    NULL,
+    "PLUGIN_NOT_LOADED",
+    "UNQUALIFIED_PLUGIN_FORMAT"};
+  const struct mpc_plugin_identity *p = &t->instrument;
+  fputs(",\"instrument\":{\"status\":", f);
+  api_quoted(f, plugin_status[p->status]);
+  fputs(",\"reason\":", f);
+  api_quoted(f, plugin_reason[p->status]);
+  fputs(",\"displayName\":", f);
+  api_quoted(f, p->status == MPC_PLUGIN_AVAILABLE ? p->display_name : NULL);
+  fputs(",\"productId\":", f);
+  api_quoted(f, p->status == MPC_PLUGIN_AVAILABLE ? p->product_id : NULL);
+  fputs(",\"instanceId\":null}", f);
   fputs(",\"requested\":{\"muted\":", f);
   nullable_bool(f, t->known & MPC_STATE_MUTE, t->muted);
   fputs(",\"soloed\":", f);

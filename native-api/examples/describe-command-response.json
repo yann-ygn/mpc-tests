@@ -4,7 +4,7 @@
   "instanceId": "run_d8db975d400593d8373c4c4be8b04a46",
   "implementation": {
     "name": "mpc-native-api",
-    "version": "0.15.0"
+    "version": "0.16.0"
   },
   "firmware": {
     "model": "Akai Professional MPC Key 37",
@@ -52,7 +52,9 @@
     "transport.sequenceBpm",
     "transport.masterBpm",
     "transport.masterTempoEnabled",
-    "track.setup"
+    "track.setup",
+    "track.instrument.displayName",
+    "track.instrument.productId"
   ],
   "flagFamilies": [
     {
@@ -1657,7 +1659,25 @@
     "maxMidiTracks": 128,
     "maxAudioTracks": 8,
     "maxBuses": 128,
-    "snapshotAbiVersion": 7,
+    "snapshotAbiVersion": 8,
     "maxJobsPerUiCallback": 1
+  },
+  "instrumentIdentity": {
+    "available": true,
+    "reason": null,
+    "trackTypes": [
+      "plugin"
+    ],
+    "formats": [
+      "MPC"
+    ],
+    "fields": [
+      "displayName",
+      "productId"
+    ],
+    "instanceIdentity": false,
+    "presets": false,
+    "parameters": false,
+    "productIdScope": "native_format_catalog"
   }
 }

@@ -189,3 +189,12 @@ Track setup fields added by US #41 are metadata. They appear in full snapshots
 and retained snapshot replay, at the existing metadata reconciliation interval.
 A fresh public read publishes them immediately. The lightweight 100 ms controls
 sample still covers flags and mixer values; it does not claim setup coverage.
+
+Assigned instrument metadata added by US #55 follows the same full reconciliation
+path. `instrument.displayName` and `instrument.productId` are product metadata,
+with explicit status/nulls and no loaded-instance ID. Controls frames carry the
+last metadata baseline; they do not claim a new plugin scan. Native plugin loading
+can exceed the existing UI-read deadline and end continuity. Clients must discard
+the old model/cursor, request `recovery_snapshot` and subscribe afresh; replay
+never joins across that gap. [Qualification and measured limits](../findings/native-plugin-identity.md)
+cover assignment, replacement, retained reconnect and recovery.

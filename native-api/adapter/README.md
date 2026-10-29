@@ -1,4 +1,4 @@
-# Firmware adapter ABI 2 and UI executor ABI 10
+# Firmware adapter ABI 2 and UI executor ABI 12
 
 Taiga #29. `libmpc_native.so` contains firmware-specific state and property primitives extracted from the temporary
 control lab. It has no constructor, socket, script frontend or public command endpoint. Its optional #30 executor
@@ -42,7 +42,7 @@ user before closing an adapter. The executor owns and closes its own adapter.
 
 ## UI executor (#30)
 
-The [executor header](include/mpc_executor.h) uses ABI 10; older configurations are rejected at open.
+The [executor header](include/mpc_executor.h) uses ABI 12; older configurations are rejected at open.
 The primitive adapter uses ABI 2. Requests support track reads/flags, identity snapshots and sequence-reference
 validation and full live state snapshots. The authoritative mode owns the resolver; the original
 host-resolver mode remains available for trusted experiments. Requests carry no arbitrary callback, native function address or raw target.
@@ -413,3 +413,18 @@ The [setup qualification](../../findings/native-track-setup.md) lists exact
 ranges, families, notifying property signatures and the lifecycle/port/CV
 operations kept unavailable. `tools/mpc_track_setup.py` runs the qualified
 screen matrix through a retained lab with independent batched readback.
+
+## Assigned instrument metadata (US #55)
+
+Snapshot ABI 8 / `STATE_V8` and executor ABI 12 add the owned, pointer-free
+`mpc_state_track.instrument` (`mpc_plugin_identity.h`). Command ABI 9,
+observation ABI 2 and primitive ABI 2 are unchanged. Product metadata is read
+only during full capture and revalidated against Program/instance ownership
+before publication. No instance pointer escapes or participates in public identity.
+
+Display name and `MPC:` product identifier qualify for plugin-family MPC-format
+instruments. Explicit status/nulls cover other families, empty/absent instances
+and unqualified formats. Bounded UTF-8 failures reject the capture. Existing
+Program destruction observers and Track generations fence replacement/reuse;
+a surviving Track retains its reference. See [the ownership trace and device
+qualification](../../findings/native-plugin-identity.md).

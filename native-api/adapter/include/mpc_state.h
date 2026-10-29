@@ -5,10 +5,11 @@
 #include "mpc_native.h"
 #include "mpc_mixer.h"
 #include "mpc_track_setup.h"
+#include "mpc_plugin_identity.h"
 
 /* Pointer-free snapshot, owned by its executor job until release. The private
  * attachment protocol checks this version and size before transferring it. */
-#define MPC_STATE_ABI 7u
+#define MPC_STATE_ABI 8u
 #define MPC_STATE_MAX_BUSES 128u
 #define MPC_STATE_NAME_BYTES 256u
 #define MPC_STATE_ATTEMPTS 3u
@@ -42,6 +43,7 @@ struct mpc_state_track {
   uint32_t muted, soloed, record_armed, audio_soloed, audio_record_armed, silenced;
   struct mpc_mixer_state mixer;
   struct mpc_track_setup setup;
+  struct mpc_plugin_identity instrument;
 };
 
 struct mpc_state_sequence {

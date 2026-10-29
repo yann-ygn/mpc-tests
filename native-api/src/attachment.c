@@ -16,8 +16,8 @@
  * address or target is accepted. PID/UID verification binds it to this MPC. */
 /* Deliberately identical on the host and ARM. Any layout change needs a new
  * transfer version, including changes to padding, capacities or identity rows. */
-_Static_assert(sizeof(struct mpc_state_track) == 472, "snapshot ABI 7 track layout");
-_Static_assert(sizeof(struct mpc_state_snapshot) == 161672, "snapshot ABI 7 transfer layout");
+_Static_assert(sizeof(struct mpc_state_track) == 992, "snapshot ABI 8 track layout");
+_Static_assert(sizeof(struct mpc_state_snapshot) == 298952, "snapshot ABI 8 transfer layout");
 
 static long long monotonic_ms(void) {
   struct timespec time;
@@ -112,13 +112,13 @@ int adapter_probe(const char *root, long pid, char instance_id[37], int *state_r
       build,
       verification,
       &extra) != 5 ||
-    (strcmp(tag, "MPC_ADAPTER_V2") && strcmp(tag, "MPC_ADAPTER_STATE_V7")) ||
+    (strcmp(tag, "MPC_ADAPTER_V2") && strcmp(tag, "MPC_ADAPTER_STATE_V8")) ||
     strcmp(profile, PROFILE_ID) || strcmp(build, PROFILE_BUILD_ID) ||
     strcmp(verification, "VERIFIED") || strlen(epoch) != 36 || strncmp(epoch, "adp_", 4) ||
     strspn(epoch + 4, "0123456789abcdef") != 32)
     goto done;
   strcpy(instance_id, epoch);
-  *state_ready = !strcmp(tag, "MPC_ADAPTER_STATE_V7");
+  *state_ready = !strcmp(tag, "MPC_ADAPTER_STATE_V8");
   valid = 1;
 done:
   close(fd);
@@ -158,7 +158,7 @@ int adapter_state(
     peer.uid != geteuid())
     goto done;
   char request[64];
-  length = snprintf(request, sizeof request, "STATE_V7 %s\n", instance);
+  length = snprintf(request, sizeof request, "STATE_V8 %s\n", instance);
   size_t sent = 0;
   while (sent < (size_t)length) {
     if (ready(fd, POLLOUT, deadline))

@@ -21,6 +21,7 @@ static void baseline(struct mpc_state_snapshot *s) {
   s->tracks[0].identity.id = s->tracks[0].identity.generation = 1;
   s->tracks[0].collection = MPC_STATE_MIDI_TRIGGERED;
   strcpy(s->tracks[0].type, "plugin");
+  s->tracks[0].instrument.status = MPC_PLUGIN_UNASSIGNED;
   s->tracks[0].known = MPC_STATE_REQUESTED;
 }
 
@@ -126,6 +127,7 @@ static void paging_tests(void) {
     s->tracks[i].collection_index = i;
   }
   strcpy(s->tracks[16].type, "audio");
+  s->tracks[16].instrument.status = MPC_PLUGIN_NOT_APPLICABLE;
   s->tracks[16].collection = MPC_STATE_AUDIO;
   s->tracks[16].collection_index = 0;
   assert(api_valid_snapshot(s, instance_id));

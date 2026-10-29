@@ -270,6 +270,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "available",
+        "reason": null,
+        "displayName": "Hype",
+        "productId": "MPC:Hype",
+        "instanceId": null
       }
     },
     {
@@ -456,6 +463,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -642,6 +656,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -810,6 +831,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -991,6 +1019,13 @@
         "midiBankLsb": 0,
         "midiProgramEnabled": false,
         "midiProgram": 0
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -1178,6 +1213,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -1346,6 +1388,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -1534,6 +1583,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     }
   ],
@@ -1700,6 +1756,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -1864,6 +1927,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -2028,6 +2098,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -2192,6 +2269,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     },
     {
@@ -2356,6 +2440,13 @@
         "midiBankLsb": null,
         "midiProgramEnabled": null,
         "midiProgram": null
+      },
+      "instrument": {
+        "status": "not_applicable",
+        "reason": "NOT_PLUGIN_TRACK",
+        "displayName": null,
+        "productId": null,
+        "instanceId": null
       }
     }
   ],

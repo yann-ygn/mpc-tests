@@ -21,6 +21,10 @@ US #33 implements [qualified Unix watch/replay](native-api/WATCH.md) with a shar
 controls producer and retained snapshot cursors. Eight-subscriber device delivery,
 replay and load evidence is in [the qualification report](findings/native-watch.md);
 HTTP and SDKs are separate stories.
+US #55 adds [assigned instrument identity](findings/native-plugin-identity.md) to
+authoritative state and metadata watch: plugin display name and native `MPC:` product
+identifier, independent of the editable Track name. Package 0.16.0 is implemented;
+the installed 0.15.0 host does not expose these fields.
 US #41 adds [stopped track metadata and MIDI bank/program settings](findings/native-track-setup.md),
 with retained desired-state commands and typed setup observations. Native rename, lifecycle,
 port enumeration and CV/gate setters remain unqualified in this initial subset.

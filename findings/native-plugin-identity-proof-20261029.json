@@ -1,0 +1,358 @@
+{
+  "story": 55,
+  "date": "2026-10-29",
+  "packageVersion": "0.16.0",
+  "availability": {
+    "implemented": true,
+    "deviceQualified": true,
+    "installedVersion": "0.15.0",
+    "installedInstrumentMetadata": false
+  },
+  "firmware": {
+    "model": "Akai MPC Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "publicContract": {
+    "trackField": "instrument",
+    "qualifiedFields": [
+      "displayName",
+      "productId"
+    ],
+    "family": "plugin",
+    "format": "MPC",
+    "productIdScope": "native_format_catalog",
+    "instanceIdentity": false,
+    "presets": false,
+    "parameters": false,
+    "statuses": [
+      "available",
+      "not_applicable",
+      "unassigned",
+      "unavailable",
+      "unsupported"
+    ]
+  },
+  "abis": {
+    "primitive": 2,
+    "executor": 12,
+    "commands": 9,
+    "observation": 2,
+    "snapshot": 8,
+    "trackBytes": 992,
+    "snapshotBytes": 298952,
+    "privateTransfer": "STATE_V8"
+  },
+  "nativeSource": {
+    "programName": "0x1bd0",
+    "programFormat": "0x1bd8",
+    "programProduct": "0x1be8",
+    "programInstance": "0x1b68",
+    "programOwner": "0x1b6c",
+    "instanceDescriptionDispatch": "0x8ada64",
+    "independentDescriptorGetters": [
+      "0x226ac00",
+      "0x2008aa0"
+    ],
+    "readsInvokeSetters": false,
+    "borrowsNativePointersOutsideCapture": false
+  },
+  "device": {
+    "originalUserTracks": 4,
+    "temporaryUserTracks": 1,
+    "families": {
+      "plugin": 2,
+      "drum": 2
+    },
+    "selectedAndUnselected": true,
+    "editableTrackNamesDifferFromProducts": true,
+    "sameProductSeparateInstances": true,
+    "verifiedProducts": [
+      {
+        "displayName": "Hype",
+        "productId": "MPC:Hype"
+      },
+      {
+        "displayName": "Electric",
+        "productId": "MPC:Electric"
+      }
+    ],
+    "independentInstanceAndProgramDescriptorsMatch": true,
+    "actualInstrumentUIAgrees": true,
+    "allSixReadProjectionsPass": true,
+    "assignmentReplacementConfinedToTemporaryTrack": true
+  },
+  "watch": {
+    "subscribers": 8,
+    "metadataAuditMs": 5000,
+    "normalAssignment": {
+      "label": "electric-qualified",
+      "productId": "MPC:Electric",
+      "assignmentEvents": [
+        {
+          "type": "snapshot",
+          "reason": null,
+          "ms": 4422.822208
+        },
+        {
+          "type": "snapshot",
+          "reason": null,
+          "ms": 4473.239236
+        },
+        {
+          "type": "snapshot",
+          "reason": null,
+          "ms": 4478.564003
+        },
+        {
+          "type": "snapshot",
+          "reason": null,
+          "ms": 4606.674699
+        },
+        {
+          "type": "snapshot",
+          "reason": null,
+          "ms": 4536.96543
+        },
+        {
+          "type": "snapshot",
+          "reason": null,
+          "ms": 4570.872653
+        },
+        {
+          "type": "snapshot",
+          "reason": null,
+          "ms": 4663.651409
+        },
+        {
+          "type": "snapshot",
+          "reason": null,
+          "ms": 4648.720523
+        }
+      ],
+      "timingBoundary": "before UI assignment tap request to complete watch frame received over SSH Unix forwarding; includes native load",
+      "oldCursorOutcome": "matched",
+      "freshEightModelsAgree": true,
+      "trackReferencesPreserved": true,
+      "freshRetainedReconnect": true,
+      "schemasPassed": 29,
+      "errors": []
+    },
+    "boundedLoadRecovery": {
+      "label": "hype-qualified",
+      "productId": "MPC:Hype",
+      "assignmentEvents": [
+        {
+          "type": "resync_required",
+          "reason": "CONTINUITY_LOST",
+          "ms": 385.009791
+        },
+        {
+          "type": "resync_required",
+          "reason": "CONTINUITY_LOST",
+          "ms": 385.890302
+        },
+        {
+          "type": "resync_required",
+          "reason": "CONTINUITY_LOST",
+          "ms": 390.271856
+        },
+        {
+          "type": "resync_required",
+          "reason": "CONTINUITY_LOST",
+          "ms": 386.53581
+        },
+        {
+          "type": "resync_required",
+          "reason": "CONTINUITY_LOST",
+          "ms": 388.809638
+        },
+        {
+          "type": "resync_required",
+          "reason": "CONTINUITY_LOST",
+          "ms": 388.11563
+        },
+        {
+          "type": "resync_required",
+          "reason": "CONTINUITY_LOST",
+          "ms": 387.184718
+        },
+        {
+          "type": "resync_required",
+          "reason": "CONTINUITY_LOST",
+          "ms": 389.543947
+        }
+      ],
+      "timingBoundary": "before UI assignment tap request to complete watch frame received over SSH Unix forwarding; includes native load",
+      "oldCursorOutcome": "resync_required",
+      "freshEightModelsAgree": true,
+      "trackReferencesPreserved": true,
+      "freshRetainedReconnect": true,
+      "schemasPassed": 29,
+      "errors": []
+    },
+    "deletionOutcome": "resync_required",
+    "fastSamplesReadPluginIdentity": false,
+    "timingLimit": "workstation UI assignment request to complete SSH-forwarded watch frame; includes load; finite workload"
+  },
+  "performance": {
+    "fiveTracks": {
+      "readCount": 40,
+      "nativeCaptureMs": {
+        "count": 40,
+        "p50": 12.153,
+        "p95": 14.574,
+        "p99": 15.567,
+        "max": 15.567
+      },
+      "sshForwardRoundTripMs": {
+        "count": 40,
+        "p50": 63.54049197398126,
+        "p95": 75.57834207545966,
+        "p99": 77.39746395964175,
+        "max": 77.39746395964175
+      },
+      "trackCount": 5
+    },
+    "fourTracks": {
+      "readCount": 40,
+      "nativeCaptureMs": {
+        "count": 40,
+        "p50": 11.765,
+        "p95": 12.928,
+        "p99": 13.217,
+        "max": 13.217
+      },
+      "sshForwardRoundTripMs": {
+        "count": 40,
+        "p50": 61.41666602343321,
+        "p95": 69.99667291529477,
+        "p99": 75.18833689391613,
+        "max": 75.18833689391613
+      },
+      "trackCount": 4
+    },
+    "sharedProducer": {
+      "fullMetadata": {
+        "callbackMs": {
+          "count": 189,
+          "p50": 12.343,
+          "p95": 15.579,
+          "p99": 23.133,
+          "max": 27.881
+        },
+        "nativeMs": {
+          "count": 189,
+          "p50": 12.332397,
+          "p95": 15.566641,
+          "p99": 23.120027,
+          "max": 27.866471
+        }
+      },
+      "controls": {
+        "callbackMs": {
+          "count": 2426,
+          "p50": 2.335,
+          "p95": 3.861,
+          "p99": 5.074,
+          "max": 10.951
+        },
+        "nativeMs": {
+          "count": 2426,
+          "p50": 2.32382,
+          "p95": 3.844153,
+          "p99": 5.058263,
+          "max": 10.932963
+        }
+      }
+    },
+    "boundedCaptureFailures": [
+      {
+        "kind": "controls",
+        "nativeError": "OUTCOME_UNKNOWN"
+      },
+      {
+        "kind": "controls",
+        "nativeError": "CANCELLED"
+      },
+      {
+        "kind": "controls",
+        "nativeError": "CANCELLED"
+      }
+    ],
+    "limits": "completed callback distribution excludes callbacks without a completed result; no marginal per-plugin or maximum-density claim"
+  },
+  "tests": {
+    "hostMesonEntries": 25,
+    "asanUbsanNativeEntries": 20,
+    "isolatedArmFixtures": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 327
+      },
+      {
+        "fixture": "mixer_fixture",
+        "passed": true,
+        "outputLines": 78
+      },
+      {
+        "fixture": "watch_fixture",
+        "passed": true,
+        "outputLines": 1
+      }
+    ],
+    "strictSchemasAndMalformedWire": true,
+    "conversionAndReloadAddressReuse": true,
+    "invalidStringsAndReplacementDuringCapture": true
+  },
+  "restoration": {
+    "originalFlagsMixersSetupInventorySelectionSequenceRestored": true,
+    "independentDescriptorsMatch": true,
+    "temporaryTrackRemoved": true,
+    "mainScreenRestored": true,
+    "zeroPlayhead": true,
+    "sameMpcProcess": true,
+    "projectSaveOrLoad": false,
+    "mpcRestart": false,
+    "addinInstall": false,
+    "temporaryLab": {
+      "pidUnchanged": true,
+      "labUnloaded": true,
+      "deviceBundleRemoved": true
+    },
+    "installedHostResumedReady": true,
+    "installedSixReadsAndVersionMatchedSchemasPass": true
+  },
+  "artifacts": {
+    "builddir/arm/native-api/mpc-api": "02d57fb472b05890ed1d4b71c4ddafa99b9ef4834919d61108ca524070e75d20",
+    "builddir/arm/native-api/libmpc_native.so": "10be1d090ce5f62eacc9eaafc6c1688173ec9492269d34e12105b4123e8a6525",
+    "builddir/arm/native-api/mpc_native_host.so": "f504f3377fb9231bcf7bf714b6bdf5f4a57b554e0fa4098e9d467f864f7ff74b",
+    "tools/profiles/key37-mpc3.9.1.2-control.json": "37cb252ce8a8a750ead993df6344e2e19ba12727a4cacfff03d350dac74d622d"
+  }
+}

@@ -1,4 +1,6 @@
 #include "identity_fixture_backend.h"
+#include "mpc_mixer_profile.h"
+#include "mpc_family_profile.h"
 
 static struct mpc_state_snapshot *state_read(
   struct identity_fixture *fixture, struct mpc_executor *executor, enum mpc_native_error expected) {
@@ -92,6 +94,127 @@ static void state_tests(void) {
   assert(!pthread_mutex_destroy(&fixture.mutex));
 }
 
+/* Production full captures must fence assignment while controls remain cheap. */
+static unsigned plugin_reads, plugin_mutation;
+static void plugin_during_read(struct identity_fixture *f, uintptr_t address) {
+  if (address != PROGRAM + PLUGIN_programInstance)
+    return;
+  plugin_reads++;
+  if (plugin_mutation && plugin_reads % 2 == 0) {
+    bool hype = !strcmp((char *)f->native.objects + 0x90000, "Hype");
+    plugin_assignment(
+      &f->native,
+      PROGRAM,
+      hype ? "TubeSynth" : "Hype",
+      hype ? "MPC:TubeSynth" : "MPC:Hype");
+    if (plugin_mutation == 1)
+      plugin_mutation = 0;
+  }
+}
+
+static void plugin_tests(void) {
+  struct identity_fixture f;
+  state_init(&f);
+  struct fixture *n = &f.native;
+  plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
+  struct mpc_executor *e = open_executor(&f);
+  struct mpc_state_snapshot *s = state_read(&f, e, MPC_NATIVE_OK);
+  uint64_t track = s->tracks[0].identity.id, generation = s->tracks[0].identity.generation;
+  assert(s->selected_track == track);
+  for (unsigned i = 0; i < 2; i++) {
+    assert(strcmp(s->tracks[i].name, "Hype"));
+    assert(s->tracks[i].instrument.status == MPC_PLUGIN_AVAILABLE);
+    assert(!strcmp(s->tracks[i].instrument.display_name, "Hype"));
+    assert(!strcmp(s->tracks[i].instrument.product_id, "MPC:Hype"));
+  }
+  free(s);
+  /* Distinct Programs can carry the same product, and then different products. */
+  uint32_t other = OBJECTS + 0x50000;
+  memcpy(n->objects + other - OBJECTS, n->objects + PROGRAM - OBJECTS, 0x2000);
+  put32(n, TRACK2 + NATIVE_PROGRAM_OFFSET, other);
+  plugin_assignment(n, other, "Hype", "MPC:Hype");
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(!strcmp(s->tracks[1].instrument.product_id, s->tracks[0].instrument.product_id));
+  free(s);
+  plugin_assignment(n, other, "TubeSynth", "MPC:TubeSynth");
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(!strcmp(s->tracks[1].instrument.display_name, "TubeSynth"));
+  assert(s->tracks[0].identity.id == track && s->tracks[0].identity.generation == generation);
+  free(s);
+  put32(n, PROGRAM + PLUGIN_programInstance, 0);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(s->tracks[0].instrument.status == MPC_PLUGIN_UNAVAILABLE);
+  assert(!s->tracks[0].instrument.display_name[0]);
+  free(s);
+  plugin_assignment(n, PROGRAM, "", "");
+  put32(n, PROGRAM + PLUGIN_programInstance, 0);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(s->tracks[0].instrument.status == MPC_PLUGIN_UNASSIGNED);
+  free(s);
+  plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
+  strcpy((char *)n->objects + 0x90200, "VST");
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(s->tracks[0].instrument.status == MPC_PLUGIN_UNSUPPORTED);
+  free(s);
+  plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
+  const unsigned char invalid[][5] =
+    {{0xc0, 0xaf, 0}, {0xed, 0xa0, 0x80, 0}, {0xf4, 0x90, 0x80, 0x80, 0}, {0xe2, 0}, {0x80, 0}};
+  for (unsigned i = 0; i < sizeof invalid / sizeof *invalid; i++) {
+    memcpy(n->objects + 0x90000, invalid[i], sizeof invalid[i]);
+    assert(!state_read(&f, e, MPC_NATIVE_READ_FAILED));
+  }
+  memset(n->objects + 0x90000, 'a', MPC_PLUGIN_TEXT_BYTES);
+  assert(!state_read(&f, e, MPC_NATIVE_READ_FAILED));
+  plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
+  put32(n, PROGRAM + PLUGIN_descriptionIdentifier, UINT32_MAX - 5);
+  assert(!state_read(&f, e, MPC_NATIVE_READ_FAILED));
+  plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
+  f.before_read = plugin_during_read;
+  plugin_reads = 0;
+  plugin_mutation = 1;
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(s->attempts == 2);
+  assert(!strcmp(s->tracks[0].instrument.display_name, "TubeSynth"));
+  free(s);
+  plugin_reads = 0;
+  plugin_mutation = 2;
+  assert(!state_read(&f, e, MPC_NATIVE_STATE_UNSTABLE));
+  plugin_mutation = 0;
+  /* Reusing the Program address cannot retain cached product metadata. */
+  ui = true;
+  destroy_object(&f, PROGRAM + MIXER_VOLUME_PROPERTY - 4);
+  ui = false;
+  plugin_assignment(n, PROGRAM, "Hype", "MPC:Hype");
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(
+    s->tracks[0].identity.id == track && !strcmp(s->tracks[0].instrument.display_name, "Hype"));
+  free(s);
+  put32(n, PROGRAM, IMAGE + mpc_family_by_type("drum")->vtable);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(s->tracks[0].identity.id == track);
+  assert(s->tracks[0].instrument.status == MPC_PLUGIN_NOT_APPLICABLE);
+  assert(!s->tracks[0].instrument.product_id[0]);
+  free(s);
+  put32(n, PROGRAM, IMAGE + NATIVE_PLUGIN_VTABLE);
+  plugin_reads = 0;
+  struct mpc_executor_request request = {
+    .operation = MPC_EXECUTOR_SAMPLE_FLAGS,
+    .sample_count = 16};
+  struct mpc_executor_job *job;
+  assert(!mpc_executor_submit(e, &request, &job));
+  finish(&f, job, MPC_NATIVE_OK);
+  assert(!plugin_reads);
+  f.before_read = NULL;
+  select_project(&f, PROJECT2);
+  s = state_read(&f, e, MPC_NATIVE_OK);
+  assert(s->tracks[0].identity.id != track);
+  free(s);
+  close_executor(&f, e);
+  assert(!n->setters && !n->filters);
+  pthread_cond_destroy(&f.changed);
+  pthread_mutex_destroy(&f.mutex);
+}
+
 int main(int argc, char **argv) {
   /* Exercise production callback classification, independent of the fixture's
    * own generic lifecycle event injector. BPM is metadata; reset signals stay
@@ -118,6 +241,7 @@ int main(int argc, char **argv) {
     return 0;
   }
   state_tests();
+  plugin_tests();
   (void)validate_target; /* This fixture uses the production identity resolver. */
   struct identity_fixture fixture;
   init(&fixture);

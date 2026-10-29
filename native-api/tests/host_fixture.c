@@ -322,6 +322,7 @@ int main(int argc, char **argv) {
   snprintf(gate, sizeof gate, "%s/gate", installation);
   snprintf(pause_ui, sizeof pause_ui, "%s/pause-ui", installation);
   state_init(&fixture);
+  plugin_assignment(&fixture.native, PROGRAM, "Hype", "MPC:Hype");
   navigation_enabled =
     !strcmp(argv[4], "navigation-commands") || !strcmp(argv[4], "setup-commands");
   native_policy =
@@ -381,6 +382,14 @@ int main(int argc, char **argv) {
     bool queued = fixture.queued;
     pthread_mutex_unlock(&fixture.mutex);
     if (queued && (stopping || access(pause_ui, F_OK))) {
+      if (marker("plugin-replace"))
+        plugin_assignment(&fixture.native, PROGRAM, "TubeSynth", "MPC:TubeSynth");
+      if (marker("plugin-unload"))
+        put32(&fixture.native, PROGRAM + PLUGIN_programInstance, 0);
+      if (marker("plugin-unassigned")) {
+        plugin_assignment(&fixture.native, PROGRAM, "", "");
+        put32(&fixture.native, PROGRAM + PLUGIN_programInstance, 0);
+      }
       if (marker("watch-replace"))
         select_project(&fixture, PROJECT2);
       if (marker("watch-rename"))

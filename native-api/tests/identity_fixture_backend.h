@@ -375,4 +375,17 @@ static inline void state_init(struct identity_fixture *fixture) {
   memcpy(f->objects + PROJECT2 - OBJECTS, f->objects, 0x1000);
 }
 
+static inline void
+plugin_assignment(struct fixture *f, uint32_t program, const char *name, const char *product) {
+  uint32_t storage = OBJECTS + 0x90000 + (program == PROGRAM ? 0 : 0x1000);
+  put32(f, program + PLUGIN_programInstance, storage + 0x400);
+  put32(f, program + PLUGIN_programOwner, storage + 0x500);
+  put32(f, program + PLUGIN_descriptionName, storage);
+  put32(f, program + PLUGIN_descriptionIdentifier, storage + 256);
+  put32(f, program + PLUGIN_descriptionFormat, storage + 512);
+  strcpy((char *)f->objects + storage - OBJECTS, name);
+  strcpy((char *)f->objects + storage + 256 - OBJECTS, product);
+  strcpy((char *)f->objects + storage + 512 - OBJECTS, "MPC");
+}
+
 #endif

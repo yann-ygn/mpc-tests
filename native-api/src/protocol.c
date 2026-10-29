@@ -246,8 +246,17 @@ char *api_respond(
         "bpm\",\"muteContext\",\"sequence.ref\",\"selection\",\"buses.metadata\",\"track.mixer\","
         "\"transport.playing\",\"transport.recording\",\"transport.recordMode\",\"transport."
         "pulse\",\"transport.sequenceBpm\",\"transport.masterBpm\",\"transport."
-        "masterTempoEnabled\"]"
+        "masterTempoEnabled\",\"track.instrument.displayName\",\"track.instrument.productId\"]"
       : "[]",
+    output);
+  fputs(",\"instrumentIdentity\":{\"available\":", output);
+  fputs(discovery.state_ready ? "true" : "false", output);
+  fputs(",\"reason\":", output);
+  api_quoted(output, discovery.state_ready ? NULL : discovery.unavailable_reason);
+  fputs(
+    ",\"trackTypes\":[\"plugin\"],\"formats\":[\"MPC\"],"
+    "\"fields\":[\"displayName\",\"productId\"],\"instanceIdentity\":false,"
+    "\"presets\":false,\"parameters\":false,\"productIdScope\":\"native_format_catalog\"}",
     output);
   fputs(",\"flagFamilies\":[", output);
   if (!strcmp(discovery.profile, "matched"))

@@ -499,3 +499,14 @@ output and audible processing effects remain unqualified. Shared strict schemas
 and typed C entries define this subset; SDK implementations remain separate.
 C clients must rebuild for command 9, executor 11 and snapshot 7 / STATE_V7.
 Primitive and lightweight observation ABIs remain 2.
+
+
+US #55 adds required `instrument` metadata on track/bus rows in all authoritative
+track projections and watch. `displayName` and native MPC-format `productId`
+describe the assigned product; `instanceId` stays null. Status/reason distinguish
+non-plugin, unassigned, unavailable and unsupported states. A failed qualified
+read fails the capture. [Product scope, ownership and reconciliation](native-plugin-identity.md)
+define this additive API 0.1 extension. Metadata follows the five-second shared
+audit, with conservative resync if native loading exceeds a bounded UI read.
+C callers rebuild for executor 12 and snapshot 8 / STATE_V8; commands remain 9,
+primitive and observation remain 2.

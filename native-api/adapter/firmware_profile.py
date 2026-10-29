@@ -526,6 +526,31 @@ def validate(state, control):
         <= names
     ):
         raise ValueError("Missing Automation Read route fingerprints")
+    plugin = control.get("pluginIdentity", {})
+    if plugin != {
+        "schemaVersion": 1,
+        "programInstance": 0x1B68,
+        "programOwner": 0x1B6C,
+        "descriptionName": 0x1BD0,
+        "descriptionFormat": 0x1BD8,
+        "descriptionIdentifier": 0x1BE8,
+        "supportedFormat": "MPC",
+    }:
+        raise ValueError("Unqualified instrument identity layout")
+    plugin_functions = {
+        "pluginIdentityDescriptionFromInstance": 0x8ADA4C,
+        "pluginIdentityAssignmentDescription": 0x2502384,
+        "pluginIdentityAssignmentProduct": 0x25023D4,
+        "pluginIdentityDescriptionCopy": 0x24FCAEC,
+        "pluginIdentityInstanceRead": 0x24F8BFC,
+        "pluginIdentityAssignment": 0x2502540,
+        "pluginIdentityInstanceDescriptor": 0x226AC00,
+    }
+    if any(
+        not any(f["name"] == name and f["rva"] == rva for f in control["functions"])
+        for name, rva in plugin_functions.items()
+    ):
+        raise ValueError("Missing instrument identity fingerprints")
     return state, control
 
 
@@ -626,6 +651,9 @@ def generate(out, state_path=STATE, control_path=CONTROL):
         fields[label] = state["identity"][key]
     for key, value in fields.items():
         lines.append(f"#define NATIVE_{key} {value}u")
+    for key, value in control["pluginIdentity"].items():
+        if type(value) is int:
+            lines.append(f"#define PLUGIN_{key} {value}u")
     lines.append("static const struct native_command_context_layout native_command_context={")
     lines.extend(f"  .{key}={value}u," for key, value in control["commandContext"].items())
     lines.append("};")

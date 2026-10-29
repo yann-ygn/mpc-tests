@@ -6,6 +6,9 @@ addin. It supports MPC Key 37, MPC 3.9.1.2, exact GNU build ID
 Mute also requires a matching explicit global/active-sequence scope (US #48). Consult `describe` for command availability and limits, and the
 [service guide](README.md#send-flag-commands) for request and receipt semantics.
 
+Version 0.16.0 adds [read-only assigned instrument identity](../findings/native-plugin-identity.md).
+It is built locally and is not installed. The installed host remains 0.15.0.
+
 Version 0.15.0 adds [track metadata and MIDI setup commands](../findings/native-track-setup.md),
 following the 0.14.0 transport/navigation extension. The owner-requested installation
 and MPC restart completed on 2026-10-29 with explicit permission to discard the

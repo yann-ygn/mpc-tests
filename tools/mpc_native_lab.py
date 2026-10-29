@@ -117,7 +117,7 @@ def experiment(args):
         )
         if (
             len(status) != 5
-            or status[0] not in ("MPC_ADAPTER_V2", "MPC_ADAPTER_STATE_V7")
+            or status[0] not in ("MPC_ADAPTER_V2", "MPC_ADAPTER_STATE_V8")
             or status[3] != state_profile["buildId"]
             or status[4] != "VERIFIED"
         ):
