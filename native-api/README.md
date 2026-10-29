@@ -437,3 +437,21 @@ Rebuild C callers for executor ABI 12 and snapshot ABI 8 / `STATE_V8`.
 Primitive 2, commands 9 and observations 2 retain their layouts. The track row is
 992 bytes and the transfer is 298,952 bytes. Package 0.16.0 is built locally;
 installed 0.15.0 has no assigned instrument metadata.
+
+## Program parameter metadata research (US #45)
+
+The [metadata catalog](parameters/key37-3.9.1.2.json), [schema v1](schema/parameter-metadata.schema.json)
+and [native paths/device evidence](../findings/native-program-parameters.md) separate
+six qualified drum-pad controls from enum-only, unused and unsupported-family
+identifiers. The fixed-allowlist lab verifies cutoff, amp attack, LFO rate and
+layer level/pan/tuning through native setters and independent field readback.
+
+`describe.capabilities.set_parameter` stays unavailable (`NOT_QUALIFIED` on a
+ready command host). No generic parameter request, retained handler, state/watch
+field or public C ABI is introduced. Plugin/insert parameter paths, other pads,
+replacement during queued work, automation, playback, Undo and display-unit
+conversions require further qualification. The installed host is unchanged.
+
+Validate metadata with `uv run --no-sync python tools/mpc_program_parameters.py validate`.
+The ARM build additionally produces `tools/program_parameter_lab.so`, an
+experimental zero-export library loaded only by the private qualification runner.

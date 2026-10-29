@@ -415,3 +415,26 @@ before running experiments.
   are restored; temporary Track and lab removed. Installed 0.15.0 resumes ready;
   0.16.0 is not installed. No project save/load or MPC restart. See
   `findings/native-plugin-identity.md` and its sanitized proof.
+
+- US #45, branch `us-45-program-parameters`: versioned parameter metadata schema
+  1.0/catalog 1.0.0 maps Program → Instrument → SynthSection/layer paths and
+  classifies static/unused/unsupported IDs separately from six verified drum-pad
+  controls: cutoff, amp attack, LFO rate, layer level/pan/semitone tuning. A
+  zero-export fixed-allowlist lab reuses firmware, UI dispatch, destruction-aware
+  identities, Off-only policy and native queued setters; no public parameter
+  command or ABI/layout change is added. Discovery keeps set_parameter unavailable.
+  Device evidence includes 35 complete value/readback/no-op/conflict cases, twelve
+  Read/Write rejections, malformed/unknown-ID/stale-generation and plugin-family
+  rejection. Five controls qualified on a disposable empty drum; LFO also passes
+  on the unselected loaded kit. The tuning getter's fused binary32 -36 endpoint
+  yields -3.7252903e-9; the lab now canonicalizes only that parameter's small
+  endpoint overshoot. The first guarded run stopped there without an unsafe
+  native call; native UI restored zero before corrected endpoint qualification.
+  27 host entries, 22 native-api ASan/UBSan entries and the isolated ARM endpoint
+  fixture pass; ARM ELF/export/glibc guards pass. Caller Undo context is unnecessary
+  for the tested path, but user undo/redo, other pads/families, queued replacement,
+  automation/playback, plugin/insert parameters and display units remain unqualified.
+  Original values on both drum Programs, flags/buses, selection, sequence, zero
+  playhead, Automation Read and Main are restored. Labs and temporary files are
+  removed; installed 0.15.0 resumes ready. No project save/load, addin installation
+  or MPC restart. See findings/native-program-parameters.md and its sanitized proof.

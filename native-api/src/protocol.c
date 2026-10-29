@@ -463,7 +463,8 @@ char *api_respond(
     "set_midi_output_port",
     "set_midi_input_channel",
     "set_cv_port",
-    "set_gate_port"};
+    "set_gate_port",
+    "set_parameter"};
   for (unsigned i = 0; i < sizeof setup_unavailable / sizeof *setup_unavailable; i++) {
     fputc(',', output);
     api_quoted(output, setup_unavailable[i]);

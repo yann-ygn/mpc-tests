@@ -96,10 +96,16 @@ The inspected code additionally names parameter identifiers for:
 - Keygroup voice mode, portamento, unison, harmonizer and pitch-bend ranges.
 - Modulation-matrix links and CV-program modulation/step/envelope parameters.
 
-**These are parameter-name/enum leads only.** They are deliberately excluded from the confirmed command list. A
+**The original inventory contains parameter-name/enum leads only.** They are deliberately excluded from the confirmed command list. A
 generic parameter getter/setter, its owning object, parameter indexing and valid ranges must still be traced. Some
 identifiers are explicitly marked unused or belong to another model/mode. Arbitrary plugin-specific parameters and
 insert-effect parameters have not been established by this inventory.
+
+US #45 subsequently traced the generic Program/Instrument/SynthSection paths and
+verified six drum-pad parameters in a private native lab. Its [versioned metadata,
+classification and evidence](native-program-parameters.md) supersede the original
+unverified status only for that explicit subset. Public `set_parameter`, plugin
+parameters and insert parameters remain unavailable.
 
 ## Evidence and small correction
 

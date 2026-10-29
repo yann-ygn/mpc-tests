@@ -25,6 +25,9 @@ US #55 adds [assigned instrument identity](findings/native-plugin-identity.md) t
 authoritative state and metadata watch: plugin display name and native `MPC:` product
 identifier, independent of the editable Track name. Package 0.16.0 is implemented;
 the installed 0.15.0 host does not expose these fields.
+US #45 publishes [versioned Program/Instrument parameter metadata](findings/native-program-parameters.md)
+and a private lab for six qualified drum-pad controls. Generic public parameter
+writes remain unavailable; plugin and insert parameters need separate qualification.
 US #41 adds [stopped track metadata and MIDI bank/program settings](findings/native-track-setup.md),
 with retained desired-state commands and typed setup observations. Native rename, lifecycle,
 port enumeration and CV/gate setters remain unqualified in this initial subset.

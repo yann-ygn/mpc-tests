@@ -1,0 +1,203 @@
+{
+  "story": 45,
+  "date": "2026-10-29",
+  "metadataSchemaVersion": "1.0",
+  "metadataVersion": "1.0.0",
+  "firmware": {
+    "model": "Akai Professional MPC Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "scope": {
+    "family": "drum",
+    "padIndex": 0,
+    "layerIndex": 0,
+    "parameterCount": 6,
+    "normalizedMinimum": 0,
+    "normalizedMaximum": 1,
+    "playing": false,
+    "recordMode": 0,
+    "automationDuringWrites": "Off",
+    "screen": "Main",
+    "completion": "native model plus independent memory readback; no audibility claim"
+  },
+  "publicSetParameterAvailable": false,
+  "publicReadWriteEnabled": false,
+  "nativeLandmarksVerified": 16,
+  "controls": [
+    {
+      "key": "kRTCutoff",
+      "nativeId": 514,
+      "normalizedValues": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "completeValueCases": 5,
+      "nativeReadbackAgreed": true,
+      "independentReadbackAgreed": true,
+      "noopsSkippedNativeSetter": true,
+      "expectedConflictsRejectedBeforeSetter": true
+    },
+    {
+      "key": "kRTEnvAttack",
+      "nativeId": 519,
+      "normalizedValues": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "completeValueCases": 5,
+      "nativeReadbackAgreed": true,
+      "independentReadbackAgreed": true,
+      "noopsSkippedNativeSetter": true,
+      "expectedConflictsRejectedBeforeSetter": true
+    },
+    {
+      "key": "kLfoRate",
+      "nativeId": 1089,
+      "normalizedValues": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "completeValueCases": 10,
+      "nativeReadbackAgreed": true,
+      "independentReadbackAgreed": true,
+      "noopsSkippedNativeSetter": true,
+      "expectedConflictsRejectedBeforeSetter": true
+    },
+    {
+      "key": "kLayer1Level",
+      "nativeId": 1039,
+      "normalizedValues": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "completeValueCases": 5,
+      "nativeReadbackAgreed": true,
+      "independentReadbackAgreed": true,
+      "noopsSkippedNativeSetter": true,
+      "expectedConflictsRejectedBeforeSetter": true
+    },
+    {
+      "key": "kLayer1SamplePan",
+      "nativeId": 1040,
+      "normalizedValues": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "completeValueCases": 5,
+      "nativeReadbackAgreed": true,
+      "independentReadbackAgreed": true,
+      "noopsSkippedNativeSetter": true,
+      "expectedConflictsRejectedBeforeSetter": true
+    },
+    {
+      "key": "kLayer1SemiTune",
+      "nativeId": 1043,
+      "normalizedValues": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "completeValueCases": 5,
+      "nativeReadbackAgreed": true,
+      "independentReadbackAgreed": true,
+      "noopsSkippedNativeSetter": true,
+      "expectedConflictsRejectedBeforeSetter": true
+    }
+  ],
+  "deviceChecks": {
+    "completeValueCases": 35,
+    "completeNativeSetterCases": 34,
+    "noops": 35,
+    "expectedConflicts": 35,
+    "invalidRequestsRejected": 18,
+    "staleGenerationsRejected": 2,
+    "pluginFamilyRejected": 1,
+    "automationReadWriteRejections": 12,
+    "allRejectionsBeforeNativeInvocation": true,
+    "uiThreadOnly": true,
+    "loadedKitUnselectedLfoCases": 5,
+    "loaderChildSelfTestsPassed": true
+  },
+  "endpointCorrection": {
+    "initialGuardRejectedTuningMinus36": true,
+    "fiveCompletedControlsRetainedFromInitialRun": true,
+    "initialIncompleteTuningRowExcluded": true,
+    "exactNativeTuningRestoredThroughUiBeforeRetest": true,
+    "getterFormula": "fused binary32(-36 * binary32(1/72) + 0.5)",
+    "formulaEndpoint": -3.725290298461914e-09,
+    "canonicalization": "Only integer tuning: clamp overshoot within one binary32 epsilon; request bounds remain 0..1",
+    "correctedTuningCases": 5,
+    "hostAndIsolatedArmRegressionPassed": true
+  },
+  "restoration": {
+    "pidUnchanged": true,
+    "initialFlagsSelectionSequenceBusesRestored": true,
+    "initialNativeContextRestored": true,
+    "parametersRestored": true,
+    "labMappingsRemoved": true,
+    "temporaryBundlesRemoved": true,
+    "installedHostReady": true,
+    "installedVersion": "0.15.0"
+  },
+  "originalNativeContext": {
+    "mode": 8320,
+    "popup": 12416,
+    "playing": 0,
+    "recordMode": 0,
+    "playbackMode": 0,
+    "perSequenceMute": 1,
+    "recordArmMode": 1,
+    "soloMode": 0
+  },
+  "originalAutomationReadRestored": true,
+  "checks": {
+    "hostMesonEntriesPassed": 27,
+    "nativeApiAsanUbsanEntriesPassed": 22,
+    "finalFocusedEntriesPassed": 2,
+    "isolatedArmEndpointFixturePassed": true,
+    "armElfExportGlibcGuardsPassed": true,
+    "sanitizerScope": "Host shared native API and endpoint fixture; the ARM lab is device-tested, not sanitizer-instrumented in MPC."
+  },
+  "projectSaved": false,
+  "projectLoaded": false,
+  "mpcRestarted": false,
+  "addinInstalled": false,
+  "limitations": [
+    "Only drum pad zero and layer zero qualify in the private lab.",
+    "Expected checks occur before native enqueue; final native dispatch atomicity and replacement fences remain unqualified.",
+    "Playing, automation Read/Write writes, other pads/layers, keygroups and other families are unqualified.",
+    "Plugin and insert parameter paths are static findings only; no arbitrary access is exposed.",
+    "Hz/ms/dB/tempo-sync display conversions and audible completion are unqualified.",
+    "No caller UndoManager context was required; undo/redo and transaction grouping remain unqualified."
+  ],
+  "transportRestored": {
+    "queuedSequenceId": null,
+    "effectiveBpm": null,
+    "tempoSource": null,
+    "playing": false,
+    "recording": false,
+    "recordMode": 0,
+    "pulse": "0",
+    "sequenceBpm": 120,
+    "masterBpm": 120,
+    "masterTempoEnabled": false
+  }
+}

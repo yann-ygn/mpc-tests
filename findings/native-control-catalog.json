@@ -2467,5 +2467,15 @@
         }
       ]
     }
-  ]
+  ],
+  "parameterResearch": {
+    "story": 45,
+    "schemaVersion": "1.0",
+    "metadataVersion": "1.0.0",
+    "metadata": "../native-api/parameters/key37-3.9.1.2.json",
+    "schema": "../native-api/schema/parameter-metadata.schema.json",
+    "findings": "native-program-parameters.md",
+    "publicSetParameterAvailable": false,
+    "interpretation": "Historical registrations remain static inventory. Only the explicitly qualified subset in the versioned parameter metadata has native device evidence; no generic public control is enabled."
+  }
 }

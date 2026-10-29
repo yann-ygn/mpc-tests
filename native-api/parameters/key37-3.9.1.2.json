@@ -1,0 +1,435 @@
+{
+  "schemaVersion": "1.0",
+  "metadataVersion": "1.0.0",
+  "firmware": {
+    "model": "Akai Professional MPC Key 37",
+    "version": "3.9.1.2",
+    "buildId": "8371199f945ecc40f79cb19c17ff5de72810a91c"
+  },
+  "capability": {
+    "available": false,
+    "reason": "RESEARCH_ONLY",
+    "publicOperation": null,
+    "labOnly": true,
+    "conditions": [
+      "exact_firmware_and_model",
+      "code_fingerprints",
+      "ui_thread",
+      "live_project_track_generations",
+      "drum_pad_zero",
+      "stopped_sequence",
+      "recording_off",
+      "automation_off",
+      "qualified_view_no_popup",
+      "local_transport"
+    ]
+  },
+  "abi": {
+    "getter": "float (Program*, int padIndex, int parameterId)",
+    "setter": "void (Program*, int padIndex, int parameterId, float normalizedValue)",
+    "floatAbi": "armhf",
+    "receiver": "Track +0x648 Program; pad from Program +0x1fec vector",
+    "notifications": "Native Program dispatch -> Instrument notifying/filter paths; no raw stores.",
+    "undo": "No caller-supplied UndoManager context required for tested native calls; undo/redo and transaction grouping remain unqualified."
+  },
+  "layout": {
+    "drumVtable": 110300160,
+    "instrumentVtable": 110294608,
+    "instruments": 8172,
+    "realtimeParameters": 5064,
+    "layers": 5020,
+    "layerStride": 2232
+  },
+  "functions": [
+    {
+      "name": "programGet",
+      "rva": 38844244,
+      "prefixHex": "013100e3030051e10200000a003090e5a83093e513ff2fe1523f42e2023043e2"
+    },
+    {
+      "name": "programSet",
+      "rva": 38845044,
+      "prefixHex": "253400e3f0426de1030052e10240a0e140229fe540329fe5f081cde1f860cde1"
+    },
+    {
+      "name": "programDispatch",
+      "rva": 38893004,
+      "prefixHex": "f4416de10040a0e1c0029fe50250a0e1bc229fe5013100e3f860cde110e08de5"
+    },
+    {
+      "name": "drumGet",
+      "rva": 38402788,
+      "prefixHex": "00c090e5fc406de108e08de534449fe594e19ce530c49fe504408fe00cc08fe0"
+    },
+    {
+      "name": "drumCurrentGet",
+      "rva": 38403896,
+      "prefixHex": "00c090e5fc406de108e08de534449fe594e19ce530c49fe504408fe00cc08fe0"
+    },
+    {
+      "name": "drumSet",
+      "rva": 38516364,
+      "prefixHex": "64c79fe564379fe5f0426de1f860cde1f081cde118a08de51ce08de5028b2ded"
+    },
+    {
+      "name": "instrumentGet",
+      "rva": 37897520,
+      "prefixHex": "c63e41e2fc416de10f3043e2f860cde10260a0e1b8249fe5070053e3d4349fe5"
+    },
+    {
+      "name": "instrumentSet",
+      "rva": 37939452,
+      "prefixHex": "6c259fe56c359fe5f4426de1f860cde1f081cde1f8a1cde120e08de5048b2ded"
+    },
+    {
+      "name": "realtimeGet",
+      "rva": 38069120,
+      "prefixHex": "f0416de10050a0e10100a0e10140a0e108608de50ce08de57f14fdeb000050e3"
+    },
+    {
+      "name": "realtimeSet",
+      "rva": 38094848,
+      "prefixHex": "fc416de1083500e30250a0e1d02f9fe5030051e1ec3f9fe5f860cde1f081cde1"
+    },
+    {
+      "name": "isRealtimeParameter",
+      "rva": 37303708,
+      "prefixHex": "450e50e30f0000ca343400e3030050e1220000ca293200e3030050e1160000ca"
+    },
+    {
+      "name": "parameterRange",
+      "rva": 37301784,
+      "prefixHex": "7f0051e308402de50040a0e104e08de508d04de2070000ca0020a0e37f30a0e3"
+    },
+    {
+      "name": "parameterDefault",
+      "rva": 37301692,
+      "prefixHex": "ca3e40e2083043e2270053e30100008a100a9fed1eff2fe108402de50040a0e1"
+    },
+    {
+      "name": "layerSemiTuneGet",
+      "rva": 37197932,
+      "prefixHex": "0c7ad0ed037a9fed000ab6eee77af8ee870aa7ee1eff2fe1398e633c1b7ad0ed"
+    },
+    {
+      "name": "pluginGet",
+      "rva": 38768792,
+      "prefixHex": "011c41e2060172e3111f6fe1a112a0e10010a003000051e30100001a1a0a9fed"
+    },
+    {
+      "name": "pluginSet",
+      "rva": 38823036,
+      "prefixHex": "f0426de10250a0e1b8239fe5b8339fe5f860cde1f081cde118a08de51ce08de5"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "kRTCutoff",
+      "nativeId": 514,
+      "classification": "native_control",
+      "families": [
+        "drum"
+      ],
+      "qualification": "device_verified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "unit": "normalized",
+        "nativeType": "float",
+        "nativeUnit": "normalized",
+        "nativeScale": 1,
+        "nativeBias": 0,
+        "getterCanonicalization": "none",
+        "quantization": "binary32"
+      },
+      "index": {
+        "kind": "pad",
+        "minimum": 0,
+        "maximum": 0,
+        "layer": null
+      },
+      "readback": {
+        "owner": "realtime",
+        "offset": 588
+      },
+      "evidence": {
+        "static": true,
+        "device": true,
+        "notes": "Five reversible normalized values, native UI-thread getters/setters and independent native-field readback on drum pad zero. See findings/native-program-parameters-proof-20261029.json. Public read/write remains disabled."
+      }
+    },
+    {
+      "key": "kRTEnvAttack",
+      "nativeId": 519,
+      "classification": "native_control",
+      "families": [
+        "drum"
+      ],
+      "qualification": "device_verified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "unit": "normalized",
+        "nativeType": "float",
+        "nativeUnit": "normalized",
+        "nativeScale": 1,
+        "nativeBias": 0,
+        "getterCanonicalization": "none",
+        "quantization": "binary32"
+      },
+      "index": {
+        "kind": "pad",
+        "minimum": 0,
+        "maximum": 0,
+        "layer": null
+      },
+      "readback": {
+        "owner": "realtime",
+        "offset": 2720
+      },
+      "evidence": {
+        "static": true,
+        "device": true,
+        "notes": "Five reversible normalized values, native UI-thread getters/setters and independent native-field readback on drum pad zero. See findings/native-program-parameters-proof-20261029.json. Public read/write remains disabled."
+      }
+    },
+    {
+      "key": "kLfoRate",
+      "nativeId": 1089,
+      "classification": "native_control",
+      "families": [
+        "drum"
+      ],
+      "qualification": "device_verified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "unit": "normalized",
+        "nativeType": "float",
+        "nativeUnit": "normalized",
+        "nativeScale": 1,
+        "nativeBias": 0,
+        "getterCanonicalization": "none",
+        "quantization": "binary32"
+      },
+      "index": {
+        "kind": "pad",
+        "minimum": 0,
+        "maximum": 0,
+        "layer": null
+      },
+      "readback": {
+        "owner": "realtime",
+        "offset": 1484
+      },
+      "evidence": {
+        "static": true,
+        "device": true,
+        "notes": "Five reversible normalized values, native UI-thread getters/setters and independent native-field readback on drum pad zero. See findings/native-program-parameters-proof-20261029.json. Public read/write remains disabled."
+      }
+    },
+    {
+      "key": "kLayer1Level",
+      "nativeId": 1039,
+      "classification": "native_control",
+      "families": [
+        "drum"
+      ],
+      "qualification": "device_verified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "unit": "normalized",
+        "nativeType": "float",
+        "nativeUnit": "normalized",
+        "nativeScale": 1,
+        "nativeBias": 0,
+        "getterCanonicalization": "none",
+        "quantization": "binary32"
+      },
+      "index": {
+        "kind": "pad",
+        "minimum": 0,
+        "maximum": 0,
+        "layer": 0
+      },
+      "readback": {
+        "owner": "layer",
+        "offset": 2172
+      },
+      "evidence": {
+        "static": true,
+        "device": true,
+        "notes": "Five reversible normalized values, native UI-thread getters/setters and independent native-field readback on drum pad zero. See findings/native-program-parameters-proof-20261029.json. Public read/write remains disabled."
+      }
+    },
+    {
+      "key": "kLayer1SamplePan",
+      "nativeId": 1040,
+      "classification": "native_control",
+      "families": [
+        "drum"
+      ],
+      "qualification": "device_verified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "unit": "normalized",
+        "nativeType": "float",
+        "nativeUnit": "normalized",
+        "nativeScale": 1,
+        "nativeBias": 0,
+        "getterCanonicalization": "none",
+        "quantization": "binary32"
+      },
+      "index": {
+        "kind": "pad",
+        "minimum": 0,
+        "maximum": 0,
+        "layer": 0
+      },
+      "readback": {
+        "owner": "layer",
+        "offset": 228
+      },
+      "evidence": {
+        "static": true,
+        "device": true,
+        "notes": "Five reversible normalized values, native UI-thread getters/setters and independent native-field readback on drum pad zero. See findings/native-program-parameters-proof-20261029.json. Public read/write remains disabled."
+      }
+    },
+    {
+      "key": "kLayer1SemiTune",
+      "nativeId": 1043,
+      "classification": "native_control",
+      "families": [
+        "drum"
+      ],
+      "qualification": "device_verified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "unit": "normalized",
+        "nativeType": "int",
+        "nativeUnit": "semitones",
+        "nativeScale": 0.013888888888888888,
+        "nativeBias": 0.5,
+        "getterCanonicalization": "binary32_endpoint_clamp",
+        "quantization": "integer_semitones"
+      },
+      "index": {
+        "kind": "pad",
+        "minimum": 0,
+        "maximum": 0,
+        "layer": 0
+      },
+      "readback": {
+        "owner": "layer",
+        "offset": 48
+      },
+      "evidence": {
+        "static": true,
+        "device": true,
+        "notes": "Five reversible normalized values, native UI-thread getters/setters and independent native-field readback on drum pad zero. See findings/native-program-parameters-proof-20261029.json. Public read/write remains disabled."
+      }
+    },
+    {
+      "key": "kAmpEnvParam1_Unused",
+      "nativeId": 1069,
+      "classification": "unused_identifier",
+      "families": [],
+      "qualification": "unverified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": null,
+      "index": null,
+      "readback": null,
+      "evidence": {
+        "static": true,
+        "device": false,
+        "notes": "Explicitly named Unused; never an enabled control."
+      }
+    },
+    {
+      "key": "kFilterEnvParam1_Unused",
+      "nativeId": 1073,
+      "classification": "unused_identifier",
+      "families": [],
+      "qualification": "unverified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": null,
+      "index": null,
+      "readback": null,
+      "evidence": {
+        "static": true,
+        "device": false,
+        "notes": "Explicitly named Unused; never an enabled control."
+      }
+    },
+    {
+      "key": "kRTCutoffGlobal",
+      "nativeId": 555,
+      "classification": "enum_only",
+      "families": [],
+      "qualification": "unverified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": null,
+      "index": null,
+      "readback": null,
+      "evidence": {
+        "static": true,
+        "device": false,
+        "notes": "Keygroup/global owner and write scope not qualified."
+      }
+    },
+    {
+      "key": "kCVProgramCV1",
+      "nativeId": 1417,
+      "classification": "unsupported_family",
+      "families": [],
+      "qualification": "unverified",
+      "publicRead": false,
+      "publicWrite": false,
+      "value": null,
+      "index": null,
+      "readback": null,
+      "evidence": {
+        "static": true,
+        "device": false,
+        "notes": "CV namespace is independent of a drum pad; no physical-output qualification."
+      }
+    }
+  ],
+  "separatePaths": [
+    {
+      "kind": "plugin",
+      "available": false,
+      "notes": "Program namespace 0x100, IDs 0x1000..0x1fff map to a loaded plugin parameter bank. Names/ranges and write semantics are plugin-specific and unqualified."
+    },
+    {
+      "kind": "insert_effect",
+      "available": false,
+      "notes": "Instrument IDs 0x2000..0x5fff encode effect slot in upper bits and parameter index in low 12 bits. Instance format, occupancy and lifecycle require separate qualification; no arbitrary insert control."
+    }
+  ]
+}

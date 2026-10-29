@@ -50,9 +50,15 @@ is callable or supported. Each story requires the specified mapping and device v
 | #42 | Probe clip, scene and song bindings and define the supported API subset |
 | #43 | Probe note-event and automation editing through native model operations |
 | #44 | Probe audio-event, sample-pool and clip-export operations |
-| #45 | Map generic program/instrument parameters and separate IDs from controls |
+| #45 | Program/Instrument parameter schema v1 and six-control research subset — [findings](native-program-parameters.md); public writes unavailable |
 | #46 | Complete user-track inventory and canonical Track List order — implemented; [findings](native-track-inventory.md) |
 | #47 | Qualify flag commands in Main, Mixer and Track Mute — implemented; [findings](native-command-screens.md) |
+
+US #45 publishes [parameter metadata schema v1 and a six-control drum subset](native-program-parameters.md).
+Native UI-thread setters/getters and independent readback qualify normalized
+cutoff, amp attack, LFO rate and layer level/pan/tuning in a private lab. Static
+IDs remain classified separately; public generic writes, other scopes and
+plugin/insert parameter access stay unavailable pending their own qualification.
 
 ## Delivery order
 

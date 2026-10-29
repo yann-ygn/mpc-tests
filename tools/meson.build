@@ -1,6 +1,9 @@
 mem_probe = executable('mem_probe', 'mpc_mem_probe.c')
 ipc_bridge = executable('ipc_bridge', 'web_ipc_bridge.c')
 elf_checks += [{'binary': mem_probe}, {'binary': ipc_bridge}]
+parameter_rules = executable('program_parameter_rules_fixture', 'tests/program_parameter_rules_fixture.c')
+elf_checks += [{'binary': parameter_rules}]
+test('program-parameter-rules', parameter_rules, suite: 'native-api')
 if not meson.is_cross_build()
   test(
     'memory-reader', python,
@@ -12,6 +15,30 @@ if not meson.is_cross_build()
 endif
 
 if host_machine.cpu_family() == 'arm'
+  parameter_profile = custom_target(
+    'parameter-research-profile',
+    input: files('../native-api/parameters/key37-3.9.1.2.json'),
+    output: 'mpc_parameter_profile.h',
+    command: [python, files('mpc_program_parameters.py'), 'header', '--profile', '@INPUT@', '--output', '@OUTPUT@'],
+    depend_files: files(
+      '../native-api/schema/parameter-metadata.schema.json',
+      'profiles/key37-mpc3.9.1.2.json',
+    ),
+  )
+  parameter_lab = shared_library(
+    'program_parameter_lab', 'mpc_program_parameter_lab.c', adapter_sources,
+    parameter_profile, profiles[1],
+    name_prefix: '',
+    include_directories: [root_inc, adapter_inc, api_inc],
+    c_args: native_args,
+    override_options: native_options,
+    gnu_symbol_visibility: 'hidden',
+    dependencies: [dl_dep, threads_dep],
+    link_with: elf_id,
+    link_args: ['-Wl,--version-script=' + files('exports.map')[0].full_path()],
+    link_depends: files('exports.map'),
+  )
+  elf_checks += [{'binary': parameter_lab, 'exports': files('exports.map')}]
   native_client = executable('native_client', 'mpc_native_client.c')
   hotload = executable('hotload', 'mpc_hotload.c', dependencies: dl_dep)
   test_payload = shared_library('test_payload', 'tests/mpc_hotload_fixture.c', name_prefix: '')
