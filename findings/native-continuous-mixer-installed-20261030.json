@@ -1,0 +1,97 @@
+{
+  "story": 56,
+  "version": "0.18.0",
+  "ownerRequestedInstallation": true,
+  "requiredRestartAuthorizedByInstallationRequest": true,
+  "ownerAuthorizedDiscard": true,
+  "previousVersion": "0.16.0",
+  "packageSha256": "9c80b902bfe8b4f7e2884bd6879dfc6abf22015b217b69947f07c199ef3b1560",
+  "transferredPayloadChecksumsVerified": true,
+  "mpcRestarted": true,
+  "status": "ready",
+  "nativeError": "OK",
+  "deviceIdentityPreserved": true,
+  "configurationPreserved": true,
+  "identityFilePreserved": true,
+  "preloadListPreserved": true,
+  "sourceRevision": "51685f47edbff95d8d790bd2babbde3df77aa204",
+  "sourceSha256": "dc319ada54a3511747f707fffb53dac34a4f5846d3b7d9453cf4d754a2b6180c",
+  "workingTreeDirty": false,
+  "artifactSha256": {
+    "mpc-api": "b74a07c42be2156acb2938ce6bf3f6410cc8e41644b578db4e65581a38223849",
+    "mpc_native_host.so": "5e2bf7587804ae14ce5b8692be2dab522220981f76b2bc5591f07b40b0d102b8"
+  },
+  "installedArtifactHashesMatch": true,
+  "coexistence": {
+    "privtap.so": true,
+    "mpc_remote": true,
+    "mpc_native_host.so": true
+  },
+  "temporaryInstallerFilesRemoved": true,
+  "passed": true,
+  "continuousVerification": {
+    "updates": 400,
+    "interleavedFlagsIncludingRestoration": 8,
+    "allApplied": true,
+    "capacityRefusals": 0,
+    "trackCounts": [
+      1,
+      2
+    ],
+    "aggregateHz": 10,
+    "secondsPerPhase": 20,
+    "canonicalRetriesMatched": true,
+    "changedPayloadConflictsVerified": true,
+    "supersededLookupUnavailable": true,
+    "independentNumericRestoration": true,
+    "callbackUs": {
+      "count": 400,
+      "p50": 22541,
+      "p95": 22831,
+      "p99": 23089,
+      "max": 24923
+    }
+  },
+  "lifecycle": {
+    "stopStartVerified": true,
+    "deviceIdentityStable": true,
+    "instanceRotated": true,
+    "socketModes": "600",
+    "mpcPidUnchanged": true
+  },
+  "watch": {
+    "passed": true,
+    "watchChange": true,
+    "replayMatches": true,
+    "canonicalRetriesMatch": true,
+    "valueRestored": true,
+    "automationMode": "Read"
+  },
+  "finalState": {
+    "version": "0.18.0",
+    "status": "ready",
+    "nativeError": "OK",
+    "readOperations": [
+      "describe",
+      "get_state",
+      "list_tracks",
+      "current_track",
+      "current_sequence",
+      "recovery_snapshot"
+    ],
+    "allSixReadsAndSchemasPassed": true,
+    "freshProjectMixersRestored": true,
+    "freshProjectContextRestored": true,
+    "trackFamilies": [
+      "plugin",
+      "drum"
+    ],
+    "main": true,
+    "automationRead": true,
+    "playing": false,
+    "recording": false,
+    "pulse": "0",
+    "sequenceBpm": 120,
+    "savedProject": false
+  }
+}

@@ -136,3 +136,12 @@ sequence, zero playhead and Mixer Pan & Volume match the independent initial
 capture. MPC.settings bytes and saved backup bytes are unchanged. One Track's
 Read mode is restored through its native UI button after reload. No addin
 installation or MPC restart; 0.18.0 remains a locally built package.
+
+The owner subsequently requested installation with permission to discard the
+loaded test project. Version 0.18.0 from clean source `51685f4` is now installed
+and ready. Four hundred installed continuous updates on one/two Tracks and
+eight interleaved flag requests/restorations pass without capacity refusal;
+Read volume watch/replay, all reads/schemas and host lifecycle checks pass.
+Configuration, persistent identity and preload order are preserved. Test values
+and Read context are restored on the fresh untitled project, Main, stopped at
+zero. See [installed verification](native-continuous-mixer-installed-20261030.json).

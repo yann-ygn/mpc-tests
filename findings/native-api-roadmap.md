@@ -184,5 +184,5 @@ of ordinary retained commands. Device qualification covers aggregate 10 Hz
 traffic on two/eight Tracks under Off and eight under Read, with interleaved
 flags and lifecycle failures. Historical recovery remains an ordinary-command
 contract; superseded continuous IDs are unavailable. The existing maximum-density
-and hard latency limits remain. Package 0.18.0 is prepared locally; installed
-0.16.0 is restored without MPC restart.
+and hard latency limits remain. The owner subsequently installed 0.18.0 with an authorized MPC restart; see
+[installed verification](native-continuous-mixer-installed-20261030.json).

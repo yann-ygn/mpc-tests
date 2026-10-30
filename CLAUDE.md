@@ -31,8 +31,9 @@ before running experiments.
   needs `-n N`. The root filesystem is read-only; addins live in `/data/mpc-addins/`.
 - The MPC Remote addin (`/data/mpc-addins/remote`, 1.0.3) serves HTTP and MCP on port 6720 (`/tap`, `/button`,
   `/screen.png`). The `mpc` MCP server is the same addin. `privtap/profiles/` keeps a copy of its `buttons.conf`.
-- MPC Native API 0.16.0 is installed and ready (verified during #57, 2026-10-29).
-  Earlier story entries below record historical installed versions; see `findings/native-vst-instrument-identity-proof-20261029.json` for the latest installed read check.
+- MPC Native API 0.18.0 is installed and ready (owner-requested US #56 follow-up, 2026-10-30).
+  Earlier story entries below record historical installed versions; see
+  `findings/native-continuous-mixer-installed-20261030.json` for the latest installed verification.
 - privtap's settings: `/data/mpc-addins/privtap/privtap.conf`. Keep `identity=` empty except during an experiment:
   as another model, the Key 37's LEDs show the wrong states.
 - Settings backup taken before identity experiments: `/data/claude-backup-20261023-settings.tar`.
@@ -487,3 +488,18 @@ before running experiments.
   0.16.0 resumes ready with six reads. No installation or MPC restart. See
   findings/native-continuous-mixer.md and its sanitized proof. 0.18.0 is built
   locally; installation still requires the owner's separate request.
+
+- Owner-requested 0.18.0 installation (#56 follow-up, 2026-10-30) completed from
+  clean source `51685f4`. The owner authorized discarding the test project and
+  restarting MPC; no additional project save was made. Package/installed hashes,
+  configuration, persistent identity and preload order match; privtap/Remote remain
+  loaded. Four hundred actual continuous volume/pan/send updates on one/two Tracks
+  and eight interleaved flag requests/restorations pass without capacity refusal.
+  Canonical retries, changed-payload conflicts and superseded lookup are verified;
+  independent numeric and context restoration passes. Read volume writes and
+  watch/replay, all six reads/schemas and host stop/start/instance rotation pass.
+  The installed host is ready/OK on a fresh untitled plugin/drum project, Main,
+  Automation Read, sequence 01 at 120 BPM, stopped at zero with recording Off.
+  See findings/native-continuous-mixer-installed-20261030.json. Clients must send
+  `continuous: true` to use bounded numeric receipts; ordinary behavior is retained.
+  Future installations/restarts still require the owner's authorization.
