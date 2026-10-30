@@ -66,6 +66,16 @@ commands_fixture = executable(
 elf_checks += [{'binary': commands_fixture}]
 test('commands-fixture', commands_fixture, suite: 'native-api', timeout: 30)
 
+continuous_fixture = executable(
+  'continuous_fixture', 'continuous_fixture.c', adapter_sources, profiles[1],
+  include_directories: [root_inc, api_inc, adapter_inc],
+  c_args: native_args, override_options: native_options + ['optimization=1'],
+  dependencies: [dl_dep, threads_dep], link_with: elf_id,
+)
+elf_checks += [{'binary': continuous_fixture}]
+test('continuous-fixture', continuous_fixture, suite: 'native-api', timeout: 30)
+test('continuous-stream', continuous_fixture, args: ['stream'], suite: 'native-api', timeout: 120)
+
 mixer_fixture = executable(
   'mixer_fixture', 'mixer_fixture.c', adapter_sources, profiles[1],
   include_directories: [root_inc, api_inc, adapter_inc],
@@ -105,7 +115,7 @@ if not meson.is_cross_build()
   native_test_env.set('MPC_READELF', readelf.full_path())
   native_test_env.set('MPC_HOST_TEST_FIXTURE', host_fixture.full_path())
   native_test_env.set('MPC_HOST_TEST_LIBRARY', native_host.full_path())
-  foreach module : ['test_describe', 'test_adapter', 'test_semantics', 'test_commands', 'test_host', 'test_wire_commands', 'test_live_policy', 'test_mixer', 'test_navigation', 'test_track_setup', 'test_program_parameters', 'test_package', 'test_watch']
+  foreach module : ['test_describe', 'test_adapter', 'test_semantics', 'test_commands', 'test_host', 'test_wire_commands', 'test_live_policy', 'test_continuous', 'test_mixer', 'test_navigation', 'test_track_setup', 'test_program_parameters', 'test_package', 'test_watch']
     test(
       module,
       python,

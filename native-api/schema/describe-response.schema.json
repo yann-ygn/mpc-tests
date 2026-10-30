@@ -996,6 +996,62 @@
               }
             }
           }
+        },
+        "continuousMixer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "available",
+            "requestOption",
+            "operations",
+            "pendingCapacity",
+            "controlCapacity",
+            "recordsPerControl",
+            "capacityScope",
+            "pendingReplacement",
+            "completedReplacement",
+            "supersededLookup",
+            "discreteCapacityShared"
+          ],
+          "properties": {
+            "available": {
+              "type": "boolean"
+            },
+            "requestOption": {
+              "const": "continuous"
+            },
+            "operations": {
+              "const": [
+                "set_volume",
+                "set_pan",
+                "set_send_level"
+              ]
+            },
+            "pendingCapacity": {
+              "const": 8
+            },
+            "controlCapacity": {
+              "const": 64
+            },
+            "recordsPerControl": {
+              "const": 1
+            },
+            "capacityScope": {
+              "const": "authority"
+            },
+            "pendingReplacement": {
+              "const": "refused_queue_full"
+            },
+            "completedReplacement": {
+              "const": "same_control_then_oldest_completed"
+            },
+            "supersededLookup": {
+              "const": "OUTCOME_UNAVAILABLE"
+            },
+            "discreteCapacityShared": {
+              "const": false
+            }
+          }
         }
       }
     },

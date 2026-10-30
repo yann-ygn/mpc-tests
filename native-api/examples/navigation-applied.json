@@ -80,5 +80,6 @@
     },
     "verificationUiUs": 13855
   },
-  "error": null
+  "error": null,
+  "retention": "retained"
 }

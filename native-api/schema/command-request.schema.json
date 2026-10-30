@@ -147,6 +147,11 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 3
+        },
+        "continuous": {
+          "type": "boolean",
+          "default": false,
+          "description": "Opt in to bounded supersedable receipts; numeric mixer only. Busy controls return QUEUE_FULL."
         }
       },
       "additionalProperties": false,
@@ -338,6 +343,26 @@
             "not": {
               "required": [
                 "slotIndex"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "set_volume",
+                  "set_pan",
+                  "set_send_level"
+                ]
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "required": [
+                "continuous"
               ]
             }
           }

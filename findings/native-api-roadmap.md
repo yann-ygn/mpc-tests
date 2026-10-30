@@ -177,3 +177,12 @@ US #55 adds read-only assigned plugin product identity to shared state/watch,
 independent of editable Track names. See [native-plugin-identity.md](native-plugin-identity.md)
 for the source trace, explicit unsupported instance identity, audit/replay rules
 and implementation/device/installed availability.
+
+US #56 adds [continuous numeric mixer admission](native-continuous-mixer.md):
+explicit opt-in volume/pan/send updates use bounded control records independently
+of ordinary retained commands. Device qualification covers aggregate 10 Hz
+traffic on two/eight Tracks under Off and eight under Read, with interleaved
+flags and lifecycle failures. Historical recovery remains an ordinary-command
+contract; superseded continuous IDs are unavailable. The existing maximum-density
+and hard latency limits remain. Package 0.18.0 is prepared locally; installed
+0.16.0 is restored without MPC restart.

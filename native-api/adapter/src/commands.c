@@ -23,7 +23,7 @@ struct mpc_commands {
   pthread_t worker;
   struct record *records;
   uint64_t next_serial;
-  unsigned pending;
+  unsigned pending, continuous_pending, capacity;
   bool stopping, exited;
   char adapter_id[37];
   uint64_t (*now)(void *);
@@ -62,9 +62,10 @@ static enum mpc_native_error check(struct mpc_commands *commands, unsigned wait_
   return mpc_executor_on_ui(commands->config.executor) ? MPC_NATIVE_WRONG_THREAD : MPC_NATIVE_OK;
 }
 static bool canonical(const struct mpc_command_request *a, const struct mpc_command_request *b) {
-  return a->operation == b->operation && a->target.project == b->target.project &&
-    a->target.track == b->target.track && a->mute_scope == b->mute_scope &&
-    a->sequence.project == b->sequence.project && a->sequence.sequence == b->sequence.sequence &&
+  return a->continuous == b->continuous && a->operation == b->operation &&
+    a->target.project == b->target.project && a->target.track == b->target.track &&
+    a->mute_scope == b->mute_scope && a->sequence.project == b->sequence.project &&
+    a->sequence.sequence == b->sequence.sequence &&
     a->sequence.generation == b->sequence.generation &&
     !memcmp(a->sequence.instance_id, b->sequence.instance_id, 37) &&
     !memcmp(a->target.instance_id, b->target.instance_id, 37) && a->value == b->value &&
@@ -75,6 +76,18 @@ static bool canonical(const struct mpc_command_request *a, const struct mpc_comm
     a->mixer.value == b->mixer.value &&
     (!a->has_expected || a->mixer.expected == b->mixer.expected);
 }
+/* A generation is a dispatch fence, not a new property allocation. */
+static bool same_control(const struct mpc_command_request *a, const struct mpc_command_request *b) {
+  return a->operation == b->operation && a->target.project == b->target.project &&
+    a->target.track == b->target.track && a->mixer.index == b->mixer.index &&
+    !memcmp(a->target.instance_id, b->target.instance_id, 37);
+}
+static void release_pending(struct mpc_commands *commands, struct record *record) {
+  record->pending = false;
+  commands->pending--;
+  if (record->receipt.request.continuous)
+    commands->continuous_pending--;
+}
 static void finish(
   struct mpc_commands *commands,
   struct record *record,
@@ -83,8 +96,7 @@ static void finish(
   record->receipt.status = status;
   record->receipt.error = error;
   record->receipt.finished_ms = commands->now(commands->clock_data);
-  record->pending = false;
-  commands->pending--;
+  release_pending(commands, record);
   pthread_cond_broadcast(&commands->changed);
 }
 static const struct mpc_command_track *target_track(const struct mpc_command_receipt *receipt) {
@@ -178,8 +190,7 @@ static void advance(struct mpc_commands *commands, struct record *record) {
     }
     mpc_executor_release(record->job);
     record->job = NULL;
-    record->pending = false;
-    commands->pending--;
+    release_pending(commands, record);
     pthread_cond_broadcast(&commands->changed);
     return;
   }
@@ -369,7 +380,7 @@ static void *work(void *data) {
   pthread_mutex_lock(&commands->mutex);
   while (!commands->stopping || commands->pending) {
     struct record *first = NULL;
-    for (unsigned i = 0; i < commands->config.receipt_capacity; i++) {
+    for (unsigned i = 0; i < commands->capacity; i++) {
       struct record *record = &commands->records[i];
       if (record->pending && (!first || record->serial < first->serial))
         first = record;
@@ -408,7 +419,8 @@ enum mpc_native_error mpc_commands_open_clock(
   struct mpc_commands *commands = calloc(1, sizeof *commands);
   if (!commands)
     return MPC_NATIVE_NOT_READY;
-  commands->records = calloc(config->receipt_capacity, sizeof *commands->records);
+  commands->capacity = config->receipt_capacity + MPC_COMMAND_CONTINUOUS_RECEIPTS;
+  commands->records = calloc(commands->capacity, sizeof *commands->records);
   if (!commands->records) {
     free(commands);
     return MPC_NATIVE_NOT_READY;
@@ -505,6 +517,8 @@ enum mpc_native_error mpc_commands_submit(
     return MPC_NATIVE_INVALID_ARGUMENT;
   if (!mpc_mixer_request_valid(input->operation, &input->mixer, input->has_expected))
     return MPC_NATIVE_INVALID_ARGUMENT;
+  if (input->continuous && !mpc_mixer_numeric(input->operation))
+    return MPC_NATIVE_INVALID_ARGUMENT;
   if (input->has_expected_revision)
     return MPC_NATIVE_UNSUPPORTED_PRECONDITION;
   if (memcmp(input->target.instance_id, commands->config.instance_id, 37))
@@ -514,8 +528,8 @@ enum mpc_native_error mpc_commands_submit(
     request.start_within_ms = MPC_COMMAND_DEFAULT_START_MS;
   pthread_mutex_lock(&commands->mutex);
   uint64_t now = commands->now(commands->clock_data);
-  struct record *empty = NULL;
-  for (unsigned i = 0; i < commands->config.receipt_capacity; i++) {
+  struct record *empty = NULL, *control = NULL, *oldest = NULL;
+  for (unsigned i = 0; i < commands->capacity; i++) {
     struct record *record = &commands->records[i];
     if (
       record->used && !record->pending && !record->readers &&
@@ -530,16 +544,38 @@ enum mpc_native_error mpc_commands_submit(
         await_receipt(commands, record, wait_ms, output);
       goto done;
     }
+    bool continuous_slot = i >= commands->config.receipt_capacity;
+    if (continuous_slot != request.continuous)
+      continue;
     if (!record->used && !empty)
       empty = record;
+    if (request.continuous && record->used) {
+      if (record->caller == caller && same_control(&record->receipt.request, &request))
+        control = record;
+      if (!record->pending && !record->readers && (!oldest || record->serial < oldest->serial))
+        oldest = record;
+    }
+  }
+  if (request.continuous) {
+    /* Never steal a pending record or storage observed by an active waiter.
+     * Same-key pressure is explicit; callers keep their latest unsent value. */
+    if (control)
+      empty = !control->pending && !control->readers ? control : NULL;
+    else if (!empty)
+      empty = oldest;
   }
   if (commands->stopping || commands->next_serial == UINT64_MAX)
     error = MPC_NATIVE_SHUTTING_DOWN;
-  else if (commands->pending == commands->config.pending_capacity)
+  else if (
+    request.continuous
+      ? commands->continuous_pending == MPC_COMMAND_CONTINUOUS_PENDING ||
+        (control && (control->pending || control->readers))
+      : commands->pending - commands->continuous_pending == commands->config.pending_capacity)
     error = MPC_NATIVE_QUEUE_FULL;
   else if (!empty)
     error = MPC_NATIVE_RETENTION_CAPACITY;
   else {
+    memset(empty, 0, sizeof *empty);
     empty->used = empty->pending = true;
     empty->caller = caller;
     empty->serial = commands->next_serial++;
@@ -551,6 +587,8 @@ enum mpc_native_error mpc_commands_submit(
     empty->receipt.accepted_ms = now;
     empty->receipt.status = MPC_COMMAND_ACCEPTED;
     commands->pending++;
+    if (request.continuous)
+      commands->continuous_pending++;
     await_receipt(commands, empty, wait_ms, output);
   }
 done:
@@ -576,7 +614,7 @@ enum mpc_native_error mpc_commands_get(
   pthread_mutex_lock(&commands->mutex);
   error = MPC_NATIVE_OUTCOME_UNAVAILABLE;
   uint64_t now = commands->now(commands->clock_data);
-  for (unsigned i = 0; i < commands->config.receipt_capacity; i++) {
+  for (unsigned i = 0; i < commands->capacity; i++) {
     struct record *record = &commands->records[i];
     if (
       record->used && record->caller == caller &&
@@ -598,7 +636,7 @@ enum mpc_native_error mpc_commands_shutdown(struct mpc_commands *commands, unsig
   struct timespec until = deadline(milliseconds);
   pthread_mutex_lock(&commands->mutex);
   commands->stopping = true;
-  for (unsigned i = 0; i < commands->config.receipt_capacity; i++) {
+  for (unsigned i = 0; i < commands->capacity; i++) {
     struct record *record = &commands->records[i];
     if (record->pending && !record->job && !record->verifying)
       fail_before_execution(commands, record, MPC_NATIVE_CANCELLED);
@@ -618,7 +656,7 @@ enum mpc_native_error mpc_commands_close(struct mpc_commands *commands) {
     return error;
   pthread_mutex_lock(&commands->mutex);
   bool drained = commands->exited;
-  for (unsigned i = 0; i < commands->config.receipt_capacity; i++)
+  for (unsigned i = 0; i < commands->capacity; i++)
     if (commands->records[i].readers)
       drained = false;
   pthread_mutex_unlock(&commands->mutex);

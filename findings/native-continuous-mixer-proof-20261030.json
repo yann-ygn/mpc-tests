@@ -1,0 +1,404 @@
+{
+  "story": 56,
+  "packageVersion": "0.18.0",
+  "firmware": "3.9.1.2",
+  "model": "MPC Key 37",
+  "capturedAtUtc": "2026-10-30T07:06:19.039809+00:00",
+  "contract": {
+    "option": {
+      "continuous": true
+    },
+    "operations": [
+      "set_volume",
+      "set_pan",
+      "set_send_level"
+    ],
+    "ordinaryPending": 16,
+    "ordinaryReceipts": 128,
+    "continuousPending": 8,
+    "continuousControls": 64,
+    "recordsPerControl": 1,
+    "scope": "authority",
+    "pendingReplacement": "QUEUE_FULL",
+    "completedReplacement": "same_control_then_oldest_completed",
+    "supersededLookup": "OUTCOME_UNAVAILABLE",
+    "expiredIdRetryCanExecuteAgain": true,
+    "commandAbi": 10,
+    "executorAbi": 12,
+    "snapshotAbi": 8,
+    "observationAbi": 2,
+    "primitiveAbi": 2
+  },
+  "validation": {
+    "hostEntries": 30,
+    "hostAllPassed": true,
+    "sanitizerSuiteEntries": 25,
+    "sanitizerAllPassed": true,
+    "finalLifecycleSanitizerEntries": 2,
+    "finalSchemaSanitizerEntries": 4,
+    "isolatedArmFixtures": [
+      {
+        "fixture": "native_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "executor_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "identity_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "inventory_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "observation_fixture",
+        "passed": true,
+        "outputLines": 1
+      },
+      {
+        "fixture": "commands_fixture",
+        "passed": true,
+        "outputLines": 327
+      },
+      {
+        "fixture": "mixer_fixture",
+        "passed": true,
+        "outputLines": 78
+      },
+      {
+        "fixture": "continuous_fixture",
+        "passed": true,
+        "outputLines": 5
+      },
+      {
+        "fixture": "watch_fixture",
+        "passed": true,
+        "outputLines": 1
+      }
+    ],
+    "isolatedArmStream": {
+      "virtual10HzRequests": 12020,
+      "streamDurationMs": 601000,
+      "trackCounts": [
+        1,
+        2
+      ],
+      "passed": true
+    },
+    "deploymentElfGuardsPassed": true
+  },
+  "device": {
+    "trafficRateMeaning": "10 Hz aggregate across chosen Tracks; not per Track/control",
+    "measuredUserTracks": 12,
+    "eligibleMixerTracks": 8,
+    "phases": [],
+    "independentPhaseReadbacks": [
+      {
+        "mode": "off",
+        "tracks": 2,
+        "controlsVerified": 12,
+        "independentReadbackMatched": true
+      },
+      {
+        "mode": "off",
+        "tracks": 8,
+        "controlsVerified": 48,
+        "independentReadbackMatched": true
+      },
+      {
+        "mode": "read",
+        "tracks": 8,
+        "controlsVerified": 16,
+        "independentReadbackMatched": true
+      }
+    ],
+    "off": {
+      "passed": true,
+      "restored": true,
+      "categoryCounts": {
+        "retained_baseline": 12,
+        "continuous": 3600,
+        "discrete": 24,
+        "discrete_restore": 24,
+        "numeric_restore": 48
+      },
+      "statuses": {
+        "applied": 3708
+      },
+      "capacityRefusals": 0,
+      "errors": 0,
+      "measurements": {
+        "retained_baseline": {
+          "callbackUs": {
+            "count": 12,
+            "p50": 28624,
+            "p95": 29672,
+            "p99": 29672,
+            "max": 29672
+          },
+          "roundTripMs": {
+            "count": 12,
+            "p50": 98.60942501109093,
+            "p95": 105.62081192620099,
+            "p99": 105.62081192620099,
+            "max": 105.62081192620099
+          }
+        },
+        "continuous": {
+          "callbackUs": {
+            "count": 3600,
+            "p50": 26871,
+            "p95": 28958,
+            "p99": 29762,
+            "max": 38896
+          },
+          "roundTripMs": {
+            "count": 3600,
+            "p50": 51.88774294219911,
+            "p95": 93.35267695132643,
+            "p99": 102.67647297587246,
+            "max": 110.94599904026836
+          }
+        },
+        "discrete": {
+          "callbackUs": {
+            "count": 24,
+            "p50": 26451,
+            "p95": 28750,
+            "p99": 48802,
+            "max": 48802
+          },
+          "roundTripMs": {
+            "count": 24,
+            "p50": 49.05830800998956,
+            "p95": 100.75475100893527,
+            "p99": 111.47068394348025,
+            "max": 111.47068394348025
+          }
+        }
+      },
+      "rssKiB": {
+        "count": 28,
+        "minimum": 721896,
+        "maximum": 729872,
+        "initial": 729872,
+        "final": 725900,
+        "attribution": "whole MPC process including instruments, graphics and temporary host"
+      },
+      "perPhase": [
+        {
+          "tracks": 2,
+          "seconds": 179.95327724795789,
+          "updates": 1800,
+          "achievedAggregateHz": 10.002596382391955
+        },
+        {
+          "tracks": 8,
+          "seconds": 179.95627640199382,
+          "updates": 1800,
+          "achievedAggregateHz": 10.002429678968713
+        }
+      ]
+    },
+    "read": {
+      "passed": true,
+      "restored": true,
+      "categoryCounts": {
+        "retained_baseline": 12,
+        "continuous": 1800,
+        "discrete": 12,
+        "discrete_restore": 12,
+        "numeric_restore": 16,
+        "selection_restore": 1
+      },
+      "statuses": {
+        "applied": 1853
+      },
+      "capacityRefusals": 0,
+      "errors": 0,
+      "measurements": {
+        "retained_baseline": {
+          "callbackUs": {
+            "count": 12,
+            "p50": 26789,
+            "p95": 27098,
+            "p99": 27098,
+            "max": 27098
+          },
+          "roundTripMs": {
+            "count": 12,
+            "p50": 52.526117069646716,
+            "p95": 101.78799601271749,
+            "p99": 101.78799601271749,
+            "max": 101.78799601271749
+          }
+        },
+        "continuous": {
+          "callbackUs": {
+            "count": 1800,
+            "p50": 26585,
+            "p95": 27229,
+            "p99": 27482,
+            "max": 39819
+          },
+          "roundTripMs": {
+            "count": 1800,
+            "p50": 51.479105022735894,
+            "p95": 92.43918594438583,
+            "p99": 101.94589896127582,
+            "max": 112.86892706993967
+          }
+        },
+        "discrete": {
+          "callbackUs": {
+            "count": 12,
+            "p50": 26140,
+            "p95": 60799,
+            "p99": 60799,
+            "max": 60799
+          },
+          "roundTripMs": {
+            "count": 12,
+            "p50": 53.22592600714415,
+            "p95": 141.00445702206343,
+            "p99": 141.00445702206343,
+            "max": 141.00445702206343
+          }
+        }
+      },
+      "rssKiB": {
+        "count": 15,
+        "minimum": 717604,
+        "maximum": 721636,
+        "initial": 721416,
+        "final": 717604,
+        "attribution": "whole MPC process including instruments, graphics and temporary host"
+      },
+      "perPhase": [
+        {
+          "tracks": 8,
+          "seconds": 179.95188047899865,
+          "updates": 1800,
+          "achievedAggregateHz": 10.00267402157028
+        }
+      ]
+    },
+    "burstAndLostDelivery": {
+      "continuousBurstClients": 8,
+      "interleavedDiscreteOperations": [
+        "set_mute",
+        "set_solo",
+        "set_record_armed"
+      ],
+      "checksPassed": true,
+      "restored": true,
+      "resultCodes": {
+        "OK": 41,
+        "REQUEST_ID_CONFLICT": 1,
+        "STALE_MIXER": 1
+      }
+    },
+    "stopUnderLoad": {
+      "continuousRequests": 8,
+      "discreteRequests": 1,
+      "drained": true,
+      "newInstance": true,
+      "oldLookupUnavailable": true,
+      "restored": true
+    },
+    "projectReplacement": {
+      "requests": 356,
+      "outcomes": {
+        "NOT_READY": 92,
+        "STALE_PROJECT": 263,
+        "CANCELLED": 1
+      },
+      "nativeInvoked": 0,
+      "oldReferencesRejected": true,
+      "originalUserTracksRestored": 9
+    }
+  },
+  "finalArtifactHashes": [
+    {
+      "artifact": "mpc-api",
+      "sha256": "b74a07c42be2156acb2938ce6bf3f6410cc8e41644b578db4e65581a38223849",
+      "matchesLoadedBundle": true
+    },
+    {
+      "artifact": "watch_lab.so",
+      "sha256": "4fde9258cdaf948d5e9d92aed399152893309ba9676a0456a9266c13df4368ee",
+      "matchesLoadedBundle": true
+    },
+    {
+      "artifact": "libmpc_native.so",
+      "sha256": "defe29ecca8365e5813d6a919fb4a4184038c8c77eed66ced12ea0f55bc93a00",
+      "matchesLoadedBundle": true
+    }
+  ],
+  "restoration": {
+    "checks": {
+      "pidUnchanged": true,
+      "mixersMatch": true,
+      "contextMatches": true,
+      "backupUnchanged": true,
+      "tracksMatch": true,
+      "busesMatch": true,
+      "selectedTrackMatch": true,
+      "selectedSequenceMatch": true,
+      "sequenceSlotsMatch": true,
+      "settingsBytesUnchanged": true
+    },
+    "settingsDifferencePaths": [],
+    "beforeTrackCount": 8,
+    "afterTrackCount": 8,
+    "temporaryHosts": [
+      {
+        "pidUnchanged": true,
+        "labUnloaded": true,
+        "deviceBundleRemoved": true
+      },
+      {
+        "pidUnchanged": true,
+        "labUnloaded": true,
+        "deviceBundleRemoved": true
+      }
+    ],
+    "noMpcRestart": true,
+    "noAddinInstallation": true,
+    "disposableTracksRemovedByReload": 3,
+    "allSixFinalReadsAndSchemasPassed": true,
+    "savedBackupBytesUnchanged": true,
+    "savedBackupAutomationCorrection": "One Track restored from Write to its initial Read through the native UI after reload.",
+    "installedHost": {
+      "version": "0.16.0",
+      "status": "ready",
+      "nativeError": "OK",
+      "readOperations": [
+        "describe",
+        "get_state",
+        "list_tracks",
+        "current_track",
+        "current_sequence",
+        "recovery_snapshot"
+      ],
+      "allReadsPassed": true
+    }
+  },
+  "remainingLimits": [
+    "Aggregate 10 Hz qualification only; no per-Track 10 Hz fanout or maximum-density claim.",
+    "Continuous pending work is refused rather than coalesced; clients keep the latest unsent desired state.",
+    "Superseded IDs have no tombstone: old resubmission may execute again. Use retained mode for historical recovery.",
+    "Ordinary clients can still exhaust their own 16 pending / 128 receipt slots.",
+    "Capacity isolation does not reserve socket connections, CPU or hard latency.",
+    "UI callback p95 still exceeds the US #52 25 ms target.",
+    "Model completion only; no acoustic, audio-buffer or persisted-project guarantee.",
+    "0.18.0 is built locally and not installed."
+  ]
+}

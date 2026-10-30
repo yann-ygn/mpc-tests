@@ -6,11 +6,15 @@
 #include "mpc_state.h"
 #include "mpc_observation.h"
 
-#define MPC_COMMANDS_ABI 9u
+#define MPC_COMMANDS_ABI 10u
 #define MPC_COMMAND_ID_BYTES 81u
 #define MPC_COMMAND_MIN_RETENTION_MS 600000u
 #define MPC_COMMAND_MAX_RECEIPTS 256u
 #define MPC_COMMAND_MAX_PENDING 128u
+/* Independent authority-wide pool; a key owns at most one pending OR terminal
+ * record. Continuous traffic never borrows retained command capacity. */
+#define MPC_COMMAND_CONTINUOUS_RECEIPTS 64u
+#define MPC_COMMAND_CONTINUOUS_PENDING 8u
 #define MPC_COMMAND_MAX_START_MS 30000u
 #define MPC_COMMAND_MAX_WAIT_MS 30000u
 #define MPC_COMMAND_DEFAULT_START_MS 1000u
@@ -87,6 +91,9 @@ struct mpc_command_request {
    * acceptance rather than silently ignoring a caller's requested safeguard. */
   bool has_expected_revision;
   unsigned start_within_ms;
+  /* Numeric mixer only. Terminal receipts may be superseded; pending work is
+   * never evicted. Zero preserves the ten-minute retained contract. */
+  bool continuous;
 };
 
 /* A trusted host must check LIVE mode/settings on the UI thread at dispatch and
@@ -148,7 +155,9 @@ struct mpc_command_receipt {
  * command is deduplicated; wait_ms only waits and never cancels/renews a command.
  * Missing start budget (zero) means DEFAULT_START_MS. Results remain retained
  * for at least ten minutes from acceptance, and pending commands never expire
- * from retention. Pressure rejects new work; it cannot evict an unexpired result. */
+ * from retention. Pressure rejects new work; it cannot evict an unexpired retained
+ * result. Explicit continuous requests use the separate bounded pool above;
+ * newer control requests can supersede only completed continuous records. */
 MPC_NATIVE_API enum mpc_native_error
 mpc_commands_open(const struct mpc_commands_config *, struct mpc_commands **);
 MPC_NATIVE_API enum mpc_native_error mpc_commands_submit(

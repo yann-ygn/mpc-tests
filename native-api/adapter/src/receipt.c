@@ -239,6 +239,7 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     (unsigned)receipt->status > MPC_COMMAND_UNKNOWN ||
     (unsigned)receipt->execution > MPC_COMMAND_COMPLETED ||
     (unsigned)receipt->request.operation > MPC_COMMAND_MIDI_PROGRAM ||
+    (receipt->request.continuous && !mpc_mixer_numeric(receipt->request.operation)) ||
     (unsigned)receipt->request.mute_scope > MPC_MUTE_SEQUENCE ||
     (receipt->request.mute_scope == MPC_MUTE_SEQUENCE &&
      (receipt->request.operation != MPC_COMMAND_MUTE ||
@@ -320,7 +321,7 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     "{\"apiVersion\":\"0.1\",\"requestId\":\"%s\",\"instanceId\":\"%s\","
     "\"status\":\"%s\",\"execution\":\"%s\",\"target\":{\"instanceId\":\"%s\","
     "\"projectId\":\"%" PRIu64
-    "\"%s},\"op\":\"%s\",\"value\":%s,\"changed\":%s,\"nativeInvoked\":%s,\"verification\":",
+    "\"%s},\"op\":\"%s\",\"value\":%s,\"changed\":%s,\"nativeInvoked\":%s,\"retention\":",
     receipt->request.request_id,
     receipt->request.target.instance_id,
     statuses[receipt->status],
@@ -332,6 +333,8 @@ char *mpc_commands_receipt_json(const struct mpc_command_receipt *receipt) {
     desired,
     receipt->changed_known ? boolean(receipt->changed) : "null",
     receipt->native_known ? boolean(receipt->native_invoked) : "null");
+  fprintf(output, "\"%s\"", receipt->request.continuous ? "supersedable" : "retained");
+  fputs(",\"verification\":", output);
   const struct mpc_command_track *track =
     receipt->after_known && receipt->after.project == receipt->request.target.project
     ? find(&receipt->after, receipt->request.target.track)

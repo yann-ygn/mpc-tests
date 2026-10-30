@@ -133,5 +133,6 @@
     },
     "verificationUiUs": 0
   },
-  "error": null
+  "error": null,
+  "retention": "retained"
 }

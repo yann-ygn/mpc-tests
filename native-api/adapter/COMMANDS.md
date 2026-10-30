@@ -1,7 +1,7 @@
 # Native command handlers (#19)
 
 `libmpc_native.so` now provides the transport-independent command API in
-[`mpc_commands.h`](include/mpc_commands.h), ABI 8. It runs on executor ABI 10 and primitive adapter ABI 2.
+[`mpc_commands.h`](include/mpc_commands.h), ABI 10. It runs on executor ABI 12 and primitive adapter ABI 2.
 The six handler exports are `mpc_commands_open`, `mpc_commands_submit`, `mpc_commands_get`,
 `mpc_commands_shutdown`, `mpc_commands_close`, and `mpc_commands_receipt_json`.
 The executor additionally exports a non-mutating `mpc_executor_poll` and the UI-only native policy helper
@@ -383,3 +383,28 @@ Use the stopped, live production qualification; only Automation Off/Read is
 qualified. See [units, families, signatures and lifecycle limits](../../findings/native-track-setup.md).
 The implementation uses executor ABI 11, commands ABI 9, state ABI 7 / STATE_V7;
 primitive ABI 2 and observations ABI 2 are unchanged.
+
+## Continuous mixer admission (US #56)
+
+Command ABI 10 appends `mpc_command_request.continuous`; rebuild trusted C callers.
+Zero initialization retains the existing contract. Only volume, pan and send
+operations permit `true`. Configured `pending_capacity`/`receipt_capacity`
+continue to belong entirely to retained requests. The handler additionally owns
+`MPC_COMMAND_CONTINUOUS_PENDING` (8) and `MPC_COMMAND_CONTINUOUS_RECEIPTS` (64),
+shared across its callers, with at most one pending or terminal record per
+caller/control. Both classes use one serial FIFO and the unchanged executor jobs.
+No executor or attachment layout changes are needed.
+
+Admission and get/copy share the handler mutex. A record with active C waiters is
+pinned; replacement waits for a later admission and otherwise returns explicit
+backpressure. Pending/frozen jobs remain owned through drain. Completed
+continuous records may be replaced by their next control update or, for a new
+control at capacity, the oldest completed continuous record. Canonical comparison
+includes the mode and mixer generation. Retry lookup searches both pools before
+checking either class's admission limits. Duplicate IDs cannot cross classes.
+
+The [public contract](../README.md#continuous-numeric-mixer-updates-us-56) defines
+superseded lookup/retry and disconnected delivery semantics. Ordinary receipts
+and their minimum retention are unaffected. The pool scans and accounting run
+on non-UI threads; native dispatch/verification and all existing lifetime,
+policy, deadline and timing fences are reused.

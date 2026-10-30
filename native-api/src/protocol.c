@@ -479,7 +479,18 @@ char *api_respond(
   }
   fprintf(
     output,
-    "},\"limits\":{\"maxRequestBytes\":%d,\"maxResponseBytes\":%d,\"maxConnections\":%d,"
+    "},\"continuousMixer\":{\"available\":%s,\"requestOption\":\"continuous\","
+    "\"operations\":[\"set_volume\",\"set_pan\",\"set_send_level\"],"
+    "\"pendingCapacity\":%u,\"controlCapacity\":%u,\"recordsPerControl\":1,"
+    "\"capacityScope\":\"authority\",\"pendingReplacement\":\"refused_queue_full\","
+    "\"completedReplacement\":\"same_control_then_oldest_completed\","
+    "\"supersededLookup\":\"OUTCOME_UNAVAILABLE\",\"discreteCapacityShared\":false}",
+    discovery.commands_ready ? "true" : "false",
+    MPC_COMMAND_CONTINUOUS_PENDING,
+    MPC_COMMAND_CONTINUOUS_RECEIPTS);
+  fprintf(
+    output,
+    ",\"limits\":{\"maxRequestBytes\":%d,\"maxResponseBytes\":%d,\"maxConnections\":%d,"
     "\"connectionTimeoutMs\":%d,\"queueCapacity\":%d,\"receiptCapacity\":%d,"
     "\"requestRetentionMs\":%d,\"defaultStartWithinMs\":%s,\"maxStartWithinMs\":%s,"
     "\"maxWaitMs\":%s,\"verificationTimeoutMs\":%s,\"adapterProbeTimeoutMs\":%d,\"maxTracks\":%u,"

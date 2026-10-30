@@ -1,0 +1,17 @@
+{
+  "apiVersion": "0.1",
+  "op": "set_volume",
+  "requestId": "fader_42",
+  "target": {
+    "instanceId": "run_0123456789abcdef0123456789abcdef",
+    "projectId": "1",
+    "trackId": "2"
+  },
+  "mixerGeneration": "100",
+  "value": 0.123456789,
+  "expected": {
+    "value": 0.75
+  },
+  "waitMs": 1000,
+  "continuous": true
+}

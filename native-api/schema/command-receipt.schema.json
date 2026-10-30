@@ -393,7 +393,8 @@
         "verification",
         "observedChanges",
         "error",
-        "timing"
+        "timing",
+        "retention"
       ],
       "properties": {
         "apiVersion": {
@@ -810,6 +811,12 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 3
+        },
+        "retention": {
+          "enum": [
+            "retained",
+            "supersedable"
+          ]
         }
       },
       "allOf": [
@@ -985,6 +992,26 @@
               "slotIndex"
             ]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "set_volume",
+                  "set_pan",
+                  "set_send_level"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "retention": {
+                "const": "retained"
+              }
+            }
+          }
         }
       ],
       "description": "Automation Read qualifies native mute/solo/volume/pan manual changes with live native sources. Applied verifies completion observations; later automation may supersede them. Timeline events are never edited. Sends/inserts remain Off-only."
@@ -1006,7 +1033,8 @@
         "verification",
         "observedChanges",
         "error",
-        "timing"
+        "timing",
+        "retention"
       ],
       "properties": {
         "apiVersion": {
@@ -1462,6 +1490,9 @@
           "type": "number",
           "minimum": 20,
           "maximum": 999
+        },
+        "retention": {
+          "const": "retained"
         }
       },
       "allOf": [
@@ -1563,7 +1594,8 @@
         "verification",
         "observedChanges",
         "error",
-        "timing"
+        "timing",
+        "retention"
       ],
       "properties": {
         "apiVersion": {
@@ -1937,6 +1969,9 @@
             }
           },
           "additionalProperties": false
+        },
+        "retention": {
+          "const": "retained"
         }
       },
       "allOf": [

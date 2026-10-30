@@ -274,11 +274,12 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     SLOT = 8192,
     CURSOR = 16384,
     PULSE = 32768,
-    BPM = 65536
+    BPM = 65536,
+    CONTINUOUS = 131072
   };
   unsigned seen = 0;
   bool value_numeric = false, expected_numeric = false;
-  for (unsigned i = 0; i < 17; i++) {
+  for (unsigned i = 0; i < 18; i++) {
     char key[32];
     if ((i && token(&p, ',')) || string(&p, key, sizeof key) || token(&p, ':'))
       return -1;
@@ -330,6 +331,9 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
     } else if (!strcmp(key, "startWithinMs")) {
       bit = START;
       error = milliseconds(&p, &out->command.start_within_ms, 1);
+    } else if (!strcmp(key, "continuous")) {
+      bit = CONTINUOUS;
+      error = boolean(&p, &out->command.continuous);
     } else if (!strcmp(key, "waitMs")) {
       bit = WAIT;
       error = milliseconds(&p, &out->wait_ms, 0);
@@ -426,6 +430,8 @@ int api_parse(const char *input, size_t size, struct api_request_data *out) {
       : !strcmp(out->op, "set_send_level")                  ? MPC_COMMAND_SEND
       : !strcmp(out->op, "set_insert_rack_enabled")         ? MPC_COMMAND_RACK
                                                             : MPC_COMMAND_INSERT;
+    if (out->command.operation >= MPC_COMMAND_VOLUME && out->command.operation <= MPC_COMMAND_SEND)
+      allowed |= CONTINUOUS;
     if (out->command.operation == MPC_COMMAND_SEND) {
       required |= SEND;
       allowed |= SEND;

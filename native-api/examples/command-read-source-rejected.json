@@ -42,5 +42,6 @@
     "details": {
       "execution": "not_started"
     }
-  }
+  },
+  "retention": "retained"
 }

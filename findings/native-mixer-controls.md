@@ -194,7 +194,9 @@ the comparison does not isolate a causal regression. Mixer sampling and lifetime
 checks add work. Saturated numeric requests can hold a UI callback for roughly
 146 ms in this measured workload. Clients should coalesce gestures, observe
 capacity errors, and use desired-state updates with retained request IDs;
-continuous automation-rate control and maximum project density remain unqualified.
+continuous automation-rate control and maximum project density remain unqualified
+in this historical release. US #56 adds a separate opt-in bounded receipt mode;
+see [continuous mixer qualification](native-continuous-mixer.md).
 
 ALSA was sampled as `RUNNING` before/after each burst. No reliable cumulative
 xrun counter or acoustic measurement was available. These observations cannot

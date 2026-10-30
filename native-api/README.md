@@ -459,3 +459,57 @@ conversions require further qualification. The installed host is unchanged.
 Validate metadata with `uv run --no-sync python tools/mpc_program_parameters.py validate`.
 The ARM build additionally produces `tools/program_parameter_lab.so`, an
 experimental zero-export library loaded only by the private qualification runner.
+
+## Continuous numeric mixer updates (US #56)
+
+Package 0.18.0 adds the explicit boolean `continuous` option to `set_volume`,
+`set_pan` and `set_send_level`. Omission or `false` preserves the existing
+retained contract. Other operations reject this option. The response's
+`retention` is `supersedable` for opted-in requests, otherwise `retained`.
+See the [request example](examples/continuous-mixer-request.json).
+
+The authenticated UID, service instance, project/Track incarnation, operation
+and send index identify a control. `mixerGeneration` remains a canonical
+precondition and dispatch fence; changing it does not allocate another slot
+for the same control. Continuous requests use an independent authority-wide
+pool of 64 control records and eight pending slots. A control owns at most one
+pending **or** completed record. Memory and pending work therefore stay bounded
+independently of update rate, including across same-UID processes/connections.
+`describe.continuousMixer` reports this contract and its limits.
+
+A new request ID replaces its control's completed receipt at admission. When
+all control records are occupied, a new control may replace the oldest admitted
+completed continuous record. Pending records, including uncertain running jobs,
+and records being copied by an active C waiter cannot be replaced. A new value
+for a busy control returns `QUEUE_FULL` before acceptance, as does an exhausted
+continuous pending pool. If no replaceable record exists, admission returns
+`RETENTION_CAPACITY`. Refused requests have no receipt and have not authorized
+execution. Clients should keep their latest unsent value and retry it after
+backpressure. There is no server-side cancellation/coalescing of pending work.
+
+Within a live record, the original request ID and canonical payload deduplicate
+exactly as retained commands do; changing `continuous`, value, expected value,
+generation, reference or start budget yields `REQUEST_ID_CONFLICT`. `waitMs`
+remains excluded. A superseded ID returns `OUTCOME_UNAVAILABLE` from
+`get_command`, including delivery polling; an already returned receipt remains
+valid historical evidence. This also applies when a client disconnects before
+reading its result. After supersession/expiry, there is no tombstone: resubmitting
+that old ID can execute again. Never retry a superseded ID; issue a fresh ID for
+the latest desired state. Use ordinary retained requests when recovery of every
+historical outcome is required. Current completed receipts otherwise expire at
+the normal retention horizon; pending work never expires from retention.
+
+The existing 16 pending slots and 128 retained receipts are reserved for ordinary
+commands, including numeric requests without opt-in, flags, insert enables,
+selection, transport and setup. Continuous traffic cannot consume or evict that
+capacity. Ordinary commands can still exhaust their own pool. All accepted work
+shares the existing FIFO, including verification; there is no reordering or
+priority bypass. Native expected-value checks, original start deadlines,
+per-request timing, model verification, identity/mixer/source fences and
+Automation Off/qualified Read rules are unchanged. Sends remain Off-only.
+Capacity isolation does not reserve CPU, network connections or bounded latency.
+
+C callers must rebuild with command ABI 10 and set `request.continuous = true`.
+Executor ABI 12, primitive ABI 2, observation ABI 2 and snapshot ABI 8 / STATE_V8
+are unchanged. The handler allocates the additional fixed pool at open and adds
+no native UI-thread operation. See [qualification and remaining limits](../findings/native-continuous-mixer.md).

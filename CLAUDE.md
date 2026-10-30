@@ -460,3 +460,30 @@ before running experiments.
   ready with six successful reads; VST stays unsupported there. No installation
   or MPC restart. See findings/native-vst-instrument-identity.md and its sanitized
   proof. A 0.17.0 upgrade still requires the owner's separate request.
+
+- US #56, branch `us-56-continuous-mixer-gestures`: package 0.18.0 adds explicit
+  `continuous: true` to volume/pan/send requests. An independent 64-control,
+  eight-pending pool keeps at most one pending or completed receipt per caller/
+  control; completed continuous records can be replaced, pending ones cannot.
+  Busy controls return QUEUE_FULL. Ordinary 16-pending/128-receipt capacity and
+  ten-minute recovery remain reserved. Superseded IDs return OUTCOME_UNAVAILABLE;
+  retrying them can execute again, so clients use fresh IDs for new values.
+  Command ABI 10 requires C callers to rebuild; executor 12, snapshot 8 / STATE_V8,
+  primitive/observation 2 remain unchanged. FIFO, expected values, generation,
+  automation/source fences and native UI work are reused.
+  Thirty host entries, 25 ASan/UBSan entries with final lifecycle/schema reruns,
+  nine isolated ARM fixtures and 12,020-update ARM/host virtual streams pass.
+  Device evidence includes 5,400 updates at aggregate 10 Hz: three-minute Off
+  phases on two/eight Tracks and a three-minute Read phase on eight Tracks,
+  72 interleaved flag requests/restorations, bursts, lost delivery, stale mixer,
+  stop/drain/instance rotation and project replacement. Numeric callback p95 is
+  28.958 ms Off and 27.229 ms Read; fixed receipt storage and process samples show
+  no growth with update count. Per-Track fanout, maximum density, hard latency and
+  acoustic completion remain unqualified. The disposable copy's three drum
+  fixtures are discarded by reloading the new backup. All original user/bus
+  flags, mixers, automation, selection, sequence, zero playhead and Mixer Pan &
+  Volume are restored; MPC.settings bytes and backup bytes are unchanged.
+  Both temporary hosts drain/unload and their files are removed; installed
+  0.16.0 resumes ready with six reads. No installation or MPC restart. See
+  findings/native-continuous-mixer.md and its sanitized proof. 0.18.0 is built
+  locally; installation still requires the owner's separate request.

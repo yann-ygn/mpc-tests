@@ -38,5 +38,6 @@
     "uiWorkUs": 128,
     "verificationPasses": 0
   },
-  "error": null
+  "error": null,
+  "retention": "retained"
 }
